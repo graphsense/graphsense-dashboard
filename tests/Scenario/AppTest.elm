@@ -11,6 +11,7 @@ import Dict
 import Effect.Api
 import Expect exposing (Expectation)
 import Fixtures.Api as Fixture
+import Html.Attributes as Attributes
 import Http
 import Json.Decode
 import Model exposing (Effect(..), Msg(..), Page(..))
@@ -84,6 +85,30 @@ isConsole eff =
 
         _ ->
             False
+
+
+{-| Any successful response, which is what moves the auth state to `Authorized`
+— the state the user info is stored in.
+-}
+okResponse : Msg
+okResponse =
+    BrowserGotResponseWithHeaders Nothing (Ok ( Dict.empty, NoOp ))
+
+
+{-| The settings page of a logged-in user the user endpoint reported `userInfo`
+for.
+-}
+settingsPageWith : Effect.Api.UserInfo -> App
+settingsPageWith userInfo =
+    App.initAt "/settings"
+        |> App.steps [ okResponse, BrowserGotUserInfo userInfo ]
+
+
+hasUsernameRow : String -> App -> Expectation
+hasUsernameRow username =
+    App.html
+        >> Query.find [ Selector.attribute (Attributes.attribute "data-testid" "gs-settings-username") ]
+        >> Query.has [ Selector.text username ]
 
 
 {-| A response that fails to decode, as a client/spec mismatch would produce.
@@ -185,6 +210,35 @@ suite =
                                 |> RemoteData.map (.currencies >> List.length)
                                 |> RemoteData.withDefault 0
                                 |> Expect.greaterThan 0
+            ]
+        , describe "the user info on the settings page"
+            -- the request is fired from handleResponse once the user is
+            -- authorized; these cover what the page does with the response
+            [ test "shows the username the user endpoint reported" <|
+                \_ ->
+                    settingsPageWith { expiration = Nothing, username = Just "alice" }
+                        |> hasUsernameRow "alice"
+            , test "shows no username row when the endpoint reported none" <|
+                \_ ->
+                    settingsPageWith { expiration = Nothing, username = Nothing }
+                        |> App.html
+                        |> Query.hasNot
+                            [ Selector.attribute (Attributes.attribute "data-testid" "gs-settings-username") ]
+            , test "keeps the expiration row next to it" <|
+                \_ ->
+                    settingsPageWith { expiration = Nothing, username = Just "alice" }
+                        |> App.html
+                        -- untranslated in the test env, where a lookup falls
+                        -- back to the key
+                        |> Query.has [ Selector.text "expires on" ]
+            , test "keeps the username across a later response" <|
+                \_ ->
+                    -- updateRequestLimit rebuilds the whole Authorized record on
+                    -- every response; dropping the username there made it
+                    -- disappear again a moment after it showed up
+                    settingsPageWith { expiration = Nothing, username = Just "alice" }
+                        |> App.step okResponse
+                        |> hasUsernameRow "alice"
             ]
         , describe "user settings persist"
             [ test "switching the locale writes the settings" <|

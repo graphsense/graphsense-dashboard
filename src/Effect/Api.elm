@@ -36,6 +36,7 @@ type alias SearchRequestConfig =
 
 type alias UserInfo =
     { expiration : Maybe Time.Posix
+    , username : Maybe String
     }
 
 
@@ -1423,9 +1424,10 @@ isOutgoingToDirection isOutgoing =
 
 userInfoDecoder : Json.Decode.Decoder UserInfo
 userInfoDecoder =
-    Json.Decode.map
-        (\expiration ->
+    Json.Decode.map2
+        (\expiration username ->
             { expiration = expiration
+            , username = username
             }
         )
         (Json.Decode.oneOf
@@ -1433,6 +1435,30 @@ userInfoDecoder =
             , Json.Decode.succeed Nothing
             ]
         )
+        (Json.Decode.oneOf
+            [ Json.Decode.field "username" usernameDecoder
+            , Json.Decode.succeed Nothing
+            ]
+        )
+
+
+{-| A blank username is treated as no username at all, so the settings page
+does not show an empty row for it.
+-}
+usernameDecoder : Json.Decode.Decoder (Maybe String)
+usernameDecoder =
+    Json.Decode.oneOf
+        [ Json.Decode.string
+            |> Json.Decode.map
+                (\username ->
+                    if String.isEmpty (String.trim username) then
+                        Nothing
+
+                    else
+                        Just username
+                )
+        , Json.Decode.succeed Nothing
+        ]
 
 
 expiresDecoder : Json.Decode.Decoder (Maybe Time.Posix)

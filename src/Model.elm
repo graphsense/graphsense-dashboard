@@ -198,6 +198,7 @@ type Auth
     = Authorized
         { requestLimit : RequestLimit
         , expiration : Maybe Time.Posix
+        , username : Maybe String
         , loggingOut : Bool
         }
     | Unauthorized Bool (List (Effect.Api.Effect Msg))

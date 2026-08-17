@@ -239,6 +239,7 @@ update plugins uc msg model =
                                     Authorized
                                         { auth
                                             | expiration = userInfo.expiration
+                                            , username = userInfo.username
                                         }
 
                                 _ ->
@@ -2204,13 +2205,13 @@ updateRequestLimit headers model =
             Dict.get key headers
                 |> Maybe.andThen String.toInt
 
-        expiration =
+        ( expiration, username ) =
             case model.auth of
                 Authorized auth ->
-                    auth.expiration
+                    ( auth.expiration, auth.username )
 
                 _ ->
-                    Nothing
+                    ( Nothing, Nothing )
 
         limitInterval =
             if Dict.member "x-ratelimit-limit-minute" headers then
@@ -2246,6 +2247,7 @@ updateRequestLimit headers model =
                     limitInterval
                     |> Maybe.withDefault Unlimited
             , expiration = expiration
+            , username = username
             , loggingOut = False
             }
                 |> Authorized

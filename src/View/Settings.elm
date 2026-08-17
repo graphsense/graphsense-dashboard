@@ -107,8 +107,11 @@ generalSettings plugins vc m =
             TSelectBox.view conf m.localeSelectBox vc.locale.locale
                 |> Html.Styled.map Model.LocaleSelectBoxMsg
 
-        ( expr, ( rqlPrim, rqlSec ) ) =
+        auth =
             authContent vc m.user
+
+        ( rqlPrim, rqlSec ) =
+            auth.requestLimit
 
         generalSettingsProperties =
             { button =
@@ -132,7 +135,7 @@ generalSettings plugins vc m =
                 { secondaryTextVisible = False
                 , secondaryValueText = ""
                 , titleText = Locale.string vc.locale "expires on"
-                , valueText = expr
+                , valueText = auth.expiration
                 }
             , settingsUsageRow4 =
                 { secondaryTextVisible = True
@@ -170,6 +173,10 @@ generalSettings plugins vc m =
             |> Rs.s_toggleSwitchText (Just currencyToggle)
             |> Rs.s_languageDropDown (Just languageSb)
             |> Rs.s_settingsTimeZoneItem (Just Util.View.none)
+            |> Rs.s_settingsExpirationRow3
+                (auth.username
+                    |> Maybe.map (\name -> usernameAndExpirationRows vc name auth.expiration)
+                )
         )
         { pluginSettingsList =
             pluginProfiles
@@ -188,19 +195,66 @@ generalSettings plugins vc m =
         generalSettingsProperties
 
 
-authContent : Config -> UserModel -> ( String, ( String, Maybe String ) )
+{-| The plan details as text: the expiration, the username if the user endpoint
+reported one, and the request limit (primary and optional secondary value).
+-}
+authContent :
+    Config
+    -> UserModel
+    ->
+        { expiration : String
+        , username : Maybe String
+        , requestLimit : ( String, Maybe String )
+        }
 authContent vc user =
     case user.auth of
         Authorized auth ->
-            ( auth.expiration |> Maybe.map (expiration vc) |> Maybe.withDefault (Locale.string vc.locale "never")
-            , auth.requestLimit |> requestLimit vc
-            )
+            { expiration = auth.expiration |> Maybe.map (expiration vc) |> Maybe.withDefault (Locale.string vc.locale "never")
+            , username = auth.username
+            , requestLimit = auth.requestLimit |> requestLimit vc
+            }
 
         Unknown ->
-            ( Locale.string vc.locale "Unknown", ( "", Nothing ) )
+            { expiration = Locale.string vc.locale "Unknown"
+            , username = Nothing
+            , requestLimit = ( "", Nothing )
+            }
 
         Unauthorized _ _ ->
-            ( Locale.string vc.locale "Please log-in", ( "", Nothing ) )
+            { expiration = Locale.string vc.locale "Please log-in"
+            , username = Nothing
+            , requestLimit = ( "", Nothing )
+            }
+
+
+{-| Replaces the expiration row of the plan details by a username row followed by
+the expiration row, reusing the plan details' own column layout so the spacing
+matches the rows around it.
+-}
+usernameAndExpirationRows : Config -> String -> String -> Html Model.Msg
+usernameAndExpirationRows vc username expirationText =
+    div
+        [ css Sp.settingsPageGeneralPlanDetails_details.styles ]
+        [ Sp.settingsRowWithAttributes
+            (Sp.settingsRowAttributes
+                |> Rs.s_root [ Util.View.testId "gs-settings-username" ]
+            )
+            { root =
+                { secondaryTextVisible = False
+                , secondaryValueText = ""
+                , titleText = Locale.string vc.locale "username"
+                , valueText = username
+                }
+            }
+        , Sp.settingsRow
+            { root =
+                { secondaryTextVisible = False
+                , secondaryValueText = ""
+                , titleText = Locale.string vc.locale "expires on"
+                , valueText = expirationText
+                }
+            }
+        ]
 
 
 requestLimit : Config -> RequestLimit -> ( String, Maybe String )
