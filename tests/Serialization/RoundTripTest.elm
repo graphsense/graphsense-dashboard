@@ -37,7 +37,6 @@ import Json.Encode
 import Model.Pathfinder exposing (Model)
 import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Network exposing (Network)
-import Plugin.Update as Plugin
 import RecordSetter exposing (s_annotations, s_index, s_labelOffset, s_name, s_network, s_txs)
 import Set
 import Test exposing (Test, describe, test)

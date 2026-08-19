@@ -13,7 +13,6 @@ import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (Txs(..))
 import Model.Pathfinder.Id as ModelId
 import Model.Pathfinder.Network exposing (FindPosition(..), Network)
-import Plugin.Update as Plugin
 import Test exposing (Test)
 import Tuple
 import Update.Pathfinder.Network as Network
