@@ -3,6 +3,7 @@ module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 import Animation as A
 import Color
 import Components.Tooltip as Tooltip
+import Config
 import Config.Pathfinder as Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Config.View as View
 import Css
@@ -215,6 +216,20 @@ view plugins vc pc searchHighlight address annotation =
             |> Html.attribute "data-selected"
          ]
             ++ dimmedOpacity searchHighlight
+            ++ -- relationship-based tracing has no aggregate edges on limited
+               -- networks (relations are disabled backend-side, see
+               -- DASHBOARD_CHANGES.md D-2/D-10) — grey those nodes out so only
+               -- core networks read as participating in this mode
+               (if
+                    pc.tracingMode
+                        == AggregateTracingMode
+                        && Config.isLimitedNetwork (Id.network address.id)
+                then
+                    [ opacity "0.3", css [ Css.property "filter" "grayscale(1)" ] ]
+
+                else
+                    []
+               )
         )
         (GraphComponents.addressNodeWithAttributes
             (GraphComponents.addressNodeAttributes
