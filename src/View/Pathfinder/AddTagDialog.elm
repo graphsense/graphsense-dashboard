@@ -7,7 +7,6 @@ import Html.Styled.Attributes exposing (css, placeholder, value)
 import Html.Styled.Events exposing (onClick, onInput)
 import Model exposing (AddTagDialogMsgs(..), Msg(..))
 import Model.Dialog as Dialog
-import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.Dialogs as Dialogs
@@ -40,8 +39,8 @@ willBePublishedAlertView vc =
         ]
 
 
-view : Plugins -> View.Config -> Dialog.AddTagConfig Msg -> Html Msg
-view plugins vc model =
+view : View.Config -> Dialog.AddTagConfig Msg -> Html Msg
+view vc model =
     let
         actorField =
             case model.selectedActor of
@@ -56,7 +55,7 @@ view plugins vc model =
                         { root = { closeVisible = True, label = name } }
 
                 _ ->
-                    View.Search.searchWithMoreCss plugins
+                    View.Search.searchWithMoreCss
                         vc
                         (View.Search.default
                             |> Rs.s_showIcon False

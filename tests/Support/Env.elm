@@ -1,8 +1,6 @@
 module Support.Env exposing
     ( updateConfig
-    , updatePlugins
     , viewConfig
-    , viewPlugins
     , viewport
     )
 
@@ -23,25 +21,6 @@ import Dict
 import Init.Locale
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale
-import Plugin
-import Plugin.Update
-import Plugin.View
-
-
-{-| `Plugin.Update.empty` rather than `Plugin.updatePlugins Config.plugins`: the
-update path must not depend on the local plugin configuration.
--}
-updatePlugins : Plugin.Update.Plugins
-updatePlugins =
-    Plugin.Update.empty
-
-
-{-| The view side has no `empty`, but every plugin view is keyed off
-`Plugin.Model.emptyModelState`, so none of them contributes anything.
--}
-viewPlugins : Plugin.View.Plugins
-viewPlugins =
-    Plugin.viewPlugins Config.plugins
 
 
 {-| `Init.Locale.init` leaves `mapping` empty — translations are fetched over

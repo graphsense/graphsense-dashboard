@@ -108,7 +108,7 @@ initAt route =
             init
 
         ( routed, produced ) =
-            Update.Pathfinder.updateByRoute Env.updatePlugins Env.updateConfig route app.model_
+            Update.Pathfinder.updateByRoute Env.updateConfig route app.model_
     in
     App { model_ = routed, effects_ = produced, outMsgs_ = [] }
 
@@ -124,7 +124,7 @@ step : Msg -> App -> App
 step msg (App app) =
     let
         ( next, produced, out ) =
-            Update.Pathfinder.update Env.updatePlugins Env.updateConfig msg app.model_
+            Update.Pathfinder.update Env.updateConfig msg app.model_
     in
     App { model_ = next, effects_ = produced, outMsgs_ = out }
 
@@ -260,7 +260,7 @@ the output does not depend on the local plugin configuration.
 -}
 html : App -> Query.Single Msg
 html (App app) =
-    View.Pathfinder.view Env.viewPlugins Plugin.Model.emptyModelState Env.viewConfig app.model_
+    View.Pathfinder.view Plugin.Model.emptyModelState Env.viewConfig app.model_
         |> .contents
         |> Html.Styled.div []
         |> Html.Styled.toUnstyled

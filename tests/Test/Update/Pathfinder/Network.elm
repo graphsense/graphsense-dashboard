@@ -13,7 +13,6 @@ import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (Txs(..))
 import Model.Pathfinder.Id as ModelId
 import Model.Pathfinder.Network exposing (FindPosition(..), Network)
-import Plugin.Update as Plugin
 import Test exposing (Test)
 import Tuple
 import Update.Pathfinder.Network as Network
@@ -74,17 +73,17 @@ suite =
     Test.describe "Update.Pathfinder.Network"
         [ Test.test "addAddress 1" <|
             \_ ->
-                Network.addAddress Plugin.empty config Id.address1 Data.empty
+                Network.addAddress config Id.address1 Data.empty
                     |> Tuple.second
                     |> equal Data.oneAddress
         , Test.test "addAddress 1 again" <|
             \_ ->
-                Network.addAddress Plugin.empty config Id.address1 Data.oneAddress
+                Network.addAddress config Id.address1 Data.oneAddress
                     |> Tuple.second
                     |> equal Data.oneAddress
         , Test.test "addAddress 2" <|
             \_ ->
-                Network.addAddress Plugin.empty config Id.address2 Data.oneAddress
+                Network.addAddress config Id.address2 Data.oneAddress
                     |> Tuple.second
                     |> equal Data.twoIndependentAddresses
         , Test.test "add outgoing Tx 1" <|
@@ -109,32 +108,32 @@ suite =
                     |> equalCoords Data.oneAddressWithTwoTxs
         , Test.test "addAddress 3" <|
             \_ ->
-                Network.addAddress Plugin.empty config Id.address3 Data.oneAddressWithOutgoingTx
+                Network.addAddress config Id.address3 Data.oneAddressWithOutgoingTx
                     |> Tuple.second
                     |> equalCoords Data.twoConnectedAddresses
         , Test.test "addAddress 3 again" <|
             \_ ->
-                Network.addAddress Plugin.empty config Id.address3 Data.twoConnectedAddresses
+                Network.addAddress config Id.address3 Data.twoConnectedAddresses
                     |> Tuple.second
                     |> equal Data.twoConnectedAddresses
         , Test.test "addAddress 4" <|
             \_ ->
-                Network.addAddress Plugin.empty config Id.address4 Data.twoConnectedAddresses
+                Network.addAddress config Id.address4 Data.twoConnectedAddresses
                     |> Tuple.second
                     |> equalCoords Data.one2TwoAddresses
         , Test.test "addAddress 4 again" <|
             \_ ->
-                Network.addAddress Plugin.empty config Id.address4 Data.one2TwoAddresses
+                Network.addAddress config Id.address4 Data.one2TwoAddresses
                     |> Tuple.second
                     |> equal Data.one2TwoAddresses
         , Test.test "addAddress 5" <|
             \_ ->
-                Network.addAddress Plugin.empty config Id.address5 Data.one2TwoAddresses
+                Network.addAddress config Id.address5 Data.one2TwoAddresses
                     |> Tuple.second
                     |> equalCoords Data.one2ThreeAddresses
         , Test.test "addAddress 5 again" <|
             \_ ->
-                Network.addAddress Plugin.empty config Id.address5 Data.one2ThreeAddresses
+                Network.addAddress config Id.address5 Data.one2ThreeAddresses
                     |> Tuple.second
                     |> equal Data.one2ThreeAddresses
         , Test.test "addTx 2" <|
@@ -146,7 +145,7 @@ suite =
             \_ ->
                 Network.addTx config (Api.Data.TxTxUtxo Api.tx4) Data.one2TwoTxs2ThreeAddresses
                     |> Tuple.second
-                    |> Network.addAddressWithPosition Plugin.empty config (NextTo ( Outgoing, Id.tx4 )) Id.address8
+                    |> Network.addAddressWithPosition config (NextTo ( Outgoing, Id.tx4 )) Id.address8
                     |> Tuple.second
                     |> equalCoords Data.one2TwoTxs2ThreeAddressesWithOverlapping
         , Test.test "account self-loop tx + address added after: both incoming and outgoing Txs populated" <|
@@ -180,7 +179,7 @@ suite =
                         Init.init
                             |> Network.addTx config (Api.Data.TxTxAccount selfTx)
                             |> Tuple.second
-                            |> Network.addAddress Plugin.empty config Id.address1
+                            |> Network.addAddress config Id.address1
                             |> Tuple.second
                 in
                 case Dict.get Id.address1 network.addresses of

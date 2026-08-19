@@ -166,26 +166,15 @@ The plugin name is case insensitive. Its Elm package name is the plugin name wit
 letter capitalised, e.g. `Myplugin`.
 
 Adapt the stub accordingly:
-* rename `./Stub`, `./Stub.elm` and `stub.js` to your plugin's name, keeping the respective capitalisation
+* rename `./Stub`, and `stub.js` to your plugin's name, keeping the respective capitalisation
 * replace `Stub` in the stub Elm files with your plugin's Elm package
 
-Place plugin-specific dependencies in the plugin's `./dependencies.txt`.
+In order for the core system to call functions from your plugin, reference them in the respective modules in `./Stub/Interface`. See `./src/PluginInterface` for available hooks.
 
 ### Registering a plugin
 
 1. Place or symlink the plugin in `plugins/`.
-2. Register it in `config/Config.elm`:
-
-```elm
-import Myplugin
-
-plugins : Plugin.Plugins
-plugins =
-    Plugin.empty
-        |> Plugin.myplugin (Myplugin.plugin {- plugin specific arguments here -})
-```
-
-3. Run `make clean-generated-plugins && make`.
+2. Run `make clean-generated-plugins && make`.
 
 Plugins hook into the dashboard through `src/PluginInterface/` (View, Update, Effects,
 Routes); the hook implementations go in the plugin's root module. See the comments in those

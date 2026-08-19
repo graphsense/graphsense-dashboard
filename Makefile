@@ -37,7 +37,8 @@ PLUGINS_DIR=./plugins
 # `--` is the elm comment marker: skip commented-out plugin registrations. Pass it
 # after `--` instead of escaping it; `\-` is not a valid escape and makes every
 # single make invocation print "grep: warning: stray \ before -".
-PLUGINS=$(shell grep -v -e '--' ${CONFIG} | sed -n 's/.*>\s*Plugin\.\([^} ]*\).*/\1/p' | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
+#PLUGINS=$(shell grep -v -e '--' ${CONFIG} | sed -n 's/.*>\s*Plugin\.\([^} ]*\).*/\1/p' | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
+PLUGINS=$(shell ls -1 $(PLUGINS_DIR) 2>/dev/null | grep -v -e '^EMPTY$$' | tr -d ' ')
 SRC_FILES=$(shell find src $(PLUGINS_DIR) -type f -name \*.elm -not -path '*/node_modules/*')
 PLUGIN_TEMPLATES=$(shell find plugin_templates -type f -name \*.mustache)
 
@@ -83,8 +84,11 @@ export NODE_OPTIONS=--max-old-space-size=8192
 serve: prepare gen
 	npm run dev
 
-build: prepare gen
+npm-build:
 	npm run build
+
+build: prepare gen
+	$(MAKE) npm-build
 
 compile: prepare gen
 	npm run compile
@@ -96,7 +100,7 @@ compile: prepare gen
 compile-quiet: SHELL := /bin/bash
 compile-quiet:
 	@$(MAKE) prepare gen > /dev/null
-	@elm make src/Main.elm --output=/dev/null | tr '\r' '\n' | grep -v "^Compiling"; exit $${PIPESTATUS[0]}
+	@npx elm make src/Main.elm --output=/dev/null | tr '\r' '\n' | grep -v "^Compiling"; exit $${PIPESTATUS[0]}
 
 check-plugin-folders:
 	@bash -c 'cd $(PLUGINS_DIR); for i in *; do \
@@ -395,8 +399,12 @@ elm.json: elm.json.base
 
 gen: copy-public $(GENERATED_PLUGIN_ELM) setem
 
-$(GENERATED_PLUGIN_ELM): elm.json $(GENERATE_JS) $(CONFIG) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
-	node $(GENERATE_JS) $(PLUGINS) 
+plugin-gen: 
+	rm $(GENERATED_PLUGIN_ELM)
+	$(MAKE) $(GENERATED_PLUGIN_ELM) FLAGS=--skip-elm-json
+
+$(GENERATED_PLUGIN_ELM): elm.json $(GENERATE_JS) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
+	node $(GENERATE_JS) $(FLAGS) $(PLUGINS) 
 
 # Mirror ./public and every plugin's public/ into generated/public. A `cp -r` into
 # the already existing target nested the whole tree a second time as

@@ -53,7 +53,6 @@ import Model.Pathfinder.Deserialize exposing (DeserializedAggEdge, DeserializedT
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
-import Plugin.Update exposing (Plugins)
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Set exposing (Set)
@@ -387,13 +386,13 @@ resolveOverlapsOnly distance movingId network =
             network
 
 
-addAddress : Plugins -> Pathfinder.Config -> Id -> Network -> ( Address, Network )
-addAddress plugins pc =
-    addAddressWithPosition plugins pc Auto
+addAddress : Pathfinder.Config -> Id -> Network -> ( Address, Network )
+addAddress pc =
+    addAddressWithPosition pc Auto
 
 
-addAddressWithPosition : Plugins -> Pathfinder.Config -> FindPosition -> Id -> Network -> ( Address, Network )
-addAddressWithPosition plugins pc position id model =
+addAddressWithPosition : Pathfinder.Config -> FindPosition -> Id -> Network -> ( Address, Network )
+addAddressWithPosition pc position id model =
     Dict.get id model.addresses
         |> Maybe.map (pairTo model)
         |> Maybe.withDefault
@@ -435,7 +434,7 @@ addAddressWithPosition plugins pc position id model =
                         |> avoidOverlappingEdges things
 
                 newAddress =
-                    Address.init plugins id coords
+                    Address.init id coords
                         |> s_isStartingPoint (isEmpty model)
 
                 -- When adding at viewport center, don't move other nodes - only the new node should move
@@ -479,8 +478,8 @@ avoidOverlappingEdges : List { a | x : Float, y : Animation } -> Coords -> Coord
 avoidOverlappingEdges things coords =
     let
         sameY =
+            -- keep things which are same y-axis as coords
             things
-                -- keep things which are same y-axis as coords
                 |> List.filter (\th -> A.getTo th.y |> round |> (==) (round coords.y))
                 -- remove things which are direct neighbors of coords
                 |> List.filter (\th -> th.x < coords.x - nodeXOffset || th.x > coords.x + nodeXOffset)
@@ -1574,11 +1573,11 @@ ingestTxs pc network things txs =
             network
 
 
-ingestAddresses : Plugins -> Pathfinder.Config -> Network -> List DeserializedThing -> Network
-ingestAddresses plugins pc network =
+ingestAddresses : Pathfinder.Config -> Network -> List DeserializedThing -> Network
+ingestAddresses pc network things =
     List.foldl
         (\th nw ->
-            Address.init plugins
+            Address.init
                 th.id
                 { x = th.x
                 , y = th.y
@@ -1587,6 +1586,7 @@ ingestAddresses plugins pc network =
                 |> insertAddress pc nw
         )
         network
+        things
 
 
 ingestAggEdges : Pathfinder.Config -> List DeserializedAggEdge -> Network -> Network

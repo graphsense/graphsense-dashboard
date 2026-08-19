@@ -37,7 +37,6 @@ import Json.Encode
 import Model.Pathfinder exposing (Model)
 import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Network exposing (Network)
-import Plugin.Update as Plugin
 import RecordSetter exposing (s_annotations, s_index, s_labelOffset, s_name, s_network, s_txs)
 import Set
 import Test exposing (Test, describe, test)
@@ -138,7 +137,7 @@ reopen : Model -> Result Json.Decode.Error ( Model, List Effect.Pathfinder.Effec
 reopen model =
     Encode.Pathfinder.encode model
         |> Update.Pathfinder.deserialize
-        |> Result.map (\d -> Update.Pathfinder.fromDeserialized Plugin.empty d emptyModel)
+        |> Result.map (\d -> Update.Pathfinder.fromDeserialized d emptyModel)
 
 
 expectStableFile : Model -> Expect.Expectation

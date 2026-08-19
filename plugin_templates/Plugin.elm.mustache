@@ -2,6 +2,7 @@ module Plugin exposing (..)
 
 {{#plugins}}
 import {{package}}
+import {{package}}.Interface.View
 {{/plugins}}
 import Plugin.Effects
 import Plugin.Update
@@ -28,24 +29,3 @@ empty =
     }
 
 {{/plugins}}
-
-
-effectsPlugins : Plugins -> Plugin.Effects.Plugins
-effectsPlugins plugins =
-    { {{#plugins}}{{name}} = Maybe.map .effects plugins.{{name}}
-    {{^last}}, {{/last}}{{/plugins}}
-    }
-
-
-updatePlugins : Plugins -> Plugin.Update.Plugins
-updatePlugins plugins =
-    { {{#plugins}}{{name}} = Maybe.map .update plugins.{{name}}
-    {{^last}}, {{/last}}{{/plugins}}
-    }
-
-
-viewPlugins : Plugins -> Plugin.View.Plugins
-viewPlugins plugins =
-    { {{#plugins}}{{name}} = Maybe.map .view plugins.{{name}}
-    {{^last}}, {{/last}}{{/plugins}}
-    }
