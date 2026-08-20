@@ -144,6 +144,18 @@ run `rm -rf elm-stuff && make build`. `elm-stuff` caches compiled dependencies b
 *version*, not content, so swapping a package's source underneath it does not invalidate
 the cache. Changing the active plugin set rewrites `elm.json`, which is the usual trigger.
 
+If the error comes back **every time you save**, the cause is a second compiler: the VS
+Code Elm extension type-checks with the default `ELM_HOME`, and `~/.elm` holds unpatched
+copies of all four forks at the same version numbers as the patched clones. Its compile
+poisons the shared `elm-stuff`; yours then reuses it. Neither guard catches this — one
+inspects the clones, the other the compiled output. Add
+
+```json
+"elmLS.disableElmLSDiagnostics": true
+```
+
+to `.vscode/settings.json` (gitignored, so per-developer) and `rm -rf elm-stuff` once.
+
 ## Translations
 
 Translations are YAML files in `lang/`, plus per-plugin files in `plugins/*/lang/`.
