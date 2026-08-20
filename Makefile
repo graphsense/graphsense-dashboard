@@ -71,6 +71,12 @@ export ELM_HOME=$(PWD)/elm_packages
 # The compiler keeps its packages in $(ELM_HOME)/<compiler version>/packages.
 # Derive the version from the installed binary: a hardcoded path silently drops
 # the patched packages of virtual-dom-fix on every compiler upgrade.
+# Absolute paths to the toolchain. `npx` resolves from the *current* directory, so
+# lint-plugins -- which runs from inside a plugin -- would look in that plugin's
+# node_modules and, finding nothing, try to fetch elm-review from the network.
+ELM_BIN=$(CURDIR)/node_modules/.bin/elm
+ELM_REVIEW_BIN=$(CURDIR)/node_modules/.bin/elm-review
+
 ELM_VERSION=$(shell npx elm --version)
 ELM_PACKAGES_DIR=$(ELM_HOME)/$(ELM_VERSION)/packages
 
@@ -323,12 +329,23 @@ require-all-plugins:
 	fi
 	@echo "all $(words $(PLUGINS)) registered plugins present"
 
+# Runs each plugin's own elm-review config. A plugin's sources are invisible to the
+# core `lint` -- they are not in core's review project -- so without this nothing ever
+# checks them.
+#
+# Three things this has to get right, all of which it previously got wrong:
+#   * a subshell, not `cd X; ...; cd -`, so a failure cannot leave the loop elsewhere;
+#   * `|| exit 1`, or the recipe's status is `cd -`'s and findings never fail anything;
+#   * `--compiler`, because elm-review shells out to `elm` by name and the plugin
+#     directory has no node_modules/.bin on PATH.
+# A plugin's review/elm.json must also declare the compiler version this project uses;
+# elm-review refuses to compile a configuration whose elm.json names a different one.
 lint-plugins:
 	@for p in $(PLUGINS); do \
 		if [ -e $(PLUGINS_DIR)/$$p/elm.json -a -e $(PLUGINS_DIR)/$$p/review ]; then \
 			echo "Linting $$p ..."; \
-			cd plugins/$$p; npx elm-review; cd -; \
-		fi \
+			( cd $(PLUGINS_DIR)/$$p && $(ELM_REVIEW_BIN) --compiler $(ELM_BIN) ) || exit 1; \
+		fi; \
 	done
 
 $(CODEGEN_CONFIG):
