@@ -3,6 +3,7 @@ module Support.MainApp exposing
     , expectEffect
     , html
     , initAt
+    , initAtWithStats
     , model
     , step
     , steps
@@ -37,6 +38,7 @@ not on the boot request that asked for it.
 
 -}
 
+import Api.Data
 import Browser
 import Dict
 import Expect exposing (Expectation)
@@ -138,12 +140,27 @@ model, then hand the URL to `Update.updateByUrl`.
 -}
 initAt : String -> App
 initAt path =
+    initAtWithStats RemoteData.NotAsked path
+
+
+{-| The app opened at `path` with the statistics already in a given state.
+
+`initAt` leaves them `NotAsked`, which is the boot state. Anything that behaves
+differently once the statistics have settled -- URL parsing does, because
+`Route.Pathfinder.parser` resolves network segments against them -- needs this instead.
+
+-}
+initAtWithStats : RemoteData.WebData Api.Data.Stats -> String -> App
+initAtWithStats stats path =
     let
         url =
             toUrl path
 
+        start =
+            initialModel url
+
         ( routed, produced ) =
-            Update.updateByUrl Env.updateConfig url (initialModel url)
+            Update.updateByUrl Env.updateConfig url { start | stats = stats }
     in
     App { model_ = routed, effects_ = produced }
 

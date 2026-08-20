@@ -2186,11 +2186,38 @@ updateByUrl uc url model =
                     )
                 )
             )
-        |> Maybe.withDefault
-            ( model
-            , [ PostponeUpdateByUrlEffect url
-              ]
-            )
+        |> Maybe.withDefault (unparseableUrl url model)
+
+
+{-| `Route.parse` said no.
+
+At boot that is usually temporary rather than wrong: `Route.Pathfinder.parser` resolves
+the network segment against `c.networks`, which comes from `model.stats`, so a deep link
+like `/pathfinder/btc/address/...` cannot parse until the statistics response lands.
+Rescheduling a moment later is the fix for that case.
+
+Once the statistics have settled, though, a URL that does not parse never will, and
+rescheduling it turns into a 50ms busy loop that no user action escapes -- which is what
+a typo, or a link to a plugin namespace that has since been renamed, used to produce. So
+retry only while the answer can still change; after that stay on the current page and say
+so.
+
+-}
+unparseableUrl : Url -> Model key -> ( Model key, List Effect )
+unparseableUrl url model =
+    if RD.isLoading model.stats || RD.isNotAsked model.stats then
+        ( model, [ PostponeUpdateByUrlEffect url ] )
+
+    else
+        let
+            ( notifications, notificationEffects ) =
+                Notification.errorDefault "unknown url"
+                    |> Notification.map (s_variables [ url.path ])
+                    |> (\notification -> Notification.add notification model.notifications)
+        in
+        ( { model | notifications = notifications }
+        , List.map NotificationEffect notificationEffects
+        )
 
 
 updateRequestLimit : Dict String String -> UserModel -> UserModel

@@ -640,3 +640,4 @@ export-dialog-only-visible-inoutputs-help: Când este activat, CSV-ul conține d
 csv-note-capped: Tranzacție prea mare – au fost exportate doar fluxurile cu o adresă vizibilă,
   trunchiate la limita de export.
 csv-note-visible-only: Au fost exportate doar fluxurile cu o adresă vizibilă.
+unknown url: "URL necunoscut: {0}"
