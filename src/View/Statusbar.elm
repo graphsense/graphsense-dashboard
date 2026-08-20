@@ -14,7 +14,8 @@ import List.Extra
 import Model exposing (Msg(..))
 import Model.Statusbar exposing (..)
 import Tuple exposing (..)
-import Util.View exposing (firstToUpper, loadingSpinner, none)
+import Util.View exposing (firstToUpper, none)
+import Util.View.Loadingspinner as Loadingspinner
 import Version exposing (version)
 import View.Locale as Locale
 
@@ -89,7 +90,12 @@ message vc ( key, values, retryAttempt ) =
     div
         [ Css.log vc True |> css
         ]
-        [ loadingSpinner vc Css.loadingSpinner
+        [ Loadingspinner.html
+            [ css
+                [ CSS.padding (CSS.px 0)
+                , CSS.rem 0.3 |> CSS.paddingRight
+                ]
+            ]
         , (messageString vc key values ++ retrySuffix)
             |> text
             |> List.singleton

@@ -12,7 +12,8 @@ import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), UserModel)
 import Model.Locale as Locale
 import Plugin.View as Plugin
 import Time
-import Util.View exposing (loadingSpinner, none, switch)
+import Util.View exposing (none, switch)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Dialog as Dialog
 import View.Locale as Locale
 
@@ -58,7 +59,7 @@ hovercard vc appModel model =
         ++ (case model.auth of
                 Authorized auth ->
                     [ if auth.loggingOut then
-                        loadingSpinner vc Css.loadingSpinner
+                        Loadingspinner.html []
 
                       else
                         button
@@ -163,7 +164,7 @@ apiKeyForm vc loading model =
                 ]
                 []
             , if loading then
-                loadingSpinner vc Css.loadingSpinner
+                Loadingspinner.html []
 
               else
                 input

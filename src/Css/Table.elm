@@ -1,4 +1,4 @@
-module Css.Table exposing (Styles, loadingSpinner, row, styles, table)
+module Css.Table exposing (Styles, row, styles, table)
 
 import Config.View as View exposing (Config)
 import Css exposing (..)

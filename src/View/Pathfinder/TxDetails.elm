@@ -10,7 +10,6 @@ import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
-import Css.View
 import Dict
 import Html.Styled exposing (Html, div, map)
 import Html.Styled.Events exposing (preventDefaultOn, stopPropagationOn)
@@ -39,6 +38,7 @@ import Util.Css exposing (spread)
 import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.View exposing (copyIconPathfinder, copyIconPathfinderAbove, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, emptyCell, valuesToCell)
 import View.Pathfinder.InfiniteTable as InfiniteTable
@@ -137,7 +137,7 @@ account vc viewState id txExistsFn =
                     b |> f
 
                 Nothing ->
-                    Util.View.loadingSpinner vc Css.View.loadingSpinner
+                    Loadingspinner.html []
 
         -- Tron (and other non-eth account networks) show hashes without a 0x prefix, in line with Tronscan
         txHashPrefix =

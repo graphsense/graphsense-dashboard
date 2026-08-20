@@ -6,7 +6,6 @@ import Components.Tooltip as Tooltip
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth)
-import Css.View
 import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import Model exposing (Msg(..))
@@ -20,6 +19,7 @@ import Theme.Html.TagsComponents as TagsComponents
 import Util.Tooltip as Util
 import Util.TooltipType
 import Util.View exposing (copyIconPathfinder, none, onClickWithStop)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
 import View.Pathfinder.Table.TagsTable as TagsTable
 
@@ -185,7 +185,7 @@ view vc conf =
                             tagsInfiniteTable vc TagsListDialogClusterTableMsg table
 
                         Dialog.ClusterTagsLoading ->
-                            Util.View.loadingSpinner vc Css.View.loadingSpinner
+                            Loadingspinner.html []
 
                         Dialog.ClusterTagsNotLoaded ->
                             Html.Styled.text ""
@@ -211,7 +211,7 @@ tagsInfiniteTable : View.Config -> (InfiniteTable.Msg -> Msg) -> InfiniteTable.M
 tagsInfiniteTable vc tag tbl =
     if InfiniteTable.isEmpty tbl then
         if InfiniteTable.isLoading tbl then
-            Util.View.loadingSpinner vc Css.View.loadingSpinner
+            Loadingspinner.html []
 
         else
             Html.Styled.text ""

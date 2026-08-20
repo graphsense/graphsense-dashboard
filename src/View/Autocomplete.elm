@@ -6,7 +6,7 @@ import Css.Autocomplete as Css
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Util.View exposing (loadingSpinner)
+import Util.View.Loadingspinner as Loadingspinner
 
 
 type alias Config msg =
@@ -28,7 +28,14 @@ dropdown vc =
     dropdownStyled
         { frame = []
         , result = []
-        , loadingSpinner = loadingSpinner vc Css.loadingSpinner
+        , loadingSpinner =
+            Loadingspinner.html
+                [ css
+                    [ Css.position Css.absolute
+                    , Css.top Css.zero
+                    , Css.right Css.zero
+                    ]
+                ]
         }
         vc
 

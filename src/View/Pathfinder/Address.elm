@@ -24,7 +24,7 @@ import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View
 import RecordSetter as Rs
 import RemoteData
-import Svg.Styled as Svg exposing (Svg, g, image, text)
+import Svg.Styled as Svg exposing (Svg, g, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
 import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
 import Theme.Svg.GraphComponents as GraphComponents
@@ -34,6 +34,7 @@ import Util.Graph exposing (decodeCoords, translate)
 import Util.Tooltip
 import Util.TooltipType as TooltipType
 import Util.View exposing (none, onClickWithStop, testId, testKey, truncateLongIdentifierWithLengths)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
 
 
@@ -271,7 +272,7 @@ view vc pc searchHighlight address annotation =
                         none
 
                     else
-                        expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
+                        expandHandleLoadingSpinner address Incoming Icons.iconsNodeOpenLeftStateActiv_details
                             |> Maybe.withDefault
                                 (Icons.iconsNodeOpenLeftWithAttributes
                                     (Icons.iconsNodeOpenLeftAttributes
@@ -294,7 +295,7 @@ view vc pc searchHighlight address annotation =
                         none
 
                     else
-                        expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
+                        expandHandleLoadingSpinner address Outgoing Icons.iconsNodeOpenRightStateActiv_details
                             |> Maybe.withDefault
                                 (Icons.iconsNodeOpenRightWithAttributes
                                     (Icons.iconsNodeOpenRightAttributes
@@ -328,29 +329,27 @@ view vc pc searchHighlight address annotation =
         )
 
 
-expandHandleLoadingSpinner : View.Config -> Address -> Direction -> { x : Float, y : Float, width : Float, height : Float, renderedWidth : Float, renderedHeight : Float, strokeWidth : Float, styles : List Css.Style } -> Maybe (Svg Msg)
-expandHandleLoadingSpinner vc address direction details =
+expandHandleLoadingSpinner : Address -> Direction -> { x : Float, y : Float, width : Float, height : Float, renderedWidth : Float, renderedHeight : Float, strokeWidth : Float, styles : List Css.Style } -> Maybe (Svg Msg)
+expandHandleLoadingSpinner address direction details =
     if getTxs address direction == TxsLoading then
         let
             offset =
                 5
         in
-        image
+        g
             [ translate
                 (details.x + offset / 2)
                 (details.y + offset / 2)
                 |> Svg.transform
-            , details.width
-                - offset
-                |> String.fromFloat
-                |> Svg.width
-            , details.height
-                - offset
-                |> String.fromFloat
-                |> Svg.height
-            , Html.attribute "href" vc.theme.loadingSpinnerUrl
             ]
-            []
+            [ Loadingspinner.svg
+                (details.width
+                    - offset
+                )
+                (details.height
+                    - offset
+                )
+            ]
             |> Just
 
     else

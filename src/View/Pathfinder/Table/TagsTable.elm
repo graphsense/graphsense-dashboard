@@ -595,6 +595,6 @@ config vc tag =
             |> addHeaderAttributes titleLastModified [ css [ Css.textAlign Css.right ] ]
             |> flip (applyHeaderCustomizations styles vc) (customizations styles vc)
     , tag = tag
-    , loadingPlaceholderAbove = ViewInfiniteTable.loadingPlaceholderAbove vc
-    , loadingPlaceholderBelow = ViewInfiniteTable.loadingPlaceholderBelow vc
+    , loadingPlaceholderAbove = ViewInfiniteTable.loadingPlaceholderAbove
+    , loadingPlaceholderBelow = ViewInfiniteTable.loadingPlaceholderBelow
     }

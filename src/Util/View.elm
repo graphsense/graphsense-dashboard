@@ -1,4 +1,4 @@
-module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyableLongIdentifier, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, loadingSpinner, makeValuesList, noTextSelection, none, onClickWithStop, p, pointer, switch, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyableLongIdentifier, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, makeValuesList, noTextSelection, none, onClickWithStop, p, pointer, switch, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -12,8 +12,8 @@ import Hex
 import Hovercard
 import Html as BHtml
 import Html.Attributes
-import Html.Styled exposing (Attribute, Html, div, img, span, text)
-import Html.Styled.Attributes exposing (attribute, css, src, title)
+import Html.Styled exposing (Attribute, Html, div, span, text)
+import Html.Styled.Attributes exposing (attribute, css, title)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
 import List.Extra
@@ -81,15 +81,6 @@ toCssColor color =
         |> (\{ red, green, blue, alpha } ->
                 Css.rgba (red * 255 |> Basics.round) (green * 255 |> Basics.round) (blue * 255 |> Basics.round) alpha
            )
-
-
-loadingSpinner : View.Config -> (View.Config -> List Style) -> Html msg
-loadingSpinner vc css_ =
-    img
-        [ src vc.theme.loadingSpinnerUrl
-        , css_ vc |> css
-        ]
-        []
 
 
 firstToUpper : String -> String

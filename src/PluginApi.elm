@@ -68,6 +68,7 @@ import Util.TextDimensions
 import Util.ThemedSelectBox
 import Util.Tooltip
 import Util.View
+import Util.View.Loadingspinner
 import View.Autocomplete
 import View.Button
 import View.Controls
@@ -266,7 +267,6 @@ surface =
 
     -- Css.View
     , ref Css.View.link
-    , ref Css.View.loadingSpinner
 
     -- Effect.Api
     , ref Effect.Api.BulkGetAddressEntityEffect
@@ -397,12 +397,15 @@ surface =
     , ref Util.View.frame
     , ref Util.View.fullWidthCss
     , ref Util.View.inputFieldStyles
-    , ref Util.View.loadingSpinner
     , ref Util.View.none
     , ref Util.View.onClickWithStop
     , ref Util.View.pointer
     , ref Util.View.truncateLongIdentifier
     , ref Util.View.truncateLongIdentifierWithLengths
+
+    -- Util.View.Loadingspinner
+    , ref Util.View.Loadingspinner.html
+    , ref Util.View.Loadingspinner.svg
 
     -- View.Autocomplete
     , ref View.Autocomplete.dropdown

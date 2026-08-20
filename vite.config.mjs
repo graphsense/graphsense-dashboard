@@ -133,7 +133,7 @@ export default defineConfig(({ command }) => ({
   // the stack in Firefox ("InternalError: too much recursion",
   // https://github.com/elm/virtual-dom/issues/80), freezing the app. If that
   // bites you, disable it with ELM_DEBUGGER=false.
-  plugins: [elmPlugin({ debug: command === 'serve' && process.env.ELM_DEBUGGER !== 'false' }), elmStepperGuardPlugin(), elmSafeVirtualDomCheckPlugin(), base64Loader, envReplacePlugin({include: [/\.elm$/, /src\/main\.js$/], exclude: /node_modules/})],
+  plugins: [elmPlugin({ debug: command === 'serve' && process.env.ELM_DEBUGGER !== 'false' }), elmStepperGuardPlugin(), /*elmSafeVirtualDomCheckPlugin(),*/ base64Loader, envReplacePlugin({include: [/\.elm$/, /src\/main\.js$/], exclude: /node_modules/})],
   server: { 
     host: '0.0.0.0',
     port: 3000,

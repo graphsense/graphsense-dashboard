@@ -1,4 +1,4 @@
-module Css.View exposing (body, contents, copyIcon, footer, frame, heading2, hovercard, iconLink, input, link, listItem, loadingSpinner, longIdentifier, main_, navbar, overlay, paragraph, sectionBelowHeader, switchLabel, switchRoot)
+module Css.View exposing (body, contents, copyIcon, footer, frame, heading2, hovercard, iconLink, input, link, listItem, longIdentifier, main_, navbar, overlay, paragraph, sectionBelowHeader, switchLabel, switchRoot)
 
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -128,11 +128,6 @@ overlay placement vc =
         :: zIndex (int 500)
         :: placementStyles
         ++ vc.theme.overlay
-
-
-loadingSpinner : Config -> List Style
-loadingSpinner vc =
-    vc.theme.loadingSpinner
 
 
 footer : Config -> List Style

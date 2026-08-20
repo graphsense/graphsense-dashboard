@@ -14,6 +14,7 @@ import Svg.Styled.Attributes as Svg exposing (d, viewBox)
 import Util.Data as Data
 import Util.RemoteData exposing (webdata)
 import Util.View
+import Util.View.Loadingspinner as Loadingspinner
 import View.CurrencyMeta exposing (networks)
 import View.Locale as Locale
 
@@ -31,7 +32,7 @@ stats vc sts tokens =
             |> webdata
                 { onFailure = statsLoadFailure
                 , onNotAsked = text ""
-                , onLoading = statsLoading vc
+                , onLoading = statsLoading
                 , onSuccess = statsLoaded vc tokens
                 }
         ]
@@ -42,9 +43,9 @@ statsLoadFailure _ =
     text "error"
 
 
-statsLoading : Config -> Html msg
-statsLoading vc =
-    Util.View.loadingSpinner vc Css.loadingSpinner
+statsLoading : Html msg
+statsLoading =
+    Loadingspinner.html []
 
 
 statsLoaded : Config -> Dict String Api.Data.TokenConfigs -> Api.Data.Stats -> Html msg

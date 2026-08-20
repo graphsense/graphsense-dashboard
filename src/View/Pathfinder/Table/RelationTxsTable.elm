@@ -105,8 +105,8 @@ config styles vc { isA2b, addressId, isChecked, allChecked } =
         ]
     , customizations = cc
     , tag = TableMsg isA2b
-    , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
-    , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc
+    , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove
+    , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow
     }
 
 

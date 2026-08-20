@@ -44,7 +44,6 @@ type alias Theme =
     , link : Bool -> List Style
     , iconLink : Bool -> List Style
     , loadingSpinner : List Style
-    , loadingSpinnerUrl : String
     , userDefautImgUrl : String
     , overlay : List Style
     , popup : Bool -> List Style
@@ -104,7 +103,6 @@ default =
     , link = \_ -> []
     , iconLink = \_ -> []
     , loadingSpinner = []
-    , loadingSpinnerUrl = ""
     , userDefautImgUrl = ""
     , overlay = []
     , popup = \_ -> []

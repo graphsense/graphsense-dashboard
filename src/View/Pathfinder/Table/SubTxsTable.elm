@@ -85,6 +85,6 @@ config styles vc { selectedSubTx, isCheckedFn } =
                         |> List.singleton
                 )
     , tag = TableMsgSubTxTable
-    , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
-    , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc
+    , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove
+    , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow
     }

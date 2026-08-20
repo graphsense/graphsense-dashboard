@@ -757,7 +757,7 @@ filterHeader vc config (Internal model) =
                 config.exportCsv
                     |> Maybe.map
                         (\( _, exportCSVModel ) ->
-                            ExportCSV.icon vc exportCSVModel
+                            ExportCSV.icon exportCSVModel
                         )
                     |> Maybe.withDefault none
             }

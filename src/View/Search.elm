@@ -4,7 +4,6 @@ import Autocomplete
 import Autocomplete.Styled as Autocomplete
 import Config.View exposing (Config)
 import Css exposing (Style)
-import Css.Autocomplete
 import Css.Button
 import Css.Search as Css
 import FontAwesome
@@ -20,7 +19,8 @@ import String.Extra
 import Theme.Colors as TColor
 import Util exposing (removeLeading0x)
 import Util.Data as Data
-import Util.View exposing (loadingSpinner)
+import Util.View
+import Util.View.Loadingspinner as Loadingspinner
 import View.Autocomplete as Autocomplete
 import View.Locale as Locale
 
@@ -163,7 +163,14 @@ searchResult vc sc model =
         config1 =
             { frame = sc.dropdownFrame
             , result = sc.dropdownResult
-            , loadingSpinner = loadingSpinner vc Css.Autocomplete.loadingSpinner
+            , loadingSpinner =
+                Loadingspinner.html
+                    [ css
+                        [ Css.position Css.absolute
+                        , Css.top Css.zero
+                        , Css.right Css.zero
+                        ]
+                    ]
             }
 
         config2 =

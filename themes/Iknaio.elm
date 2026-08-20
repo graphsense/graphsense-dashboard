@@ -105,7 +105,7 @@ theme : Theme
 theme =
     Theme.default
         |> s_scaled scaled
-        |> s_loadingSpinnerUrl "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/loading.gif]"
+
         |> s_body
             (\lightmode ->
                 [ colorWithLightmode lightmode colors.brandText

@@ -10,7 +10,8 @@ import RecordSetter as Rs
 import Theme.Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsComponents as SettingsComponents
-import Util.View exposing (loadingSpinner, onClickWithStop, testId)
+import Util.View exposing (onClickWithStop, testId)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
 
 
@@ -91,14 +92,14 @@ view vc config =
         )
         (let
             ls =
-                loadingSpinner vc
-                    (\_ ->
+                Loadingspinner.html
+                    [ css
                         [ Css.width <| Css.px 22
                         , Css.position Css.absolute
                         , Css.top (Css.px 1)
                         , Css.left (Css.px 1)
                         ]
-                    )
+                    ]
                     |> List.singleton
                     |> div
                         [ css

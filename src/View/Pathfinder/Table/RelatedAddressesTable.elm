@@ -7,7 +7,6 @@ import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth)
 import Css.Table exposing (Styles)
-import Css.View
 import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (AssetIdentifier)
@@ -20,7 +19,8 @@ import Table
 import Theme.Colors as Colors
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Tag as Tag
-import Util.View exposing (copyIconPathfinder, loadingSpinner, truncateLongIdentifier)
+import Util.View exposing (copyIconPathfinder, truncateLongIdentifier)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Graph.Table exposing (htmlColumnWithSorter)
 import View.Locale as Locale
 import View.Pathfinder.InfiniteTable as InfiniteTable
@@ -128,7 +128,7 @@ config styles vc ratc _ =
                         withTagSummary withoutCluster
 
                     LoadingTags ->
-                        [ loadingSpinner vc Css.View.loadingSpinner
+                        [ Loadingspinner.html []
                         ]
 
                     HasExchangeTagOnly ->
@@ -150,6 +150,6 @@ config styles vc ratc _ =
             |> addHeaderAttributes totalReceivedColumn [ css [ Css.textAlign Css.right ] ]
             |> flip (applyHeaderCustomizations styles_ vc) (customizations vc)
     , tag = AddressDetails.RelatedAddressesTableSubTableMsg
-    , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
-    , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc
+    , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove
+    , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow
     }

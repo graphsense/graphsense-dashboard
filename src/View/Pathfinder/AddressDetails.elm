@@ -11,7 +11,6 @@ import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
-import Css.View
 import Dict exposing (Dict)
 import Html.Styled as Html exposing (Html, div, object, text)
 import Html.Styled.Attributes as HA
@@ -58,7 +57,8 @@ import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
 import Util.Tooltip
 import Util.TooltipType
-import Util.View exposing (HintPosition(..), copyIconPathfinderAbove, emptyCell, iconWithHint, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.View exposing (HintPosition(..), copyIconPathfinderAbove, emptyCell, iconWithHint, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
@@ -167,7 +167,7 @@ utxo pluginStates vc model id viewState address =
             , clusterInfoInstance =
                 cluster
                     |> Maybe.withDefault RemoteData.NotAsked
-                    |> RemoteData.unpack (\_ -> loadingSpinner vc Css.View.loadingSpinner)
+                    |> RemoteData.unpack (\_ -> Loadingspinner.html [])
                         (clusterInfoView vc viewState.isClusterDetailsOpen model.colors
                             >> Html.map (Pathfinder.AddressDetailsMsg id)
                         )
@@ -215,7 +215,7 @@ utxo pluginStates vc model id viewState address =
                 (viewState.address.data
                     |> RemoteData.map
                         (\_ -> Nothing)
-                    |> RemoteData.withDefault (loadingSpinner vc Css.View.loadingSpinner |> Just)
+                    |> RemoteData.withDefault (Loadingspinner.html [] |> Just)
                 )
          -- |> Rs.s_iconsBinanceL
          --     (Just sidePanelData.actorIconInstance)
@@ -462,7 +462,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                         Html.text "error"
 
                                     RemoteData.Loading ->
-                                        loadingSpinner vc Css.View.loadingSpinner
+                                        Loadingspinner.html []
 
                                     RemoteData.NotAsked ->
                                         none
@@ -493,7 +493,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                         Html.text "error"
 
                                     RemoteData.Loading ->
-                                        loadingSpinner vc Css.View.loadingSpinner
+                                        Loadingspinner.html []
 
                                     RemoteData.NotAsked ->
                                         none
@@ -1052,7 +1052,7 @@ account pluginStates vc model id viewState address =
                 (viewState.address.data
                     |> RemoteData.map
                         (\_ -> Nothing)
-                    |> RemoteData.withDefault (loadingSpinner vc Css.View.loadingSpinner |> Just)
+                    |> RemoteData.withDefault (Loadingspinner.html [] |> Just)
                 )
         )
         { pluginList = pluginList

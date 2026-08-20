@@ -13,7 +13,8 @@ import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
 import Tuple3
-import Util.View exposing (loadingSpinner, none)
+import Util.View exposing (none)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
 
 
@@ -60,7 +61,7 @@ table styles vc attributes tools config tbl =
              )
                 :: Table.view config tbl.state tbl.filtered
                 :: (if tbl.loading then
-                        [ loadingSpinner vc styles.loadingSpinner
+                        [ Loadingspinner.html [ css (styles.loadingSpinner vc) ]
                         ]
 
                     else if List.isEmpty tbl.data then

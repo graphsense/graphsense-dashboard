@@ -1,4 +1,4 @@
-module Css.Stats exposing (currency, currencyBackground, currencyBackgroundPath, currencyHeading, loadingSpinner, stats, statsBadge, statsBadgeContainer, statsTable, statsTableCellKey, statsTableCellValue, statsTableInnerWrapper, statsTableRow, statsTableWrapper)
+module Css.Stats exposing (currency, currencyBackground, currencyBackgroundPath, currencyHeading, stats, statsBadge, statsBadgeContainer, statsTable, statsTableCellKey, statsTableCellValue, statsTableInnerWrapper, statsTableRow, statsTableWrapper)
 
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -96,8 +96,3 @@ currencyBackgroundPath : Config -> List Style
 currencyBackgroundPath vc =
     fill currentColor
         :: vc.theme.stats.currencyBackgroundPath
-
-
-loadingSpinner : Config -> List Style
-loadingSpinner vc =
-    vc.theme.stats.loadingSpinner
