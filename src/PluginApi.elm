@@ -1,4 +1,4 @@
-module PluginApi exposing (ComponentsInfiniteTableConfig, ComponentsInfiniteTableModel, ComponentsInfiniteTableMsg, ComponentsInfiniteTableTableConfig, ComponentsPagedTableMsg, ComponentsTableFilter, ComponentsTableTable, ComponentsTooltipConfig, ComponentsTooltipModel, ComponentsTooltipMsg, ConfigUpdateConfig, ConfigViewConfig, CssTableStyles, EffectApiEffect, ModelAddressAddress, ModelCurrencyAssetIdentifier, ModelDialogPlacement, ModelEntityEntity, ModelGraphBrowserRow, ModelGraphCoordsCoords, ModelPathfinderAddressAddress, ModelPathfinderIdId, RoutePathfinderAddressHopType, RoutePathfinderPathHopType, UtilThemedSelectBoxModel, UtilThemedSelectBoxMsg, ViewPathfinderContextMenuItemContextMenuItem, surface)
+module PluginApi exposing (ComponentsInfiniteTableConfig, ComponentsInfiniteTableModel, ComponentsInfiniteTableMsg, ComponentsInfiniteTableTableConfig, ComponentsPagedTableMsg, ComponentsTableFilter, ComponentsTableTable, ComponentsTooltipConfig, ComponentsTooltipModel, ComponentsTooltipMsg, ConfigUpdateConfig, ConfigViewConfig, CssTableStyles, EffectApiEffect, ModelAddressAddress, ModelCurrencyAssetIdentifier, ModelDialogPlacement, ModelEntityEntity, ModelGraphCoordsCoords, ModelPathfinderAddressAddress, ModelPathfinderIdId, RoutePathfinderAddressHopType, RoutePathfinderPathHopType, UtilThemedSelectBoxModel, UtilThemedSelectBoxMsg, ViewPathfinderContextMenuItemContextMenuItem, surface)
 
 {-| The core API that the dashboard plugins depend on.
 
@@ -47,7 +47,6 @@ import Model.Currency
 import Model.Dialog
 import Model.Direction
 import Model.Entity
-import Model.Graph.Browser
 import Model.Graph.Coords
 import Model.Locale
 import Model.Notification
@@ -74,7 +73,6 @@ import View.Button
 import View.Controls
 import View.CurrencyMeta
 import View.Dialog
-import View.Graph.Browser
 import View.Graph.Table
 import View.Locale
 import View.Pathfinder.ContextMenuItem
@@ -159,10 +157,6 @@ type alias ModelDialogPlacement =
 
 type alias ModelEntityEntity =
     Model.Entity.Entity
-
-
-type alias ModelGraphBrowserRow a b c =
-    Model.Graph.Browser.Row a b c
 
 
 type alias ModelGraphCoordsCoords =
@@ -297,10 +291,6 @@ surface =
     -- Model.Direction
     , ref Model.Direction.Incoming
 
-    -- Model.Graph.Browser
-    , ref Model.Graph.Browser.Row
-    , ref Model.Graph.Browser.Select
-
     -- Model.Locale
     , ref Model.Locale.getFiatValue
 
@@ -430,10 +420,6 @@ surface =
 
     -- View.Dialog
     , ref View.Dialog.part
-
-    -- View.Graph.Browser
-    , ref View.Graph.Browser.properties
-    , ref View.Graph.Browser.propertyBox
 
     -- View.Graph.Table
     , ref View.Graph.Table.customizations
