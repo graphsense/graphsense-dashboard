@@ -1,39 +1,27 @@
 module View.Landingpage exposing (view)
 
 import Config.View as View
-import Css
-import Css.Landingpage as CssLanding
-import Css.View
-import FontAwesome
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (..)
-import Json.Decode
+import Css exposing (hover)
+import Css.Transitions exposing (transition)
+import Html.Styled exposing (Html, div)
+import Html.Styled.Attributes exposing (autofocus, css)
+import Html.Styled.Events exposing (onClick)
 import Model exposing (Model, Msg(..))
 import Model.Search
 import Msg.Pathfinder as Pathfinder
 import RecordSetter as Rs
 import Theme.Colors as Colors
+import Theme.Html.Buttons as Buttons
+import Theme.Html.Landingpage as Landingpage
 import Theme.Html.SettingsComponents as Sc
-import Util.View
-import Util.View.Rule exposing (rule)
+import Util.View exposing (pointer)
+import View.Button as Button
 import View.Locale as Locale
 import View.Search
 
 
 
 --import Css exposing (marginRight)
-
-
-frame : View.Config -> List (Html Msg) -> Html Msg
-frame vc =
-    div
-        [ CssLanding.frame vc |> css
-        ]
-        >> List.singleton
-        >> div
-            [ CssLanding.root vc |> css
-            ]
 
 
 searchBoxView : View.Config -> Model.Search.Model -> Html Msg
@@ -98,62 +86,50 @@ searchBoxView vc model =
 
 view : View.Config -> Model key -> Html Msg
 view vc model =
-    frame vc
-        [ h2
-            [ Css.View.heading2 vc |> css
-            ]
-            [ Locale.text vc.locale "Landingpage-start-new"
-            ]
-        , searchBoxView vc model.search
-            |> List.singleton
-            |> div
-                [ CssLanding.searchRoot vc |> css
+    Landingpage.startInvestigationWithInstances
+        (Landingpage.startInvestigationAttributes
+            |> Rs.s_openGsFileFrame
+                [ onClick (PathfinderMsg Pathfinder.UserClickedOpenGraph)
+                , pointer
+                , css
+                    [ hover [ Css.property "background-color" Colors.grey50 ]
+                    , transition [ Css.Transitions.backgroundColor 100 ]
+                    ]
                 ]
-        , [ ( "1Archive1n2C579dMsAu3iC6tWzuQJz8dN", "address" )
-          , ( "8c510d39be9458721bdde62f64b096812de23c0ebd37a4aff82b8abb6307beb6", "transaction" )
-
-          --   , ( "internet archive", "label" )
-          --   , ( "123", "block" )
-          ]
-            |> List.map
-                (\( str, name ) ->
-                    span
-                        [ Css.View.link vc |> css
-                        , ( UserClickedExampleSearch str, True )
-                            |> Json.Decode.succeed
-                            |> stopPropagationOn "click"
-                        ]
-                        [ name |> Locale.string vc.locale |> text
-                        ]
-                )
-            |> List.intersperse (text " / ")
-            |> (::) (Locale.string vc.locale "Landingpage-try-example" ++ ": " |> text)
-            |> div [ CssLanding.exampleLinkBox vc |> css ]
-        , rule
-            (if vc.lightmode then
-                vc.theme.landingpage.ruleColor.light
-
-             else
-                vc.theme.landingpage.ruleColor.dark
-            )
-            [ CssLanding.rule vc |> css
+        )
+        Landingpage.startInvestigationInstances
+        { examplesList =
+            [ ( "1Archive1n2C579dMsAu3iC6tWzuQJz8dN", "address" )
+            , ( "8c510d39be9458721bdde62f64b096812de23c0ebd37a4aff82b8abb6307beb6", "transaction" )
             ]
-            [ Locale.string vc.locale "or" |> text
-            ]
-        , div
-            [ CssLanding.loadBox vc |> css
-            , onClick (PathfinderMsg Pathfinder.UserClickedOpenGraph)
-            ]
-            [ div
-                [ CssLanding.loadBoxIcon vc |> css
-                ]
-                [ FontAwesome.icon FontAwesome.folderOpen
-                    |> Html.Styled.fromUnstyled
-                ]
-            , div
-                [ CssLanding.loadBoxText vc |> css
-                ]
-                [ Locale.string vc.locale "Landingpage-load-file" |> text
+                |> List.map
+                    (\( str, name ) ->
+                        Button.button vc
+                            (Button.defaultConfig
+                                |> Rs.s_size Buttons.ButtonSizeSmall
+                                |> Rs.s_onClick (Just <| UserClickedExampleSearch str)
+                                |> Rs.s_onClickWithStop True
+                                |> Rs.s_text (name |> Locale.string vc.locale)
+                                |> Rs.s_style Buttons.ButtonStyleTextGrey
+                            )
+                    )
+        }
+        { searchBar = { variant = searchBoxView vc model.search }
+        , root =
+            { title = Locale.string vc.locale "Landingpage-start-new"
+            , alternativesTitle = Locale.string vc.locale "or"
+            , examplesTitle = Locale.string vc.locale "Landingpage-try-example" ++ ":"
+            , openGsFileTitle = Locale.string vc.locale "Landingpage-load-file"
+            }
+        }
+        |> List.singleton
+        |> div
+            [ css
+                [ Css.width <| Css.pct 100
+                , Css.height <| Css.pct 100
+                , Css.displayFlex
+                , Css.justifyContent Css.center
+                , Css.alignItems Css.flexStart
+                , Css.paddingTop <| Css.px 200
                 ]
             ]
-        ]

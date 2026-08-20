@@ -3,13 +3,11 @@ module Theme.Theme exposing (Theme, default)
 import Color exposing (Color)
 import Css exposing (Style)
 import Theme.Autocomplete as Autocomplete exposing (Autocomplete)
-import Theme.Browser as Browser exposing (Browser)
 import Theme.Button as Button exposing (Button)
 import Theme.ContextMenu as ContextMenu exposing (ContextMenu)
 import Theme.Dialog as Dialog exposing (Dialog)
 import Theme.Graph as Graph exposing (Graph)
 import Theme.Hovercard as Hovercard exposing (Hovercard)
-import Theme.Landingpage as Landingpage exposing (Landingpage)
 import Theme.Search as Search exposing (Search)
 import Theme.Stats as Stats exposing (Stats)
 import Theme.Statusbar as Statusbar exposing (Statusbar)
@@ -52,8 +50,6 @@ type alias Theme =
     , autocomplete : Autocomplete
     , button : Button
     , graph : Graph
-    , landingpage : Landingpage
-    , browser : Browser
     , contextMenu : ContextMenu
     , table : Table
     , tool : List Style
@@ -108,7 +104,6 @@ default =
     , popup = \_ -> []
     , stats = Stats.default
     , search = Search.default
-    , landingpage = Landingpage.default
     , autocomplete = Autocomplete.default
     , button = Button.default
     , tool = []
@@ -118,7 +113,6 @@ default =
     , statusbar = Statusbar.default
     , footer = []
     , graph = Graph.default
-    , browser = Browser.default
     , contextMenu = ContextMenu.default
     , table = Table.default
     , buttonsRow = []

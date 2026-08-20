@@ -7,7 +7,6 @@ import Iknaio.ColorScheme exposing (..)
 import Model.Graph.Tool as Tool
 import RecordSetter exposing (..)
 import Theme.Autocomplete as Autocomplete
-import Theme.Browser as Browser
 import Theme.Button as Button
 import Theme.Colors
 import Theme.ColorsDark
@@ -15,7 +14,6 @@ import Theme.ContextMenu as ContextMenu
 import Theme.Dialog as Dialog
 import Theme.Graph as Graph
 import Theme.Hovercard as Hovercard
-import Theme.Landingpage as Landingpage
 import Theme.Search as Search
 import Theme.Stats as Stats
 import Theme.Statusbar as Statusbar
@@ -105,7 +103,6 @@ theme : Theme
 theme =
     Theme.default
         |> s_scaled scaled
-
         |> s_body
             (\lightmode ->
                 [ colorWithLightmode lightmode colors.brandText
@@ -383,75 +380,6 @@ theme =
                     , scaled 2 |> rem |> paddingTop
                     , scaled -1 |> rem |> marginLeft
                     ]
-            )
-        |> s_landingpage
-            (Landingpage.default
-                |> s_root
-                    [ displayFlex
-                    , width <| pct 100
-                    , height <| pct 100
-                    , flexDirection column
-                    , alignItems center
-                    , scaled 20 |> rem |> marginTop
-                    , fontFamilies fontFam
-                    ]
-                |> s_searchRoot
-                    [ paddingTop <| rem <| scaled 5
-                    ]
-                |> s_frame
-                    (\lightmode ->
-                        [ backgroundColorWithLightmode lightmode colors.white
-                        , displayFlex
-                        , alignItems center
-                        , flexDirection column
-                        , scaled 7 |> rem |> padding
-                        , boarderRadiusPathfinder2
-                        , shadowSm
-                        ]
-                    )
-                |> s_rule
-                    (\lightmode ->
-                        [ width <| pct 50
-                        , colorWithLightmode lightmode colors.grey
-                        , paddingTop <| rem <| scaled 8
-                        , paddingBottom <| rem <| scaled 5
-                        ]
-                    )
-                |> s_ruleColor colors.grey
-                |> s_loadBox
-                    (\lightmode ->
-                        [ scaled 4 |> rem |> padding
-                        , boarderRadiusPathfinder2
-                        , border zero
-                        , backgroundColorWithLightmode lightmode colors.greyLighter
-                        , hover
-                            [ backgroundColorWithLightmode lightmode colors.brandLighter
-                            ]
-                        , disabled
-                            [ colorWithLightmode lightmode colors.brandLight
-                            ]
-                        , displayFlex
-                        , flexDirection column
-                        , alignItems center
-                        , cursor pointer
-                        ]
-                    )
-                |> s_loadBoxIcon
-                    (\lightmode ->
-                        [ colorWithLightmode lightmode colors.brandDark
-                        , paddingBottom <| rem <| scaled 4
-                        , fontSize <| rem <| scaled 7
-                        ]
-                    )
-                |> s_loadBoxText
-                    (\_ ->
-                        [ textDecoration none
-                        ]
-                    )
-                |> s_exampleLinkBox
-                    (\_ ->
-                        [ paddingTop <| rem <| scaled 4 ]
-                    )
             )
         |> s_search
             (Search.default
@@ -1094,129 +1022,6 @@ theme =
                         ]
                     )
             )
-        |> s_browser
-            (Browser.default
-                |> s_propertyBoxTable
-                    [ letterSpacingWide
-                    ]
-                |> s_propertyBoxNote
-                    (\_ ->
-                        [ scaled 1 |> rem |> paddingLeft
-                        ]
-                    )
-                |> s_propertyBoxRow
-                    (\lightmode active ->
-                        hover
-                            [ backgroundColorWithLightmode lightmode colors.brandLightest
-                            ]
-                            :: (if active then
-                                    [ backgroundColorWithLightmode lightmode colors.brandLightest
-                                    ]
-
-                                else
-                                    []
-                               )
-                    )
-                |> s_propertyBoxKey
-                    [ fontBold
-                    , scaled 2 |> rem |> paddingRight
-                    , scaled 0.5 |> rem |> paddingBottom
-                    , scaled 0.5 |> rem |> paddingTop
-                    , whiteSpace noWrap
-                    ]
-                |> s_propertyBoxValue
-                    [ fontNormal
-                    ]
-                |> s_propertyBoxValueInner
-                    [ displayFlex
-                    , justifyContent spaceBetween
-                    , whiteSpace noWrap
-                    ]
-                |> s_frame
-                    (\lightmode visible ->
-                        let
-                            p =
-                                if visible then
-                                    0
-
-                                else
-                                    -120
-                        in
-                        [ backgroundColorWithLightmode lightmode colors.brandWhite
-                        , Css.Transitions.transition
-                            [ Css.Transitions.transform 200
-                            ]
-                        , displayFlex
-                        , scaled 2 |> rem |> padding
-                        , width <| calc (pct 100) minus (scaled 3 |> rem)
-                        , translateY (pct p) |> transform
-                        , shadowSm
-                        , minHeight <| px 30
-
-                        --, borderWidth (px 1)
-                        --, borderStyle solid
-                        --, colors.brandDark |> toCssColor |> borderColor
-                        ]
-                    )
-                |> s_propertyBoxRule
-                    [ borderWidth (px 0)
-                    , scaled 1 |> rem |> margin
-                    ]
-                |> s_propertyBoxOutgoingTxs
-                    (\lightmode ->
-                        [ colorWithLightmode lightmode colors.brandRed
-                        ]
-                    )
-                |> s_propertyBoxIncomingTxs
-                    (\lightmode ->
-                        [ colorWithLightmode lightmode colors.brandBase
-                        ]
-                    )
-                |> s_propertyBoxTableLink
-                    (\lightmode isActive ->
-                        [ colorWithLightmode lightmode
-                            (if isActive then
-                                colors.brandBase
-
-                             else
-                                colors.brandLight
-                            )
-                        , hover
-                            [ switchColor lightmode colors.brandBase |> toCssColor |> color
-                            ]
-                        , active
-                            [ switchColor lightmode colors.brandBase |> toCssColor |> color
-                            ]
-                        ]
-                    )
-                |> s_propertyBoxEntityId
-                    (\lightmode ->
-                        [ scaled 3 |> rem |> fontSize
-                        , scaled 1 |> rem |> paddingLeft
-                        , colors.greyDark
-                            |> colorWithLightmode lightmode
-                        ]
-                    )
-                |> s_loadingSpinner
-                    [ scaled 3.5 |> rem |> height
-                    , scaled 3.5 |> rem |> width
-                    ]
-                |> s_valueCell
-                    [ scaled 1 |> rem |> paddingLeft
-                    , scaled 1 |> rem |> paddingBottom
-                    , textAlign right
-                    , ex 30 |> width
-                    ]
-                |> s_tableSeparator
-                    (\lightmode ->
-                        [ borderLeftWidth (px 1)
-                        , borderStyle solid
-                        , switchColor lightmode colors.greyLightest |> toCssColor |> borderColor
-                        , scaled 1 |> rem |> paddingLeft
-                        , scaled 1 |> rem |> marginLeft
-                        ]
-                    )
-            )
         |> s_table
             (Table.default
                 |> s_sidebar
@@ -1494,9 +1299,11 @@ borderRadiusSm =
         (Tuple.first borderRadiusSmRaw)
         (Tuple.second borderRadiusSmRaw)
 
-boarderRadiusPathfinder2: Style
+
+boarderRadiusPathfinder2 : Style
 boarderRadiusPathfinder2 =
     property "border-radius" "5px"
+
 
 inputStyleRaw : Bool -> Maybe Float -> List ( String, String )
 inputStyleRaw lm len =
