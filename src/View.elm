@@ -17,8 +17,7 @@ import Route.Pathfinder as Pathfinder
 import Theme.Colors
 import Theme.ColorsDark
 import Theme.Html.Navbar as Nb
-import Util.Css
-import Util.View exposing (hovercard)
+import Util.View 
 import View.Dialog as Dialog
 import View.Header as Header
 import View.Locale as Locale
@@ -26,7 +25,6 @@ import View.Main as Main
 import View.Notification as Notification
 import View.Sidebar as Sidebar
 import View.Statusbar as Statusbar
-import View.User as User
 
 
 view :
@@ -103,10 +101,10 @@ body vc model =
             [ Statusbar.view vc model.statusbar
             ]
          ]
-            ++ hovercards vc model
             ++ overlay vc model
-            ++ [ Notification.view vc model.notifications ]
-            ++ Maybe.withDefault [] (Plugin.tooltip model.plugins vc)
+            ++ (Notification.view vc model.notifications 
+            :: Maybe.withDefault [] (Plugin.tooltip model.plugins vc)
+            )
         )
 
 
@@ -207,19 +205,6 @@ sidebar vc model =
         }
 
 
-hovercards : Config -> Model key -> List (Html Msg)
-hovercards vc model =
-    model.user.hovercard
-        |> Maybe.map
-            (\hc ->
-                User.hovercard vc model model.user
-                    |> List.map Html.Styled.toUnstyled
-                    |> hovercard { vc | size = Nothing } hc (Util.Css.zIndexMainValue + 1)
-                    |> List.singleton
-            )
-        |> Maybe.withDefault []
-
-
 overlay : Config -> Model key -> List (Html Msg)
 overlay vc model =
     let
@@ -231,19 +216,6 @@ overlay vc model =
                     ]
                 >> List.singleton
     in
-    case model.user.auth of
-        Unauthorized _ _ ->
-            model.user.hovercard
-                |> Maybe.map
-                    (\hc ->
-                        User.hovercard vc model model.user
-                            |> List.map Html.Styled.toUnstyled
-                            |> hovercard { vc | size = Nothing } hc (Util.Css.zIndexMainValue + 1)
-                    )
-                |> Maybe.map (ov Dialog.Centered NoOp)
-                |> Maybe.withDefault []
-
-        _ ->
             case model.dialog of
                 Just dialog ->
                     Dialog.view model.plugins vc dialog
