@@ -891,7 +891,13 @@ accountValueRundown vc conf =
                 |> Rs.s_sidePanelRowChevronOpen [ fw ]
                 |> Rs.s_iconGroup fixedleftAttr
                 |> Rs.s_tokensList
-                    [ css [ Css.overflowY Css.auto ] ]
+                    -- the generated component caps the list at 100px (~5 rows),
+                    -- silently clipping the fiat-less tokens that sort last
+                    [ css
+                        [ Css.overflowY Css.auto
+                        , Css.maxHeight Css.none |> Css.important
+                        ]
+                    ]
             )
             { tokensList =
                 (nativeValue
