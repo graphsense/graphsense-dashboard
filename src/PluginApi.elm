@@ -33,11 +33,8 @@ import Components.Table
 import Components.Tooltip
 import Config.Update
 import Config.View
-import Css.Autocomplete
-import Css.Button
 import Css.Pathfinder
 import Css.Search
-import Css.Statusbar
 import Css.Table
 import Css.View
 import Effect.Api
@@ -237,24 +234,12 @@ surface =
     -- Config.View
     , ref Config.View.getConceptName
 
-    -- Css.Autocomplete
-    , ref Css.Autocomplete.loadingSpinner
-
-    -- Css.Button
-    , ref Css.Button.button
-    , ref Css.Button.danger
-    , ref Css.Button.iconButton
-    , ref Css.Button.primary
-
     -- Css.Pathfinder
     , ref Css.Pathfinder.fullWidth
 
     -- Css.Search
     , ref Css.Search.resultLine
     , ref Css.Search.resultLineHighlighted
-
-    -- Css.Statusbar
-    , ref Css.Statusbar.loadingSpinner
 
     -- Css.Table
     , ref Css.Table.styles

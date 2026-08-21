@@ -1,37 +1,7 @@
-module Css.Search exposing (button, form, frame, resultGroup, resultGroupList, resultGroupTitle, resultLine, resultLineHighlighted, resultLineIcon)
+module Css.Search exposing (resultLine, resultLineHighlighted)
 
 import Config.View exposing (Config)
 import Css exposing (..)
-
-
-form : Config -> Bool -> List Style
-form vc flex =
-    if flex then
-        displayFlex
-            :: vc.theme.search.form
-
-    else
-        vc.theme.search.form
-
-
-frame : Config -> List Style
-frame vc =
-    vc.theme.search.frame
-
-
-resultGroup : Config -> List Style
-resultGroup vc =
-    vc.theme.search.resultGroup
-
-
-resultGroupTitle : Config -> List Style
-resultGroupTitle vc =
-    vc.theme.search.resultGroupTitle
-
-
-resultGroupList : Config -> List Style
-resultGroupList vc =
-    vc.theme.search.resultGroupList
 
 
 resultLine : Config -> List Style
@@ -44,13 +14,3 @@ resultLine vc =
 resultLineHighlighted : Config -> List Style
 resultLineHighlighted vc =
     vc.theme.search.resultLineHighlighted vc.lightmode
-
-
-resultLineIcon : Config -> List Style
-resultLineIcon vc =
-    vc.theme.search.resultLineIcon
-
-
-button : Config -> List Style
-button vc =
-    vc.theme.search.button vc.lightmode

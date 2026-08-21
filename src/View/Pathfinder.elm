@@ -692,39 +692,6 @@ searchBoxView vc _ model =
                 (View.Search.searchWithMoreCss
                     vc
                     (View.Search.default
-                        |> Rs.s_css
-                            (\_ ->
-                                Css.outline Css.none
-                                    :: Css.pseudoClass "placeholder" Sc.searchBarFieldStatePlaceholderSearchInputField_details.styles
-                                    :: (Css.width <| Css.pct 100)
-                                    :: Sc.searchBarFieldStateTypingSearchInputField_details.styles
-                                    ++ Sc.searchBarFieldStateTypingSearchText_details.styles
-                            )
-                        |> Rs.s_formCss
-                            [ Css.flexGrow <| Css.num 1
-                            , Css.height Css.auto |> Css.important
-                            ]
-                        |> Rs.s_frameCss
-                            [ Css.height <| Css.pct 100
-                            , Css.marginRight Css.zero |> Css.important
-                            ]
-                        |> Rs.s_resultLine
-                            [ Css.property "background-color" Colors.white
-                            , Css.hover
-                                [ Css.property "background-color" Colors.greyBlue50
-                                    |> Css.important
-                                ]
-                            ]
-                        |> Rs.s_resultLineHighlighted
-                            [ Css.property "background-color" Colors.greyBlue50
-                            ]
-                        |> Rs.s_resultsAsLink True
-                        |> Rs.s_dropdownResult
-                            [ Css.property "background-color" Colors.white
-                            ]
-                        |> Rs.s_dropdownFrame
-                            [ Css.property "background-color" Colors.white
-                            ]
                         |> Rs.s_inputAttributes [ HA.autofocus True ]
                     )
                     model.search

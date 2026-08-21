@@ -1,15 +1,7 @@
-module Css.Autocomplete exposing (frame, loadingSpinner, result)
+module Css.Autocomplete exposing (result)
 
 import Config.View exposing (Config)
 import Css exposing (..)
-
-
-frame : Config -> List Style
-frame vc =
-    [ overflow visible
-    , position relative
-    ]
-        ++ vc.theme.autocomplete.frame
 
 
 result : Config -> List Style
@@ -18,9 +10,3 @@ result vc =
     , zIndex <| int 200
     ]
         ++ vc.theme.autocomplete.result vc.lightmode
-
-
-loadingSpinner : Config -> List Style
-loadingSpinner vc =
-    position absolute
-        :: vc.theme.autocomplete.loadingSpinner

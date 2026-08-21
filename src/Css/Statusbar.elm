@@ -1,4 +1,4 @@
-module Css.Statusbar exposing (close, loadingSpinner, log, logIcon, root)
+module Css.Statusbar exposing (close, log, logIcon, root)
 
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -7,11 +7,6 @@ import Css exposing (..)
 root : Config -> Bool -> List Style
 root vc visible =
     vc.theme.statusbar.root vc.lightmode visible
-
-
-loadingSpinner : Config -> List Style
-loadingSpinner vc =
-    vc.theme.statusbar.loadingSpinner
 
 
 log : Config -> Bool -> List Style

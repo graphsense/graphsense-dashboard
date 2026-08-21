@@ -8,7 +8,7 @@ import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
-import Model exposing (Auth(..), Model, Msg(..), NavbarSubMenuType(..), Page(..))
+import Model exposing (Model, Msg(..), NavbarSubMenuType(..), Page(..))
 import Model.Dialog as Dialog
 import Plugin.View as Plugin
 import RecordSetter as Rs
@@ -17,7 +17,7 @@ import Route.Pathfinder as Pathfinder
 import Theme.Colors
 import Theme.ColorsDark
 import Theme.Html.Navbar as Nb
-import Util.View 
+import Util.View
 import View.Dialog as Dialog
 import View.Header as Header
 import View.Locale as Locale
@@ -102,9 +102,9 @@ body vc model =
             ]
          ]
             ++ overlay vc model
-            ++ (Notification.view vc model.notifications 
-            :: Maybe.withDefault [] (Plugin.tooltip model.plugins vc)
-            )
+            ++ (Notification.view vc model.notifications
+                    :: Maybe.withDefault [] (Plugin.tooltip model.plugins vc)
+               )
         )
 
 
@@ -216,10 +216,10 @@ overlay vc model =
                     ]
                 >> List.singleton
     in
-            case model.dialog of
-                Just dialog ->
-                    Dialog.view model.plugins vc dialog
-                        |> ov (Dialog.placement dialog) (Dialog.defaultMsg dialog)
+    case model.dialog of
+        Just dialog ->
+            Dialog.view model.plugins vc dialog
+                |> ov (Dialog.placement dialog) (Dialog.defaultMsg dialog)
 
-                Nothing ->
-                    []
+        Nothing ->
+            []

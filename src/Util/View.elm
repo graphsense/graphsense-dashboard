@@ -1,26 +1,24 @@
-module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyableLongIdentifier, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, makeValuesList, noTextSelection, none, onClickWithStop, p, pointer, switch, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, makeValuesList, noTextSelection, none, onClickWithStop, p, pointer, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Api.Data
 import Basics.Extra exposing (flip)
 import Color as BColor
 import Config.View as View
-import Css exposing (Color, Style, paddingLeft, px)
+import Css exposing (Color, Style)
 import Css.View as Css
 import Dict
-import FontAwesome
 import Hex
 import Hovercard
 import Html as BHtml
 import Html.Attributes
-import Html.Styled exposing (Attribute, Html, div, span, text)
-import Html.Styled.Attributes exposing (attribute, css, title)
+import Html.Styled exposing (Attribute, Html, div, span)
+import Html.Styled.Attributes exposing (attribute, css)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
 import List.Extra
 import Model.Currency as Currency exposing (AssetIdentifier)
 import Model.Locale as Locale
 import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_triangle)
-import Switch
 import Theme.Colors as Colors
 import Theme.Html.Fields as Fields
 import Theme.Html.GraphComponents
@@ -158,55 +156,6 @@ hovercard vc element zIndex =
         >> Html.Styled.fromUnstyled
 
 
-switch : View.Config -> List (Attribute msg) -> String -> Html msg
-switch =
-    switchInternal False
-
-
-switchInternal : Bool -> View.Config -> List (Attribute msg) -> String -> Html msg
-switchInternal showOnColor vc attrs title =
-    div
-        [ Css.switchRoot vc |> css
-        ]
-        [ Switch.switch 2 1 Css.rem
-            |> Switch.duration 200
-            |> Switch.onStyle
-                (if showOnColor then
-                    [ vc.theme.switchOnColor vc.lightmode
-                        |> toCssColor
-                        |> Css.backgroundColor
-                    ]
-
-                 else
-                    []
-                )
-            |> Switch.offStyle
-                [ (if vc.lightmode then
-                    Css.rgba 0 0 0 0.2
-
-                   else
-                    Css.rgba 255 255 255 0.2
-                  )
-                    |> Css.backgroundColor
-                ]
-            |> Switch.knobStyle
-                [ (if vc.lightmode then
-                    Css.rgb 0 0 0
-
-                   else
-                    Css.rgb 255 255 255
-                  )
-                    |> Css.backgroundColor
-                ]
-            |> Switch.attributes attrs
-            |> Switch.render
-        , title
-            |> text
-            |> List.singleton
-            |> span [ Css.switchLabel vc |> css ]
-        ]
-
-
 p : View.Config -> List (Attribute msg) -> List (Html msg) -> Html msg
 p vc attrs =
     Html.Styled.p
@@ -216,21 +165,6 @@ p vc attrs =
 addDot : String -> String
 addDot s =
     s ++ "."
-
-
-copyableLongIdentifier : View.Config -> List (Attribute msg) -> String -> Html msg
-copyableLongIdentifier vc attr identifier =
-    span
-        [ Css.longIdentifier vc |> css
-        ]
-        [ text (truncateLongIdentifier identifier)
-            |> List.singleton
-            |> span
-                (title identifier
-                    :: attr
-                )
-        , copyIcon vc identifier
-        ]
 
 
 type HintPosition
@@ -405,28 +339,6 @@ iconWithHint vc { position, hint, hide, icon } attr =
                 , instance = icon
                 }
             }
-        ]
-
-
-copyIcon : View.Config -> String -> Html msg
-copyIcon =
-    copyIconWithAttr ([ paddingLeft (px 3) ] |> css |> List.singleton)
-
-
-copyIconWithAttr : List (Attribute msg) -> View.Config -> String -> Html msg
-copyIconWithAttr attr vc value =
-    Html.Styled.a
-        ([ Css.copyIcon vc |> css
-         , title (Locale.string vc.locale "copy")
-         ]
-            ++ attr
-        )
-        [ Html.Styled.node "copy-icon"
-            [ Html.Styled.Attributes.attribute "data-value" value
-            ]
-            [ FontAwesome.icon FontAwesome.clone
-                |> Html.Styled.fromUnstyled
-            ]
         ]
 
 

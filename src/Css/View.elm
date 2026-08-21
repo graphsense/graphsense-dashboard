@@ -1,4 +1,4 @@
-module Css.View exposing (body, contents, copyIcon, footer, frame, heading2, hovercard, iconLink, input, link, listItem, longIdentifier, main_, navbar, overlay, paragraph, sectionBelowHeader, switchLabel, switchRoot)
+module Css.View exposing (body, contents, copyIcon, footer, frame, heading2, hovercard, link, listItem, main_, navbar, overlay, paragraph, sectionBelowHeader)
 
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -82,28 +82,10 @@ hovercard vc =
     (vc.theme.hovercard vc.lightmode).root
 
 
-inputRaw : Config -> List ( String, String )
-inputRaw vc =
-    vc.theme.inputRaw vc.lightmode Nothing
-
-
-input : Config -> List Style
-input vc =
-    inputRaw vc
-        |> List.map
-            (\( k, v ) -> property k v)
-
-
 link : Config -> List Style
 link vc =
     cursor pointer
         :: vc.theme.link vc.lightmode
-
-
-iconLink : Config -> List Style
-iconLink vc =
-    cursor pointer
-        :: vc.theme.iconLink vc.lightmode
 
 
 overlay : Placement -> Config -> List Style
@@ -139,25 +121,10 @@ footer vc =
         :: vc.theme.footer
 
 
-switchLabel : Config -> List Style
-switchLabel vc =
-    vc.theme.switchLabel
-
-
-switchRoot : Config -> List Style
-switchRoot vc =
-    vc.theme.switchRoot
-
-
 copyIcon : Config -> List Style
 copyIcon vc =
     cursor pointer
         :: vc.theme.copyIcon vc.lightmode
-
-
-longIdentifier : Config -> List Style
-longIdentifier vc =
-    display inlineBlock :: vc.theme.longIdentifier
 
 
 frame : Config -> List Style
