@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Exporting the address transaction table as CSV with the utxo-only filter set hung: those rows come from the `WorkflowNextUtxoTx` chain walk, whose responses go to the table rather than to the export, so the download never started and the spinner kept turning. The export now writes out the rows the table holds, since no server-side query reproduces that filter
+- Exporting a transaction table that no rows matched hung for the same reason from the other end: with no addresses to look up there was no tag request to answer, and nothing completed the export
 - The "show fiat and crypto" display setting was saved but never restored, so it reverted to off on every reload
 - The open-graph dialog did nothing: the removed `exportGraphics` port was still wired up in `main.js` and threw during startup, which silently killed every subscription registered after it — file open, plugin ports and settings persistence included
 - Search missed hits when the query was pasted from a PDF: letter pairs such as `ff` arrive as single ligature glyphs, which are now folded where the query enters the model, so the request, prefix filter, highlighting and Enter-navigation all agree

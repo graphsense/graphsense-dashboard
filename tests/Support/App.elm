@@ -5,6 +5,7 @@ module Support.App exposing
     , html
     , init
     , initAt
+    , internalMsgs
     , model
     , outMsgs
     , respond
@@ -167,6 +168,28 @@ batched effects.
 apiEffects : App -> List (Effect.Api.Effect Msg)
 apiEffects (App app) =
     List.concatMap fromEffect app.effects_
+
+
+{-| Every message the last step asked the shell to feed straight back in, as
+`Effect.elm` does for `InternalEffect`. Pair with `steps` to continue a flow that
+loops through the update function without touching the network.
+-}
+internalMsgs : App -> List Msg
+internalMsgs (App app) =
+    List.concatMap internalFromEffect app.effects_
+
+
+internalFromEffect : Effect -> List Msg
+internalFromEffect eff =
+    case eff of
+        InternalEffect msg ->
+            [ msg ]
+
+        BatchEffect batched ->
+            List.concatMap internalFromEffect batched
+
+        _ ->
+            []
 
 
 fromEffect : Effect -> List (Effect.Api.Effect Msg)
