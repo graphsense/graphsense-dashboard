@@ -4394,10 +4394,14 @@ updateByRoute_ plugins uc route model =
         Route.Root ->
             unselect model
 
+        -- deep-link identifiers are normalized like every other entry path
+        -- (lowercase hex on EVM networks): nodes are keyed by the API's
+        -- lowercased ids, so a checksummed address in the URL would load the
+        -- node but never select it (panel stays closed)
         Route.Network network (Route.Address a _) ->
             let
                 id =
-                    Id.init network a
+                    Id.init network (Data.normalizeIdentifier network a)
             in
             { model | network = Network.clearSelection model.network }
                 |> loadAddressWithPosition plugins True viewportCenter id
@@ -4406,7 +4410,7 @@ updateByRoute_ plugins uc route model =
         Route.Network network (Route.Tx a) ->
             let
                 id =
-                    Id.init network a
+                    Id.init network (Data.normalizeIdentifier network a)
             in
             { model | network = Network.clearSelection model.network }
                 |> loadTxWithPosition viewportCenter True True plugins id
@@ -4415,10 +4419,10 @@ updateByRoute_ plugins uc route model =
         Route.Network network (Route.Relation a b) ->
             let
                 aId =
-                    Id.init network a
+                    Id.init network (Data.normalizeIdentifier network a)
 
                 bId =
-                    Id.init network b
+                    Id.init network (Data.normalizeIdentifier network b)
 
                 edgeId =
                     AggEdge.initId aId bId
