@@ -7,12 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- A `.gs` file can be opened by dragging it onto the load box on the landing page. The box grows while a file hovers over it, and the drop runs through the same validation and import path as the toolbar's open button, so a legacy pf1 file still gets the retired notice rather than a decode error. Dropping a file anywhere else on the page no longer makes the browser navigate away from the app
+- Middle-clicking the logo opens the start page in a new tab; a plain click still navigates in place
+- Plugins can set the browser page title per route, through a new `pageTitle` hook on the view interface
+- Regression coverage for the parts of the app that are reachable without a browser — routes, `.gs` serialization, i18n, the generated API client, and Pathfinder scenarios driven through the real update and view. Fixtures come from the response examples in the OpenAPI spec, so the suite needs no API key and no network
 - The settings page shows the username above the expiration date, taken from the `username` field of the user endpoint's response. The row is left out when that field is absent or blank, so nothing changes against a backend that does not send it
 - A browser test layer (`make e2e`, Playwright) covering what `Update`/`View` cannot reach: that the shipped bundle boots without console errors or uncaught exceptions, that the elm-safe-virtual-dom patches are actually present in the build, and that the ports work end to end — saving a `.gs` file and reading it back, the Ctrl/Cmd+S chord the browser competes for, and settings surviving a reload via localStorage. All backend requests are answered by fixtures matched on path, so the suite needs no API key and cannot reach a real instance
 - The production build now fails when it would ship without the elm-safe-virtual-dom patches, which previously produced runtime DOM crashes that no check caught: the existing guard inspects the patched package clones, not the compiled output
 
 ### Changed
 
+- Plugins are discovered from whatever is checked out in `plugins/` instead of being registered by hand in `config/Config.elm`, which no longer mentions them at all. Core calls each plugin's hooks directly rather than through a record of functions threaded through the update loop
 - Production builds minify with rolldown's oxc minifier (vite 8's default) instead of terser, cutting minification from 16.5s to 4.1s per bundle. Shipped size is unchanged in practice: 5.7% smaller uncompressed, within 1.6% gzipped
 - Dead-code detection (unused exports, type constructors and constructor arguments) now runs in CI, and about 3,400 lines of already-unreachable code are gone: pf1 leftovers, 16 modules nothing imported, and four features whose messages nothing could send. Detection was previously impossible to run reliably because plugins live in separate repositories and are not always checked out, so a core function only a plugin used looked dead; `src/PluginApi.elm` now records that surface
 
@@ -22,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- A URL that could never parse — a typo, or a link into a plugin namespace that has since been renamed — put the app into a 50ms busy loop that no user action escaped. Such URLs are still retried while the statistics response is outstanding, since a deep link cannot resolve its network segment before then, but once that has settled the app stays on the current page and reports the unknown URL
 - Exporting the address transaction table as CSV with the utxo-only filter set hung: those rows come from the `WorkflowNextUtxoTx` chain walk, whose responses go to the table rather than to the export, so the download never started and the spinner kept turning. The export now writes out the rows the table holds, since no server-side query reproduces that filter
 - Exporting a transaction table that no rows matched hung for the same reason from the other end: with no addresses to look up there was no tag request to answer, and nothing completed the export
 - The "show fiat and crypto" display setting was saved but never restored, so it reverted to off on every reload
