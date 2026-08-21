@@ -27,7 +27,6 @@ init : Maybe TransactionFilter.Settings -> Address -> AddressDetails.Model
 init txsFilter address =
     { neighborsTableOpen = False
     , transactionsTableOpen = False
-    , tokenBalancesOpen = False
     , txs = RemoteData.NotAsked
     , neighborsOutgoing = RemoteData.NotAsked
     , neighborsIncoming = RemoteData.NotAsked
@@ -44,6 +43,5 @@ init txsFilter address =
     , incomingNeighborsTableOpen = False
     , copyIconChevronOpen = False
     , isClusterDetailsOpen = False
-    , displayAllTagsInDetails = False
     , txsFilter = txsFilter
     }

@@ -1,4 +1,4 @@
-module View.Pathfinder.Legend exposing (ItemType, legendItem, legendView)
+module View.Pathfinder.Legend exposing (ItemType, legendView)
 
 import Config.View as View
 import Css
@@ -6,7 +6,7 @@ import Html.Styled exposing (Html)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Model exposing (Msg)
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View as Plugin
 import RecordSetter as Rs
 import Theme.Html.Dialogs
 import Theme.Html.GraphComponents as GraphComponents
@@ -50,11 +50,11 @@ legendItem vc itemt { description, icon, label } =
                 data
 
 
-legendView : Plugins -> View.Config -> Msg -> Html Msg
-legendView plugins vc closeMsg =
+legendView : View.Config -> Msg -> Html Msg
+legendView vc closeMsg =
     let
         pluginLegendIconItems =
-            Plugin.getLegendIconItems plugins vc |> List.map (legendItem vc IconItem)
+            Plugin.getLegendIconItems vc |> List.map (legendItem vc IconItem)
     in
     Theme.Html.Dialogs.dialogLegendWithAttributes
         (Theme.Html.Dialogs.dialogLegendAttributes

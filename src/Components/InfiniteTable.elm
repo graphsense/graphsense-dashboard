@@ -9,18 +9,14 @@ module Components.InfiniteTable exposing
     , config
     , getCurrentData
     , getPage
-    , getPageSize
     , getTable
     , gotoFirstPage
-    , infiniteScroll
     , init
     , isEmpty
     , isLoading
     , isScrolling
     , loadFirstPage
     , removeItem
-    , reset
-    , resetCurrent
     , setCountable
     , setData
     , setForce
@@ -548,11 +544,6 @@ updateTable : (Table d -> Table d) -> Model nextPage d -> Model nextPage d
 updateTable upd (Model model) =
     { model | table = upd model.table }
         |> Model
-
-
-getPageSize : Model nextPage d -> Int
-getPageSize (Model model) =
-    model.pagesize
 
 
 getPage : Model nextPage d -> List d

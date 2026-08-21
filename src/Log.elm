@@ -1,14 +1,8 @@
-module Log exposing (log, log2, truncate)
+module Log exposing (log, truncate)
 
 
 log : String -> a -> a
 log str a =
-    --Debug.log str a
-    a
-
-
-log2 : String -> a -> a
-log2 str a =
     --Debug.log str a
     a
 

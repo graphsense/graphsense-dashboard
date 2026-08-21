@@ -1,4 +1,4 @@
-module Util.EventualMessages exposing (EventualMessages, addMessage, dispatchMessages, heartBeat, init, setMaxAge, setMillisecondsPerEpoch)
+module Util.EventualMessages exposing (EventualMessages, addMessage, dispatchMessages, heartBeat, init)
 
 import Process
 import Task
@@ -33,16 +33,6 @@ init conditionChecker heartBeatOutput =
     , heartBeatOutput = heartBeatOutput
     }
         |> Internal
-
-
-setMillisecondsPerEpoch : Int -> EventualMessages c m o -> EventualMessages c m o
-setMillisecondsPerEpoch newMillisecondsPerEpoch (Internal model) =
-    { model | millisecondsPerEpoch = newMillisecondsPerEpoch } |> Internal
-
-
-setMaxAge : Int -> EventualMessages c m o -> EventualMessages c m o
-setMaxAge newMaxAge (Internal model) =
-    { model | maxAge = newMaxAge } |> Internal
 
 
 addMessage : c -> o -> EventualMessages c m o -> ( EventualMessages c m o, Maybe (Cmd o) )

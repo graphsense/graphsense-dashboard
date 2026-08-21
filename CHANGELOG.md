@@ -3,7 +3,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [26.07.3] - Unreleased
+## [26.08.0] - Unreleased
+
+### Added
+
+- The settings page shows the username above the expiration date, taken from the `username` field of the user endpoint's response. The row is left out when that field is absent or blank, so nothing changes against a backend that does not send it
+- A browser test layer (`make e2e`, Playwright) covering what `Update`/`View` cannot reach: that the shipped bundle boots without console errors or uncaught exceptions, that the elm-safe-virtual-dom patches are actually present in the build, and that the ports work end to end — saving a `.gs` file and reading it back, the Ctrl/Cmd+S chord the browser competes for, and settings surviving a reload via localStorage. All backend requests are answered by fixtures matched on path, so the suite needs no API key and cannot reach a real instance
+- The production build now fails when it would ship without the elm-safe-virtual-dom patches, which previously produced runtime DOM crashes that no check caught: the existing guard inspects the patched package clones, not the compiled output
+
+### Changed
+
+- Production builds minify with rolldown's oxc minifier (vite 8's default) instead of terser, cutting minification from 16.5s to 4.1s per bundle. Shipped size is unchanged in practice: 5.7% smaller uncompressed, within 1.6% gzipped
+- Dead-code detection (unused exports, type constructors and constructor arguments) now runs in CI, and about 3,400 lines of already-unreachable code are gone: pf1 leftovers, 16 modules nothing imported, and four features whose messages nothing could send. Detection was previously impossible to run reliably because plugins live in separate repositories and are not always checked out, so a core function only a plugin used looked dead; `src/PluginApi.elm` now records that surface
+
+### Removed
+
+- Pathfinder 1.0, the legacy graph tool. Any `/graph/*` URL now lands on a dedicated "Pathfinder 1.0 retired" page linking to the current Pathfinder, and opening a legacy pf1 `.gs` file shows that notice instead of a generic decode error
+
+### Fixed
+
+- Exporting the address transaction table as CSV with the utxo-only filter set hung: those rows come from the `WorkflowNextUtxoTx` chain walk, whose responses go to the table rather than to the export, so the download never started and the spinner kept turning. The export now writes out the rows the table holds, since no server-side query reproduces that filter
+- Exporting a transaction table that no rows matched hung for the same reason from the other end: with no addresses to look up there was no tag request to answer, and nothing completed the export
+- The "show fiat and crypto" display setting was saved but never restored, so it reverted to off on every reload
+- The open-graph dialog did nothing: the removed `exportGraphics` port was still wired up in `main.js` and threw during startup, which silently killed every subscription registered after it — file open, plugin ports and settings persistence included
+- Search missed hits when the query was pasted from a PDF: letter pairs such as `ff` arrive as single ligature glyphs, which are now folded where the query enters the model, so the request, prefix filter, highlighting and Enter-navigation all agree
+- Long notification messages without an explicit title (e.g. the Case Connect no-writable-group warning) did not wrap and overflowed the toast — they now wrap within the notification
+- Opening a tag label or actor whose name contains `/`, `?` or `#` did not work: the name went into the URL unescaped, so a slash silently dropped the route and a question mark truncated the name. Labels and actor ids are now percent-encoded in the URL and decoded when it is read; links written before this still open
+
+## [26.07.3] - 2026-07-17
 
 ### Changed
 

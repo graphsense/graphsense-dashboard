@@ -1,26 +1,20 @@
 module View.Locale exposing
-    ( capitalized
-    , coin
+    ( coin
     , coinWithoutCode
     , currency
-    , currencyAsFloat
     , currencyWithoutCode
     , date
-    , durationPosix
-    , durationToString
     , durationToStringWithPrecision
     , fiat
     , fiatWithoutCode
     , httpErrorToString
     , int
-    , intWithFormat
     , intWithoutValueDetailFormatting
     , interpolated
     , interpolatedMarkdown
     , isFirstSecondOfTheDay
     , isLastSecondOfTheDay
     , makeTimestampFilename
-    , markdown
     , percentage
     , string
     , text
@@ -30,10 +24,8 @@ module View.Locale exposing
     , timestampDateUniform
     , timestampNormal
     , timestampTimeUniform
-    , timestampWithFormat
     , title
     , titleCase
-    , tokenCurrencies
     , valuesToFloat
     )
 
@@ -124,17 +116,6 @@ interpolated model key =
     String.Interpolate.interpolate (string model key)
 
 
-capitalized : Model -> String -> String
-capitalized model key =
-    let
-        translated =
-            string model key
-    in
-    String.left 1 translated
-        |> String.toUpper
-        |> flip (++) (String.dropLeft 1 translated)
-
-
 title : Model -> String -> String
 title model key =
     string model key
@@ -179,13 +160,6 @@ text model key =
         [ string model key
             |> Html.Styled.text
         ]
-
-
-markdown : Model -> String -> Html msg
-markdown model key =
-    string model key
-        |> Markdown.toHtml [ class "gs-markdown" ]
-        |> Html.Styled.fromUnstyled
 
 
 interpolatedMarkdown : Model -> String -> List String -> Html msg
@@ -353,13 +327,6 @@ sumFiats fiatCode =
         >> List.sum
 
 
-currencyAsFloat : Currency -> Model -> List ( AssetIdentifier, Api.Data.Values ) -> Float
-currencyAsFloat c model values =
-    currencyWithOptions { showCode = False, currency = c } model values
-        |> String.toFloat
-        |> Maybe.withDefault 0
-
-
 type alias CurrencyOptions =
     { showCode : Bool
     , currency : Currency
@@ -504,16 +471,6 @@ valuesToFloat c model asset values =
                 |> Maybe.map .value
 
 
-durationToString : Model -> Int -> String
-durationToString m dur =
-    durationToStringWithPrecision m 3 dur
-
-
-durationPosix : Model -> Int -> Posix -> Posix -> String
-durationPosix m prec start end =
-    durationToStringWithPrecision m prec (Time.posixToMillis end - Time.posixToMillis start)
-
-
 durationToStringWithPrecision : Model -> Int -> Int -> String
 durationToStringWithPrecision { unitToString } prec dur =
     Locale.Durations.durationToString
@@ -522,11 +479,6 @@ durationToStringWithPrecision { unitToString } prec dur =
         , separator = " "
         }
         dur
-
-
-tokenCurrencies : String -> Model -> List String
-tokenCurrencies network model =
-    getTokenTickers model network
 
 
 httpErrorToString : Model -> Http.Error -> String

@@ -21,7 +21,7 @@ import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.SearchBox exposing (Highlight(..), dimmedOpacity)
 import Msg.Pathfinder exposing (Msg(..))
-import Plugin.View exposing (Plugins)
+import Plugin.View
 import RecordSetter as Rs
 import RemoteData
 import Svg.Styled as Svg exposing (Svg, g, image, text)
@@ -33,12 +33,12 @@ import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Graph exposing (decodeCoords, translate)
 import Util.Tooltip
 import Util.TooltipType as TooltipType
-import Util.View exposing (none, onClickWithStop, truncateLongIdentifierWithLengths)
+import Util.View exposing (none, onClickWithStop, testId, testKey, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Highlight -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
-view plugins vc pc searchHighlight address annotation =
+view : View.Config -> Pathfinder.Config -> Highlight -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
+view vc pc searchHighlight address annotation =
     let
         data =
             RemoteData.toMaybe address.data
@@ -142,7 +142,7 @@ view plugins vc pc searchHighlight address annotation =
                     )
 
         pluginTagIcons =
-            Plugin.View.addressNodeTagIcon plugins address.plugins vc address
+            Plugin.View.addressNodeTagIcon address.plugins vc address
 
         offset =
             2
@@ -219,7 +219,9 @@ view plugins vc pc searchHighlight address annotation =
         (GraphComponents.addressNodeWithAttributes
             (GraphComponents.addressNodeAttributes
                 |> Rs.s_root
-                    ([ A.animate address.clock address.opacity
+                    ([ testId "gs-address-node"
+                     , testKey (Id.toString address.id)
+                     , A.animate address.clock address.opacity
                         |> String.fromFloat
                         |> opacity
                      , UserClickedAddress address.id |> onClickWithStop

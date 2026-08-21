@@ -14,10 +14,15 @@ make compile-quiet      # Compile the project (recommended for agents - token fr
 make compile            # Compile the project (verbose output)
 make serve              # Start dev server (localhost:3000) — runs prepare + codegen + vite
 make build              # Production build to ./dist
-make test               # Run Elm tests (elm-test-rs)
+make test               # Run Elm tests (elm-test-rs) + check-lang
+make check-lang         # Check translation files against each other and the code
+make e2e                # Browser tests (Playwright); make e2e-install once first
+make api-fixtures       # Regenerate tests/Fixtures/Api.elm (after every `make openapi`)
 make format             # Format Elm code (elm-format)
-make lint               # Lint with elm-review
-make lint-fix           # Auto-fix lint issues
+make lint               # Lint with elm-review (incl. dead code); notes if plugins are unlinked
+make lint-fix           # Auto-fix lint issues (needs every registered plugin linked)
+make plugin-api         # Add newly-used core symbols to src/PluginApi.elm
+make check-plugin-api   # Fail if a plugin uses core symbols not yet listed there
 
 # Setup (first time)
 npm install
@@ -144,6 +149,71 @@ Plugins hook into the app through `src/PluginInterface/` interfaces (View, Updat
 
 Plugin folders have their own Git repositories.
 
+### Plugins vs. dead-code detection
+
+`make lint` includes `NoUnused.Exports`, `NoUnused.CustomTypeConstructors` and
+`NoUnused.CustomTypeConstructorArgs`. Those rules ask "does anything use this?" — and
+core cannot answer it on its own, because plugins are the other half of the answer and
+they are not always there. `elm.json` is generated, gaining one `source-directories`
+entry per plugin registered in `config/Config.elm`, so elm-review only ever sees the
+plugins that happen to be present. CI registers none at all.
+
+**`src/PluginApi.elm` closes that gap.** It is generated, has no behaviour, and does
+nothing but *reference* every core symbol the plugins use (`ref Util.View.colorToHex`,
+plus `type alias` re-declarations for types, which cannot be passed as values). Because
+core references them, they count as used whatever is checked out. It doubles as the
+written plugin contract, and `tests/PluginApiTest.elm` imports it so `make test`
+type-checks the whole list — nothing in `src/` imports it, so without that test it would
+never reach the compiler.
+
+Two properties matter and are easy to get wrong:
+
+- **Detection is by what is on disk in `plugins/`**, not by what is registered in
+  `config/Config.elm`. The build is the other way round.
+- **`make plugin-api` only ever adds.** A plugin missing from your tree contributes
+  nothing and cannot shrink the list. Only `make plugin-api-prune` removes entries, and
+  it refuses unless every registered plugin is present.
+
+#### The workflow
+
+**Working on core without some plugins** — normal, and faster. Comment the plugin out in
+`config/Config.elm` **but keep the symlink in `plugins/`**. The build then ignores it
+(registration drives `elm.json`) while the dead-code tooling still sees it (detection
+reads the directory). You get the fast build and full coverage. Deleting the symlink
+costs you the coverage.
+
+**A plugin starts using a new core function** — `make check-plugin-api` fails with the
+missing entry; run `make plugin-api` and commit `src/PluginApi.elm`. It is a pre-commit
+hook, but note it can only fire on a machine where that plugin is linked.
+
+**Before deleting a core export that `make lint` reports as unused** — check the note
+`make lint` prints. With no plugins linked it cannot tell a plugin-only export from dead
+code, and it says so. Link the plugins and run `make plugin-api` to confirm.
+
+**Never run `tools/gen_plugin_api.py --prune` directly.** It bypasses the guard on
+`make plugin-api-prune`; on a partial tree it silently drops the absent plugins' symbols,
+after which CI reports them as dead and someone deletes them. This has already happened
+once.
+
+#### Known limits
+
+- Signature changes are **not** caught — `ref` accepts any type. Only deletion and
+  renaming are. The `adapt to new <X> interface` commits in the plugin repos are this
+  gap.
+- A plugin that is linked nowhere is invisible to every check. The only real fixes are a
+  check inside the plugin repos, or a CI job that checks out all of them.
+- Exempt from the dead-code rules: `src/PluginApi.elm` (its consumers are other repos),
+  `src/Util/Debug.elm` (hand-wired debugging helper), `src/Util/Nullable.elm` (core, but
+  imports `OpenApi.Common` from a plugin's generated api directory, so referencing it
+  breaks the build wherever that plugin is absent — it should move into that plugin), and
+  `themes/` (not covered by `make format`, so an auto-fix would reformat a
+  hand-maintained file).
+- The ~220 findings in `review/suppressed/` are a shrinking baseline, not a to-do list.
+  Clearing an entry is a deletion, so the note above applies.
+
+Plugin names must not appear in this repository — they are private. `theme/figma.json`
+still contains some, inherited from component names in the Figma file.
+
 ### API Layer
 
 - OpenAPI-generated client in `openapi/src/Api.elm` (regenerate with `make openapi`)
@@ -156,7 +226,112 @@ Translation files in `lang/*.yaml` (en, de, es, it). Plugin translations in `plu
 
 ## Testing
 
-The test suite is small but growing. When adding or changing logic — especially pure functions, data transformations, and parsing — write tests for it. Easy-to-test logic should always be tested. Run tests with `make test`.
+**Write tests for what you change.** The suite runs in about a second (`make test`, which also runs `make check-lang`), so there is no reason to skip it. Almost everything is testable without a browser — see the harnesses below before concluding that something can only be checked by clicking.
+
+### Every bug fix gets a regression test
+
+A fix without a test is a fix that can be undone by the next refactor without anyone noticing. The `### Fixed` entries in `CHANGELOG.md` are, read another way, a list of behaviours that had no test — and some of them broke more than once.
+
+So: **when you fix a bug, add the test in the same commit.** Pick the layer from the table below; it is usually a scenario, and usually about 30 lines.
+
+The test has to actually pin the fix. The cheap way to be sure is to check that it fails without it:
+
+1. write the test, run it, watch it fail for the *right reason*
+2. apply the fix, watch it pass
+3. or, if the fix came first, revert it temporarily and confirm the test goes red
+
+That last step catches assertions that pass for the wrong reason — a real risk here. In `Scenario/AppTest.elm` an early version asserted on the statusbar's `.messages`, which is never written on that path (`Update.Statusbar.add` appends to `.log`), so it would have passed against a completely broken handler. The route-encoding fix is the shape to aim for instead: removing *either* the encode or the decode half fails 8 of the 15 tests.
+
+When a fix is genuinely unreachable from a test — something in `main.js`, or a browser behaviour — say so in the commit message rather than quietly skipping it.
+
+### Which layer to use
+
+| For | Use | Example |
+|---|---|---|
+| Pure functions, decoders, encoders, routes, formatting | a plain `elm-test` module | `tests/Locale/FormattingTest.elm` |
+| A user flow through the Pathfinder | `Support.App` | `tests/Scenario/PathfinderTest.elm` |
+| Page routing, statusbar, notifications, dialogs, settings | `Support.MainApp` | `tests/Scenario/AppTest.elm` |
+| A response shape the API promises | `tests/Api/DecoderContractTest.elm` | |
+| Ports, downloads, the browser itself | Playwright, `e2e/` | `e2e/ports.spec.ts` |
+
+**Anything expressible in `elm-test` belongs there, not in `e2e/`.** The browser
+layer is slower, needs a build, and is the only layer that can be flaky. It
+earns its place only for what `Update`/`View` cannot reach: `src/main.js`, the
+ports, real downloads and file pickers, keyboard chords the browser competes
+for, and whether the shipped bundle boots at all.
+
+### The headless harnesses
+
+`Update.update` and `View.view` are pure and `Model` is parameterised over its navigation key, so the app runs in `elm-test` with `key = ()` — no browser, no ports. Effects are data, and every `Effect.Api.Effect` carries the function that turns a response into a `Msg`, so faking an API call is "find the effect, hand it a fixture, feed the `Msg` back in":
+
+```elm
+App.initAt (Route.addressRoute { network = "btc", address = someAddress })
+    |> App.respond
+        (\eff ->
+            case eff of
+                Effect.Api.GetAddressEffect _ toMsg -> Just (toMsg addressFixture)
+                _ -> Nothing
+        )
+    |> App.html
+    |> Query.has [ Selector.text "1Archive…z8dN" ]
+```
+
+Both harnesses share `Support.Env` (locale, viewport, config) so scenarios cannot drift apart. They use `Plugin.Update.empty` and `Plugin.Model.emptyModelState`, so results do not depend on what `config/Config.elm` registers locally. They start a scenario differently: `Support.App.initAt` takes a `Route.Pathfinder.Route`, `Support.MainApp.initAt` a URL path.
+
+**Do not try to call `Init.init` from a test.** It takes a `Plugin.Model.Flags` record whose *shape* is generated per registered plugin — several locally, none in CI — and no value of that type can be written portably. `Support.MainApp` mirrors the model `Init.elm` builds instead. The consequence: the harness starts *after* boot, so the effects `Init.init` fires (statistics, taxonomies, translations, plugin commands) are invisible. Assert on what the app does with a response, not on the boot request.
+
+### Fixtures
+
+`tests/Fixtures/Api.elm` is generated from the response examples in the OpenAPI spec by `make api-fixtures` — **re-run it after every `make openapi`**. It is committed, so tests need no network and no API key.
+
+`tests/Api/DecoderContractTest.elm` feeds those examples to the generated decoders. When the client and the spec disagree, write the test so it asserts the *current* behaviour — including a failure, if that is what happens — rather than skipping the case: it then goes red once the disagreement is resolved instead of rotting. The `null` tests at the bottom of that module are the pattern.
+
+A spec example can also be incomplete: `stats` and `address_tag` omit fields a live instance really sends. `EXAMPLE_PATCHES` in `tools/gen_api_fixtures.mjs` fills those in, so the gap lives in one documented place instead of looking like a client bug.
+
+### Translations
+
+`make check-lang` (part of `make test`) fails when a locale lost a key that `lang/en.yaml` or a `View.Locale` call still uses. Note that `en.yaml` is an *override* map, not a full key list — a lookup that misses falls back to the key itself, which is the English text. Known gaps are baselined in `lang/untranslated-baseline.json`; refresh with `node tools/check_lang.mjs --update-baseline`. The baseline also fails once a key in it gets translated, so it shrinks instead of rotting.
+
+### The browser layer (`e2e/`)
+
+```bash
+make e2e-install    # once: fetch the browser
+make e2e            # build + run
+make e2e-ui         # the same, in Playwright's UI mode
+```
+
+`make e2e` builds with `VITE_GS_REST_URL` pointed at a port nothing listens on and
+passes it as a *make variable* — a plain environment variable loses to the
+`-include .env` at the top of the Makefile. `e2e/fixtures.ts` then answers every
+request that leaves the preview origin, matching on **path** rather than origin so
+the suite does not depend on whatever is in your `.env`.
+
+Fixture bodies must be complete enough to decode. The client rejects a whole
+response over one missing required field and logs it, and `boot.spec.ts` asserts
+the console is clean — so a lazy stub shows up as a failing boot test rather
+than a passing lie. Collection endpoints have suffix-matched defaults (`/tags`,
+`/neighbors`, `/txs`, …) so a new view does not mean a new fixture entry.
+
+`boot.spec.ts` is the one to keep working above all others: it asserts no
+uncaught exceptions, no console errors, and `document.body.elmTree` — the marker
+only the patched elm/virtual-dom sets. Building against unpatched packages makes
+it fail, which is the check `make check-virtual-dom-fix` cannot do (that one
+inspects the clones, not the bundle that ships).
+
+Selectors come from `Util.View.testId`, applied at component **call sites**.
+elm-css class names are content hashes and visible text is translated and
+truncated, so neither works as a selector; `generated/` must never be edited.
+
+Names are prefixed `gs-` so plugin hooks, rendered into the same DOM from other
+repositories, cannot collide with ours; write the prefix out at the call site so
+a name is greppable from `e2e/` to `src/` and back. A name describes a *kind*, so
+several nodes share `gs-address-node` — pair it with `Util.View.testKey` and the
+`addressNode()` helper when a test means one particular element. Playwright fails
+any single-element assertion whose locator matches more than one.
+
+### Writing tests that are worth having
+
+A round-trip test that compares an encoder against its own decoder passes even when both drop the same field. `tests/Serialization/RoundTripTest.elm` therefore also pins the exact bytes of a golden `.gs` file. When a test could pass for the wrong reason, break the code on purpose and check that it fails.
 
 ## Key Configuration
 
@@ -198,17 +373,35 @@ The browser default for a claimed chord (F = find bar, S = save page, E = focus 
 
 The Makefile clones patched forks of `elm/virtual-dom`, `elm/browser`, `elm/html`, and `rtfeldman/elm-css` into `elm_packages/` (the `virtual-dom-fix` target). These patches (elm-safe-virtual-dom) prevent the app from crashing when browser extensions modify the DOM, which would otherwise conflict with Elm's virtual DOM diffing. They are required for the build to work.
 
-Four ways they used to fall out of the build silently — and all four are now caught:
+Five ways they fall out of the build silently. Four are now caught; the fifth is not:
 
 - **The package cache is per compiler version** (`elm_packages/<elm version>/packages`). `ELM_PACKAGES_DIR` derives that version from `npx elm --version`; never hardcode it, or an elm upgrade makes the compiler resolve the *unpatched* registry packages from a fresh directory while the clones sit unused in the old one.
 - **`elm-stuff` caches compiled dependencies by package version, not content.** Swapping a package's source in place does not invalidate it, so the next build keeps the old kernel. `clone-repo` deletes `elm-stuff` whenever it clones.
 - **A clone of the wrong commit is still a clone.** `clone-repo` compares `git rev-parse HEAD` against the pinned hash, so bumping a pin actually re-clones.
 - **Only the Makefile exports `ELM_HOME`.** Starting the dev server directly (`npm run dev`, `npx vite`) instead of via `make serve` left the elm compiler resolving the *unpatched* registry packages from `~/.elm`, while `make check-virtual-dom-fix` still passed — it checks the clones, which were fine. `vite.config.mjs` now defaults `process.env.ELM_HOME` to `./elm_packages`, so the entry point no longer matters.
+- **Anything that compiles outside `make` still uses `~/.elm` — and the editor does.**
+  `vite.config.mjs` fixed the dev-server entry point, but not other compilers. The VS Code
+  Elm extension (`elmtooling.elm-ls-vscode`) type-checks on save with the default
+  `ELM_HOME`, and `~/.elm` holds unpatched copies of all four forks *at the same version
+  numbers* as the patched clones (`virtual-dom` 1.0.5, `browser` 1.0.2, `html` 1.0.1,
+  `elm-css` 18.0.0). Because `elm-stuff` keys artifacts by version and not content, the
+  two are indistinguishable: the extension's compile poisons the shared `elm-stuff`, and
+  the next vite build serves an unpatched kernel. The symptom is
+  `elm-safe-virtual-dom is NOT in this build` recurring *on save* rather than once, and
+  `make check-virtual-dom-fix` passes throughout because the clones are fine.
+
+  Neither guard can see this — one inspects the clones, the other the compiled output,
+  and the poisoning happens between them. `elm-ls-vscode` 2.8.0 has no `ELM_HOME` setting
+  (only `elmPath`, `elmFormatPath`, `elmTestPath`, `elmReviewPath`), so the fix is to stop
+  it compiling: `"elmLS.disableElmLSDiagnostics": true` in `.vscode/settings.json`, which
+  is gitignored and therefore per-developer. Recover a poisoned tree with
+  `rm -rf elm-stuff`. Setting `ELM_HOME` before launching the editor works too, but then
+  every other Elm project on the machine resolves against this repository's cache.
 
 Two guards, both loud:
 
 - `make check-virtual-dom-fix` (run automatically by `virtual-dom-fix`, hence by `prepare`) **fails the build** if the kernel the compiler reads lacks `_VirtualDom_createTNode`, a function only the fork defines.
-- `elmSafeVirtualDomCheckPlugin` in `vite.config.mjs` warns if that marker is missing from the *compiled* Elm — the last word on what actually ships.
+- `elmSafeVirtualDomCheckPlugin` in `vite.config.mjs` **fails the build** if that marker is missing from the *compiled* Elm — the last word on what actually ships. `check-virtual-dom-fix` inspects the clones and keeps passing while the output has no patch in it, so this is the check that matters. The usual trigger is a stale `elm-stuff` after `tools/generate.js` rewrites `elm.json` (which happens whenever the active plugin set changes); the fix it prints is `rm -rf elm-stuff && make build`.
 
 Symptom of a build without the patches: `TypeError: Node.removeChild: Argument 1 is not an object` from `_VirtualDom_applyPatch`. `_VirtualDom_applyPatchesHelp` in a stack trace is itself the tell — the fork does not have that function.
 

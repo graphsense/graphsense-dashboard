@@ -19,7 +19,6 @@ import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
-import Plugin.View exposing (Plugins)
 import RecordSetter exposing (s_txNode)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
@@ -39,8 +38,8 @@ import View.Pathfinder.Tx.Path exposing (pickPathFunction)
 import View.Pathfinder.Tx.Utils exposing (signX, toPosition)
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> AccountTx -> Maybe Annotations.AnnotationItem -> Svg Msg
-view _ vc pc tx accTx annotation =
+view : View.Config -> Pathfinder.Config -> Tx -> AccountTx -> Maybe Annotations.AnnotationItem -> Svg Msg
+view vc pc tx accTx annotation =
     let
         fd =
             GraphComponents.txNodeEthTransparentEllipse_details
@@ -215,8 +214,8 @@ tooltipEventHandlers vc id accTx =
             )
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> AccountTx -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
-edge _ vc pc account tx annotation =
+edge : View.Config -> Pathfinder.Config -> AccountTx -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
+edge vc pc account tx annotation =
     let
         radTx =
             GraphComponents.txNodeTypeNeutralTxNode_details.width / 2

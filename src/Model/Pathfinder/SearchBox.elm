@@ -7,9 +7,6 @@ module Model.Pathfinder.SearchBox exposing
     , highlightFor
     , highlightForAny
     , inputId
-    , isActive
-    , isCurrentMatch
-    , isMatch
     )
 
 import List.Extra
@@ -63,11 +60,6 @@ empty =
 isActive : Model -> Bool
 isActive m =
     m.visible && not (String.isEmpty (String.trim m.query))
-
-
-isMatch : Model -> Id -> Bool
-isMatch m id =
-    Set.member id m.matchSet
 
 
 isCurrentMatch : Model -> Id -> Bool

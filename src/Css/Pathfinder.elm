@@ -1,23 +1,13 @@
 module Css.Pathfinder exposing
-    ( annotationInputStyle
-    , bottomCenterPanelStyle
+    ( bottomCenterPanelStyle
     , emptyTableMsg
     , fullWidth
     , graphActionsViewStyle
     , inoutStyle
-    , lGap
-    , linkButtonStyle
     , mGap
-    , mlGap
-    , no
     , plainLinkStyle
-    , sGap
     , searchBoxMinWidth
     , sidePanelCss
-    , tagConfidenceTextHighStyle
-    , tagConfidenceTextLowStyle
-    , tagConfidenceTextMediumStyle
-    , tooltipMargin
     , topPanelStyle
     , topRightPanelStyle
     )
@@ -31,40 +21,24 @@ import Css
         , Style
         , absolute
         , alignItems
-        , block
-        , border2
-        , borderWidth
         , bottom
-        , calc
         , center
         , color
-        , cursor
-        , display
         , displayFlex
         , flexEnd
-        , height
-        , hex
         , important
         , justifyContent
         , margin
-        , margin4
         , marginLeft
         , marginRight
-        , minus
         , none
-        , notAllowed
-        , outline
-        , padding
-        , paddingLeft
         , paddingRight
         , pct
-        , pointer
         , pointerEvents
         , position
         , property
         , px
         , right
-        , solid
         , spaceBetween
         , textAlign
         , top
@@ -72,11 +46,6 @@ import Css
         )
 import Theme.Colors as TColors
 import Util.View
-
-
-sGap : Px
-sGap =
-    px 3
 
 
 mGap : Px
@@ -99,21 +68,8 @@ all =
     pct 100
 
 
-no : Px
-no =
-    px 0
-
-
 
 -- colors
-
-
-greenColor : Color
-greenColor =
-    TColors.pathOut_color |> Util.View.toCssColor
-
-
-
 -- rgb 141 194 153
 -- hex "#369D8F"
 
@@ -125,100 +81,13 @@ redColor =
     TColors.pathIn_color |> Util.View.toCssColor
 
 
-orangeColor : Color
-orangeColor =
-    -- rgb 194 141 141
-    hex "#FF9800"
-
-
 
 -- Styles
-
-
-tagConfidenceTextHighStyle : View.Config -> List Style
-tagConfidenceTextHighStyle vc =
-    [ color (successColor vc) ]
-
-
-tagConfidenceTextMediumStyle : View.Config -> List Style
-tagConfidenceTextMediumStyle vc =
-    [ color (warningColor vc) ]
-
-
-tagConfidenceTextLowStyle : View.Config -> List Style
-tagConfidenceTextLowStyle vc =
-    [ color (alertColor vc) ]
-
-
-alertColor : View.Config -> Color
-alertColor _ =
-    redColor
-
-
-successColor : View.Config -> Color
-successColor _ =
-    greenColor
-
-
-warningColor : View.Config -> Color
-warningColor _ =
-    orangeColor
-
-
-emphTextColor : View.Config -> String
-emphTextColor _ =
-    TColors.grey100
-
-
-tooltipMargin : List Style
-tooltipMargin =
-    [ margin4 sGap mGap sGap mGap ]
-
-
-annotationInputStyle : View.Config -> String -> List Style
-annotationInputStyle vc _ =
-    [ width (pct 95)
-    , calc (pct 100) minus (px 2) |> height
-    , padding <| px 1
-    , display block
-    , emphTextColor vc |> property "color"
-    , border2 no solid
-    , outline none
-    ]
 
 
 plainLinkStyle : View.Config -> List Style
 plainLinkStyle _ =
     [ TColors.black0 |> property "color" ]
-
-
-linkButtonStyle : View.Config -> Bool -> List Style
-linkButtonStyle vc enabled =
-    let
-        clr =
-            case ( vc.lightmode, enabled ) of
-                ( True, True ) ->
-                    TColors.black0
-
-                ( False, True ) ->
-                    TColors.white
-
-                _ ->
-                    TColors.grey50
-    in
-    [ no |> borderWidth
-    , cursor
-        (if enabled then
-            pointer
-
-         else
-            notAllowed
-        )
-    , no |> padding
-    , mGap |> paddingLeft
-    , mGap |> paddingRight
-    , clr |> property "color"
-    ]
 
 
 topPanelStyle : List Style

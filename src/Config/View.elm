@@ -1,4 +1,4 @@
-module Config.View exposing (CharacterDimension, Config, characterDimensionsDecoder, getAbuseName, getConceptName, toCurrency)
+module Config.View exposing (CharacterDimension, Config, characterDimensionsDecoder, getConceptName, toCurrency)
 
 import Api.Data
 import Dict exposing (Dict)
@@ -71,12 +71,6 @@ getConceptName vc cat =
     else
         List.Extra.find (.id >> (==) cat) vc.allConcepts
             |> Maybe.map .label
-
-
-getAbuseName : { t | abuseConcepts : List Api.Data.Concept } -> Maybe String -> Maybe String
-getAbuseName gc =
-    Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.abuseConcepts)
-        >> Maybe.map .label
 
 
 toCurrency : Config -> Currency

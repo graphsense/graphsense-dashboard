@@ -1,7 +1,6 @@
 module Util.Url.Parser exposing
     ( Parser
     , custom
-    , fragment
     , int
     , map
     , oneOf
@@ -367,36 +366,6 @@ query (Q.Parser queryParser) =
 
 
 -- FRAGMENT
-
-
-{-| Create a parser for the URL fragment, the stuff after the `#`. This can
-be handy for handling links to DOM elements within a page. Pages like this one!
-
-
-    type alias Docs =
-        ( String, Maybe String )
-
-    docs : Parser (Docs -> a) a
-    docs =
-        map Tuple.pair (string </> fragment identity)
-
-    -- /List/map   ==>  Nothing
-    -- /List/#map  ==>  Just ("List", Just "map")
-    -- /List#map   ==>  Just ("List", Just "map")
-    -- /List#      ==>  Just ("List", Just "")
-    -- /List       ==>  Just ("List", Nothing)
-    -- /           ==>  Nothing
-
--}
-fragment : (Maybe String -> fragment) -> Parser (fragment -> a) a
-fragment toFrag =
-    Parser <|
-        \{ visited, unvisited, params, frag, value } ->
-            [ State visited unvisited params frag (value (toFrag frag))
-            ]
-
-
-
 -- PARSE
 
 

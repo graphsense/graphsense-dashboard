@@ -1,4 +1,4 @@
-module Model.Locale exposing (Flags, Model, State(..), ValueDetail(..), getFiatValue, getTokenTickers, getTokenTickersAndBase, isEmpty, locales)
+module Model.Locale exposing (Model, State(..), ValueDetail(..), getFiatValue, getTokenTickers, locales)
 
 import Api.Data
 import DateFormat
@@ -28,18 +28,6 @@ type ValueDetail
     | Magnitude
 
 
-{-|
-
-    locale : the two digit locale id
-    hint : a number formatted via JS toLocaleString to derive number formatting
-           rules from (see https://package.elm-lang.org/packages/cuducos/elm-format-number/latest/FormatNumber-Locales)
-
--}
-type alias Flags =
-    { locale : String
-    }
-
-
 type alias Model =
     { mapping : State
     , numberFormat : String -> Float -> String
@@ -60,23 +48,8 @@ getFiatValue code values =
         |> Maybe.map .value
 
 
-isEmpty : Model -> Bool
-isEmpty { mapping } =
-    case mapping of
-        Settled _ ->
-            False
-
-        _ ->
-            True
-
-
 getTokenTickers : Model -> String -> List String
 getTokenTickers m net =
     Dict.get net m.supportedTokens
         |> Maybe.map (.tokenConfigs >> List.map (.ticker >> String.toUpper))
         |> Maybe.withDefault []
-
-
-getTokenTickersAndBase : Model -> String -> List String
-getTokenTickersAndBase m net =
-    (net |> String.toUpper) :: getTokenTickers m net

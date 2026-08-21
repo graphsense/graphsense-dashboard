@@ -3,17 +3,13 @@ module Util.ThemedSelectBox exposing
     , Model
     , Msg(..)
     , OutMsg(..)
-    , close
     , defaultConfig
     , defaultConfigHtml
-    , empty
     , getOptions
     , init
     , update
     , updateOptions
     , view
-    , viewDisabled
-    , viewWithLabel
     , withAttributes
     , withFilter
     )
@@ -24,8 +20,6 @@ import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onMouseLeave, onMouseOut, onMouseOver)
 import List.Extra
 import RecordSetter as Rs
-import Theme.Html.Fields as F
-import Theme.Html.Icons as Icons
 import Theme.Html.SelectionControls as Sc
 import Util.Css
 import Util.View exposing (none)
@@ -72,11 +66,6 @@ updateOptions options (SelectBox m) =
 getOptions : Model a -> List a
 getOptions (SelectBox m) =
     m.options
-
-
-empty : Model a
-empty =
-    SelectBox { options = [], open = False }
 
 
 close : Model a -> Model a
@@ -154,32 +143,6 @@ type alias ConfigInternal a =
 withAttributes : List (Html.Styled.Attribute (Msg a)) -> Config a -> Config a
 withAttributes attributes (Config config) =
     Config { config | attributes = attributes }
-
-
-viewWithLabel : Config a -> Model a -> a -> String -> Html (Msg a)
-viewWithLabel config m selected label =
-    F.dropDownLabel { dropDown = { variant = view config m selected }, root = { label = label } }
-
-
-viewDisabled : Config a -> List (Html.Styled.Attribute (Msg a)) -> Model a -> a -> Html (Msg a)
-viewDisabled (Config config) attrs _ selected =
-    let
-        baseAttrs =
-            attrs
-    in
-    F.dropDownStateDisabledWithInstances
-        (F.dropDownStateDisabledAttributes
-            |> Rs.s_root baseAttrs
-            |> Rs.s_text (([ Css.alignItems Css.center ] |> css) :: baseAttrs)
-        )
-        (F.dropDownStateDisabledInstances
-            |> Rs.s_text (config.optionToLabel selected |> Just)
-        )
-        { root =
-            { iconInstance = Icons.iconsChevronDownThick {}
-            , text = ""
-            }
-        }
 
 
 view : Config a -> Model a -> a -> Html (Msg a)

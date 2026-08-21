@@ -1,24 +1,14 @@
-module Util.Csv exposing (a0, bool, float, int, prefix, string, timestamp, values, valuesWithBaseCurrencyFloat)
+module Util.Csv exposing (int, string, valuesWithBaseCurrencyFloat)
 
 import Api.Data
 import Model.Currency exposing (AssetIdentifier)
 import Model.Locale exposing (Model, ValueDetail(..))
-import Time
 import View.Locale exposing (coinWithoutCode)
 
 
 int : Int -> String
 int =
     String.fromInt
-
-
-bool : Bool -> String
-bool b =
-    if b then
-        "true"
-
-    else
-        "false"
 
 
 string : String -> String
@@ -29,11 +19,6 @@ string =
 float : Float -> String
 float =
     String.fromFloat
-
-
-timestamp : Model -> Int -> String
-timestamp model =
-    Time.millisToPosix >> View.Locale.timestamp model
 
 
 prefix : String -> String -> String
@@ -52,14 +37,3 @@ valuesWithBaseCurrencyFloat key v locModel asset =
         :: (( prefix key "in_base_currency", string (coinWithoutCode nlocModel asset v.value) )
                 :: List.map (\f -> ( prefix key f.code, float f.value )) v.fiatValues
            )
-
-
-values : String -> Api.Data.Values -> List ( String, String )
-values key v =
-    ( key, int v.value )
-        :: List.map (\f -> ( prefix key f.code, float f.value )) v.fiatValues
-
-
-a0 : String -> String
-a0 s =
-    s ++ " {0}"

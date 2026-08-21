@@ -1,4 +1,4 @@
-module Init.Pathfinder.RelationDetails exposing (getExposedAssetsForNeighbor, getExposedAssetsForNeighborWebData, init)
+module Init.Pathfinder.RelationDetails exposing (getExposedAssetsForNeighborWebData, init)
 
 import Api.Data
 import Components.TransactionFilter as TransactionFilter

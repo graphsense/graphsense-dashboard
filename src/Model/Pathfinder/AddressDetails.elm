@@ -15,7 +15,6 @@ import Util.ThemedSelectBox as ThemedSelectBox
 type alias Model =
     { neighborsTableOpen : Bool
     , transactionsTableOpen : Bool
-    , tokenBalancesOpen : Bool
     , txs : WebData TransactionTable.Model
     , neighborsIncoming : WebData (InfiniteTable.Model String Api.Data.NeighborAddress)
     , neighborsOutgoing : WebData (InfiniteTable.Model String Api.Data.NeighborAddress)
@@ -32,6 +31,5 @@ type alias Model =
     , incomingNeighborsTableOpen : Bool
     , copyIconChevronOpen : Bool
     , isClusterDetailsOpen : Bool
-    , displayAllTagsInDetails : Bool
     , txsFilter : Maybe TransactionFilter.Settings
     }

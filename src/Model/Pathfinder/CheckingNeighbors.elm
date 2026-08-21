@@ -1,4 +1,4 @@
-module Model.Pathfinder.CheckingNeighbors exposing (Model, done, getData, init, initAddress, insert, isEmpty, member, remove, removeAll)
+module Model.Pathfinder.CheckingNeighbors exposing (Model, getData, init, initAddress, insert, isEmpty, remove, removeAll)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -42,11 +42,6 @@ initAddress data outRequestIds inRequestIds (CheckingNeighbors model) =
     }
         |> flip (Dict.insert id) model
         |> CheckingNeighbors
-
-
-member : Id -> Model -> Bool
-member addressId (CheckingNeighbors cn) =
-    Dict.member addressId cn
 
 
 insert : Direction -> Id -> List Api.Data.NeighborAddress -> Model -> Model
@@ -99,11 +94,6 @@ isEmpty_ cn =
             False
 
 
-done_ : ModelInternal -> Bool
-done_ cn =
-    cn.incoming /= Nothing && cn.outgoing /= Nothing
-
-
 remove : Id -> Id -> Model -> Model
 remove addressId neighborId (CheckingNeighbors model) =
     Dict.update addressId
@@ -152,10 +142,3 @@ removeAll id (CheckingNeighbors model) =
             )
         |> Maybe.withDefault model
         |> CheckingNeighbors
-
-
-done : Id -> Model -> Bool
-done addressId (CheckingNeighbors model) =
-    Dict.get addressId model
-        |> Maybe.map done_
-        |> Maybe.withDefault True

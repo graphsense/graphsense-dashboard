@@ -1,13 +1,10 @@
-port module Ports exposing (blur, console, deserialize, deserializeFile, deserialized, exportGraph, exportGraphResult, exportGraphics, getBBox, newTab, pluginsIn, pluginsOut, renderedImageForExport, saveToLocalStorage, sendBBox, serialize, setDirty, toClipboard, uncaughtError, windowBlurred)
+port module Ports exposing (blur, console, deserialize, deserializeFile, deserialized, exportGraph, exportGraphResult, getBBox, newTab, pluginsIn, pluginsOut, renderedImageForExport, saveToLocalStorage, sendBBox, serialize, setDirty, toClipboard, uncaughtError, windowBlurred)
 
 import Json.Encode exposing (Value)
 import Model.Graph.Coords as Coords
 
 
 port console : String -> Cmd msg
-
-
-port exportGraphics : String -> Cmd msg
 
 
 port exportGraph :

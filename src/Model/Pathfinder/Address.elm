@@ -9,9 +9,6 @@ module Model.Pathfinder.Address exposing
     , getBalance
     , getClusterId
     , getCoords
-    , getInDegree
-    , getNrTxs
-    , getOutDegree
     , getTotalReceived
     , getTotalSpent
     , getTxs
@@ -34,7 +31,7 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Plugin.Model as Plugin
 import RecordSetter exposing (s_incomingTxs, s_outgoingTxs)
-import RemoteData exposing (RemoteData(..), WebData)
+import RemoteData exposing (WebData)
 import Set exposing (Set)
 import Time exposing (Posix)
 import Util.Data exposing (isAccountLike, timestampToPosix)
@@ -98,29 +95,9 @@ txsToSet txs =
             Set.empty
 
 
-getNrTxs : Address -> Maybe Int
-getNrTxs a =
-    case a.data of
-        Success x ->
-            Just (x.noOutgoingTxs + x.noIncomingTxs)
-
-        _ ->
-            Nothing
-
-
 getCoords : Address -> Coords
 getCoords a =
     Coords (a.x + a.dx) (Animation.animate a.clock a.y + a.dy)
-
-
-getInDegree : Address -> Maybe Int
-getInDegree a =
-    RemoteData.unwrap Nothing (.inDegree >> Just) a.data
-
-
-getOutDegree : Address -> Maybe Int
-getOutDegree a =
-    RemoteData.unwrap Nothing (.outDegree >> Just) a.data
 
 
 getBalance : Address -> Maybe Values

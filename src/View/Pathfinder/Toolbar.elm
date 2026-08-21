@@ -10,7 +10,7 @@ import RecordSetter as Rs
 import Theme.Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsComponents as SettingsComponents
-import Util.View exposing (loadingSpinner, onClickWithStop)
+import Util.View exposing (loadingSpinner, onClickWithStop, testId)
 import View.Locale as Locale
 
 
@@ -30,8 +30,9 @@ type alias Config =
 view : View.Config -> Config -> Html Msg
 view vc config =
     let
-        iconsAttr titl disabled msg =
-            [ css
+        iconsAttr tid titl disabled msg =
+            [ testId tid
+            , css
                 [ Css.cursor Css.pointer
                 , Css.property "pointer-events" "bounding-box"
                 ]
@@ -62,31 +63,31 @@ view vc config =
     SettingsComponents.toolbarWithInstances
         (SettingsComponents.toolbarAttributes
             |> Rs.s_iconsDelete
-                (iconsAttr "Delete" config.deleteDisabled UserClickedToolbarDeleteIcon)
+                (iconsAttr "gs-toolbar-delete" "Delete" config.deleteDisabled UserClickedToolbarDeleteIcon)
             |> Rs.s_iconsAnnotate
                 (id (toolbarHovercardTypeToId Annotation)
-                    :: iconsAttr "Annotate" config.annotateDisabled UserToggleAnnotationSettings
+                    :: iconsAttr "gs-toolbar-annotate" "Annotate" config.annotateDisabled UserToggleAnnotationSettings
                 )
             |> Rs.s_iconsNewFile
-                (iconsAttr "Restart" config.newDisabled UserClickedRestart)
+                (iconsAttr "gs-toolbar-new" "Restart" config.newDisabled UserClickedRestart)
             |> Rs.s_iconsSelectionTool
                 (css (highlightBackground Select)
-                    :: iconsAttr "selection Tool" False UserClickedSelectionTool
+                    :: iconsAttr "gs-toolbar-select" "selection Tool" False UserClickedSelectionTool
                 )
             |> Rs.s_iconsDisplayConfiguration
                 (id (toolbarHovercardTypeToId Settings)
-                    :: iconsAttr "Display settings" False (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
+                    :: iconsAttr "gs-toolbar-display-settings" "Display settings" False (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
                 )
             |> Rs.s_iconsCenterGraph
-                (iconsAttr "center graph" False UserClickedFitGraph)
+                (iconsAttr "gs-toolbar-center" "center graph" False UserClickedFitGraph)
             |> Rs.s_iconsSave
-                (iconsAttr "save file" False (UserClickedSaveGraph Nothing))
+                (iconsAttr "gs-toolbar-save" "save file" False (UserClickedSaveGraph Nothing))
             |> Rs.s_iconsExport
-                (iconsAttr "export graph" False (UserClickedExportGraph Nothing))
+                (iconsAttr "gs-toolbar-export" "export graph" False (UserClickedExportGraph Nothing))
             |> Rs.s_iconsOpen
-                (iconsAttr "open" False UserClickedOpenGraph)
+                (iconsAttr "gs-toolbar-open" "open" False UserClickedOpenGraph)
             |> Rs.s_iconsHorizontalAlign
-                (iconsAttr "align horizontally" config.alignHorizontalDisabled UserClickedContextMenuAlignHorizontally)
+                (iconsAttr "gs-toolbar-align-horizontal" "align horizontally" config.alignHorizontalDisabled UserClickedContextMenuAlignHorizontally)
         )
         (let
             ls =
@@ -121,7 +122,7 @@ view vc config =
                 Icons.iconsRedoWithAttributes
                     (Icons.iconsRedoAttributes
                         |> Rs.s_root
-                            (iconsAttr "Redo" config.redoDisabled UserClickedRedo)
+                            (iconsAttr "gs-toolbar-redo" "Redo" config.redoDisabled UserClickedRedo)
                     )
                     { root = { state = Icons.IconsRedoStateActive } }
             }
@@ -130,7 +131,7 @@ view vc config =
                 Icons.iconsUndoWithAttributes
                     (Icons.iconsUndoAttributes
                         |> Rs.s_root
-                            (iconsAttr "Undo" config.undoDisabled UserClickedUndo)
+                            (iconsAttr "gs-toolbar-undo" "Undo" config.undoDisabled UserClickedUndo)
                     )
                     { root = { state = Icons.IconsUndoStateActive } }
             }

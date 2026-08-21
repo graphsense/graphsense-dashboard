@@ -391,44 +391,6 @@ app.ports.exportGraph.subscribe(async ({filename, graphId, viewbox, transparentB
   img.src = url 
 })
 
-app.ports.exportGraphics.subscribe(async (filename) => {
-  const classMap = new Map()
-  const sheets = ([...document.styleSheets]).filter(({ href }) => !href)
-  if (!sheets) return
-  for (let i = 0; i < sheets.length; i++) {
-    try {
-      const rules = sheets[i].cssRules
-      for (let j = 0; j < rules.length; j++) {
-        const selectorText = rules[j].selectorText
-        const cssText = rules[j].cssText
-        if (!selectorText) continue
-        const s = selectorText.replace('.', '').trim()
-        classMap.set(s, cssText.split('{')[1].replace('}', ''))
-      }
-    } catch (e) {
-      if (!(e instanceof DOMException)) {
-        throw e
-      }
-    }
-  }
-  classMap.set('rectLabel', 'fill: white')
-  let svg = document.querySelector('svg#graph').outerHTML
-  // replace classes by inline styles
-  svg = svg.replace(new RegExp('class="(.+?)"', 'g'), (_, classes) => {
-    const repl = classes.split(' ')
-      .map(cls => classMap.get(cls) || '')
-      .join('')
-    if (repl.trim() === '') return ''
-    return 'style="' + repl.replace(/"/g, '\'').replace('"', '\'') + '"'
-  })
-  // replace double quotes and quot (which was created by innerHTML)
-  svg = svg.replace(new RegExp('style="(.+?)"', 'g'), (_, style) => 'style="' + style.replace(/&quot;/g, '\'') + '"')
-  // merge double style definitions
-  svg = svg.replace(new RegExp('style="([^"]+?)"([^>]+?)style="([^"]+?)"', 'g'), 'style="$1$3" $2')
-  svg = svg.replace('<svg', '<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg"')
-  await download(filename, svg)
-})
-
 const download = async (filename, buffer) => {
   const blob = new Blob([buffer], { type: 'application/octet-stream' }) // eslint-disable-line no-undef
   const FileSaver = (await import('file-saver')).default

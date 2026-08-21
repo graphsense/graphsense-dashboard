@@ -1,4 +1,4 @@
-module View.Pathfinder exposing (annotationHovercardView, bottomCenterPanel, contextMenuView, detailsView, drawDragSelector, dropShadowEdgeHighlight, graph, graphActionsView, graphSvg, originShiftX, searchBoxView, settingsHovercardView, toolbarHovercardView, topCenterPanel, topRightPanel, view)
+module View.Pathfinder exposing (originShiftX, view)
 
 import Basics.Extra exposing (flip)
 import Components.ExportCSV as ExportCSV
@@ -26,7 +26,7 @@ import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, 
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), OverlayWindows(..))
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View as Plugin
 import RecordSetter as Rs
 import String.Format
 import Svg.Styled exposing (Svg, defs, feComposite, feFlood, feGaussianBlur, feMerge, feMergeNode, feOffset, filter, linearGradient, stop, svg)
@@ -76,20 +76,20 @@ originShiftX =
 --Css.searchBoxMinWidth / 2
 
 
-view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> { navbar : List (Html Msg), contents : List (Html Msg) }
-view plugins states vc model =
+view : ModelState -> View.Config -> Pathfinder.Model -> { navbar : List (Html Msg), contents : List (Html Msg) }
+view states vc model =
     { navbar = []
-    , contents = graph plugins states vc model.config model
+    , contents = graph states vc model.config model
     }
 
 
-graph : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> List (Html Msg)
-graph plugins pluginStates vc gc model =
+graph : ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> List (Html Msg)
+graph pluginStates vc gc model =
     [ vc.size
-        |> Maybe.map (graphSvg plugins vc gc model)
+        |> Maybe.map (graphSvg vc gc model)
         |> Maybe.withDefault none
-    , topCenterPanel plugins pluginStates vc gc model
-    , topRightPanel plugins pluginStates vc model
+    , topCenterPanel pluginStates vc gc model
+    , topRightPanel pluginStates vc model
     , bottomCenterPanel vc model
     , OnGraphSearchView.view vc model.onGraphSearch
     , Util.Tooltip.view vc model
@@ -101,14 +101,14 @@ graph plugins pluginStates vc gc model =
                 |> Maybe.withDefault []
            )
         ++ (model.contextMenu
-                |> Maybe.map (contextMenuView plugins pluginStates vc model)
+                |> Maybe.map (contextMenuView pluginStates vc model)
                 |> Maybe.map List.singleton
                 |> Maybe.withDefault []
            )
 
 
-contextMenuView : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> ContextMenu -> Html Msg
-contextMenuView plugins pluginStates vc model ( coords, menu ) =
+contextMenuView : ModelState -> View.Config -> Pathfinder.Model -> ContextMenu -> Html Msg
+contextMenuView pluginStates vc model ( coords, menu ) =
     let
         contextMenuWidth =
             180
@@ -186,7 +186,7 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                     pluginsList =
                         Dict.get id model.network.addresses
                             |> Maybe.map
-                                (Plugin.addressContextMenu plugins pluginStates vc
+                                (Plugin.addressContextMenu pluginStates vc
                                     >> List.map (ContextMenuItem.view vc)
                                 )
                             |> Maybe.withDefault []
@@ -217,20 +217,6 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                                         True
                                 )
                             |> ContextMenuItem.view vc
-
-                        -- , { msg = UserClickedContextMenuAlignVertically
-                        --   , icon = HIcons.iconsLine {}
-                        --   , text = Locale.string vc.locale "align vertically"
-                        --   }
-                        --     |> ContextMenuItem.init
-                        --     |> ContextMenuItem.setDisabled
-                        --         (case model.selection of
-                        --             Pathfinder.MultiSelect _ ->
-                        --                 False
-                        --             _ ->
-                        --                 True
-                        --         )
-                        --     |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuAlignHorizontally
                           , icon = HIcons.iconsHorizontalAlign {}
                           , text = Locale.string vc.locale "Align horizontally"
@@ -321,20 +307,6 @@ contextMenuView plugins pluginStates vc model ( coords, menu ) =
                           }
                             |> ContextMenuItem.init
                             |> ContextMenuItem.view vc
-
-                        -- , { msg = UserClickedContextMenuAlignVertically
-                        --   , icon = HIcons.iconsLine {}
-                        --   , text = Locale.string vc.locale "align vertically"
-                        --   }
-                        --     |> ContextMenuItem.init
-                        --     |> ContextMenuItem.setDisabled
-                        --         (case model.selection of
-                        --             Pathfinder.MultiSelect _ ->
-                        --                 False
-                        --             _ ->
-                        --                 True
-                        --         )
-                        --     |> ContextMenuItem.view vc
                         , { msg = UserClickedContextMenuAlignHorizontally
                           , icon = HIcons.iconsHorizontalAlign {}
                           , text = Locale.string vc.locale "align horizontally"
@@ -439,13 +411,13 @@ bottomCenterPanel vc model =
         ]
 
 
-topCenterPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-topCenterPanel plugins pluginStates vc gc model =
+topCenterPanel : ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
+topCenterPanel pluginStates vc gc model =
     div
         [ css Css.topPanelStyle
         ]
         [ div [ css [ Css.property "pointer-events" "all", Css.position Css.relative, Css.overflow Css.visible ] ]
-            (Plugin.pathfinderUpperLeftPanel plugins pluginStates vc)
+            (Plugin.pathfinderUpperLeftPanel pluginStates vc)
         , div
             [ css
                 [ Css.displayFlex
@@ -454,7 +426,7 @@ topCenterPanel plugins pluginStates vc gc model =
                 , Css.flexWrap Css.wrap
                 ]
             ]
-            [ searchBoxView plugins vc gc model
+            [ searchBoxView vc gc model
             , Toolbar.view vc
                 { undoDisabled = List.isEmpty model.history.past
                 , redoDisabled = List.isEmpty model.history.future
@@ -650,10 +622,10 @@ settingsHovercardView vc pm hc =
         |> hovercard vc hc (Css.zIndexMainValue + 1)
 
 
-topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Html Msg
-topRightPanel plugins pluginStates vc model =
+topRightPanel : ModelState -> View.Config -> Pathfinder.Model -> Html Msg
+topRightPanel pluginStates vc model =
     div [ Css.topRightPanelStyle vc |> css ]
-        [ detailsView plugins pluginStates vc model
+        [ detailsView pluginStates vc model
         ]
 
 
@@ -711,13 +683,13 @@ graphActionsView vc _ model =
         )
 
 
-searchBoxView : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
-searchBoxView plugins vc _ model =
+searchBoxView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
+searchBoxView vc _ model =
     Sc.searchBarFieldStateTypingWithInstances
         Sc.searchBarFieldStateTypingAttributes
         (Sc.searchBarFieldStateTypingInstances
             |> Rs.s_searchInputField
-                (View.Search.searchWithMoreCss plugins
+                (View.Search.searchWithMoreCss
                     vc
                     (View.Search.default
                         |> Rs.s_css
@@ -763,13 +735,13 @@ searchBoxView plugins vc _ model =
         {}
 
 
-detailsView : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Html Msg
-detailsView plugin pluginStates vc model =
+detailsView : ModelState -> View.Config -> Pathfinder.Model -> Html Msg
+detailsView pluginStates vc model =
     case model.details of
         Just details ->
             case details of
                 Pathfinder.AddressDetails id state ->
-                    AddressDetails.view plugin pluginStates vc model id state
+                    AddressDetails.view pluginStates vc model id state
 
                 Pathfinder.TxDetails id state ->
                     TxDetails.view vc model id state
@@ -784,8 +756,8 @@ detailsView plugin pluginStates vc model =
             none
 
 
-graphSvg : Plugins -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> { a | width : Float, height : Float } -> Svg Msg
-graphSvg plugins vc gc model dim =
+graphSvg : View.Config -> Pathfinder.Config -> Pathfinder.Model -> { a | width : Float, height : Float } -> Svg Msg
+graphSvg vc gc model dim =
     let
         -- hide always-on aggregate-edge labels when zoomed out far enough
         -- (larger z = more zoomed out); they reappear when zoomed in
@@ -934,8 +906,8 @@ graphSvg plugins vc gc model dim =
                     )
                 ]
                 dim
-        , Network.relations plugins vc gc showAggLabels model.hovered model.selection model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
-        , Svg.lazy6 Network.addresses plugins vc gc model.onGraphSearch model.annotations model.network.addresses
+        , Network.relations vc gc showAggLabels model.hovered model.selection model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
+        , Svg.lazy5 Network.addresses vc gc model.onGraphSearch model.annotations model.network.addresses
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system

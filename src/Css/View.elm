@@ -1,4 +1,4 @@
-module Css.View exposing (body, box, buttonsRow, contents, copyIcon, disabled, footer, frame, heading2, hint, hovercard, iconLink, input, inputRaw, inputRawWithLength, link, listItem, loadingSpinner, longIdentifier, main_, navbar, overlay, paragraph, popup, sectionBelowHeader, sidebar, sidebarIcon, sidebarIconsBottom, sidebarLink, sidebarRule, switchLabel, switchRoot, tool)
+module Css.View exposing (body, contents, copyIcon, footer, frame, heading2, hovercard, iconLink, input, link, listItem, loadingSpinner, longIdentifier, main_, navbar, overlay, paragraph, sectionBelowHeader, switchLabel, switchRoot)
 
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -43,34 +43,6 @@ sectionBelowHeader vc =
         ++ vc.theme.sectionBelowHeader
 
 
-sidebar : Config -> List Style
-sidebar vc =
-    displayFlex
-        :: Util.Css.zIndexMain
-        :: flexDirection column
-        :: vc.theme.sidebar vc.lightmode
-
-
-sidebarIcon : Config -> Bool -> List Style
-sidebarIcon vc active =
-    vc.theme.sidebarIcon vc.lightmode active
-
-
-sidebarIconsBottom : Config -> Bool -> List Style
-sidebarIconsBottom vc active =
-    vc.theme.sidebarIconsBottom vc.lightmode active
-
-
-sidebarLink : Config -> List Style
-sidebarLink vc =
-    vc.theme.sidebarLink vc.lightmode
-
-
-sidebarRule : Config -> List Style
-sidebarRule vc =
-    vc.theme.sidebarRule vc.lightmode
-
-
 main_ : Config -> List Style
 main_ _ =
     [ flexGrow (num 1)
@@ -105,20 +77,9 @@ contents vc =
         ++ vc.theme.contents vc.lightmode
 
 
-tool : Config -> List Style
-tool vc =
-    cursor pointer
-        :: vc.theme.tool
-
-
 hovercard : Config -> List ( String, String )
 hovercard vc =
     (vc.theme.hovercard vc.lightmode).root
-
-
-inputRawWithLength : Config -> Float -> List ( String, String )
-inputRawWithLength vc px =
-    vc.theme.inputRaw vc.lightmode (Just px)
 
 
 inputRaw : Config -> List ( String, String )
@@ -169,11 +130,6 @@ overlay placement vc =
         ++ vc.theme.overlay
 
 
-popup : Config -> List Style
-popup vc =
-    vc.theme.popup vc.lightmode
-
-
 loadingSpinner : Config -> List Style
 loadingSpinner vc =
     vc.theme.loadingSpinner
@@ -188,13 +144,6 @@ footer vc =
         :: vc.theme.footer
 
 
-buttonsRow : Config -> List Style
-buttonsRow vc =
-    displayFlex
-        :: justifyContent spaceBetween
-        :: vc.theme.buttonsRow
-
-
 switchLabel : Config -> List Style
 switchLabel vc =
     vc.theme.switchLabel
@@ -203,11 +152,6 @@ switchLabel vc =
 switchRoot : Config -> List Style
 switchRoot vc =
     vc.theme.switchRoot
-
-
-disabled : Config -> List Style
-disabled vc =
-    vc.theme.disabled vc.lightmode
 
 
 copyIcon : Config -> List Style
@@ -221,16 +165,6 @@ longIdentifier vc =
     display inlineBlock :: vc.theme.longIdentifier
 
 
-hint : Config -> List Style
-hint vc =
-    vc.theme.hint vc.lightmode
-
-
 frame : Config -> List Style
 frame vc =
     vc.theme.frame vc.lightmode
-
-
-box : Config -> List Style
-box vc =
-    vc.theme.box vc.lightmode

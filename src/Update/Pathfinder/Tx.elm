@@ -1,4 +1,4 @@
-module Update.Pathfinder.Tx exposing (setAddressInTx, setFromAddress, setIoAddress, setToAddress, unsetAccountAddress, unsetAddress, updateAccount, updateAccountAddress, updateAddress, updateAddressInTx, updateIoAddress, updateUtxo, updateUtxoIo)
+module Update.Pathfinder.Tx exposing (setAddressInTx, unsetAccountAddress, unsetAddress, updateAccount, updateAccountAddress, updateAddress, updateUtxo, updateUtxoIo)
 
 import Basics.Extra exposing (flip)
 import Dict
@@ -42,13 +42,6 @@ setIoAddress : Address -> Io -> Io
 setIoAddress address io =
     { io
         | address = Just address
-    }
-
-
-updateIoAddress : (Address -> Address) -> Io -> Io
-updateIoAddress upd io =
-    { io
-        | address = Maybe.map upd io.address
     }
 
 
@@ -132,17 +125,4 @@ setAddressInTx dir a t =
                     else
                         identity
                    )
-                |> flip updateAccount t
-
-
-updateAddressInTx : Direction -> Id -> (Address -> Address) -> Tx -> Tx
-updateAddressInTx dir id upd t =
-    case t.type_ of
-        Utxo _ ->
-            updateIoAddress upd
-                |> updateUtxoIo dir id
-                |> flip updateUtxo t
-
-        Account _ ->
-            updateAccountAddress dir id upd
                 |> flip updateAccount t

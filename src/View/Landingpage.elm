@@ -11,11 +11,11 @@ import Html.Styled.Events exposing (..)
 import Json.Decode
 import Model exposing (Model, Msg(..))
 import Model.Search
-import Msg.Graph as Graph
-import Plugin.View exposing (Plugins)
+import Msg.Pathfinder as Pathfinder
 import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.SettingsComponents as Sc
+import Util.View
 import Util.View.Rule exposing (rule)
 import View.Locale as Locale
 import View.Search
@@ -51,12 +51,13 @@ whenDraggingFiles msg =
             )
 
 
-searchBoxView : Plugins -> View.Config -> Model.Search.Model -> Html Msg
-searchBoxView plugins vc model =
+searchBoxView : View.Config -> Model.Search.Model -> Html Msg
+searchBoxView vc model =
     Sc.searchBarFieldStateTypingWithInstances
         (Sc.searchBarFieldStateTypingAttributes
             |> Rs.s_root
-                [ css
+                [ Util.View.testId "gs-landing-search"
+                , css
                     [ Css.alignItems Css.stretch |> Css.important
                     , Css.rem 23 |> Css.width |> Css.important
                     ]
@@ -64,7 +65,7 @@ searchBoxView plugins vc model =
         )
         (Sc.searchBarFieldStateTypingInstances
             |> Rs.s_searchInputField
-                (View.Search.searchWithMoreCss plugins
+                (View.Search.searchWithMoreCss
                     vc
                     (View.Search.default
                         |> Rs.s_css
@@ -110,15 +111,15 @@ searchBoxView plugins vc model =
         {}
 
 
-view : Plugins -> View.Config -> Model key -> Html Msg
-view plugins vc model =
+view : View.Config -> Model key -> Html Msg
+view vc model =
     frame vc
         [ h2
             [ Css.View.heading2 vc |> css
             ]
             [ Locale.text vc.locale "Landingpage-start-new"
             ]
-        , searchBoxView plugins vc model.search
+        , searchBoxView vc model.search
             |> List.singleton
             |> div
                 [ CssLanding.searchRoot vc |> css
@@ -166,7 +167,7 @@ view plugins vc model =
                         )
                    ]
                 |> css
-            , onClick (GraphMsg Graph.UserClickedImportGS)
+            , onClick (PathfinderMsg Pathfinder.UserClickedOpenGraph)
 
             -- dragover must be cancelled for the box to be a drop target
             , preventDefaultOn "dragover" (Json.Decode.succeed ( NoOp, True ))

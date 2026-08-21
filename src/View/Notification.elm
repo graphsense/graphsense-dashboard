@@ -23,7 +23,7 @@ import Theme.Html.ErrorMessagesAlerts as Msg
 import Theme.Html.Icons as Icons
 import Theme.Html.Navbar as Nb
 import Util.Css
-import Util.View exposing (fixFillRule, none, onClickWithStop)
+import Util.View exposing (fixFillRule, none, onClickWithStop, testId)
 import View.Locale as Locale
 
 
@@ -62,6 +62,11 @@ view vc model =
 
         contentAttr =
             [ css [ Css.width Css.auto, Css.maxWidth (Css.px Msg.messageText_details.renderedWidth) ] ]
+
+        -- notifications without an explicit title render the whole message
+        -- as the header title, whose generated style is white-space: nowrap
+        titleAttr =
+            [ css [ Css.whiteSpace Css.normal, Css.property "word-break" "break-word" ] ]
 
         notificationViewConfig { title, message, moreInfo, variables, showClose } =
             let
@@ -127,6 +132,8 @@ view vc model =
                     |> Rs.s_messageText nvc.msgTextAttr
                     |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
                     |> Rs.s_content contentAttr
+                    |> Rs.s_infoboxTitle titleAttr
+                    |> Rs.s_root [ testId "gs-notification" ]
                 )
                 { header =
                     { iconInstance = icon
@@ -152,6 +159,8 @@ view vc model =
                     |> Rs.s_messageText nvc.msgTextAttr
                     |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
                     |> Rs.s_content contentAttr
+                    |> Rs.s_infoboxTitle titleAttr
+                    |> Rs.s_root [ testId "gs-notification" ]
                 )
                 { header =
                     { iconInstance = icon
@@ -181,6 +190,8 @@ view vc model =
                     |> Rs.s_messageText nvc.msgTextAttr
                     |> Rs.s_iconsCloseSnoPadding nvc.btnOkAttr
                     |> Rs.s_content contentAttr
+                    |> Rs.s_infoboxTitle titleAttr
+                    |> Rs.s_root [ testId "gs-notification" ]
                 )
                 { header =
                     { iconInstance = icon

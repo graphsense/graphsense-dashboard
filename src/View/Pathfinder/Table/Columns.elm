@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, CustomHeaders, HtmlColumnConfig, TwoValuesCellConfig, ValueColumnOptions, addHeaderAttributes, addressColumn, applyHeaderCustomizations, assetsCell, assetsColumnWithOptions, checkboxColumn, debitCreditColumn, htmlColumn, initCustomHeaders, selectionIndicatorColumn, setHeaderCheckbox, setHeaderHtml, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumn, valueColumnWithOptions, wrapCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, CustomHeaders, HtmlColumnConfig, TwoValuesCellConfig, ValueColumnOptions, addHeaderAttributes, addressColumn, applyHeaderCustomizations, assetsColumnWithOptions, checkboxColumn, debitCreditColumn, htmlColumn, initCustomHeaders, setHeaderCheckbox, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -236,28 +236,6 @@ type alias CheckboxColumnConfig data msg =
     }
 
 
-selectionIndicatorColumn : View.Config -> { isSelected : data -> Bool } -> Table.Column data msg
-selectionIndicatorColumn _ { isSelected } =
-    Table.veryCustomColumn
-        { name = ""
-        , viewData =
-            \data ->
-                Table.HtmlDetails
-                    [ [ PCSS.mGap |> Css.padding
-                      , Css.verticalAlign Css.middle
-                      ]
-                        |> css
-                    ]
-                    [ if isSelected data then
-                        text ">"
-
-                      else
-                        none
-                    ]
-        , sorter = Table.unsortable
-        }
-
-
 checkboxColumn : View.Config -> String -> CheckboxColumnConfig data msg -> Table.Column data msg
 checkboxColumn _ name { isChecked, onClick, readonly } =
     Table.veryCustomColumn
@@ -324,16 +302,6 @@ sortableDebitCreditColumn isOutgoingFn =
         , hideCode = False
         , colorFlowDirection = True
         , isOutgoingFn = isOutgoingFn
-        }
-
-
-valueColumn : View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
-valueColumn =
-    valueColumnWithOptions
-        { sortable = True
-        , hideCode = True
-        , colorFlowDirection = False
-        , isOutgoingFn = \_ -> False
         }
 
 

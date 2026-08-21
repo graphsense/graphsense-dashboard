@@ -1,4 +1,4 @@
-module Components.PagedTable exposing (Config, Fetch, Model, Msg(..), appendData, getCurrentPage, getItemsPerPage, getNrItems, getPage, getTable, goToFirstPage, hasData, hasNextPage, hasPrevPage, init, loadFirstPage, removeItem, setData, setItemsPerPage, setNrItems, update, updateTable)
+module Components.PagedTable exposing (Config, Fetch, Model, Msg(..), appendData, getCurrentPage, getNrItems, getPage, getTable, hasData, hasNextPage, hasPrevPage, init, setItemsPerPage, setNrItems, update)
 
 import Components.Table as Table exposing (Table)
 import RecordSetter exposing (s_loading, s_nextpage)
@@ -166,18 +166,6 @@ appendData config filt nextPage data (Model pt) =
         |> loadMore config
 
 
-setData : Config eff -> Table.Filter d -> Maybe String -> List d -> Model d -> ( Model d, Maybe eff )
-setData config filt nextPage data (Model pt) =
-    { pt
-        | table =
-            Table.setData filt data pt.table
-                |> s_nextpage nextPage
-                |> s_loading False
-        , loaded = True
-    }
-        |> loadMore config
-
-
 loadMore : Config eff -> ModelInternal d -> ( Model d, Maybe eff )
 loadMore config pt =
     let
@@ -241,34 +229,6 @@ getTable (Model pt) =
     pt.table
 
 
-removeItem : Config eff -> (d -> Bool) -> Model d -> ( Model d, Maybe eff )
-removeItem config predicate (Model pt) =
-    { pt
-        | table = Table.filterTable (predicate >> not) pt.table
-    }
-        |> loadMore config
-
-
-updateTable : Config eff -> (Table d -> Table d) -> Model d -> ( Model d, Maybe eff )
-updateTable config upd (Model pt) =
-    { pt | table = upd pt.table }
-        |> loadMore config
-
-
 getCurrentPage : Model d -> Int
 getCurrentPage (Model pt) =
     pt.currentPage
-
-
-getItemsPerPage : Model d -> Int
-getItemsPerPage (Model pt) =
-    pt.itemsPerPage
-
-
-loadFirstPage : Config eff -> Model d -> ( Model d, Maybe eff )
-loadFirstPage config (Model pt) =
-    ( Model pt |> setLoading True |> goToFirstPage
-    , config.fetch
-        |> Maybe.map
-            (\fn -> fn pt.itemsPerPage Nothing)
-    )

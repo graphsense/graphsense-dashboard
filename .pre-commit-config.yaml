@@ -23,6 +23,15 @@ repos:
     pass_filenames: false
     always_run: true
     stages: [pre-commit]
+  # The dead-code rules in review/ are only correct while src/PluginApi.elm
+  # lists what the plugins use. Skips itself in a checkout without plugins.
+  - id: check_plugin_api
+    name: Check src/PluginApi.elm is up to date
+    entry: make check-plugin-api
+    language: system
+    pass_filenames: false
+    always_run: true
+    stages: [pre-commit]
   - id: linting
     name: Run linting (elm-review)
     entry: make lint

@@ -10,16 +10,12 @@ module Components.TransactionFilter exposing
     , Range
     , Settings
     , SettingsModel
-    , applyQuickFilter
     , getDateRange
     , getDirection
-    , getDirectionFromQuickFilter
     , getHoveredQuickFilter
     , getIncludeZeroValueTxs
     , getSelectedAsset
-    , getSelectedQuickFilter
     , getSettings
-    , getTx
     , getTxIdFromQuickFilter
     , getUtxoFilter
     , hasChanged
@@ -29,17 +25,12 @@ module Components.TransactionFilter exposing
     , initSettingsFromQuickFilter
     , perform
     , setFocusDate
-    , setSelectedQuickFilter
     , subscriptions
     , update
     , updateDateRange
-    , updateDateRangeInternal
-    , updateDirection
     , updateQuickFilters
-    , updateSelectedAsset
     , view
     , withAssetSelectBox
-    , withDateRange
     , withDateRangePicker
     , withDirection
     , withIncludeZeroValueTxs
@@ -467,12 +458,6 @@ updateDirectionInternal direction model =
         |> Maybe.map (\_ -> direction)
         |> flip s_direction model.settings
         |> flip s_settings model
-
-
-updateDirection : Maybe Direction -> Model -> Model
-updateDirection direction (Internal model) =
-    updateDirectionInternal direction model
-        |> Internal
 
 
 resetIncludeZeroValueTxs : InternalModel -> InternalModel
@@ -1261,12 +1246,6 @@ initQuickFilter tx dir date =
         }
 
 
-withDateRange : Posix -> Posix -> Settings -> Settings
-withDateRange mn mx (Settings model) =
-    Settings
-        { model | range = Just <| Just <| Range mn mx }
-
-
 withDateRangePicker : Locale.Model -> Posix -> Posix -> Model -> Model
 withDateRangePicker locale mn mx (Internal model) =
     Internal
@@ -1461,12 +1440,6 @@ setFocusDate focusDate (Internal model) =
         }
 
 
-updateSelectedAsset : Maybe String -> Model -> Model
-updateSelectedAsset selectedAsset (Internal model) =
-    updateSelectedAssetInternal (Maybe.map String.toUpper selectedAsset) model
-        |> Internal
-
-
 updateSelectedAssetInternal : Maybe String -> InternalModel -> InternalModel
 updateSelectedAssetInternal selectedAsset model =
     Rs.s_asset selectedAsset model.settings
@@ -1495,12 +1468,6 @@ getDirection (Settings model) =
     model.direction |> Maybe.Extra.join
 
 
-getSelectedQuickFilter : Model -> Maybe QuickFilter
-getSelectedQuickFilter (Internal model) =
-    settingsToQuickFilter model
-        |> Maybe.map QuickFilterInternal
-
-
 applyQuickFilter : QuickFilterModel -> InternalModel -> InternalModel
 applyQuickFilter qf model =
     let
@@ -1517,12 +1484,6 @@ applyQuickFilter qf model =
                     ( Nothing, Just qf.date )
             )
         |> updateDirectionInternal (Just qf.direction)
-
-
-setSelectedQuickFilter : QuickFilter -> Model -> Model
-setSelectedQuickFilter (QuickFilterInternal qf) (Internal model) =
-    applyQuickFilter qf model
-        |> Internal
 
 
 getSettings : Model -> Settings
@@ -1542,16 +1503,6 @@ getUtxoFilter (Internal model) =
                     _ ->
                         Nothing
             )
-
-
-getTx : QuickFilter -> Tx.TxType
-getTx (QuickFilterInternal { tx }) =
-    tx
-
-
-getDirectionFromQuickFilter : QuickFilter -> Direction
-getDirectionFromQuickFilter (QuickFilterInternal { direction }) =
-    direction
 
 
 subscriptions : Model -> Sub Msg

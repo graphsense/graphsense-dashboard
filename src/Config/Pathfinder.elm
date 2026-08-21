@@ -1,4 +1,4 @@
-module Config.Pathfinder exposing (AggEdgeFilter(..), Config, HideForExport(..), TracingMode(..), addressRadius, autoLinkContractAddresses, bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset, numberOfRowsForCSVExport)
+module Config.Pathfinder exposing (Config, HideForExport(..), TracingMode(..), addressRadius, autoLinkContractAddresses, bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset, numberOfRowsForCSVExport)
 
 {-| When auto-linking newly added address nodes to their visible neighbors,
 contract calls (links where either endpoint is a smart contract) are omitted by
@@ -47,25 +47,10 @@ type HideForExport
     | Exporting Bool
 
 
-{-| In aggregate mode, which subset of agg-edges to show.
-
-  - `AllAggEdges` — every agg-edge (default)
-  - `OnlyTxBacked` — only edges with at least one underlying tx on the canvas
-  - `OnlyNew` — only edges whose underlying-tx set is empty (i.e. revealed
-    via aggregate exploration without any tx yet traced through them)
-
--}
-type AggEdgeFilter
-    = AllAggEdges
-    | OnlyTxBacked
-    | OnlyNew
-
-
 type alias Config =
     { snapToGrid : Bool
     , highlightClusterFriends : Bool
     , tracingMode : TracingMode
     , avoidOverlapingNodes : Bool
     , hideForExport : HideForExport
-    , aggEdgeFilter : AggEdgeFilter
     }

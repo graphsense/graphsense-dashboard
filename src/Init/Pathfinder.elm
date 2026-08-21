@@ -3,7 +3,7 @@ module Init.Pathfinder exposing (init)
 import AssocList
 import Components.ExportCSV as ExportCSV
 import Components.Tooltip as Tooltip
-import Config.Pathfinder exposing (AggEdgeFilter(..), HideForExport(..), TracingMode(..))
+import Config.Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Dict
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
@@ -48,7 +48,6 @@ init us =
             , tracingMode = us.tracingMode |> Maybe.withDefault TransactionTracingMode
             , avoidOverlapingNodes = us.avoidOverlapingNodes |> Maybe.withDefault True
             , hideForExport = NoExport
-            , aggEdgeFilter = AllAggEdges
             }
       , pointerTool = Drag
       , modPressed = False

@@ -35,6 +35,28 @@ import Review.Rule as Rule exposing (Rule)
 import Simplify
 
 
+{-| Exemptions for the three dead-code rules.
+
+These rules are only correct because `src/PluginApi.elm` references every core
+symbol the plugins use: `elm.json` is generated and only lists the plugins that
+happen to be checked out, and CI has none, so without that module ~40 core
+exports would look dead in CI. `PluginApi` itself is therefore exempt -- its
+only consumers live in six other repositories.
+
+`Util/Debug.elm` is a hand-wired debugging helper, always "unused" in a clean
+tree. `Util/Nullable.elm` is used only by a plugin *and* imports a module from a
+plugin's generated api directory, so `PluginApi` cannot reference it without
+breaking the build wherever that plugin is absent -- it should really move into
+that plugin. `themes/` is not covered by `make format`, so an automatic fix there
+would reformat a hand-maintained file as a side effect.
+
+-}
+ignoreForDeadCode : Rule -> Rule
+ignoreForDeadCode =
+    Rule.ignoreErrorsForFiles [ "src/PluginApi.elm", "src/Util/Debug.elm", "src/Util/Nullable.elm" ]
+        >> Rule.ignoreErrorsForDirectories [ "themes/" ]
+
+
 config : List Rule
 config =
     [ --   Docs.ReviewAtDocs.rule
@@ -53,10 +75,10 @@ config =
     , NoRedundantlyQualifiedType.rule
 
     -- , NoPrematureLetComputation.rule
-    -- , NoUnused.CustomTypeConstructors.rule []
-    -- , NoUnused.CustomTypeConstructorArgs.rule
     -- , NoUnused.Dependencies.rule
-    -- , NoUnused.Exports.rule
+    , NoUnused.Exports.rule |> ignoreForDeadCode
+    , NoUnused.CustomTypeConstructors.rule [] |> ignoreForDeadCode
+    , NoUnused.CustomTypeConstructorArgs.rule |> ignoreForDeadCode
     , NoUnused.Parameters.rule
 
     -- , NoUnused.Patterns.rule

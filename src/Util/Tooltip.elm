@@ -1,4 +1,4 @@
-module Util.Tooltip exposing (linkRow, tooltipConfig, tooltipProperties, tooltipRow, tooltipRowCustomValue, view)
+module Util.Tooltip exposing (tooltipConfig, tooltipProperties, tooltipRow, tooltipRowCustomValue, view)
 
 import Api.Data exposing (Actor, TagSummary)
 import Basics.Extra exposing (flip)

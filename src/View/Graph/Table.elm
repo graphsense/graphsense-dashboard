@@ -1,22 +1,19 @@
-module View.Graph.Table exposing (Tools, addressColumn, csvTool, customizations, filterTool, htmlColumn, htmlColumnWithSorter, info, intColumn, intColumnWithoutValueDetailFormatting, maybeIntColumn, noTools, simpleThead, simpleTheadHelp, stringColumn, table, tableHint, tickColumn, tickIf, timestampColumn, valueAndTokensColumnWithOptions, valueColumn, valueColumnWithOptions, valueColumnWithoutCode, valuesCell, valuesCss, valuesSorter)
+module View.Graph.Table exposing (Tools, customizations, htmlColumn, htmlColumnWithSorter, intColumn, noTools, simpleThead, simpleTheadHelp, stringColumn, table, valuesSorter)
 
 import Api.Data
 import Components.Table as T
 import Config.View as View
-import Css
 import Css.Table exposing (Styles)
-import Dict exposing (Dict)
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Model.Currency exposing (AssetIdentifier, asset, assetFromBase)
+import Model.Currency exposing (AssetIdentifier)
 import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
 import Tuple3
-import Util.Data as Data
-import Util.View exposing (copyableLongIdentifier, loadingSpinner, none)
+import Util.View exposing (loadingSpinner, none)
 import View.Locale as Locale
 
 
@@ -224,34 +221,6 @@ stringColumn styles vc name accessor =
         }
 
 
-addressColumn : Styles -> View.Config -> String -> (data -> String) -> (data -> msg) -> Table.Column data msg
-addressColumn styles vc name accessor onCli =
-    Table.veryCustomColumn
-        { name = name
-        , viewData =
-            \data ->
-                accessor data
-                    |> copyableLongIdentifier vc
-                        [ onClick (onCli data)
-                        , Css.cursor Css.pointer
-                            |> List.singleton
-                            |> css
-                        ]
-                    |> List.singleton
-                    |> Table.HtmlDetails [ styles.cell vc |> css ]
-        , sorter = Table.increasingOrDecreasingBy accessor
-        }
-
-
-timestampColumn : Styles -> View.Config -> String -> (data -> Int) -> Table.Column data msg
-timestampColumn styles vc name accessor =
-    Table.veryCustomColumn
-        { name = name
-        , viewData = accessor >> Data.timestampToPosix >> Locale.timestamp vc.locale >> text >> List.singleton >> Table.HtmlDetails [ styles.cell vc |> css ]
-        , sorter = Table.increasingOrDecreasingBy accessor
-        }
-
-
 intColumn : Styles -> View.Config -> String -> (data -> Int) -> Table.Column data msg
 intColumn styles vc name accessor =
     Table.veryCustomColumn
@@ -266,171 +235,10 @@ intColumn styles vc name accessor =
         }
 
 
-intColumnWithoutValueDetailFormatting : Styles -> View.Config -> String -> (data -> Int) -> Table.Column data msg
-intColumnWithoutValueDetailFormatting styles vc name accessor =
-    Table.veryCustomColumn
-        { name = name
-        , viewData =
-            accessor
-                >> Locale.intWithoutValueDetailFormatting vc.locale
-                >> text
-                >> List.singleton
-                >> Table.HtmlDetails [ styles.numberCell vc |> css ]
-        , sorter = Table.increasingOrDecreasingBy accessor
-        }
-
-
-maybeIntColumn : Styles -> View.Config -> String -> (data -> Maybe Int) -> Table.Column data msg
-maybeIntColumn styles vc name accessor =
-    Table.veryCustomColumn
-        { name = name
-        , viewData =
-            accessor
-                >> Maybe.map (Locale.intWithoutValueDetailFormatting vc.locale)
-                >> Maybe.withDefault ""
-                >> text
-                >> List.singleton
-                >> Table.HtmlDetails [ styles.numberCell vc |> css ]
-        , sorter = Table.increasingOrDecreasingBy (accessor >> Maybe.withDefault 0)
-        }
-
-
-valueColumn : Styles -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
-valueColumn styles =
-    valueColumnWithOptions styles False
-
-
-valueColumnWithoutCode : Styles -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
-valueColumnWithoutCode styles =
-    valueColumnWithOptions styles True
-
-
-valueColumnWithOptions : Styles -> Bool -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
-valueColumnWithOptions styles hideCode vc getCoinCode name getValues =
-    Table.veryCustomColumn
-        { name = name
-        , viewData = \data -> getValues data |> valuesCell styles vc hideCode (getCoinCode data)
-        , sorter = Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
-        }
-
-
-valueAndTokensColumnWithOptions : Styles -> Bool -> View.Config -> (data -> String) -> String -> (data -> Api.Data.Values) -> (data -> Maybe (Dict String Api.Data.Values)) -> Table.Column data msg
-valueAndTokensColumnWithOptions styles _ vc getCoinCode name getValues getTokens =
-    let
-        assets data =
-            ( assetFromBase (getCoinCode data), getValues data )
-                :: (getTokens data |> Maybe.map (Dict.toList >> List.map (\( k, v ) -> ( asset (getCoinCode data) k, v ))) |> Maybe.withDefault [])
-
-        curr =
-            View.toCurrency vc
-    in
-    Table.veryCustomColumn
-        { name = name
-        , viewData =
-            \data ->
-                assets data
-                    |> Locale.currency curr vc.locale
-                    |> text
-                    |> List.singleton
-                    |> Table.HtmlDetails
-                        [ styles.valuesCell vc False |> css
-                        ]
-        , sorter = Table.decreasingOrIncreasingBy (assets >> Locale.currencyAsFloat curr vc.locale)
-        }
-
-
-valuesCell : Styles -> View.Config -> Bool -> AssetIdentifier -> Api.Data.Values -> Table.HtmlDetails msg
-valuesCell styles vc hideCode coinCode values =
-    (if hideCode then
-        Locale.currencyWithoutCode
-
-     else
-        Locale.currency
-    )
-        (View.toCurrency vc)
-        vc.locale
-        [ ( coinCode, values ) ]
-        |> text
-        |> List.singleton
-        |> Table.HtmlDetails
-            [ valuesCss styles vc coinCode values |> css
-            ]
-
-
-valuesCss : Styles -> View.Config -> AssetIdentifier -> Api.Data.Values -> List Css.Style
-valuesCss styles vc asset values =
-    Locale.valuesToFloat (View.toCurrency vc) vc.locale asset values
-        |> Maybe.withDefault 0
-        |> (>) 0
-        |> styles.valuesCell vc
-
-
 valuesSorter : View.Config -> AssetIdentifier -> Api.Data.Values -> Float
 valuesSorter vc asset values =
     Locale.valuesToFloat (View.toCurrency vc) vc.locale asset values
         |> Maybe.withDefault 0
-
-
-tickIf : Styles -> View.Config -> (a -> Bool) -> a -> Html msg
-tickIf styles vc has a =
-    if has a then
-        FontAwesome.icon FontAwesome.check
-            |> Html.Styled.fromUnstyled
-            |> List.singleton
-            |> span
-                [ styles.tick vc |> css
-                ]
-
-    else
-        none
-
-
-tickColumn : Styles -> View.Config -> String -> (data -> Bool) -> Table.Column data msg
-tickColumn styles vc title accessor =
-    htmlColumn styles
-        vc
-        title
-        (\data ->
-            if accessor data then
-                "Y"
-
-            else
-                "N"
-        )
-        (\data ->
-            if accessor data then
-                FontAwesome.icon FontAwesome.check
-                    |> Html.Styled.fromUnstyled
-                    |> List.singleton
-
-            else
-                []
-        )
-
-
-info : Styles -> View.Config -> T.Table data -> Html msg
-info styles vc { data, filtered } =
-    let
-        ld =
-            List.length data
-
-        lf =
-            List.length filtered
-    in
-    div
-        [ styles.info vc |> css
-        ]
-        [ text <|
-            if ld /= lf then
-                Locale.interpolated vc.locale
-                    "Showing {0} of {1} items"
-                    [ String.fromInt lf, String.fromInt ld ]
-
-            else
-                Locale.interpolated vc.locale
-                    "{0} items"
-                    [ String.fromInt lf ]
-        ]
 
 
 tableHint : Styles -> View.Config -> String -> Html msg

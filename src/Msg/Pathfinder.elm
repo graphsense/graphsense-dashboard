@@ -1,10 +1,9 @@
-module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, ChangeTooltipConfig, DisplaySettingsMsg(..), Msg(..), OverlayWindows(..), TextTooltipConfig)
+module Msg.Pathfinder exposing (AddingAddressConfig, AddingRelationsConfig, AddingTxConfig, DisplaySettingsMsg(..), Msg(..), OutMsg(..), OverlayWindows(..))
 
 import Api.Data
 import Color exposing (Color)
 import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
-import Config.Pathfinder
 import Hovercard
 import Model.Dialog as Dialog
 import Model.Direction exposing (Direction)
@@ -124,7 +123,6 @@ type Msg
     | UserInputsAnnotation (List Id) String
     | UserSelectsAnnotationColor (List Id) (Maybe Color)
     | UserPushesLeftMouseButtonOnAggEdgeLabel ( Id, Id ) { x : Float, y : Float } Coords
-    | UserSelectedAggEdgeFilter Config.Pathfinder.AggEdgeFilter
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraph (Maybe Time.Posix)
     | BrowserGotTagSummariesForExportGraphTxsAsCSV Dialog.ExportArea Bool Bool (List ( Id, Api.Data.TagSummary ))
@@ -139,7 +137,6 @@ type Msg
     | UserClickedContextMenuDeleteIcon ContextMenuType
     | UserClickedContextMenuOpenInNewTab ContextMenuType
     | UserClickedContextMenuIdToClipboard ContextMenuType
-    | UserClickedContextMenuAlignVertically
     | UserClickedContextMenuAlignHorizontally
     | UserClosesContextMenu
     | RuntimePostponedUpdateByRoute Route
@@ -170,15 +167,35 @@ type Msg
     | InternalExpandSpecificTxAndAddress Id Id Direction Int
 
 
-type alias TextTooltipConfig =
-    { domId : String, text : String }
+{-| Work the Pathfinder needs the application shell to do.
 
+`Update.Pathfinder` cannot open a dialog, persist user settings or reset the app:
+those live on the top-level `Model`. It used to be `Update.elm` that reached in
+the other direction, intercepting a dozen `PathfinderMsg` variants _before_ they
+reached `Update.Pathfinder` -- which made dispatch depend on the order of case
+branches across two files, with three different conventions for whether the
+intercepted message was also delegated. Two Pathfinder handlers were unreachable
+as a result.
 
-type alias ChangeTooltipConfig =
-    { domId : String
-    , confidence : Float
-    , heuristics : List String
-    }
+Now every Pathfinder message reaches `updateByMsg`, and anything needing the shell
+is returned as one of these instead. See `appLevelOutMsgs`, which is the single
+place that decides.
+
+-}
+type OutMsg
+    = ShowLegendDialog
+    | ConfirmRestart
+    | Restart
+    | SaveUserSettings
+    | ChangedDisplaySettings DisplaySettingsMsg
+    | OpenTagsListDialog Id Api.Data.AddressTags
+    | SetClusterTagsInDialog Id Api.Data.AddressTags
+    | AppendAddressTagsInDialog Id Api.Data.AddressTags
+    | AppendClusterTagsInDialog Id Api.Data.AddressTags
+    | OpenAddTagDialog Id
+    | OpenExportDialog (Maybe Time.Posix)
+    | CloseExportDialog
+    | CloseTopmostOverlay
 
 
 type OverlayWindows

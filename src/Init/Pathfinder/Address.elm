@@ -5,13 +5,13 @@ import Dict
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address, AddressServiceType(..), Txs(..))
 import Model.Pathfinder.Id as Id exposing (Id)
-import Plugin.Update as Plugin exposing (Plugins)
+import Plugin.Update as Plugin
 import RemoteData exposing (RemoteData(..))
 import Set
 
 
-init : Plugins -> Id -> Coords -> Address
-init plugins id { x, y } =
+init : Id -> Coords -> Address
+init id { x, y } =
     { x = x
     , y = Animation.static y
     , clock = 0
@@ -30,7 +30,7 @@ init plugins id { x, y } =
     , hasClusterTagsOnly = False
     , networks = Dict.singleton (Id.network id) (Set.singleton (Id.id id))
     , isStartingPoint = False
-    , plugins = Plugin.initAddress plugins
+    , plugins = Plugin.initAddress
     , clusterColor = Nothing
     , addressServiceType = UnknownService
     }

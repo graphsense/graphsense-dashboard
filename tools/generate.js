@@ -44,7 +44,9 @@ fse.copySync(publicFolder, genPublicFolder, {recursive: true})
 fse.copySync(langFolder, genLangFolder, {recursive: true})
 
 console.log('Generating glue code for plugins:')
-let plugins = process.argv.slice(2)
+const args = process.argv.slice(2)
+const skipElmJson = args.includes('--skip-elm-json')
+let plugins = args.filter(arg => arg !== '--skip-elm-json')
 let availablePlugins = fs.readdirSync(pluginsFolder)
   .filter(fileName => isDir(path.join(pluginsFolder, fileName)))
 
@@ -79,34 +81,39 @@ if(plugins.length === 0) {
 
 console.log("")
 
-const elmJson = JSON.parse(fs.readFileSync('./elm.json'))
+if (!skipElmJson) {
+  const elmJson = JSON.parse(fs.readFileSync('./elm.json'))
 
-// remove all plugin src directories first
-elmJson['source-directories'] = elmJson['source-directories'].filter(s => !s.startsWith(path.join(pluginsFolder)))
+  // remove all plugin src directories first
+  elmJson['source-directories'] = elmJson['source-directories'].filter(s => !s.startsWith(path.join(pluginsFolder)))
 
-// add the installed plugin src directories from each plugin's elm.json
-plugins.forEach(plugin => {
-  const pluginElmJsonPath = path.join(pluginsFolder, plugin.raw_name, 'elm.json')
-  let pluginSourceDirs = ['src'] // default to src if no elm.json or no source-directories
-  
-  try {
-    const pluginElmJson = JSON.parse(fs.readFileSync(pluginElmJsonPath, 'utf8'))
-    if (pluginElmJson['source-directories'] && Array.isArray(pluginElmJson['source-directories'])) {
-      pluginSourceDirs = pluginElmJson['source-directories']
+  // add the installed plugin src directories from each plugin's elm.json
+  plugins.forEach(plugin => {
+    const pluginElmJsonPath = path.join(pluginsFolder, plugin.raw_name, 'elm.json')
+    let pluginSourceDirs = ['src'] // default to src if no elm.json or no source-directories
+    
+    try {
+      const pluginElmJson = JSON.parse(fs.readFileSync(pluginElmJsonPath, 'utf8'))
+      if (pluginElmJson['source-directories'] && Array.isArray(pluginElmJson['source-directories'])) {
+        pluginSourceDirs = pluginElmJson['source-directories']
+      }
+    } catch (e) {
+      // If plugin elm.json doesn't exist or can't be read, use default
     }
-  } catch (e) {
-    // If plugin elm.json doesn't exist or can't be read, use default
-  }
-  
-  pluginSourceDirs.forEach(dir => {
-    const p = path.join(pluginsFolder, plugin.raw_name, dir)
-    if(elmJson['source-directories'].indexOf(p) === -1) {
-      elmJson['source-directories'].push(p)
-    }
+    
+    pluginSourceDirs.forEach(dir => {
+      const p = path.join(pluginsFolder, plugin.raw_name, dir)
+      if(elmJson['source-directories'].indexOf(p) === -1) {
+        elmJson['source-directories'].push(p)
+      }
+    })
   })
-})
 
-fs.writeFileSync('./elm.json', JSON.stringify(elmJson, null, 4))
+  fs.writeFileSync('./elm.json', JSON.stringify(elmJson, null, 4))
+  console.log("\nUpdated src directories in elm.json")
+} else {
+  console.log("\nSkipping elm.json update (--skip-elm-json flag passed)")
+}
 
 
 const transform = (folder) => {
@@ -155,7 +162,4 @@ transform('./')
 for(const plugin in plugins) {
   appendLang(plugins[plugin].raw_name)
 }
-
-
-console.log("\nUpdated src directories in elm.json")
 

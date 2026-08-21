@@ -1,7 +1,6 @@
-module Config exposing (config, logoutUrl, plugins)
+module Config exposing (config, logoutUrl)
 
 import Iknaio
-import Plugin
 import Theme.Theme exposing (Theme)
 
 
@@ -14,8 +13,3 @@ config : { theme : Theme }
 config =
     { theme = Iknaio.theme
     }
-
-
-plugins : Plugin.Plugins
-plugins =
-    Plugin.empty

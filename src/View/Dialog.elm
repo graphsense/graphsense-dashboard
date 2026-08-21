@@ -1,17 +1,16 @@
-module View.Dialog exposing (body, headRow, part, view)
+module View.Dialog exposing (part, view)
 
 import Config.View exposing (Config)
 import Css.Dialog as Css
 import Css.View
-import FontAwesome
-import Html.Styled exposing (Html, button, div, h4, li, span, text, ul)
+import Html.Styled exposing (Html, div, h4, li, text, ul)
 import Html.Styled.Attributes exposing (css)
-import Html.Styled.Events exposing (onClick, stopPropagationOn)
+import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
 import Model exposing (Msg(..))
 import Model.Dialog exposing (ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), InfoConfig, Model(..), OptionsConfig, PluginConfig)
 import Plugin.Model
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View as Plugin
 import RecordSetter as Rs
 import Theme.Html.ErrorMessagesAlerts
     exposing
@@ -34,8 +33,8 @@ import View.Pathfinder.ExportDialog as ExportDialog
 import View.Pathfinder.TagDetailsList as TagsDetailList
 
 
-view : Plugins -> Plugin.Model.ModelState -> Config -> Model Msg -> Html Msg
-view plugins pluginStates vc model =
+view : Plugin.Model.ModelState -> Config -> Model Msg -> Html Msg
+view pluginStates vc model =
     div
         [ stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
         ]
@@ -62,13 +61,13 @@ view plugins pluginStates vc model =
                 TagsDetailList.view vc conf
 
             AddTag conf ->
-                AddTagDialog.view plugins vc conf
+                AddTagDialog.view vc conf
 
             Export conf ->
                 ExportDialog.view vc conf
 
             Plugin conf ->
-                plugin plugins pluginStates vc conf
+                plugin pluginStates vc conf
         ]
 
 
@@ -152,41 +151,6 @@ part vc title content =
             ]
             :: content
         )
-
-
-headRow : Config -> String -> Maybe msg -> Html msg
-headRow vc title onClose =
-    div
-        [ Css.headRow vc |> css
-        ]
-        [ title
-            |> Locale.string vc.locale
-            |> text
-            |> List.singleton
-            |> span
-                [ Css.headRowText vc |> css
-                ]
-        , onClose
-            |> Maybe.map
-                (\click ->
-                    button
-                        [ Css.headRowClose vc |> css
-                        , onClick click
-                        ]
-                        [ FontAwesome.icon FontAwesome.times
-                            |> Html.Styled.fromUnstyled
-                        ]
-                )
-            |> Maybe.withDefault Util.View.none
-        ]
-
-
-body : Config -> { onSubmit : msg } -> List (Html msg) -> Html msg
-body vc { onSubmit } =
-    Html.Styled.form
-        [ Css.body vc |> css
-        , Html.Styled.Events.onSubmit onSubmit
-        ]
 
 
 error : Config -> ErrorConfig Msg -> Html Msg
@@ -353,7 +317,7 @@ customWithVc vc { html } =
     html vc
 
 
-plugin : Plugins -> Plugin.Model.ModelState -> Config -> PluginConfig Msg -> Html Msg
-plugin plugins pluginStates vc _ =
-    Plugin.dialog plugins pluginStates vc
+plugin : Plugin.Model.ModelState -> Config -> PluginConfig Msg -> Html Msg
+plugin pluginStates vc _ =
+    Plugin.dialog pluginStates vc
         |> Maybe.withDefault none

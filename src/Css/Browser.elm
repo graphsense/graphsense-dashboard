@@ -1,29 +1,7 @@
-module Css.Browser exposing (currencyCell, frame, loadingSpinner, propertyBoxActivityPeriod, propertyBoxEntityId, propertyBoxImage, propertyBoxIncomingTxs, propertyBoxKey, propertyBoxNote, propertyBoxOutgoingTxs, propertyBoxRoot, propertyBoxRow, propertyBoxRule, propertyBoxTable, propertyBoxTableLink, propertyBoxUsageRelative, propertyBoxUsageTimestamp, propertyBoxValue, propertyBoxValueInner, root, tableSeparator, valueCell)
+module Css.Browser exposing (propertyBoxImage, propertyBoxKey, propertyBoxNote, propertyBoxRoot, propertyBoxRow, propertyBoxRule, propertyBoxTable, propertyBoxTableLink, propertyBoxValueInner)
 
 import Config.View exposing (Config)
 import Css exposing (..)
-import Util.Css
-
-
-root : Config -> Float -> List Style
-root vc width =
-    position absolute
-        :: height (px 0)
-        :: (zIndex <| int <| Util.Css.zIndexMainValue - 1)
-        :: (maxWidth <| px width)
-        :: vc.theme.browser.root
-
-
-frame : Config -> Bool -> List Style
-frame vc visible =
-    backgroundColor (rgb 255 255 255)
-        :: (if visible then
-                displayFlex
-
-            else
-                display none
-           )
-        :: vc.theme.browser.frame vc.lightmode visible
 
 
 propertyBoxRoot : Config -> List Style
@@ -71,50 +49,14 @@ propertyBoxImage _ =
     ]
 
 
-propertyBoxValue : Config -> List Style
-propertyBoxValue vc =
-    display tableCell
-        :: vc.theme.browser.propertyBoxValue
-
-
 propertyBoxValueInner : Config -> List Style
 propertyBoxValueInner vc =
     vc.theme.browser.propertyBoxValueInner
 
 
-propertyBoxEntityId : Config -> List Style
-propertyBoxEntityId vc =
-    vc.theme.browser.propertyBoxEntityId vc.lightmode
-
-
 propertyBoxRule : Config -> List Style
 propertyBoxRule vc =
     vc.theme.browser.propertyBoxRule
-
-
-propertyBoxIncomingTxs : Config -> List Style
-propertyBoxIncomingTxs vc =
-    vc.theme.browser.propertyBoxIncomingTxs vc.lightmode
-
-
-propertyBoxOutgoingTxs : Config -> List Style
-propertyBoxOutgoingTxs vc =
-    vc.theme.browser.propertyBoxOutgoingTxs vc.lightmode
-
-
-propertyBoxUsageTimestamp : Config -> List Style
-propertyBoxUsageTimestamp vc =
-    vc.theme.browser.propertyBoxUsageTimestamp
-
-
-propertyBoxUsageRelative : Config -> List Style
-propertyBoxUsageRelative vc =
-    vc.theme.browser.propertyBoxUsageRelative
-
-
-propertyBoxActivityPeriod : Config -> List Style
-propertyBoxActivityPeriod vc =
-    vc.theme.browser.propertyBoxActivityPeriod
 
 
 propertyBoxTableLink : Config -> Bool -> List Style
@@ -124,24 +66,3 @@ propertyBoxTableLink vc active =
         :: paddingLeft (px 5)
         :: borderRight (px 1)
         :: vc.theme.browser.propertyBoxTableLink vc.lightmode active
-
-
-loadingSpinner : Config -> List Style
-loadingSpinner vc =
-    vc.theme.browser.loadingSpinner
-
-
-valueCell : Config -> List Style
-valueCell vc =
-    whiteSpace noWrap
-        :: vc.theme.browser.valueCell
-
-
-currencyCell : Config -> List Style
-currencyCell vc =
-    vc.theme.browser.currencyCell
-
-
-tableSeparator : Config -> List Style
-tableSeparator vc =
-    vc.theme.browser.tableSeparator vc.lightmode

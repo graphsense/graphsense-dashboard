@@ -1,10 +1,9 @@
-module Update.Statusbar exposing (add, clearRetry, messagesFromEffects, setRetry, toggle, update, updateLastBlocks)
+module Update.Statusbar exposing (add, messagesFromEffects, setRetry, toggle, update, updateLastBlocks)
 
 import Api.Data
 import Api.Request.Clusters
 import Dict
 import Effect.Api as Api
-import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Pathfinder as Pathfinder
 import Effect.Search as Search
@@ -102,36 +101,6 @@ messageFromEffect model effect =
         Model.ApiEffect eff ->
             messageFromApiEffect model eff
 
-        Model.GraphEffect (Graph.ApiEffect eff) ->
-            messageFromApiEffect model eff
-
-        Model.GraphEffect (Graph.NavPushRouteEffect _) ->
-            Nothing
-
-        Model.GraphEffect Graph.GetBrowserElementEffect ->
-            Nothing
-
-        Model.GraphEffect (Graph.PluginEffect _) ->
-            Nothing
-
-        Model.GraphEffect (Graph.InternalGraphAddedAddressesEffect _) ->
-            Nothing
-
-        Model.GraphEffect (Graph.InternalGraphAddedEntitiesEffect _) ->
-            Nothing
-
-        Model.GraphEffect (Graph.InternalGraphSelectedAddressEffect _) ->
-            Nothing
-
-        Model.GraphEffect (Graph.TagSearchEffect _) ->
-            Nothing
-
-        Model.GraphEffect (Graph.CmdEffect _) ->
-            Nothing
-
-        Model.GraphEffect (Graph.DownloadCSVEffect _) ->
-            Nothing
-
         Model.PathfinderEffect (Pathfinder.ApiEffect eff) ->
             messageFromApiEffect model eff
 
@@ -227,9 +196,6 @@ retryTokenFromEffect effect =
         Model.ApiEffect eff ->
             Api.retryToken eff
 
-        Model.GraphEffect (Graph.ApiEffect eff) ->
-            Api.retryToken eff
-
         Model.PathfinderEffect (Pathfinder.ApiEffect eff) ->
             Api.retryToken eff
 
@@ -248,16 +214,6 @@ cancelled or superseded in the meantime — see the `retries` field docs on
 setRetry : String -> Int -> Model -> Model
 setRetry key attempt sb =
     { sb | retries = Dict.insert key attempt sb.retries }
-
-
-{-| Drop any retry bookkeeping for `key`. Use this when a request is
-cancelled or otherwise abandoned outside the normal `update` path; the
-regular `update` function already clears the entry alongside the message
-when a final result arrives.
--}
-clearRetry : String -> Model -> Model
-clearRetry key sb =
-    { sb | retries = Dict.remove key sb.retries }
 
 
 updateLastBlocks : Api.Data.Stats -> Model -> Model

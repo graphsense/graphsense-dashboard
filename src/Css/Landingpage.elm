@@ -1,4 +1,4 @@
-module Css.Landingpage exposing (exampleLinkBox, frame, loadBox, loadBoxIcon, loadBoxText, root, rule, searchRoot, searchTextarea)
+module Css.Landingpage exposing (exampleLinkBox, frame, loadBox, loadBoxIcon, loadBoxText, root, rule, searchRoot)
 
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -17,11 +17,6 @@ frame vc =
 searchRoot : Config -> List Style
 searchRoot vc =
     vc.theme.landingpage.searchRoot
-
-
-searchTextarea : Config -> List Style
-searchTextarea vc =
-    vc.theme.landingpage.searchTextarea vc.lightmode
 
 
 rule : Config -> List Style

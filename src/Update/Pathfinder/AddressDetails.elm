@@ -1,4 +1,4 @@
-module Update.Pathfinder.AddressDetails exposing (loadFirstTxsPage, makeExportCSVConfig, prepareCSV, syncByAddress, update, updateTransactionTable)
+module Update.Pathfinder.AddressDetails exposing (makeExportCSVConfig, syncByAddress, update)
 
 import Api.Data
 import Api.Request.Addresses
@@ -171,9 +171,6 @@ update uc msg model =
 
         UserClickedToggleTotalSpentDetails ->
             ( model |> s_totalSentDetailsOpen (not model.totalSentDetailsOpen), [] )
-
-        UserClickedToggleTokenBalancesSelect ->
-            ( model |> s_tokenBalancesOpen (not model.tokenBalancesOpen), [] )
 
         UserClickedToggleNeighborsTable dir ->
             getNeighborsTableAndSetter model dir
@@ -555,11 +552,6 @@ update uc msg model =
                 |> flip s_isClusterDetailsOpen model
                 |> n
 
-        UserClickedToggleDisplayAllTagsInDetails ->
-            not model.displayAllTagsInDetails
-                |> flip s_displayAllTagsInDetails model
-                |> n
-
         ExportCSVMsg _ _ ->
             -- handled upstream
             n model
@@ -761,18 +753,43 @@ makeExportCSVConfig uc addressId txs =
         , numberOfRows = numberOfRowsForCSVExport
         , fetch =
             \nor ->
-                fetchTransactions
-                    (\_ -> GotAddressTxsForExport txs)
-                    txs
-                    addressId
-                    (txs.table
-                        |> InfiniteTable.getTable
-                        |> .state
-                        |> Table.getSortState
-                        |> Just
-                    )
-                    nor
-                    Nothing
+                case TransactionFilter.getUtxoFilter txs.filter of
+                    Just _ ->
+                        -- The utxo-only filter has no server-side equivalent: its rows
+                        -- come from the WorkflowNextUtxoTx chain walk, whose responses
+                        -- are routed to the table (see fetchTransactionsWithPathfinderMsg),
+                        -- not to the message the caller passes in. Fetching again here
+                        -- would silently drop the export's continuation and leave the
+                        -- spinner turning forever, so export the rows the table holds.
+                        let
+                            loaded =
+                                InfiniteTable.getCurrentData txs.table
+                        in
+                        { addressTxs = List.take nor loaded
+                        , nextPage =
+                            if List.length loaded > nor then
+                                Just "truncated"
+
+                            else
+                                Nothing
+                        }
+                            |> GotAddressTxsForExport txs
+                            |> Pathfinder.AddressDetailsMsg addressId
+                            |> InternalEffect
+
+                    Nothing ->
+                        fetchTransactions
+                            (\_ -> GotAddressTxsForExport txs)
+                            txs
+                            addressId
+                            (txs.table
+                                |> InfiniteTable.getTable
+                                |> .state
+                                |> Table.getSortState
+                                |> Just
+                            )
+                            nor
+                            Nothing
         , cmdToEff =
             Cmd.map
                 (ExportCSVMsg txs >> Pathfinder.AddressDetailsMsg addressId)
@@ -1073,10 +1090,3 @@ prepareCSV locModel network data =
                 |> Util.Csv.string
              )
            ]
-
-
-updateTransactionTable : (TransactionTable.Model -> TransactionTable.Model) -> Model -> Model
-updateTransactionTable f model =
-    model.txs
-        |> RemoteData.map (\txs -> { model | txs = f txs |> RemoteData.Success })
-        |> RemoteData.withDefault model

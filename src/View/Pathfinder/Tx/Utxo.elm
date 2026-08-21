@@ -20,7 +20,6 @@ import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
-import Plugin.View exposing (Plugins)
 import RecordSetter exposing (s_subtract, s_txNode)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
@@ -41,8 +40,8 @@ import View.Pathfinder.Tx.Path exposing (labelsSep, pickPathFunction)
 import View.Pathfinder.Tx.Utils exposing (signX, toPosition)
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> UtxoTx -> Maybe Annotations.AnnotationItem -> Svg Msg
-view _ vc pc tx utxo annotation =
+view : View.Config -> Pathfinder.Config -> Tx -> UtxoTx -> Maybe Annotations.AnnotationItem -> Svg Msg
+view vc pc tx utxo annotation =
     let
         id =
             tx.id
@@ -205,8 +204,8 @@ type RenderLevel
     | Edge
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> RenderLevel -> UtxoTx -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
-edge _ vc pc level utxo tx annotation =
+edge : View.Config -> Pathfinder.Config -> RenderLevel -> UtxoTx -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
+edge vc pc level utxo tx annotation =
     let
         assetToValue asset =
             let

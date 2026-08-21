@@ -1,4 +1,4 @@
-module Model.Graph.Coords exposing (BBox, Coords, avg, betrag, isInBBox, relativeToGraph, relativeToGraphZero)
+module Model.Graph.Coords exposing (BBox, Coords, avg, betrag, isInBBox, relativeToGraphZero)
 
 import List.Nonempty as NList
 
@@ -21,18 +21,6 @@ betrag start current =
         + (current.y - start.y)
         |> (\x -> x ^ 2)
         |> sqrt
-
-
-relativeToGraph : Maybe BBox -> Coords -> Coords
-relativeToGraph bbox coords =
-    bbox
-        |> Maybe.map
-            (\{ x, y } ->
-                { x = coords.x - x
-                , y = coords.y - y
-                }
-            )
-        |> Maybe.withDefault coords
 
 
 relativeToGraphZero : Maybe BBox -> Coords -> Coords

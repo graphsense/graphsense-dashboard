@@ -1,10 +1,7 @@
-module Util.ExternalLinks exposing (addProtocolPrefx, getBlockExplorerLinks, getBlockExplorerTransactionLinks, getFontAwesomeIconForUris)
+module Util.ExternalLinks exposing (addProtocolPrefx, getBlockExplorerLinks, getBlockExplorerTransactionLinks)
 
 import Dict exposing (Dict)
-import FontAwesome
-import List.Extra
 import Model.Tx exposing (AccountTxType(..), getTxHash, parseTxIdentifier)
-import Regex exposing (Regex)
 
 
 blockExplorerLinks : Dict String (List ( String, String ))
@@ -137,28 +134,6 @@ getBlockExplorerTransactionLinks network txHash =
 
         _ ->
             []
-
-
-fontAwesomeIconAssignments : List ( Regex, FontAwesome.Icon )
-fontAwesomeIconAssignments =
-    [ ( Regex.fromString "github.com" |> Maybe.withDefault Regex.never, FontAwesome.github )
-    , ( Regex.fromString "twitter.com" |> Maybe.withDefault Regex.never, FontAwesome.twitter )
-    , ( Regex.fromString "facebook.com" |> Maybe.withDefault Regex.never, FontAwesome.facebook )
-    , ( Regex.fromString "linkedin.com" |> Maybe.withDefault Regex.never, FontAwesome.linkedin )
-    , ( Regex.fromString "wikipedia.org" |> Maybe.withDefault Regex.never, FontAwesome.wikipediaW )
-    , ( Regex.fromString "reddit.com" |> Maybe.withDefault Regex.never, FontAwesome.reddit )
-    , ( Regex.fromString "instagram.com" |> Maybe.withDefault Regex.never, FontAwesome.instagram )
-    ]
-
-
-getFontAwesomeIconForUri : String -> Maybe FontAwesome.Icon
-getFontAwesomeIconForUri uri =
-    List.Extra.find (\( regex, _ ) -> Regex.contains regex uri) fontAwesomeIconAssignments |> Maybe.map Tuple.second
-
-
-getFontAwesomeIconForUris : List String -> List ( String, Maybe FontAwesome.Icon )
-getFontAwesomeIconForUris uris =
-    List.map getFontAwesomeIconForUri uris |> List.map2 Tuple.pair uris
 
 
 addProtocolPrefx : String -> String
