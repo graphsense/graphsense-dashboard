@@ -34,9 +34,22 @@ view :
     -> Model key
     -> Document Msg
 view vc model =
+    let
+        -- `Plugin.title` is contributed by every plugin regardless of the page;
+        -- `Plugin.pageTitle` only by the plugin whose page is currently on screen.
+        pluginTitles =
+            Plugin.title model.plugins vc
+                ++ (case model.page of
+                        Plugin pluginType ->
+                            Plugin.pageTitle model.plugins pluginType vc
+
+                        _ ->
+                            []
+                   )
+    in
     { title =
         Locale.string vc.locale "Iknaio Analytics Platform"
-            :: Plugin.title model.plugins vc
+            :: pluginTitles
             |> List.reverse
             |> String.join " | "
     , body =

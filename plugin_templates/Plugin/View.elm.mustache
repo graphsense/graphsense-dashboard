@@ -204,6 +204,21 @@ title states vc =
         |> List.concat
 
 
+pageTitle : Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> List String
+pageTitle states type_ vc =
+    {{^plugins}}[]{{/plugins}}{{#plugins.length}}case type_ of{{#plugins}} 
+        Plugin.Model.{{package}} ->
+                Maybe.map2
+                    (\fun ->
+                        fun vc
+                    )
+                    {{package}}.Interface.View.plugin.pageTitle
+                    states.{{name}}
+                |> Maybe.withDefault []
+{{/plugins}}
+{{/plugins.length}}
+
+
 profile : Plugin.Model.ModelState -> View.Config -> List (String, Html Model.Msg)
 profile states vc =
     [ {{#plugins}}
