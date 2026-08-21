@@ -470,6 +470,12 @@ type alias CurrencyStats =
     , noTaggedAddresses : Int
     , noTxs : Int
     , timestamp : Int
+    -- optional network-behavior fields sent by external-backend deployments
+    -- (absent from the core API): the gas coin's ticker, its decimals, and a
+    -- display name — lets the app stop hardcoding per-network tables
+    , coinTicker : Maybe String
+    , coinDecimals : Maybe Int
+    , networkName : Maybe String
     }
 
 
@@ -2840,15 +2846,18 @@ conceptDecoder =
 currencyStatsDecoder : Json.Decode.Decoder CurrencyStats
 currencyStatsDecoder =
     Json.Decode.succeed CurrencyStats
-        |> decode "name" Json.Decode.string 
-        |> decode "no_address_relations" Json.Decode.int 
-        |> decode "no_addresses" Json.Decode.int 
-        |> decode "no_blocks" Json.Decode.int 
-        |> decode "no_entities" Json.Decode.int 
-        |> decode "no_labels" Json.Decode.int 
-        |> decode "no_tagged_addresses" Json.Decode.int 
-        |> decode "no_txs" Json.Decode.int 
-        |> decode "timestamp" Json.Decode.int 
+        |> decode "name" Json.Decode.string
+        |> decode "no_address_relations" Json.Decode.int
+        |> decode "no_addresses" Json.Decode.int
+        |> decode "no_blocks" Json.Decode.int
+        |> decode "no_entities" Json.Decode.int
+        |> decode "no_labels" Json.Decode.int
+        |> decode "no_tagged_addresses" Json.Decode.int
+        |> decode "no_txs" Json.Decode.int
+        |> decode "timestamp" Json.Decode.int
+        |> maybeDecode "coin_ticker" Json.Decode.string Nothing
+        |> maybeDecode "coin_decimals" Json.Decode.int Nothing
+        |> maybeDecode "network_name" Json.Decode.string Nothing
 
 
 clusterDecoder : Json.Decode.Decoder Cluster
