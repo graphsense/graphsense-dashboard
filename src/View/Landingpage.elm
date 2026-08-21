@@ -36,6 +36,21 @@ frame vc =
             ]
 
 
+{-| Succeeds only if the drag carries files (not text selections etc.).
+-}
+whenDraggingFiles : Msg -> Json.Decode.Decoder Msg
+whenDraggingFiles msg =
+    Json.Decode.at [ "dataTransfer", "types" ] (Json.Decode.list Json.Decode.string)
+        |> Json.Decode.andThen
+            (\types ->
+                if List.member "Files" types then
+                    Json.Decode.succeed msg
+
+                else
+                    Json.Decode.fail "not dragging files"
+            )
+
+
 searchBoxView : View.Config -> Model.Search.Model -> Html Msg
 searchBoxView vc model =
     Sc.searchBarFieldStateTypingWithInstances
@@ -141,17 +156,49 @@ view vc model =
             [ Locale.string vc.locale "or" |> text
             ]
         , div
-            [ CssLanding.loadBox vc |> css
+            [ CssLanding.loadBox vc
+                ++ [ Css.property "transition" "transform 0.15s ease-out"
+                   , Css.transform
+                        (if model.fileDragOver then
+                            Css.scale 1.1
+
+                         else
+                            Css.scale 1
+                        )
+                   ]
+                |> css
             , onClick (PathfinderMsg Pathfinder.UserClickedOpenGraph)
+
+            -- dragover must be cancelled for the box to be a drop target
+            , preventDefaultOn "dragover" (Json.Decode.succeed ( NoOp, True ))
+            , on "dragenter" (whenDraggingFiles (UserDraggedFileOverLoadBox True))
+            , on "dragleave" (Json.Decode.succeed (UserDraggedFileOverLoadBox False))
+
+            -- some drag sources advertise files at dragenter but deliver none at
+            -- drop; still reset the drag-over state then, or the box stays enlarged
+            , preventDefaultOn "drop"
+                (Json.Decode.at [ "dataTransfer", "files", "0" ] Json.Decode.value
+                    |> Json.Decode.maybe
+                    |> Json.Decode.map
+                        (\file ->
+                            ( file
+                                |> Maybe.map UserDroppedFileOnLoadBox
+                                |> Maybe.withDefault (UserDraggedFileOverLoadBox False)
+                            , True
+                            )
+                        )
+                )
             ]
+            -- pointer-events none on the children, so dragleave only fires
+            -- when the cursor leaves the box, not when it crosses a child
             [ div
-                [ CssLanding.loadBoxIcon vc |> css
+                [ CssLanding.loadBoxIcon vc ++ [ Css.pointerEvents Css.none ] |> css
                 ]
                 [ FontAwesome.icon FontAwesome.folderOpen
                     |> Html.Styled.fromUnstyled
                 ]
             , div
-                [ CssLanding.loadBoxText vc |> css
+                [ CssLanding.loadBoxText vc ++ [ Css.pointerEvents Css.none ] |> css
                 ]
                 [ Locale.string vc.locale "Landingpage-load-file" |> text
                 ]

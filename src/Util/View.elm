@@ -1,4 +1,4 @@
-module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyableLongIdentifier, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, loadingSpinner, makeValuesList, noTextSelection, none, onClickWithStop, p, pointer, switch, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyableLongIdentifier, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, loadingSpinner, makeValuesList, noTextSelection, none, onClickWithStop, onMiddleClick, p, pointer, switch, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -14,7 +14,7 @@ import Html as BHtml
 import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
 import Html.Styled.Attributes exposing (attribute, css, src, title)
-import Html.Styled.Events exposing (stopPropagationOn)
+import Html.Styled.Events exposing (on, stopPropagationOn)
 import Json.Decode
 import List.Extra
 import Model.Currency as Currency exposing (AssetIdentifier)
@@ -461,6 +461,20 @@ onClickWithStop : msg -> Attribute msg
 onClickWithStop msg =
     Json.Decode.succeed ( msg, True )
         |> stopPropagationOn "click"
+
+
+onMiddleClick : msg -> Attribute msg
+onMiddleClick msg =
+    Json.Decode.field "button" Json.Decode.int
+        |> Json.Decode.andThen
+            (\button ->
+                if button == 1 then
+                    Json.Decode.succeed msg
+
+                else
+                    Json.Decode.fail "not the middle button"
+            )
+        |> on "auxclick"
 
 
 pointer : Attribute msg

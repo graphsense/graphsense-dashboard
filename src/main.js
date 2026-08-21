@@ -478,6 +478,12 @@ async function openGsFile () {
   if (!file) {
     return
   }
+  loadGsFile(file)
+}
+
+// Validates and loads a .gs File object. Used by the file picker (openGsFile)
+// and by drag-and-drop (deserializeFile port).
+function loadGsFile (file) {
   if (!file.name.toLowerCase().endsWith('.gs')) {
     reportImportFileError(new Error('unsupported-extension'), file.name)
     return
@@ -505,6 +511,20 @@ async function openGsFile () {
 
 // Toolbar "open graph" button -> open the file picker.
 app.ports.deserialize.subscribe(openGsFile)
+
+// File dropped onto the landing page load box.
+app.ports.deserializeFile.subscribe(loadGsFile)
+
+// A file dropped anywhere else would make the browser navigate to the file,
+// replacing the app. Swallow such drops and show the no-drop cursor. Drops on
+// real drop targets are unaffected: their handlers preventDefault first.
+window.addEventListener('dragover', (e) => {
+  if (!e.defaultPrevented) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'none'
+  }
+})
+window.addEventListener('drop', (e) => e.preventDefault())
 
 // Download a .gs graph by its API download id and load it through the same path
 // as the file picker. Used by the ?import=<id> deep link. We take an opaque id

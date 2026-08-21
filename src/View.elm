@@ -18,7 +18,7 @@ import Theme.Colors
 import Theme.ColorsDark
 import Theme.Html.Navbar as Nb
 import Util.Css
-import Util.View exposing (hovercard)
+import Util.View exposing (hovercard, onMiddleClick)
 import View.Dialog as Dialog
 import View.Header as Header
 import View.Locale as Locale
@@ -201,6 +201,7 @@ sidebar vc model =
                   ]
                     |> css
                 , onClick UserClickedNavHome
+                , onMiddleClick UserMiddleClickedNavHome
                 ]
         )
         (Nb.navbarMenuNewInstances

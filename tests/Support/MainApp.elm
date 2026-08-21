@@ -132,6 +132,7 @@ initialModel url =
     , localeSelectBox = TSelectBox.init <| List.map first Model.Locale.locales
     , dirty = False
     , navbarSubMenu = Nothing
+    , fileDragOver = False
     }
 
 

@@ -64,6 +64,7 @@ type alias Model navigationKey =
     , localeSelectBox : SelectBox.Model String
     , dirty : Bool
     , navbarSubMenu : Maybe NavbarSubMenu
+    , fileDragOver : Bool
     }
 
 
@@ -127,6 +128,9 @@ type Msg
     | LocaleSelectBoxMsg (SelectBox.Msg String)
     | UserClickedNavBack
     | UserClickedNavHome
+    | UserMiddleClickedNavHome
+    | UserDroppedFileOnLoadBox Json.Encode.Value
+    | UserDraggedFileOverLoadBox Bool
     | NotificationMsg Model.Notification.Msg
     | ShowNotification Model.Notification.Notification
     | RuntimePostponedUpdateByUrl Url
