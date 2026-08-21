@@ -64,6 +64,7 @@ fixpointFactor : Maybe Api.Data.TokenConfigs -> Dict String ( Float, String )
 fixpointFactor configs =
     [ ( "eth", ( 1.0e18, "wei" ) )
     , ( "bnb", ( 1.0e18, "wei" ) )
+    , ( "arb", ( 1.0e18, "wei" ) )
     , ( "trx", ( 1.0e6, "sun" ) )
     , ( "btc", ( 1.0e8, "s" ) )
     , ( "bch", ( 1.0e8, "s" ) )

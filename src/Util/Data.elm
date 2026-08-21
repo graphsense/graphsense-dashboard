@@ -46,7 +46,7 @@ isAccountLike network =
         currl =
             String.toLower network
     in
-    currl == "eth" || currl == "trx" || currl == "bnb"
+    currl == "eth" || currl == "trx" || currl == "bnb" || currl == "arb"
 
 
 {-| Networks whose addresses and tx hashes are 0x-prefixed, case-insensitive
@@ -59,7 +59,7 @@ isEvmHexNetwork network =
         currl =
             String.toLower network
     in
-    currl == "eth" || currl == "bnb"
+    currl == "eth" || currl == "bnb" || currl == "arb"
 
 
 negateValues : Api.Data.Values -> Api.Data.Values

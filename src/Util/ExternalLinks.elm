@@ -29,6 +29,11 @@ blockExplorerLinks =
             , ( "https://www.oklink.com/bsc/address/", "Oklink" )
             ]
           )
+        , ( "arb"
+          , [ ( "https://arbiscan.io/address/", "Arbiscan" )
+            , ( "https://www.oklink.com/arbitrum-one/address/", "Oklink" )
+            ]
+          )
         , ( "btc"
           , [ ( "https://www.oklink.com/btc/address/", "Oklink" )
             , ( "https://www.blockchain.com/btc/address/", "Blockchain.com" )
@@ -66,6 +71,11 @@ blockExplorerTransactionLinks =
         , ( "bnb"
           , [ ( "https://bscscan.com/tx/0x", "BscScan" )
             , ( "https://www.oklink.com/bsc/tx/", "Oklink" )
+            ]
+          )
+        , ( "arb"
+          , [ ( "https://arbiscan.io/tx/0x", "Arbiscan" )
+            , ( "https://www.oklink.com/arbitrum-one/tx/", "Oklink" )
             ]
           )
         , ( "trx"
