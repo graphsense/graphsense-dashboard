@@ -271,11 +271,14 @@ dialog states vc =
     |> Maybe.map (Html.map Model.PluginMsg)
 
 
-tooltip : Plugin.Model.ModelState -> View.Config -> Maybe (List (Html Model.Msg))
+-- Additive, not first-wins: every plugin renders its own tooltip. A plugin's hook
+-- cannot report "nothing to show" -- `Components.Tooltip.Model` is opaque, so the hook
+-- returns `Just` whatever `Tooltip.view` gives it, which is an empty node while closed
+-- -- so short-circuiting on the first `Just` silently swallowed the tooltips of every
+-- plugin but the alphabetically first one.
+tooltip : Plugin.Model.ModelState -> View.Config -> List (Html Model.Msg)
 tooltip states vc =
-    Nothing
-{{#plugins}}   
-    |> Maybe.Extra.orElseLazy (\_ ->
+    [ {{#plugins}}
             Maybe.map2
                 (\fun ->
                     fun vc
@@ -284,9 +287,11 @@ tooltip states vc =
                 states.{{name}}
             |> Maybe.Extra.join
             |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
-    )
-{{/plugins}}
-    |> Maybe.map (List.map (Html.map Model.PluginMsg))
+    {{^last}}, {{/last}}{{/plugins}}
+    ]
+        |> List.filterMap identity
+        |> List.concat
+        |> List.map (Html.map Model.PluginMsg)
 
 
 pathfinderUpperLeftPanel : Plugin.Model.ModelState -> View.Config -> List (Html Pathfinder.Msg)

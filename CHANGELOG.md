@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Every plugin's tooltip is rendered, not just the first one's. The generated `tooltip` hook stopped at the first plugin that returned something, and a plugin cannot report "no tooltip open" — `Components.Tooltip.Model` is opaque and its view is an empty node while closed — so a second plugin's tooltips silently never appeared
 - A URL that could never parse — a typo, or a link into a plugin namespace that has since been renamed — put the app into a 50ms busy loop that no user action escaped. Such URLs are still retried while the statistics response is outstanding, since a deep link cannot resolve its network segment before then, but once that has settled the app stays on the current page and reports the unknown URL
 - Exporting the address transaction table as CSV with the utxo-only filter set hung: those rows come from the `WorkflowNextUtxoTx` chain walk, whose responses go to the table rather than to the export, so the download never started and the spinner kept turning. The export now writes out the rows the table holds, since no server-side query reproduces that filter
 - Exporting a transaction table that no rows matched hung for the same reason from the other end: with no addresses to look up there was no tag request to answer, and nothing completed the export

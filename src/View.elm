@@ -119,7 +119,7 @@ body vc model =
             ++ hovercards vc model
             ++ overlay vc model
             ++ [ Notification.view vc model.notifications ]
-            ++ Maybe.withDefault [] (Plugin.tooltip model.plugins vc)
+            ++ Plugin.tooltip model.plugins vc
         )
 
 
