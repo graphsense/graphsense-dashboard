@@ -36,6 +36,7 @@ import Model.Graph.Coords exposing (BBox)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
+import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Notification as Notification exposing (Notification)
 import Model.Pathfinder
 import Model.Pathfinder.Error exposing (Error(..))
@@ -205,10 +206,24 @@ update plugins uc msg model =
                                 Effect.Api.ListSupportedTokensEffect currency (BrowserGotSupportedTokens currency)
                                     |> ApiEffect
                             )
+
+                pathfinder =
+                    model.pathfinder
+
+                pathfinderConfig =
+                    pathfinder.config
             in
             n
                 { model
                     | stats = RD.Success stats
+                    , pathfinder =
+                        { pathfinder
+                            | config =
+                                { pathfinderConfig
+                                    | networkCapabilities =
+                                        NetworkCapabilities.withStats stats pathfinderConfig.networkCapabilities
+                                }
+                        }
                     , statusbar = Statusbar.updateLastBlocks stats model.statusbar
                     , search =
                         if model.page == Graph then

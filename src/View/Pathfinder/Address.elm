@@ -3,7 +3,6 @@ module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 import Animation as A
 import Color
 import Components.Tooltip as Tooltip
-import Config
 import Config.Pathfinder as Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Config.View as View
 import Css
@@ -16,6 +15,7 @@ import List.Extra
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
+import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address, AddressServiceType(..), Txs(..), expandAllowed, getTxs, isSmartContract, txsGetSet)
 import Model.Pathfinder.ContextMenu as ContextMenu
@@ -223,7 +223,7 @@ view plugins vc pc searchHighlight address annotation =
                (if
                     pc.tracingMode
                         == AggregateTracingMode
-                        && Config.isLimitedNetwork (Id.network address.id)
+                        && not (NetworkCapabilities.supports NetworkCapabilities.Relations pc.networkCapabilities (Id.network address.id))
                 then
                     [ opacity "0.3", css [ Css.property "filter" "grayscale(1)" ] ]
 

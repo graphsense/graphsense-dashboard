@@ -10,7 +10,6 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
-import Config
 import Config.Pathfinder exposing (HideForExport(..), TracingMode(..), autoLinkContractAddresses, bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
@@ -45,6 +44,7 @@ import Model.Graph.Coords exposing (BBox, isInBBox, relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Locale as Locale
+import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Notification as Notification
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Address exposing (Address, Txs(..), expandAllowed, getAddressType, getTxs, txsSetter)
@@ -369,7 +369,7 @@ syncSidePanel uc model =
     let
         makeAddressDetails aid =
             Dict.get aid model.network.addresses
-                |> Maybe.map (AddressDetails.init (AssocList.get (TxsFilterAddress aid) model.txsFilters))
+                |> Maybe.map (AddressDetails.init (NetworkCapabilities.supports NetworkCapabilities.Relations model.config.networkCapabilities (Id.network aid)) (AssocList.get (TxsFilterAddress aid) model.txsFilters))
                 |> Maybe.map (AddressDetails aid)
 
         makeTxDetails tid =
@@ -3405,15 +3405,15 @@ getRelationDetails model id =
 
 fetchEgonet : Id -> Bool -> Api.Data.Address -> Model -> ( Model, List Effect )
 fetchEgonet id autoLinkInTraceMode data model =
-    -- limited networks have no precomputed relations: even the pair-edge
-    -- lookups against visible addresses can take tens of seconds on busy
-    -- addresses, so skip edge discovery entirely (edges appear only from
-    -- expanded transactions)
-    if Config.isLimitedNetwork (Id.network id) then
-        n model
+    -- networks without the relations capability have no precomputed
+    -- relations: even the pair-edge lookups against visible addresses can
+    -- take tens of seconds on busy addresses, so skip edge discovery
+    -- entirely (edges appear only from expanded transactions)
+    if NetworkCapabilities.supports NetworkCapabilities.Relations model.config.networkCapabilities (Id.network id) then
+        fetchEgonetUnlimited id autoLinkInTraceMode data model
 
     else
-        fetchEgonetUnlimited id autoLinkInTraceMode data model
+        n model
 
 
 fetchEgonetUnlimited : Id -> Bool -> Api.Data.Address -> Model -> ( Model, List Effect )
@@ -3859,7 +3859,7 @@ userClickedAggEdgeCheckboxInTable plugins dir anchorId data model =
     -- limited networks: the neighbors endpoint is fully disabled server-side
     -- (501, 2026-07-29) — never fire the flipped-direction pair request. The
     -- neighbors table is hidden there anyway; this guards leftover paths.
-    if Config.isLimitedNetwork (Id.network anchorId) then
+    if not (NetworkCapabilities.supports NetworkCapabilities.Relations model.config.networkCapabilities (Id.network anchorId)) then
         n model
 
     else
@@ -5714,8 +5714,8 @@ fromDeserialized plugins deserialized model =
             addressIds
                 |> List.concatMap
                     (\id ->
-                        -- limited networks: no pair-edge discovery (see fetchEgonet)
-                        if Config.isLimitedNetwork (Id.network id) then
+                        -- no relations capability: no pair-edge discovery (see fetchEgonet)
+                        if not (NetworkCapabilities.supports NetworkCapabilities.Relations model.config.networkCapabilities (Id.network id)) then
                             []
 
                         else
@@ -5965,11 +5965,10 @@ getTagsForExport addressId table data model =
                 AddressDetails.BrowserGotBulkTagsForExport table data includesBestClusterTag result
                     |> AddressDetailsMsg addressId
     in
-    if Config.isLimitedNetwork (Id.network addressId) then
-        -- limited networks: bulk tag summaries answer 501 (tags are delegated
-        -- upstream, which does not index these networks), so requesting them
-        -- kills the export. The empty-addresses effect resolves immediately
-        -- with [] and the export proceeds without actor columns.
+    if not (NetworkCapabilities.supports NetworkCapabilities.Tags model.config.networkCapabilities (Id.network addressId)) then
+        -- no tags capability: bulk tag summaries answer 501, so requesting
+        -- them kills the export. The empty-addresses effect resolves
+        -- immediately with [] and the export proceeds without actor columns.
         ( model
         , [ toMsg True
                 |> Api.BulkGetAddressTagSummaryEffect

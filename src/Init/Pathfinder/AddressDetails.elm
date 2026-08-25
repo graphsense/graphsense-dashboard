@@ -23,9 +23,10 @@ getExposedAssetsForAddress uc address =
         |> RemoteData.withDefault allAssets
 
 
-init : Maybe TransactionFilter.Settings -> Address -> AddressDetails.Model
-init txsFilter address =
+init : Bool -> Maybe TransactionFilter.Settings -> Address -> AddressDetails.Model
+init networkHasRelations txsFilter address =
     { neighborsTableOpen = False
+    , networkHasRelations = networkHasRelations
     , transactionsTableOpen = False
     , tokenBalancesOpen = False
     , txs = RemoteData.NotAsked

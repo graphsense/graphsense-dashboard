@@ -3,6 +3,7 @@ module Init.Pathfinder exposing (init)
 import AssocList
 import Components.ExportCSV as ExportCSV
 import Components.Tooltip as Tooltip
+import Config
 import Config.Pathfinder exposing (AggEdgeFilter(..), HideForExport(..), TracingMode(..))
 import Dict
 import Init.Graph.History as History
@@ -10,6 +11,7 @@ import Init.Graph.Transform as Transform
 import Init.Pathfinder.Network as Network
 import Init.Search as Search
 import Model.Graph exposing (Dragging(..))
+import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Pathfinder exposing (Hovered(..), Model)
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
@@ -49,6 +51,10 @@ init us =
             , avoidOverlapingNodes = us.avoidOverlapingNodes |> Maybe.withDefault True
             , hideForExport = NoExport
             , aggEdgeFilter = AllAggEdges
+
+            -- seeded from build config; refined by /stats declarations
+            -- (BrowserGotStatistics) once they arrive
+            , networkCapabilities = NetworkCapabilities.fromBuildConfig Config.limitedNetworks
             }
       , pointerTool = Drag
       , modPressed = False

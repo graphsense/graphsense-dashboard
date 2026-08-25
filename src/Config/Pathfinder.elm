@@ -1,12 +1,13 @@
 module Config.Pathfinder exposing (AggEdgeFilter(..), Config, HideForExport(..), TracingMode(..), addressRadius, autoLinkContractAddresses, bulkFetchSizeForExportSize, nodeXOffset, nodeYOffset, numberOfRowsForCSVExport)
 
+import Model.NetworkCapabilities exposing (NetworkCapabilities)
+
+
 {-| When auto-linking newly added address nodes to their visible neighbors,
 contract calls (links where either endpoint is a smart contract) are omitted by
 default to keep traces clean. Set this to `True` to restore the old behavior and
 auto-link contract addresses as well.
 -}
-
-
 autoLinkContractAddresses : Bool
 autoLinkContractAddresses =
     False
@@ -68,4 +69,5 @@ type alias Config =
     , avoidOverlapingNodes : Bool
     , hideForExport : HideForExport
     , aggEdgeFilter : AggEdgeFilter
+    , networkCapabilities : NetworkCapabilities
     }

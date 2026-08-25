@@ -476,6 +476,10 @@ type alias CurrencyStats =
     , coinTicker : Maybe String
     , coinDecimals : Maybe Int
     , networkName : Maybe String
+    -- capability discovery (same extension class): ABSENT = full core
+    -- GraphSense; PRESENT (even empty) = lite network limited to exactly the
+    -- named features. Parsed only by Model.NetworkCapabilities.
+    , capabilities : Maybe (List String)
     }
 
 
@@ -2858,6 +2862,7 @@ currencyStatsDecoder =
         |> maybeDecode "coin_ticker" Json.Decode.string Nothing
         |> maybeDecode "coin_decimals" Json.Decode.int Nothing
         |> maybeDecode "network_name" Json.Decode.string Nothing
+        |> maybeDecode "capabilities" (Json.Decode.list Json.Decode.string) Nothing
 
 
 clusterDecoder : Json.Decode.Decoder Cluster

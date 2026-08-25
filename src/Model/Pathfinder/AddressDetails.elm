@@ -14,6 +14,10 @@ import Util.ThemedSelectBox as ThemedSelectBox
 
 type alias Model =
     { neighborsTableOpen : Bool
+
+    -- capability of the address's network, fixed at panel init: without it
+    -- the neighbor tables are never rendered nor fetched
+    , networkHasRelations : Bool
     , transactionsTableOpen : Bool
     , tokenBalancesOpen : Bool
     , txs : WebData TransactionTable.Model

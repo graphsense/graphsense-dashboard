@@ -6,7 +6,6 @@ import Components.InfiniteTable as Inf
 import Components.PagedTable as PagedTable
 import Components.Tooltip as Tooltip
 import Components.TransactionFilter as TransactionFilter
-import Config
 import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
@@ -24,6 +23,7 @@ import Model.Currency exposing (asset, assetFromBase)
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Locale as Locale
+import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
@@ -1042,16 +1042,16 @@ account plugins pluginStates vc model id viewState address =
                     )
 
         onLimitedNetwork =
-            Config.isLimitedNetwork (Id.network id)
+            NetworkCapabilities.isLimitedNetwork model.config.networkCapabilities (Id.network id)
 
-        -- limited networks have no cluster/entity data (locally minted ids
-        -- only): no cluster-addresses tab
+        -- no clusters capability = no cluster/entity data (locally minted
+        -- ids only): no cluster-addresses tab
         relatedAddressesTab =
-            if onLimitedNetwork then
-                []
+            if NetworkCapabilities.supports NetworkCapabilities.Clusters model.config.networkCapabilities (Id.network id) then
+                [ relatedAddressesDataTab vc model id viewState RemoteData.NotAsked ]
 
             else
-                [ relatedAddressesDataTab vc model id viewState RemoteData.NotAsked ]
+                []
 
         relatedDataTabsList =
             transactionsOrNeighborsDataTabs vc model id viewState
@@ -1190,10 +1190,11 @@ transactionsOrNeighborsDataTabs vc model id viewState =
             ]
 
         AggregateTracingMode ->
-            -- limited networks have no precomputed relations: counterparty
-            -- listing is unavailable, so aggregate mode falls back to the
-            -- transactions tab (pair edges on the graph keep working)
-            if Config.isLimitedNetwork (Id.network id) then
+            -- no relations capability = no precomputed relations:
+            -- counterparty listing is unavailable, so aggregate mode falls
+            -- back to the transactions tab (pair edges on the graph keep
+            -- working)
+            if not (NetworkCapabilities.supports NetworkCapabilities.Relations model.config.networkCapabilities (Id.network id)) then
                 [ transactionsDataTab vc model id viewState
                 ]
 

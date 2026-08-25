@@ -7,7 +7,6 @@ import Components.ExportCSV as ExportCSV
 import Components.InfiniteTable as InfiniteTable
 import Components.PagedTable as PagedTable
 import Components.TransactionFilter as TransactionFilter
-import Config
 import Config.Pathfinder exposing (numberOfRowsForCSVExport)
 import Config.Update as Update
 import Dict exposing (Dict)
@@ -177,9 +176,10 @@ update uc msg model =
             ( model |> s_tokenBalancesOpen (not model.tokenBalancesOpen), [] )
 
         UserClickedToggleNeighborsTable dir ->
-            if Config.isLimitedNetwork (Id.network model.address.id) then
-                -- no counterparty listing on limited networks: the tables are
-                -- not rendered, and no stray message may trigger their fetch
+            if not model.networkHasRelations then
+                -- no counterparty listing without the relations capability:
+                -- the tables are not rendered, and no stray message may
+                -- trigger their fetch
                 n model
 
             else

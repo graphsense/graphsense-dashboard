@@ -1,4 +1,4 @@
-module Config exposing (config, isLimitedNetwork, limitedNetworks, logoutUrl, plugins)
+module Config exposing (config, limitedNetworks, logoutUrl, plugins)
 
 import Iknaio
 import Plugin
@@ -10,10 +10,12 @@ logoutUrl =
     "{{VITE_LOGOUT_URL}}"
 
 
-{-| Networks served by a backend without precomputed relations (e.g.
-iknaio-rest): counterparty listing is unavailable there, so the
-UI hides features that need it (neighbor tables, cluster views). Comma
-separated, e.g. "eth,bnb". An unreplaced placeholder means no limits.
+{-| Build-time SEED for Model.NetworkCapabilities: networks listed here are
+treated as capability-less lite networks (no relations/clusters/tags) until
+/stats arrives — backends that declare a `capabilities` list override the
+seed at runtime, so this only covers non-declaring backends and requests
+fired before /stats. Comma separated, e.g. "bnb,arb". An unreplaced
+placeholder seeds nothing (the server declarations still apply).
 -}
 limitedNetworks : List String
 limitedNetworks =
@@ -21,11 +23,6 @@ limitedNetworks =
         |> String.split ","
         |> List.map (String.trim >> String.toLower)
         |> List.filter (\n -> n /= "" && not (String.contains "{" n))
-
-
-isLimitedNetwork : String -> Bool
-isLimitedNetwork network =
-    List.member (String.toLower network) limitedNetworks
 
 
 config : { theme : Theme }

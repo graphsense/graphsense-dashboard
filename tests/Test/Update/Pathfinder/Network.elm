@@ -10,6 +10,7 @@ import Dict
 import Expect exposing (Expectation)
 import Init.Pathfinder.Network as Init
 import Model.Direction exposing (Direction(..))
+import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Pathfinder.Address exposing (Txs(..))
 import Model.Pathfinder.Id as ModelId
 import Model.Pathfinder.Network exposing (FindPosition(..), Network)
@@ -27,6 +28,7 @@ config =
     , avoidOverlapingNodes = True
     , hideForExport = NoExport
     , aggEdgeFilter = Pathfinder.AllAggEdges
+    , networkCapabilities = NetworkCapabilities.fromBuildConfig []
     }
 
 

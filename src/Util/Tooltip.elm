@@ -3,7 +3,6 @@ module Util.Tooltip exposing (linkRow, tooltipConfig, tooltipProperties, tooltip
 import Api.Data exposing (Actor, TagSummary)
 import Basics.Extra exposing (flip)
 import Components.Tooltip as Tooltip
-import Config
 import Config.View as View exposing (getConceptName)
 import Css
 import Css.Pathfinder as Css
@@ -11,6 +10,7 @@ import Dict
 import Html.Styled as Html exposing (Html, div, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
 import Model.Currency exposing (assetFromBase)
+import Model.NetworkCapabilities as NetworkCapabilities exposing (NetworkCapabilities)
 import Model.Pathfinder as Pathfinder exposing (getTagSummary)
 import Model.Pathfinder.Address as Addr
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -61,7 +61,7 @@ view vc model tt =
         Address id ->
             model.network.addresses
                 |> Dict.get id
-                |> Maybe.map (address vc (getTagSummary model id))
+                |> Maybe.map (address vc model.config.networkCapabilities (getTagSummary model id))
                 |> Maybe.withDefault []
 
         TagLabel addrId lblid ->
@@ -383,8 +383,8 @@ tagLabel vc lbl tag =
             []
 
 
-address : View.Config -> Maybe TagSummary -> Addr.Address -> List (Html msg)
-address vc tags adr =
+address : View.Config -> NetworkCapabilities -> Maybe TagSummary -> Addr.Address -> List (Html msg)
+address vc capabilities tags adr =
     let
         net =
             Id.network adr.id
@@ -404,9 +404,9 @@ address vc tags adr =
                 |> Maybe.withDefault ""
                 |> val vc
         }
-        :: -- limited networks serve totals as budget-capped floors: hide them
+        :: -- lite networks serve totals as budget-capped floors: hide them
            -- here like in the side panel (user decision 2026-07-27)
-           (if Config.isLimitedNetwork net then
+           (if NetworkCapabilities.isLimitedNetwork capabilities net then
                 []
 
             else
