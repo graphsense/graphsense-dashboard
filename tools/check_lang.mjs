@@ -21,15 +21,33 @@
 //   node tools/check_lang.mjs --update-baseline    accept the current gaps
 //   node tools/check_lang.mjs --no-baseline        report every gap, ignore the baseline
 //   node tools/check_lang.mjs --verbose            list stale keys instead of counting them
+//
+// A plugin keeps its own lang/ and src/ in its own repository, so it points the
+// same check at those instead of the defaults:
+//
+//   node ../graphsense-dashboard/tools/check_lang.mjs --lang-dir lang --src src
+//
+// The plugin's en.yaml is an override map exactly like core's, and its locales
+// are checked against the same union of en.yaml keys and literal keys in src/.
+// --baseline is optional there: with no such file, every gap is an error, which
+// is the right default for a lang set that starts complete.
 
 import fs from 'fs'
 import path from 'path'
 import YAML from 'yaml'
 
-const LANG_DIR = 'lang'
+// `--flag value`, or the default when it is absent. Repeatable flags collect.
+function option (flag, fallback) {
+  const values = process.argv.flatMap((arg, i) =>
+    arg === flag && process.argv[i + 1] ? [process.argv[i + 1]] : []
+  )
+  return values.length ? values : fallback
+}
+
+const LANG_DIR = option('--lang-dir', ['lang'])[0]
 const REFERENCE = 'en'
-const SRC_DIRS = ['src']
-const BASELINE_FILE = path.join(LANG_DIR, 'untranslated-baseline.json')
+const SRC_DIRS = option('--src', ['src'])
+const BASELINE_FILE = option('--baseline', [path.join(LANG_DIR, 'untranslated-baseline.json')])[0]
 
 // View.Locale functions whose second argument is a translation key.
 const LOOKUP_FUNCTIONS = [
@@ -45,6 +63,17 @@ const LOOKUP_FUNCTIONS = [
 
 // `Locale.string vc.locale "some key"` — the model argument is a plain (dotted)
 // identifier at every call site we can check statically.
+//
+// Matched against the whole file rather than line by line: elm-format breaks a
+// call whose key is long, and
+//
+//     Locale.interpolated vc.locale
+//         "{0} addresses were found"
+//         [ ... ]
+//
+// is the normal shape for every interpolated string in the codebase. Read a line
+// at a time those were invisible — not reported as computed, just missed, which
+// is the one failure mode this check must not have.
 const LOOKUP_RE = new RegExp(
   `Locale\\.(${LOOKUP_FUNCTIONS.join('|')})\\s+[A-Za-z_][A-Za-z0-9_.]*\\s+"((?:[^"\\\\]|\\\\.)*)"`,
   'g'
@@ -89,17 +118,18 @@ function collectUsedKeys () {
 
   for (const dir of SRC_DIRS) {
     for (const file of elmFiles(dir)) {
-      fs.readFileSync(file, 'utf8')
-        .split('\n')
-        .forEach((line, i) => {
-          if (line.trimStart().startsWith('--')) return // commented out
-          for (const match of line.matchAll(LOOKUP_RE)) {
-            const key = normalize(match[2])
-            if (!used.has(key)) used.set(key, [])
-            used.get(key).push(`${file}:${i + 1}`)
-          }
-          computed += [...line.matchAll(COMPUTED_KEY_RE)].length
-        })
+      // Commented-out lines are blanked rather than dropped, so the offsets a
+      // whole-file match reports still map back to the right line number.
+      const lines = fs.readFileSync(file, 'utf8').split('\n')
+      const text = lines.map((l) => (l.trimStart().startsWith('--') ? '' : l)).join('\n')
+      const lineOf = (offset) => text.slice(0, offset).split('\n').length
+
+      for (const match of text.matchAll(LOOKUP_RE)) {
+        const key = normalize(match[2])
+        if (!used.has(key)) used.set(key, [])
+        used.get(key).push(`${file}:${lineOf(match.index)}`)
+      }
+      computed += [...text.matchAll(COMPUTED_KEY_RE)].length
     }
   }
   return { used, computed }
@@ -200,7 +230,7 @@ function main () {
   const summary =
     `${Object.keys(locales).length} locale(s), ` +
     `${reference.size} reference key(s) ` +
-    `(${locales[REFERENCE].size} from ${REFERENCE}.yaml, ${used.size} literal key(s) in src/, ` +
+    `(${locales[REFERENCE].size} from ${REFERENCE}.yaml, ${used.size} literal key(s) in ${SRC_DIRS.join(', ')}/, ` +
     `${computed} computed call site(s) skipped)`
 
   if (errors) {

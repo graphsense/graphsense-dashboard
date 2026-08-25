@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Plugins are discovered from whatever is checked out in `plugins/` instead of being registered by hand in `config/Config.elm`, which no longer mentions them at all. Core calls each plugin's hooks directly rather than through a record of functions threaded through the update loop
+- `tools/check_lang.mjs` takes `--lang-dir`, `--src` and `--baseline`, so a plugin can point it at its own `lang/` and `src/` from its own repository. Nothing checked plugin translations before: core's run only ever sees core's files, so a key added to a plugin's `en.yaml` and forgotten in its other locales showed English to those users in silence
+- `tools/check_lang.mjs` finds a `View.Locale` key that elm-format put on the line after the call. Every interpolated string in the codebase is written that way, and read a line at a time they were not reported as computed but missed outright — the one failure mode this check must not have. Six more keys in core are now covered
 - Production builds minify with rolldown's oxc minifier (vite 8's default) instead of terser, cutting minification from 16.5s to 4.1s per bundle. Shipped size is unchanged in practice: 5.7% smaller uncompressed, within 1.6% gzipped
 - Dead-code detection (unused exports, type constructors and constructor arguments) now runs in CI, and about 3,400 lines of already-unreachable code are gone: pf1 leftovers, 16 modules nothing imported, and four features whose messages nothing could send. Detection was previously impossible to run reliably because plugins live in separate repositories and are not always checked out, so a core function only a plugin used looked dead; `src/PluginApi.elm` now records that surface
 
