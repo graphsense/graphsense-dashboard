@@ -79,7 +79,6 @@ view vc model =
                 , css
                     [ hover [ Css.property "background-color" Colors.grey50 ]
                     , transition [ Css.Transitions.backgroundColor 100 ]
-                    , Css.pointerEvents Css.none
                     ]
                 , [ Css.property "transition" "transform 0.15s ease-out"
                   , Css.transform
