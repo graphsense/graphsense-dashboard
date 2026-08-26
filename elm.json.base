@@ -6,7 +6,6 @@
         "generated/plugins",
         "generated/theme",
         "openapi/src",
-        "themes",
         "config",
         "lib/elm-autocomplete/src",
         "lib/elm-css-sortable-table/src"

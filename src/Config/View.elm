@@ -7,7 +7,6 @@ import List.Extra
 import Model.Currency exposing (Currency(..))
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale as Locale
-import Theme.Theme exposing (Theme)
 
 
 type alias Config =

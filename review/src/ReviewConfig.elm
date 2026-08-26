@@ -53,7 +53,7 @@ would reformat a hand-maintained file as a side effect.
 -}
 ignoreForDeadCode : Rule -> Rule
 ignoreForDeadCode =
-    Rule.ignoreErrorsForFiles [ "src/PluginApi.elm", "src/Util/Debug.elm", "src/Util/Nullable.elm" ]
+    Rule.ignoreErrorsForFiles [ "src/PluginApi.elm", "src/Util/Debug.elm", "src/Util/Nullable.elm", "src/Log.elm" ]
         >> Rule.ignoreErrorsForDirectories [ "themes/", "src/Components" ]
 
 

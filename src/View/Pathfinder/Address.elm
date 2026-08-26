@@ -1,7 +1,6 @@
 module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 
 import Animation as A
-import Color
 import Components.Tooltip as Tooltip
 import Config.Pathfinder as Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Config.View as View
@@ -44,12 +43,6 @@ view vc pc searchHighlight address annotation =
         data =
             RemoteData.toMaybe address.data
 
-        halfAlpha x =
-            Color.fromRgba { red = x.red, green = x.green, blue = x.blue, alpha = x.alpha / 2 }
-
-        clusterColorLight =
-            address.clusterColor |> Maybe.map (Color.toRgba >> halfAlpha)
-
         clusterSiblingHovered =
             pc.highlightClusterFriends
                 && address.clusterSiblingHovered
@@ -63,10 +56,10 @@ view vc pc searchHighlight address annotation =
                 && (address.selected || isCurrentSearchMatch)
 
         clusterStroke =
-            case ( clusterColorLight, pc.highlightClusterFriends ) of
+            case ( address.clusterColor, pc.highlightClusterFriends ) of
                 ( Just color, True ) ->
                     [ css
-                        [ Css.property "stroke" (Color.toCssString color) |> Css.important
+                        [ Css.property "stroke" color |> Css.important
                         , Css.property "stroke-width"
                             (if clusterSiblingHovered then
                                 "5"

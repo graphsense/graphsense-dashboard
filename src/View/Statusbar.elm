@@ -74,7 +74,10 @@ view vc model =
                                                 ""
                                        )
                         in
-                        Theme.Html.Page.messageElement
+                        Theme.Html.Page.messageElementWithAttributes
+                            (Theme.Html.Page.messageElementAttributes
+                                |> Rs.s_root [ css [ fullWidthCss ] ]
+                            )
                             { root =
                                 { text = text_
                                 , iconVisible = True
@@ -90,7 +93,10 @@ view vc model =
                                     text_ =
                                         logToText vc model.lastBlocks logEntry
                                 in
-                                Theme.Html.Page.messageElement
+                                Theme.Html.Page.messageElementWithAttributes
+                                    (Theme.Html.Page.messageElementAttributes
+                                        |> Rs.s_root [ css [ fullWidthCss ] ]
+                                    )
                                     { root =
                                         { text = text_
                                         , iconVisible = True
@@ -115,17 +121,14 @@ view vc model =
                         ]
                     , onClick UserClickedStatusbar
                     ]
+                |> Rs.s_messageElement [ css [ fullWidthCss ] ]
             )
             { messageElement =
                 { text = firstMessageText
                 , iconVisible = List.isEmpty entries |> not
                 , icon =
                     Loadingspinner.html
-                        [ css
-                            [ Css.padding (Css.px 0)
-                            , Css.rem 0.3 |> Css.paddingRight
-                            ]
-                        ]
+                        []
                 }
             , root = { version = version }
             }

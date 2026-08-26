@@ -9,9 +9,8 @@ import Dict
 import Hex
 import Hovercard
 import Html as BHtml
-import Html.Attributes
-import Html.Styled exposing (Attribute, Html, div, img, span, text)
-import Html.Styled.Attributes exposing (attribute, css, src, title)
+import Html.Styled exposing (Attribute, Html, span)
+import Html.Styled.Attributes exposing (attribute, css)
 import Html.Styled.Events exposing (on, stopPropagationOn)
 import Json.Decode
 import List.Extra

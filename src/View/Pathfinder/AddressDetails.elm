@@ -550,9 +550,9 @@ clusterInfoView vc open colors clstr =
 
             clusterColor =
                 Colors.getAssignedColor Colors.Clusters clstrid colors
-                    |> Maybe.map (.color >> Util.View.toCssColor)
-                    |> Maybe.withDefault (Css.rgba 0 0 0 0)
-                    |> Css.fill
+                    |> Maybe.map .color
+                    |> Maybe.withDefault "transparent"
+                    |> Css.property "fill"
                     |> Css.important
                     |> List.singleton
                     |> css

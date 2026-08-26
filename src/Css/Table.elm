@@ -41,6 +41,7 @@ headCell _ =
     , position sticky
     , top <| px 0
     , zIndex <| int 1
+    , verticalAlign middle
     ]
 
 
@@ -63,10 +64,10 @@ headCellSortable vc =
 row : Config -> List Style
 row vc =
     [ nthChild "2n"
-        [ Css.property "background-color" Colors.grey200
+        [ Css.property "background-color" Colors.greyBlue20
         ]
     , nthChild "2n+1"
-        [ Css.property "background-color" Colors.grey100
+        [ Css.property "background-color" Colors.white
         ]
     , 20 |> px |> height
     ]

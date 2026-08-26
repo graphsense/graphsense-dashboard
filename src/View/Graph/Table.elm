@@ -7,13 +7,11 @@ import Css.Table exposing (Styles)
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (..)
 import Model.Currency exposing (AssetIdentifier)
 import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
 import Tuple3
-import Util.View exposing (none)
 import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
 

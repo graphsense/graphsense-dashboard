@@ -1,10 +1,24 @@
 module Model.Pathfinder.Colors exposing (ColorAssingment, ColorScope(..), ReuseableColor, ScopedColorAssignment, assignNextColor, getAssignedColor, init)
 
-import Color exposing (Color)
 import Dict exposing (Dict)
-import Iknaio.ColorScheme exposing (colorSchemePathfinder)
 import List.Extra exposing (getAt)
 import Model.Pathfinder.Id exposing (Id)
+import Theme.Colors as Colors
+
+
+colorSchemePathfinder : List String
+colorSchemePathfinder =
+    [ Colors.cluster1
+    , Colors.cluster2
+    , Colors.cluster3
+    , Colors.cluster4
+    , Colors.cluster5
+    , Colors.cluster6
+    , Colors.cluster7
+    , Colors.cluster8
+    , Colors.cluster9
+    , Colors.cluster10
+    ]
 
 
 type ColorScope
@@ -19,13 +33,13 @@ scopeToId s =
 
 
 type alias ReuseableColor =
-    { color : Color, timesUsed : Int }
+    { color : String, timesUsed : Int }
 
 
 type alias ColorAssingment =
     { currentIndex : Int
     , assignments : Dict Id ReuseableColor
-    , colorSet : List Color
+    , colorSet : List String
     }
 
 

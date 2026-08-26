@@ -20,7 +20,6 @@ import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Effect.Search
 import Encode.Pathfinder as Pathfinder
 import Hovercard
-import Iknaio.ColorScheme exposing (annotationGreen, annotationRed)
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
 import Init.Pathfinder as Pathfinder
@@ -92,6 +91,7 @@ import Route as GlobalRoute
 import Route.Pathfinder as Route exposing (AddressHopType(..), PathHopType(..), Route)
 import Set exposing (..)
 import Task
+import Theme.Colors as Colors
 import Time
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
@@ -4344,14 +4344,14 @@ addPathToGraph uc model net config list =
                             Annotations.set
                                 ( net, Data.normalizeIdentifier net adr )
                                 (Locale.string uc.locale "victim")
-                                (Just annotationGreen)
+                                (Just Colors.annotation1_color)
                                 m.annotations
 
                         Route.AddressHop PerpetratorAddress adr ->
                             Annotations.set
                                 ( net, Data.normalizeIdentifier net adr )
                                 (Locale.string uc.locale "perpetrator")
-                                (Just annotationRed)
+                                (Just Colors.annotation2_color)
                                 m.annotations
 
                         _ ->

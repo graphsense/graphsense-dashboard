@@ -17,7 +17,7 @@ import Theme.Colors
 import Theme.ColorsDark
 import Theme.Html.Navbar as Nb
 import Util.Css
-import Util.View exposing (hovercard, onMiddleClick)
+import Util.View exposing (onMiddleClick)
 import View.Dialog as Dialog
 import View.Header as Header
 import View.Locale as Locale
@@ -60,7 +60,12 @@ view vc model =
           )
             |> toUnstyled
         , node "style" [] [ text """
-           body { overflow: hidden; }
+           body { 
+               overflow: hidden; 
+               font-family: "Roboto", "system-ui", "BlinkMacSystemFont", "-apple-system", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "sans-serif";
+               font-size: 0.77rem;
+
+           }
            input { border: 0; }
            """ ] |> toUnstyled
         , node "style" [] [ text """
