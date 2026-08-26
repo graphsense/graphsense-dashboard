@@ -2279,13 +2279,27 @@ updateByMsg plugins uc msg model =
 
                 network =
                     Id.network txId
+
+                -- account txs are keyed by the served {hash}_I{n} identifier;
+                -- a selection pending on the requested bare hash (deep link,
+                -- search) would miss that key forever and the details panel
+                -- would never open — re-point it at the served id
+                modelWithSelection =
+                    if
+                        (Id.id txId /= requestedTxHash)
+                            && (model.selection == WillSelectTx (Id.init network requestedTxHash))
+                    then
+                        s_selection (WillSelectTx txId) model
+
+                    else
+                        model
             in
-            if Dict.member txId model.network.txs then
-                n model
+            if Dict.member txId modelWithSelection.network.txs then
+                checkSelection uc modelWithSelection
 
             else if Data.isAccountLike network && Id.id txId /= requestedTxHash && Tx.isZeroValueTx tx then
                 -- a tx hash without subtx id part was requested
-                ( model
+                ( modelWithSelection
                 , BrowserGotTxFlow loadTxConfig tx
                     |> Api.ListTxFlowsEffect
                         { currency = network
@@ -2301,7 +2315,7 @@ updateByMsg plugins uc msg model =
                     |> and (selectTx txId)
 
             else
-                browserGotTx plugins uc loadTxConfig tx model
+                browserGotTx plugins uc loadTxConfig tx modelWithSelection
 
         BrowserGotTxFlow loadTxConfig originalTx txs ->
             txs.nextPage
