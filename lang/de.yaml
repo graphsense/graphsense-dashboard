@@ -356,7 +356,7 @@ jurisdictions: Gerichtsbarkeit
 any category: beliebige Kategorie
 graph: Graph
 statistics: Statistiken
-landingpage-start-new: Starte eine neue Nachforschung
+landingpage-start-new: Eine neue Nachforschung starten
 landingpage-load-file: Eine bestehende .gs Datei laden
 landingpage-try-example: Beispiele
 table-no-rows-match-filter: Keine Einträge vorhanden, die Ihren Filtereinstellungen
@@ -528,6 +528,7 @@ date-time-format: 'dd.MMMM yyyy HH:mm'
 time-format: "HH:mm"
 date-format: "dd.MM.yy"
 open in new tab: in neuem Tab öffnen
+or: oder
 align vertically: Vertikal ausrichten
 align horizontally: Horizontal ausrichten
 export pdf: Als PDF exportieren

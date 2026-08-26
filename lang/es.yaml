@@ -530,6 +530,7 @@ date-time-format: 'dd MMMM yyyy HH:mm'
 time-format: "HH:mm"
 date-format: "dd/MM/yy"
 open in new tab: abrir en una nueva pestaña
+or: o
 true: verdadero
 false: falso
 align vertically: Alinear verticalmente

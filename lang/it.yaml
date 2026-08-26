@@ -511,6 +511,7 @@ report tag: segnalare un tag
 Add_Tag_description: 'Aiutaci a migliorare i nostri dati segnalando un''entità collegata
   a questo indirizzo: verrà esaminata e, se del caso, pubblicata.'
 open in new tab: apri in una nuova scheda
+or: o
 Sending entities: invio cluster
 Receiving entities: ricezione cluster
 Incoming entity: Cluster in entrata
