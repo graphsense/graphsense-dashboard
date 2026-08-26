@@ -9,7 +9,6 @@ import Theme.Dialog as Dialog exposing (Dialog)
 import Theme.Graph as Graph exposing (Graph)
 import Theme.Hovercard as Hovercard exposing (Hovercard)
 import Theme.Search as Search exposing (Search)
-import Theme.Stats as Stats exposing (Stats)
 import Theme.Statusbar as Statusbar exposing (Statusbar)
 import Theme.Table as Table exposing (Table)
 import Theme.User as User exposing (User)
@@ -45,7 +44,6 @@ type alias Theme =
     , userDefautImgUrl : String
     , overlay : List Style
     , popup : Bool -> List Style
-    , stats : Stats
     , search : Search
     , autocomplete : Autocomplete
     , button : Button
@@ -101,7 +99,6 @@ default =
     , userDefautImgUrl = ""
     , overlay = []
     , popup = \_ -> []
-    , stats = Stats.default
     , search = Search.default
     , autocomplete = Autocomplete.default
     , button = Button.default

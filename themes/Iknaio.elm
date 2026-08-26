@@ -3,7 +3,6 @@ module Iknaio exposing (theme)
 import Color exposing (rgb255)
 import Css exposing (..)
 import Css.Transitions
-import Iknaio.ColorScheme exposing (..)
 import Model.Graph.Tool as Tool
 import RecordSetter exposing (..)
 import Theme.Autocomplete as Autocomplete
@@ -15,7 +14,6 @@ import Theme.Dialog as Dialog
 import Theme.Graph as Graph
 import Theme.Hovercard as Hovercard
 import Theme.Search as Search
-import Theme.Stats as Stats
 import Theme.Statusbar as Statusbar
 import Theme.SwitchableColor as Theme
 import Theme.Table as Table
@@ -319,68 +317,6 @@ theme =
                 , backgroundColorWithLightmode lightmode colors.white
                 ]
             )
-        |> s_stats
-            (Stats.default
-                |> s_stats
-                    [ scaled -statsMargin |> rem |> marginLeft ]
-                |> s_currency
-                    (\lightmode ->
-                        [ backgroundColorWithLightmode lightmode colors.greyLight
-                        , scaled statsMargin |> rem |> margin
-                        , boarderRadiusPathfinder2
-                        ]
-                    )
-                |> s_tokenBadgeStyle
-                    (\lightmode ->
-                        [ --backgroundColorWithLightmode lightmode colors.brandLightest
-                          borderColorWithLightmode lightmode colors.brandDark
-                        , borderRadius <| px 5
-                        , borderStyle solid
-                        , borderWidth (px 1)
-                        , px 5 |> marginRight
-                        , px 2 |> paddingLeft
-                        , px 2 |> paddingRight
-                        , px 1 |> paddingTop
-                        , px 1 |> paddingBottom
-                        ]
-                    )
-                |> s_currencyHeading
-                    (\lightmode ->
-                        [ backgroundColorWithLightmode lightmode colors.brandBase
-                        , fontHairline
-                        , scaled 2 |> rem |> padding
-                        , scaled 5 |> rem |> fontSize
-                        , scaled 3.5 |> rem |> paddingTop
-                        , scaled currencyPadding |> rem |> paddingLeft
-                        , width auto
-                        , fontFamilies headingFontFamilies
-                        , boarderRadiusPathfinder2
-                        ]
-                    )
-                |> s_tableWrapperInner
-                    [ currencyPadding / 2 |> scaled |> rem |> padding
-                    ]
-                |> s_table
-                    [ scaled 0.1 |> rem |> letterSpacing
-                    , currencyPadding / 2 |> scaled |> rem |> borderSpacing
-                    ]
-                |> s_tableCellKey
-                    [ fontBold
-                    , scaled 2 |> rem |> paddingRight
-                    ]
-                |> s_tableCellValue
-                    [ fontNormal
-                    ]
-                |> s_currencyBackground
-                    [ rgba 0 0 0 0.2 |> color
-                    ]
-                |> s_loadingSpinner
-                    [ scaled 8 |> rem |> height
-                    , scaled 8 |> rem |> width
-                    , scaled 2 |> rem |> paddingTop
-                    , scaled -1 |> rem |> marginLeft
-                    ]
-            )
         |> s_search
             (Search.default
                 |> s_frame
@@ -621,98 +557,6 @@ theme =
                         , opacity <| num 0.5
                         ]
                     )
-                |> s_categoryToColor
-                    (\category ->
-                        case category of
-                            "exchange" ->
-                                color0
-
-                            "coinjoin" ->
-                                color3
-
-                            "perpetrator" ->
-                                color1
-
-                            "defi" ->
-                                color2
-
-                            "miner" ->
-                                color4
-
-                            "payment_processor" ->
-                                color0
-
-                            "user" ->
-                                color5
-
-                            "gambling" ->
-                                color6
-
-                            "defi_lending" ->
-                                color7
-
-                            "market" ->
-                                color8
-
-                            "mixing_service" ->
-                                color9
-
-                            "defi_dex" ->
-                                color9
-
-                            "donation" ->
-                                color9
-
-                            "service" ->
-                                color9
-
-                            "wallet_service" ->
-                                color9
-
-                            "hosting" ->
-                                color9
-
-                            "shop" ->
-                                color9
-
-                            "entity" ->
-                                color9
-
-                            "organization" ->
-                                color9
-
-                            "vpn" ->
-                                color9
-
-                            "faucet" ->
-                                color9
-
-                            "defi_bridge" ->
-                                color9
-
-                            "ico_wallet" ->
-                                color9
-
-                            "atm" ->
-                                color9
-
-                            "mining_service" ->
-                                color9
-
-                            _ ->
-                                defaultColor
-                    )
-                |> (\graph ->
-                        s_highlightsColorScheme
-                            (colorScheme
-                                |> List.map
-                                    (Color.toHsla
-                                        >> (\c -> { c | saturation = 1 })
-                                        >> Color.fromHsla
-                                    )
-                            )
-                            graph
-                   )
                 |> s_lightnessFactor
                     (\lightmode ->
                         { entity =
@@ -745,8 +589,6 @@ theme =
                                 0.9
                         }
                     )
-                |> s_defaultColor
-                    defaultColor
                 |> s_tool
                     (\lightmode status ->
                         [ scaled 2 |> rem |> padding
@@ -987,22 +829,6 @@ theme =
                     [ displayFlex
                     , alignItems center
                     ]
-                |> s_highlightColor
-                    (\lightmode selected ->
-                        [ scaled 5 |> rem |> fontSize
-                        , scaled 1 |> rem |> marginRight
-                        , borderBottomWidth <| px 2
-                        , borderStyle solid
-                        ]
-                            ++ (if selected then
-                                    [ borderColorWithLightmode lightmode colors.brandDark
-                                    ]
-
-                                else
-                                    [ borderColorWithLightmode lightmode colors.brandWhite
-                                    ]
-                               )
-                    )
                 |> s_highlightTitle
                     (\lightmode ->
                         [ inputStyle lightmode
