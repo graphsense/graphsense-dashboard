@@ -16,7 +16,6 @@ jobs:
         with:
           node-version: '20.x'
       - run: npm ci
-      - run: cp config/Config.elm.tmp config/Config.elm
       - run: cp env.template .env
       - run: make build
       - run: make test
