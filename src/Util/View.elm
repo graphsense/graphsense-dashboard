@@ -1,16 +1,15 @@
-module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, makeValuesList, noTextSelection, none, onClickWithStop, p, pointer, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, emptyCell, firstToUpper, fixFillRule, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, makeValuesList, noTextSelection, none, onClickWithStop, p, pointer, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Api.Data
 import Basics.Extra exposing (flip)
 import Color as BColor
 import Config.View as View
 import Css exposing (Color, Style)
-import Css.View as Css
 import Dict
 import Hex
 import Hovercard
 import Html as BHtml
-import Html.Styled exposing (Attribute, Html, div, span)
+import Html.Styled exposing (Attribute, Html, span)
 import Html.Styled.Attributes exposing (attribute, css)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
@@ -153,10 +152,10 @@ hovercard vc element zIndex =
         >> Html.Styled.fromUnstyled
 
 
-p : View.Config -> List (Attribute msg) -> List (Html msg) -> Html msg
-p vc attrs =
+p : List (Attribute msg) -> List (Html msg) -> Html msg
+p attrs =
     Html.Styled.p
-        ((Css.paragraph vc |> css) :: attrs)
+        (([ 2 * 0.22 |> Css.rem |> Css.marginBottom ] |> css) :: attrs)
 
 
 addDot : String -> String
@@ -210,7 +209,7 @@ copyIconWithAttrPathfinderInternal fixedHint hp hideHint attr vc value =
                     )
     in
     Html.Styled.a
-        ((Css.copyIcon vc |> css)
+        (pointer
             :: attr
         )
         [ Html.Styled.node "copy-icon"
@@ -349,12 +348,6 @@ colorToHex cl =
         |> List.map (String.padLeft 2 '0')
         |> (::) "#"
         |> String.concat
-
-
-frame : View.Config -> List (Attribute msg) -> List (Html msg) -> Html msg
-frame vc attr =
-    div
-        ((Css.frame vc |> css) :: attr)
 
 
 onClickWithStop : msg -> Attribute msg

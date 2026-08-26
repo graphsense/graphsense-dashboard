@@ -35,7 +35,6 @@ import Config.Update
 import Config.View
 import Css.Pathfinder
 import Css.Table
-import Css.View
 import Effect.Api
 import Log
 import Model.Address
@@ -238,9 +237,6 @@ surface =
     -- Css.Table
     , ref Css.Table.styles
 
-    -- Css.View
-    , ref Css.View.link
-
     -- Effect.Api
     , ref Effect.Api.BulkGetAddressEntityEffect
     , ref Effect.Api.GetAddressEffect
@@ -363,7 +359,6 @@ surface =
     , ref Util.View.copyIconPathfinder
     , ref Util.View.copyIconPathfinderFixed
     , ref Util.View.fixFillRule
-    , ref Util.View.frame
     , ref Util.View.fullWidthCss
     , ref Util.View.inputFieldStyles
     , ref Util.View.none
@@ -420,6 +415,7 @@ surface =
     , ref View.Locale.interpolatedMarkdown
     , ref View.Locale.percentage
     , ref View.Locale.string
+    , ref View.Locale.text
     , ref View.Locale.time
     , ref View.Locale.timestamp
     , ref View.Locale.timestampDateTimeUniform

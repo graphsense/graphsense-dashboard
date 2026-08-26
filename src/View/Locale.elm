@@ -31,14 +31,11 @@ module View.Locale exposing
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Css exposing (num, opacity)
-import Css.Transitions as T exposing (transition)
 import DateFormat
 import Dict exposing (Dict)
 import Ease
 import Html.Attributes exposing (class)
-import Html.Styled exposing (Html, span)
-import Html.Styled.Attributes exposing (css)
+import Html.Styled exposing (Html)
 import Http
 import List.Extra exposing (find)
 import Locale.Durations

@@ -2,14 +2,15 @@ module View.Main exposing (view)
 
 import Config.View as View
 import Css
-import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model exposing (Model, Msg(..), Page(..))
 import Plugin.View as Plugin
+import RecordSetter as Rs
 import Route
 import Route.Pathfinder
-import Util.View
+import Theme.Html.Page as Page
+import Util.View exposing (fullWidthCss)
 import View.Landingpage as Landingpage
 import View.Locale as Locale
 import View.Pathfinder as Pathfinder
@@ -24,9 +25,7 @@ view :
 view vc model =
     case model.page of
         Home ->
-            { navbar = []
-            , contents = [ Landingpage.view vc model ]
-            }
+            [ Landingpage.view vc model ]
                 |> main_ vc
 
         Stats ->
@@ -37,84 +36,73 @@ view vc model =
 
         Pathfinder ->
             Pathfinder.view model.plugins vc model.pathfinder
-                |> (\{ navbar, contents } ->
-                        { navbar = List.map (Html.Styled.map PathfinderMsg) navbar
-                        , contents = List.map (Html.Styled.map PathfinderMsg) contents
-                        }
-                   )
+                |> List.map (Html.Styled.map PathfinderMsg)
                 |> main_ vc
 
         RetiredGraph ->
-            { navbar = []
-            , contents = [ retiredGraph vc ]
-            }
+            [ retiredGraph vc ]
                 |> main_ vc
 
         Plugin type_ ->
             Plugin.contents model.plugins type_ vc
-                |> Maybe.map
-                    (\contents ->
-                        main_ vc
-                            { navbar =
-                                Plugin.navbar model.plugins type_ vc
-                                    |> Maybe.withDefault []
-                            , contents = contents
-                            }
-                    )
+                |> Maybe.map (main_ vc)
                 |> Maybe.withDefault Util.View.none
 
 
 retiredGraph : View.Config -> Html Msg
 retiredGraph vc =
-    div
-        [ css
-            [ Css.displayFlex
-            , Css.flexDirection Css.column
-            , Css.alignItems Css.center
-            , Css.justifyContent Css.center
-            , Css.flexGrow (Css.num 1)
-            , Css.textAlign Css.center
-            , Css.padding (Css.px 50)
-            ]
-        ]
-        [ h2
-            [ Css.View.heading2 vc |> css ]
-            [ Locale.text vc.locale "pf1_retired_title" ]
-        , p
-            [ Css.View.paragraph vc |> css
-            , css [ Css.maxWidth (Css.px 600) ]
-            ]
-            [ Locale.text vc.locale "pf1_retired_notice" ]
-        , a
-            [ Css.View.link vc |> css
-            , Route.Pathfinder.Root
-                |> Route.pathfinderRoute
-                |> Route.toUrl
-                |> href
-            ]
-            [ Locale.text vc.locale "Open Pathfinder" ]
-        ]
+    Page.infoPageWithInstances
+        (Page.infoPageAttributes
+            |> Rs.s_root [ css [ fullWidthCss ] ]
+        )
+        (Page.infoPageInstances
+            |> Rs.s_link
+                (Just <|
+                    a
+                        [ css Page.infoPageLink_details.styles
+                        , Route.Pathfinder.Root
+                            |> Route.pathfinderRoute
+                            |> Route.toUrl
+                            |> href
+                        ]
+                        [ text <| Locale.string vc.locale "Open Pathfinder" ]
+                )
+        )
+        { root =
+            { title = Locale.string vc.locale "pf1_retired_title"
+            , information = Locale.string vc.locale "pf1_retired_notice"
+            , link = ""
+            }
+        }
 
 
-main_ : View.Config -> { navbar : List (Html Msg), contents : List (Html Msg) } -> Html Msg
-main_ vc { navbar, contents } =
+main_ : View.Config -> List (Html Msg) -> Html Msg
+main_ vc contents =
     Html.Styled.main_
-        [ Css.View.main_ vc |> css
+        [ css
+            [ Css.flexGrow (Css.num 1)
+            , Css.displayFlex
+            , Css.flexDirection Css.column
+            , Css.position Css.relative
+            ]
         , id "contents"
         ]
-        ((if List.isEmpty navbar then
-            []
-
-          else
-            nav
-                [ Css.View.navbar vc |> css
-                ]
-                navbar
-                |> List.singleton
-         )
-            ++ [ section
-                    [ Css.View.contents vc |> css
-                    ]
-                    contents
-               ]
-        )
+        [ section
+            [ [ Css.displayFlex
+              , Css.flexDirection Css.column
+              , Css.flexGrow (Css.num 1)
+              , Css.overflow Css.auto
+              ]
+                ++ (vc.size
+                        |> Maybe.map
+                            (\{ height } ->
+                                Css.px height
+                                    |> Css.maxHeight
+                                    |> List.singleton
+                            )
+                        |> Maybe.withDefault []
+                   )
+                |> css
+            ]
+            contents
+        ]

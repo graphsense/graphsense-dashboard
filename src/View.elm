@@ -4,12 +4,11 @@ import Browser exposing (Document)
 import Config.View exposing (Config)
 import Css
 import Css.Reset
-import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
 import Model exposing (Model, Msg(..), NavbarSubMenuType(..), Page(..))
-import Model.Dialog as Dialog
+import Model.Dialog as Dialog exposing (Placement(..))
 import Plugin.View as Plugin
 import RecordSetter as Rs
 import Route
@@ -17,6 +16,7 @@ import Route.Pathfinder as Pathfinder
 import Theme.Colors
 import Theme.ColorsDark
 import Theme.Html.Navbar as Nb
+import Util.Css
 import Util.View
 import View.Dialog as Dialog
 import View.Header as Header
@@ -78,7 +78,12 @@ body :
     -> Html Msg
 body vc model =
     div
-        [ Css.View.body vc |> css
+        [ [ Css.height <| Css.vh 100
+          , Css.displayFlex
+          , Css.flexDirection Css.column
+          , Css.overflow Css.hidden
+          ]
+            |> css
         , onClick UserClickedLayout
         ]
         ([ Header.header
@@ -89,13 +94,24 @@ body vc model =
             , hideSearch = True
             }
          , section
-            [ Css.View.sectionBelowHeader vc |> css
+            [ [ Css.displayFlex
+              , Css.flexDirection Css.row
+              , Css.flexGrow (Css.num 1)
+              , Css.alignItems Css.stretch
+              , Css.property "background-color" Theme.Colors.greyBlue20
+              ]
+                |> css
             ]
             [ sidebar vc model
             , Main.view vc model
             ]
          , footer
-            [ Css.View.footer vc |> css
+            [ [ Css.position Css.absolute
+              , Css.bottom (Css.px 0)
+              , Css.width (Css.pct 100)
+              , Util.Css.zIndexMain
+              ]
+                |> css
             ]
             [ Statusbar.view vc model.statusbar
             ]
@@ -208,9 +224,29 @@ overlay : Config -> Model key -> List (Html Msg)
 overlay vc model =
     let
         ov placement onClickOutside =
+            let
+                placementStyles =
+                    case placement of
+                        Centered ->
+                            [ Css.alignItems Css.center ]
+
+                        PinnedToTop ->
+                            [ Css.alignItems Css.flexStart
+                            , Css.paddingTop (Css.vh 10)
+                            , Css.boxSizing Css.borderBox
+                            ]
+            in
             List.singleton
                 >> div
-                    [ Css.View.overlay placement vc |> css
+                    [ Css.position Css.absolute
+                        :: Css.height (Css.vh 100)
+                        :: Css.width (Css.vw 100)
+                        :: Css.displayFlex
+                        :: Css.justifyContent Css.center
+                        :: Css.zIndex (Css.int 500)
+                        :: Css.property "background-color" Theme.Colors.overlayBg
+                        :: placementStyles
+                        |> css
                     , onClick (UserClickedOutsideDialog onClickOutside)
                     ]
                 >> List.singleton

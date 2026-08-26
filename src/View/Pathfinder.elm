@@ -71,19 +71,12 @@ originShiftX =
     0
 
 
-
---Css.searchBoxMinWidth / 2
-
-
-view : ModelState -> View.Config -> Pathfinder.Model -> { navbar : List (Html Msg), contents : List (Html Msg) }
-view states vc model =
-    { navbar = []
-    , contents = graph states vc model.config model
-    }
-
-
-graph : ModelState -> View.Config -> Pathfinder.Config -> Pathfinder.Model -> List (Html Msg)
-graph pluginStates vc gc model =
+view : ModelState -> View.Config -> Pathfinder.Model -> List (Html Msg)
+view pluginStates vc model =
+    let
+        gc =
+            model.config
+    in
     [ vc.size
         |> Maybe.map (graphSvg vc gc model)
         |> Maybe.withDefault none

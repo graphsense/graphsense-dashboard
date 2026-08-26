@@ -120,14 +120,6 @@ theme =
             , display inline
             , scaled 2 |> rem |> marginLeft
             ]
-        |> s_heading2
-            [ fontFamilies headingFontFamilies
-            , letterSpacingWide
-            , scaled 6 |> rem |> fontSize
-            , fontWeight bold
-            , scaled 1 |> rem |> paddingTop
-            , marginBottom <| rem <| 1
-            ]
         |> s_paragraph
             [ scaled 2 |> rem |> marginBottom
             ]
@@ -242,9 +234,6 @@ theme =
                 ]
             )
         |> s_logo_lightmode "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo_without_text_light.svg]"
-        |> s_overlay
-            [ Color.rgba 0 0 0 0.6 |> toCssColor |> backgroundColor
-            ]
         |> s_switchLabel
             [ whiteSpace noWrap
             ]

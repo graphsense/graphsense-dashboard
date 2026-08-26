@@ -1,8 +1,8 @@
 module View.Dialog exposing (view)
 
 import Config.View exposing (Config)
+import Css
 import Css.Dialog as Css
-import Css.View
 import Html.Styled exposing (Html, div, li, text, ul)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (stopPropagationOn)
@@ -169,14 +169,14 @@ error vc err =
                     Locale.interpolated vc.locale message variables
                         |> text
                         |> List.singleton
-                        |> Util.View.p vc []
+                        |> Util.View.p []
                         |> List.singleton
 
                 Http _ e ->
                     Locale.httpErrorToString vc.locale e
                         |> text
                         |> List.singleton
-                        |> Util.View.p vc []
+                        |> Util.View.p []
                         |> List.singleton
 
                 AddressNotFound addrs ->
@@ -231,10 +231,15 @@ notFoundDetails vc things details =
     let
         take =
             3
+
+        listItemStyle =
+            [ Css.listStyleType Css.disc
+            , 6 * 0.22 |> Css.rem |> Css.marginLeft
+            ]
     in
     [ things
         |> List.take take
-        |> List.map (text >> List.singleton >> li [ Css.View.listItem vc |> css ])
+        |> List.map (text >> List.singleton >> li [ listItemStyle |> css ])
         |> (\lis ->
                 if List.length things > take then
                     (List.length things - take)
@@ -252,20 +257,20 @@ notFoundDetails vc things details =
            )
         |> ul []
         |> List.singleton
-        |> Util.View.p vc []
+        |> Util.View.p []
     , div
         []
         [ Locale.string vc.locale "Popup-address-not-found-various-reasons"
             |> (\s -> s ++ ":")
             |> text
             |> List.singleton
-            |> Util.View.p vc []
+            |> Util.View.p []
         , details
             ++ [ "Popup-address-not-found-typos" ]
-            |> List.map (Locale.string vc.locale >> addDot >> text >> List.singleton >> li [ Css.View.listItem vc |> css ])
+            |> List.map (Locale.string vc.locale >> addDot >> text >> List.singleton >> li [ listItemStyle |> css ])
             |> ul []
             |> List.singleton
-            |> Util.View.p vc []
+            |> Util.View.p []
         ]
     ]
 
