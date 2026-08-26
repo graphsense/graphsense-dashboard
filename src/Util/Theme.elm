@@ -1,4 +1,4 @@
-module Util.Theme exposing (backgroundColorWithLightmode, borderColorWithLightmode, borderColor_backgroundColorWithLightmode, colorWithLightmode, color_backgroundColorWithLightmode, duration, setAlpha, switchColor)
+module Util.Theme exposing (backgroundColorWithLightmode, borderColor_backgroundColorWithLightmode, colorWithLightmode, color_backgroundColorWithLightmode, duration, setAlpha, switchColor)
 
 import Color exposing (Color)
 import Css
@@ -35,11 +35,6 @@ colorWithLightmode lm c =
 backgroundColorWithLightmode : Bool -> Theme.SwitchableColor -> Css.Style
 backgroundColorWithLightmode lm c =
     withLightmode [ ( backgroundColor, c ) ] lm
-
-
-borderColorWithLightmode : Bool -> Theme.SwitchableColor -> Css.Style
-borderColorWithLightmode lm c =
-    withLightmode [ ( borderColor, c ) ] lm
 
 
 color_backgroundColorWithLightmode : Bool -> Theme.SwitchableColor -> Theme.SwitchableColor -> Css.Style

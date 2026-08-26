@@ -7,11 +7,9 @@ import Theme.Button as Button exposing (Button)
 import Theme.ContextMenu as ContextMenu exposing (ContextMenu)
 import Theme.Dialog as Dialog exposing (Dialog)
 import Theme.Graph as Graph exposing (Graph)
-import Theme.Hovercard as Hovercard exposing (Hovercard)
 import Theme.Search as Search exposing (Search)
 import Theme.Statusbar as Statusbar exposing (Statusbar)
 import Theme.Table as Table exposing (Table)
-import Theme.User as User exposing (User)
 
 
 type alias Theme =
@@ -52,10 +50,8 @@ type alias Theme =
     , table : Table
     , tool : List Style
     , dialog : Dialog
-    , user : User
     , statusbar : Statusbar
     , footer : List Style
-    , hovercard : Bool -> Hovercard
     , buttonsRow : List Style
     , switchLabel : List Style
     , switchRoot : List Style
@@ -103,9 +99,7 @@ default =
     , autocomplete = Autocomplete.default
     , button = Button.default
     , tool = []
-    , hovercard = \_ -> Hovercard.default
     , dialog = Dialog.default
-    , user = User.default
     , statusbar = Statusbar.default
     , footer = []
     , graph = Graph.default

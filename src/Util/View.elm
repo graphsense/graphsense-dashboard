@@ -10,7 +10,6 @@ import Dict
 import Hex
 import Hovercard
 import Html as BHtml
-import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, span)
 import Html.Styled.Attributes exposing (attribute, css)
 import Html.Styled.Events exposing (stopPropagationOn)
@@ -147,11 +146,10 @@ hovercard vc element zIndex =
             |> Hovercard.withBorderColorString Colors.grey50
             |> Hovercard.withBackgroundColorString Colors.white
             |> Hovercard.withViewport vc.size
+            |> Hovercard.styleTickOnly True
         )
         element
-        (Css.hovercard vc
-            |> List.map (\( k, v ) -> Html.Attributes.style k v)
-        )
+        []
         >> Html.Styled.fromUnstyled
 
 

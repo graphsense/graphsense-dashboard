@@ -386,6 +386,7 @@ view (Config config) (Model model) view_ =
                                         |> Hovercard.withBorderWidth config.borderWidth
                                         |> Hovercard.withViewport config.viewport
                                         |> Hovercard.withFixed config.fixed
+                                        |> Hovercard.styleTickOnly True
                                     )
                                     hovercard
                                     []

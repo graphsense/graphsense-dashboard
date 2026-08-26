@@ -1,4 +1,4 @@
-module Css.View exposing (body, contents, copyIcon, footer, frame, heading2, hovercard, link, listItem, main_, navbar, overlay, paragraph, sectionBelowHeader)
+module Css.View exposing (body, contents, copyIcon, footer, frame, heading2, link, listItem, main_, navbar, overlay, paragraph, sectionBelowHeader)
 
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -75,11 +75,6 @@ contents vc =
                 |> Maybe.withDefault []
            )
         ++ vc.theme.contents vc.lightmode
-
-
-hovercard : Config -> List ( String, String )
-hovercard vc =
-    (vc.theme.hovercard vc.lightmode).root
 
 
 link : Config -> List Style

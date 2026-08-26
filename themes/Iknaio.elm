@@ -12,18 +12,15 @@ import Theme.ColorsDark
 import Theme.ContextMenu as ContextMenu
 import Theme.Dialog as Dialog
 import Theme.Graph as Graph
-import Theme.Hovercard as Hovercard
 import Theme.Search as Search
 import Theme.Statusbar as Statusbar
 import Theme.SwitchableColor as Theme
 import Theme.Table as Table
 import Theme.Theme as Theme exposing (Theme)
-import Theme.User as User
 import Tuple
 import Util.Theme
     exposing
         ( backgroundColorWithLightmode
-        , borderColorWithLightmode
         , borderColor_backgroundColorWithLightmode
         , colorWithLightmode
         , color_backgroundColorWithLightmode
@@ -450,42 +447,6 @@ theme =
                 |> s_iconButton
                     (\_ ->
                         [ width <| px 16
-                        ]
-                    )
-            )
-        |> s_hovercard
-            (\lightmode ->
-                Hovercard.default
-                    |> s_borderColor (switchColor lightmode colors.greyLight)
-                    |> s_backgroundColor (switchColor lightmode colors.brandWhite)
-                    |> s_borderWidth 1
-                    |> s_root
-                        [ ( "box-shadow", "0 4px 8px 0 rgba(0, 0, 0, .12), 0 2px 4px 0 rgba(0, 0, 0, .08)" )
-                        , ( "border-radius", "5px" )
-                        ]
-            )
-        |> s_user
-            (User.default
-                |> s_root
-                    (\lightmode ->
-                        [ scaled 5 |> rem |> fontSize
-                        , colorWithLightmode lightmode iconActive
-                        ]
-                    )
-                |> s_hovercardRoot
-                    [ scaled 3 |> rem |> padding
-                    ]
-                |> s_logoutButton
-                    (\lightmode ->
-                        [ padding zero
-                        , backgroundColor transparent
-                        , border zero
-                        , colors.brandText |> colorWithLightmode lightmode
-                        , textDecoration underline
-                        , cursor pointer
-                        , hover
-                            [ textDecoration none
-                            ]
                         ]
                     )
             )
@@ -1054,29 +1015,9 @@ scaled =
     (*) 0.22
 
 
-fontHairline : Style
-fontHairline =
-    fontWeight (int 100)
-
-
-fontNormal : Style
-fontNormal =
-    fontWeight (int 300)
-
-
 fontBold : Style
 fontBold =
     fontWeight (int 500)
-
-
-currencyPadding : Float
-currencyPadding =
-    4
-
-
-statsMargin : Float
-statsMargin =
-    5
 
 
 paddingY : Length compatibleB unitsB -> Style
@@ -1124,11 +1065,6 @@ borderRadiusSm =
     property
         (Tuple.first borderRadiusSmRaw)
         (Tuple.second borderRadiusSmRaw)
-
-
-boarderRadiusPathfinder2 : Style
-boarderRadiusPathfinder2 =
-    property "border-radius" "5px"
 
 
 inputStyleRaw : Bool -> Maybe Float -> List ( String, String )
