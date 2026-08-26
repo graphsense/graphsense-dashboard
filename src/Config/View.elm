@@ -11,8 +11,7 @@ import Theme.Theme exposing (Theme)
 
 
 type alias Config =
-    { theme : Theme
-    , locale : Locale.Model
+    { locale : Locale.Model
     , lightmode : Bool
     , size : Maybe BBox -- position and size of the main pane
     , showDatesInUserLocale : Bool

@@ -4,7 +4,6 @@ module Effect exposing (perform)
 
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
-import Config
 import Config.UserSettings
 import Effect.Api
 import Effect.Locale as Locale
@@ -47,7 +46,7 @@ perform model statusbarToken apiKey effect =
                 |> Cmd.map LocaleMsg
 
         LogoutEffect ->
-            Nav.load Config.logoutUrl
+            Nav.load "{{VITE_LOGOUT_URL}}"
 
         SaveUserSettingsEffect m ->
             Config.UserSettings.encoder m

@@ -1,6 +1,5 @@
 module Init exposing (init, viewConfigFromSettings)
 
-import Config exposing (config)
 import Config.Update as Update
 import Config.UserSettings
 import Config.View exposing (characterDimensionsDecoder)
@@ -108,7 +107,6 @@ then silently dropped at the next boot, which is what `showBothValues` did.
 viewConfigFromSettings : Locale.Model -> Dict String Config.View.CharacterDimension -> Config.UserSettings.UserSettings -> Config.View.Config
 viewConfigFromSettings locale characterDimensions settings =
     { locale = locale
-    , theme = config.theme
     , lightmode = settings.lightMode |> Maybe.withDefault True
     , size = Nothing
     , showDatesInUserLocale = settings.showDatesInUserLocale |> Maybe.withDefault True
