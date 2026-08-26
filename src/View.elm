@@ -17,7 +17,7 @@ import Theme.Colors
 import Theme.ColorsDark
 import Theme.Html.Navbar as Nb
 import Util.Css
-import Util.View
+import Util.View exposing (hovercard, onMiddleClick)
 import View.Dialog as Dialog
 import View.Header as Header
 import View.Locale as Locale
@@ -32,9 +32,22 @@ view :
     -> Model key
     -> Document Msg
 view vc model =
+    let
+        -- `Plugin.title` is contributed by every plugin regardless of the page;
+        -- `Plugin.pageTitle` only by the plugin whose page is currently on screen.
+        pluginTitles =
+            Plugin.title model.plugins vc
+                ++ (case model.page of
+                        Plugin pluginType ->
+                            Plugin.pageTitle model.plugins pluginType vc
+
+                        _ ->
+                            []
+                   )
+    in
     { title =
         Locale.string vc.locale "Iknaio Analytics Platform"
-            :: Plugin.title model.plugins vc
+            :: pluginTitles
             |> List.reverse
             |> String.join " | "
     , body =
@@ -117,9 +130,8 @@ body vc model =
             ]
          ]
             ++ overlay vc model
-            ++ (Notification.view vc model.notifications
-                    :: Maybe.withDefault [] (Plugin.tooltip model.plugins vc)
-               )
+            ++ [ Notification.view vc model.notifications ]
+            ++ Plugin.tooltip model.plugins vc
         )
 
 
@@ -201,6 +213,7 @@ sidebar vc model =
                   ]
                     |> css
                 , onClick UserClickedNavHome
+                , onMiddleClick UserMiddleClickedNavHome
                 ]
         )
         (Nb.navbarMenuNewInstances

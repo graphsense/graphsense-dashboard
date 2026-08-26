@@ -753,18 +753,43 @@ makeExportCSVConfig uc addressId txs =
         , numberOfRows = numberOfRowsForCSVExport
         , fetch =
             \nor ->
-                fetchTransactions
-                    (\_ -> GotAddressTxsForExport txs)
-                    txs
-                    addressId
-                    (txs.table
-                        |> InfiniteTable.getTable
-                        |> .state
-                        |> Table.getSortState
-                        |> Just
-                    )
-                    nor
-                    Nothing
+                case TransactionFilter.getUtxoFilter txs.filter of
+                    Just _ ->
+                        -- The utxo-only filter has no server-side equivalent: its rows
+                        -- come from the WorkflowNextUtxoTx chain walk, whose responses
+                        -- are routed to the table (see fetchTransactionsWithPathfinderMsg),
+                        -- not to the message the caller passes in. Fetching again here
+                        -- would silently drop the export's continuation and leave the
+                        -- spinner turning forever, so export the rows the table holds.
+                        let
+                            loaded =
+                                InfiniteTable.getCurrentData txs.table
+                        in
+                        { addressTxs = List.take nor loaded
+                        , nextPage =
+                            if List.length loaded > nor then
+                                Just "truncated"
+
+                            else
+                                Nothing
+                        }
+                            |> GotAddressTxsForExport txs
+                            |> Pathfinder.AddressDetailsMsg addressId
+                            |> InternalEffect
+
+                    Nothing ->
+                        fetchTransactions
+                            (\_ -> GotAddressTxsForExport txs)
+                            txs
+                            addressId
+                            (txs.table
+                                |> InfiniteTable.getTable
+                                |> .state
+                                |> Table.getSortState
+                                |> Just
+                            )
+                            nor
+                            Nothing
         , cmdToEff =
             Cmd.map
                 (ExportCSVMsg txs >> Pathfinder.AddressDetailsMsg addressId)

@@ -373,12 +373,30 @@ The browser default for a claimed chord (F = find bar, S = save page, E = focus 
 
 The Makefile clones patched forks of `elm/virtual-dom`, `elm/browser`, `elm/html`, and `rtfeldman/elm-css` into `elm_packages/` (the `virtual-dom-fix` target). These patches (elm-safe-virtual-dom) prevent the app from crashing when browser extensions modify the DOM, which would otherwise conflict with Elm's virtual DOM diffing. They are required for the build to work.
 
-Four ways they used to fall out of the build silently — and all four are now caught:
+Five ways they fall out of the build silently. Four are now caught; the fifth is not:
 
 - **The package cache is per compiler version** (`elm_packages/<elm version>/packages`). `ELM_PACKAGES_DIR` derives that version from `npx elm --version`; never hardcode it, or an elm upgrade makes the compiler resolve the *unpatched* registry packages from a fresh directory while the clones sit unused in the old one.
 - **`elm-stuff` caches compiled dependencies by package version, not content.** Swapping a package's source in place does not invalidate it, so the next build keeps the old kernel. `clone-repo` deletes `elm-stuff` whenever it clones.
 - **A clone of the wrong commit is still a clone.** `clone-repo` compares `git rev-parse HEAD` against the pinned hash, so bumping a pin actually re-clones.
 - **Only the Makefile exports `ELM_HOME`.** Starting the dev server directly (`npm run dev`, `npx vite`) instead of via `make serve` left the elm compiler resolving the *unpatched* registry packages from `~/.elm`, while `make check-virtual-dom-fix` still passed — it checks the clones, which were fine. `vite.config.mjs` now defaults `process.env.ELM_HOME` to `./elm_packages`, so the entry point no longer matters.
+- **Anything that compiles outside `make` still uses `~/.elm` — and the editor does.**
+  `vite.config.mjs` fixed the dev-server entry point, but not other compilers. The VS Code
+  Elm extension (`elmtooling.elm-ls-vscode`) type-checks on save with the default
+  `ELM_HOME`, and `~/.elm` holds unpatched copies of all four forks *at the same version
+  numbers* as the patched clones (`virtual-dom` 1.0.5, `browser` 1.0.2, `html` 1.0.1,
+  `elm-css` 18.0.0). Because `elm-stuff` keys artifacts by version and not content, the
+  two are indistinguishable: the extension's compile poisons the shared `elm-stuff`, and
+  the next vite build serves an unpatched kernel. The symptom is
+  `elm-safe-virtual-dom is NOT in this build` recurring *on save* rather than once, and
+  `make check-virtual-dom-fix` passes throughout because the clones are fine.
+
+  Neither guard can see this — one inspects the clones, the other the compiled output,
+  and the poisoning happens between them. `elm-ls-vscode` 2.8.0 has no `ELM_HOME` setting
+  (only `elmPath`, `elmFormatPath`, `elmTestPath`, `elmReviewPath`), so the fix is to stop
+  it compiling: `"elmLS.disableElmLSDiagnostics": true` in `.vscode/settings.json`, which
+  is gitignored and therefore per-developer. Recover a poisoned tree with
+  `rm -rf elm-stuff`. Setting `ELM_HOME` before launching the editor works too, but then
+  every other Elm project on the machine resolves against this repository's cache.
 
 Two guards, both loud:
 

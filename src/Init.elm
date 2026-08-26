@@ -67,6 +67,7 @@ init uc flags url key =
       , notifications = Notification.init
       , localeSelectBox = TSelectBox.init <| List.map first Locale.locales
       , navbarSubMenu = Nothing
+      , fileDragOver = False
       }
     , List.map LocaleEffect localeEffect
         ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy

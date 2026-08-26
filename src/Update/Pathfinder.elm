@@ -5950,14 +5950,24 @@ getTagsForExport addressId table data model =
             \includesBestClusterTag result ->
                 AddressDetails.BrowserGotBulkTagsForExport table data includesBestClusterTag result
                     |> AddressDetailsMsg addressId
+
+        effects =
+            data
+                |> first
+                |> List.concatMap (\tx -> [ tx.fromAddress, tx.toAddress ])
+                |> Set.fromList
+                |> Set.toList
+                |> fetchTagSummaryForIds True model.tagSummaries toMsg (Id.network addressId)
     in
     ( model
-    , data
-        |> first
-        |> List.concatMap (\tx -> [ tx.fromAddress, tx.toAddress ])
-        |> Set.fromList
-        |> Set.toList
-        |> fetchTagSummaryForIds True model.tagSummaries toMsg (Id.network addressId)
+    , if List.isEmpty effects then
+        -- Nothing left to fetch — every tag summary is already in the model, or
+        -- there are no rows at all. Complete the export anyway: waiting on a
+        -- response that will never come leaves the spinner turning forever.
+        [ InternalEffect (toMsg True []) ]
+
+      else
+        effects
     )
 
 

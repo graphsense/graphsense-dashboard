@@ -322,7 +322,7 @@ incoming-neighbors-of-address: Eingehende Nachbarn der Adresse {0} ({1})
 outgoing-neighbors-of-address: Ausgehende Nachbarn der Adresse {0} ({1})
 incoming-neighbors-of-entity: Eingehende Nachbarn des Clusters {0} ({1})
 outgoing-neighbors-of-entity: Ausgehende Nachbarn des Clusters {0} ({1})
-addresses-of-entity: Adressen des Clusterss {0} ({1})
+addresses-of-entity: Adressen des Clusters {0} ({1})
 total-received-assets-of-address: Eingänge aller Assets der Adresse {0} ({1})
 final-balance-assets-of-address: Bilanz aller Assets der Adresse {0} ({1})
 transactions-of-block: Transaktionen des Blocks {0} ({1})
@@ -596,3 +596,4 @@ export-dialog-only-visible-inoutputs: "nur sichtbare Ein-/Ausgänge exportieren"
 export-dialog-only-visible-inoutputs-help: "Wenn aktiviert, enthält die CSV nur Flüsse zwischen Ein- und Ausgängen, die im Graphen sichtbar sind. Deaktivieren, um die vollständige Ein-/Ausgangs-Matrix zu exportieren — bei Transaktionen mit vielen Ein- und Ausgängen kann dies eine sehr große Datei erzeugen."
 csv-note-capped: "Transaktion zu groß – nur Flüsse mit einer sichtbaren Adresse wurden exportiert, auf das Exportlimit gekürzt."
 csv-note-visible-only: "Nur Flüsse mit einer sichtbaren Adresse wurden exportiert."
+unknown url: "Unbekannte URL: {0}"

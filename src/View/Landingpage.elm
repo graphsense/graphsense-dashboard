@@ -5,7 +5,8 @@ import Css exposing (hover)
 import Css.Transitions exposing (transition)
 import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (autofocus, css)
-import Html.Styled.Events exposing (onClick)
+import Html.Styled.Events exposing (on, onClick, preventDefaultOn)
+import Json.Decode
 import Model exposing (Model, Msg(..))
 import Model.Search
 import Msg.Pathfinder as Pathfinder
@@ -22,6 +23,21 @@ import View.Search
 
 
 --import Css exposing (marginRight)
+
+
+{-| Succeeds only if the drag carries files (not text selections etc.).
+-}
+whenDraggingFiles : Msg -> Json.Decode.Decoder Msg
+whenDraggingFiles msg =
+    Json.Decode.at [ "dataTransfer", "types" ] (Json.Decode.list Json.Decode.string)
+        |> Json.Decode.andThen
+            (\types ->
+                if List.member "Files" types then
+                    Json.Decode.succeed msg
+
+                else
+                    Json.Decode.fail "not dragging files"
+            )
 
 
 searchBoxView : View.Config -> Model.Search.Model -> Html Msg
@@ -63,7 +79,38 @@ view vc model =
                 , css
                     [ hover [ Css.property "background-color" Colors.grey50 ]
                     , transition [ Css.Transitions.backgroundColor 100 ]
+                    , Css.pointerEvents Css.none
                     ]
+                , [ Css.property "transition" "transform 0.15s ease-out"
+                  , Css.transform
+                        (if model.fileDragOver then
+                            Css.scale 1.1
+
+                         else
+                            Css.scale 1
+                        )
+                  ]
+                    |> css
+
+                -- dragover must be cancelled for the box to be a drop target
+                , preventDefaultOn "dragover" (Json.Decode.succeed ( NoOp, True ))
+                , on "dragenter" (whenDraggingFiles (UserDraggedFileOverLoadBox True))
+                , on "dragleave" (Json.Decode.succeed (UserDraggedFileOverLoadBox False))
+
+                -- some drag sources advertise files at dragenter but deliver none at
+                -- drop; still reset the drag-over state then, or the box stays enlarged
+                , preventDefaultOn "drop"
+                    (Json.Decode.at [ "dataTransfer", "files", "0" ] Json.Decode.value
+                        |> Json.Decode.maybe
+                        |> Json.Decode.map
+                            (\file ->
+                                ( file
+                                    |> Maybe.map UserDroppedFileOnLoadBox
+                                    |> Maybe.withDefault (UserDraggedFileOverLoadBox False)
+                                , True
+                                )
+                            )
+                    )
                 ]
         )
         Landingpage.startInvestigationInstances

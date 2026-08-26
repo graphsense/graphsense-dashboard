@@ -26,8 +26,13 @@ type alias View modelState addressState msg =
     -- contents of the main pane
     , contents : Maybe (View.Config -> modelState -> List (Html msg))
 
-    -- update window's title
+    -- update window's title, on every page
     , title : Maybe (View.Config -> modelState -> List String)
+
+    -- update window's title, but only while this plugin's own page is on screen.
+    -- Core calls `title` for every plugin on every render and never tells a plugin that
+    -- the user navigated away, so a page-specific title has to be route-gated here.
+    , pageTitle : Maybe (View.Config -> modelState -> List String)
 
     -- additional stuff for the user's profile
     , profile : Maybe (View.Config -> modelState -> List ( String, Html msg ))
@@ -68,6 +73,7 @@ init =
     , navbar = Nothing
     , contents = Nothing
     , title = Nothing
+    , pageTitle = Nothing
     , profile = Nothing
     , login = Nothing
     , addressSidePanelHeader = Nothing
