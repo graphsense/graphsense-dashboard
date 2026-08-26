@@ -1,4 +1,4 @@
-module Model exposing (AddTagDialogMsgs(..), Auth(..), Effect(..), Flags, Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..), RequestLimit(..), RequestLimitInterval(..), SettingsMsg(..), Thing(..), UserModel, requestLimitIntervalToString, showResetCounterAtRemaining, userSettingsFromMainModel)
+module Model exposing (AddTagDialogMsgs(..), Auth(..), Effect(..), Flags, Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..), RequestLimit(..), RequestLimitInterval(..), SettingsMsg(..), UserModel, requestLimitIntervalToString, showResetCounterAtRemaining, userSettingsFromMainModel)
 
 import Api.Data
 import Browser exposing (UrlRequest)
@@ -93,10 +93,8 @@ type Msg
     | BrowserGotStatistics Api.Data.Stats
     | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Headers, Effect.Api.Effect Msg ) ( Headers, Msg ))
     | UserSwitchesLocale String
-    | UserSubmitsApiKeyForm
     | UserInputsApiKeyForm String
     | UserClickedUserIcon String
-    | UserLeftUserHovercard
     | UserClickedLayout
     | UserClickedConfirm Msg
     | UserClickedOption Msg
@@ -108,7 +106,6 @@ type Msg
     | BrowserChangedWindowSize Int Int
     | BrowserGotEntityTaxonomy (List Api.Data.Concept)
     | BrowserGotAbuseTaxonomy (List Api.Data.Concept)
-    | BrowserGotElementForPlugin (Result Browser.Dom.Error Browser.Dom.Element -> Plugin.Msg) (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotSupportedTokens String Api.Data.TokenConfigs
     | BrowserGotUserInfo Effect.Api.UserInfo
     | UserClickedStatusbar
@@ -213,7 +210,6 @@ type Effect
     = NavLoadEffect String
     | NavPushUrlEffect String
     | NavBackEffect Int
-    | GetElementEffect { id : String, msg : Result Browser.Dom.Error Browser.Dom.Element -> Msg }
     | GetContentsElementEffect
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect (Msg.Search.Msg -> Msg) Effect.Search.Effect
@@ -226,10 +222,6 @@ type Effect
     | SaveUserSettingsEffect UserSettings
     | NotificationEffect Model.Notification.Effect
     | PostponeUpdateByUrlEffect Url
-
-
-type Thing
-    = Entity Api.Data.Cluster
 
 
 userSettingsFromMainModel : Model key -> UserSettings

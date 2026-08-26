@@ -177,10 +177,7 @@ step : Msg -> App -> App
 step msg (App app) =
     let
         config =
-            { defaultColor = Env.updateConfig.defaultColor
-            , categoryToColor = Env.updateConfig.categoryToColor
-            , highlightsColorScheme = Env.updateConfig.highlightsColorScheme
-            , locale = app.model_.config.locale
+            { locale = app.model_.config.locale
             , size = app.model_.config.size
             , abuseConcepts = app.model_.config.abuseConcepts
             , allConcepts = app.model_.config.allConcepts
@@ -228,9 +225,6 @@ name eff =
 
         NavBackEffect _ ->
             "NavBackEffect"
-
-        GetElementEffect _ ->
-            "GetElementEffect"
 
         GetContentsElementEffect ->
             "GetContentsElementEffect"

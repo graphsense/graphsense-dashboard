@@ -13,7 +13,6 @@ run on or on what `config/Config.elm` happens to register locally.
 
 -}
 
-import Config
 import Config.Update
 import Config.UserSettings
 import Config.View
@@ -45,10 +44,7 @@ viewport =
 -}
 updateConfig : Config.Update.Config
 updateConfig =
-    { defaultColor = Config.config.theme.graph.defaultColor
-    , categoryToColor = Config.config.theme.graph.categoryToColor
-    , highlightsColorScheme = Config.config.theme.graph.highlightsColorScheme
-    , locale = locale
+    { locale = locale
     , size = Just viewport
     , allConcepts = []
     , abuseConcepts = []
@@ -57,8 +53,7 @@ updateConfig =
 
 viewConfig : Config.View.Config
 viewConfig =
-    { theme = Config.config.theme
-    , locale = locale
+    { locale = locale
     , lightmode = True
     , size = Just viewport
     , showDatesInUserLocale = True

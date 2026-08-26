@@ -33,10 +33,6 @@ perform model statusbarToken apiKey effect =
         NavBackEffect steps ->
             Nav.back model.key steps
 
-        GetElementEffect { id, msg } ->
-            Dom.getElement id
-                |> Task.attempt msg
-
         GetContentsElementEffect ->
             Dom.getElement "contents"
                 |> Task.attempt BrowserGotContentsElement

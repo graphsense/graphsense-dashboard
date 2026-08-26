@@ -284,7 +284,6 @@ the output does not depend on the local plugin configuration.
 html : App -> Query.Single Msg
 html (App app) =
     View.Pathfinder.view Plugin.Model.emptyModelState Env.viewConfig app.model_
-        |> .contents
         |> Html.Styled.div []
         |> Html.Styled.toUnstyled
         |> Query.fromHtml

@@ -62,9 +62,6 @@ messageFromEffect model effect =
         Model.NavBackEffect _ ->
             Nothing
 
-        Model.GetElementEffect _ ->
-            Nothing
-
         Model.GetContentsElementEffect ->
             Nothing
 

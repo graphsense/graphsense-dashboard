@@ -6,7 +6,7 @@ import Theme.Colors as Colors
 
 
 root : Config -> List Style
-root vc =
+root _ =
     [ displayFlex
     , flexDirection Css.row
     , overflowX auto
@@ -15,7 +15,7 @@ root vc =
 
 
 tableRoot : Config -> List Style
-tableRoot vc =
+tableRoot _ =
     [ overflowY auto
     , overflowX auto
     , displayFlex
@@ -24,7 +24,7 @@ tableRoot vc =
 
 
 table : Config -> List Style
-table vc =
+table _ =
     [ 0.22 |> rem |> padding
     ]
 
@@ -56,13 +56,13 @@ headRow _ =
 
 
 headCellSortable : Config -> List Style
-headCellSortable vc =
+headCellSortable _ =
     [ cursor pointer
     ]
 
 
 row : Config -> List Style
-row vc =
+row _ =
     [ nthChild "2n"
         [ Css.property "background-color" Colors.greyBlue20
         ]
@@ -74,7 +74,7 @@ row vc =
 
 
 cell : Config -> List Style
-cell vc =
+cell _ =
     [ tableCell ]
 
 
@@ -106,7 +106,7 @@ numberCell _ =
 
 
 loadingSpinner : Config -> List Style
-loadingSpinner vc =
+loadingSpinner _ =
     [ px 24 |> height
     , px 24 |> width
     , px 12 |> padding
@@ -114,7 +114,7 @@ loadingSpinner vc =
 
 
 emptyHint : Config -> List Style
-emptyHint vc =
+emptyHint _ =
     [ displayFlex
     , flexGrow (int 1)
     , alignItems center
@@ -123,12 +123,12 @@ emptyHint vc =
 
 
 tick : Config -> List Style
-tick vc =
+tick _ =
     [ display inlineBlock ]
 
 
 info : Config -> List Style
-info vc =
+info _ =
     [ position absolute
     , bottom zero
     , left zero

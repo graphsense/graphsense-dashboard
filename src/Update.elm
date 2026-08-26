@@ -41,7 +41,6 @@ import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin
 import PluginInterface.Msg as PluginInterface
-import PluginInterface.Update as PluginInterface
 import Ports
 import Process
 import RecordSetter exposing (..)
@@ -49,7 +48,6 @@ import RemoteData as RD
 import Result.Extra
 import Route
 import Route.Pathfinder
-import Sha256
 import Task
 import Time
 import Tuple exposing (..)
@@ -613,18 +611,6 @@ update uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
-        UserLeftUserHovercard ->
-            { model
-                | user =
-                    case model.user.auth of
-                        Unauthorized _ _ ->
-                            model.user
-
-                        _ ->
-                            model.user |> s_hovercard Nothing
-            }
-                |> n
-
         UserSwitchesLocale loc ->
             switchLocale loc model
 
@@ -646,48 +632,6 @@ update uc msg model =
                         |> s_apiKey input
             }
                 |> n
-
-        UserSubmitsApiKeyForm ->
-            if String.isEmpty model.user.apiKey then
-                n model
-
-            else
-                let
-                    effs =
-                        case model.user.auth of
-                            Unauthorized _ effects ->
-                                List.map ApiEffect effects
-
-                            _ ->
-                                []
-
-                    ( new, outMsg, cmd ) =
-                        Plugin.updateApiKeyHash (Sha256.sha256 model.user.apiKey) model.plugins
-                            |> PluginInterface.andThen (Plugin.updateApiKey model.user.apiKey)
-                in
-                ( { model
-                    | user =
-                        model.user
-                            |> s_auth
-                                (if List.isEmpty effs then
-                                    Unknown
-
-                                 else
-                                    Unauthorized True []
-                                )
-                            |> s_hovercard
-                                (if List.isEmpty effs then
-                                    Nothing
-
-                                 else
-                                    model.user.hovercard
-                                )
-                    , plugins = new
-                  }
-                , PluginEffect cmd
-                    :: effs
-                )
-                    |> updateByPluginOutMsg uc outMsg
 
         BrowserGotContentsElement result ->
             result
@@ -833,9 +777,6 @@ update uc msg model =
               ]
             )
                 |> updateByPluginOutMsg uc outMsg
-
-        BrowserGotElementForPlugin pmsg element ->
-            updatePlugins uc (pmsg element) model
 
         LocaleMsg m ->
             let
