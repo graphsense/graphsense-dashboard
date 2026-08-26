@@ -3,7 +3,7 @@ FROM node:22-alpine AS builder
 ENV WORKDIR=/app
 
 RUN mkdir ${WORKDIR} && \
-    apk --no-cache --update add bash git openssh python3 make g++ rsync nginx
+    apk --no-cache --update add bash git openssh python3 make g++ rsync nginx jq
 
 WORKDIR $WORKDIR
 
@@ -18,7 +18,6 @@ COPY ./lang $WORKDIR/lang
 #COPY ./generated/theme $WORKDIR/generated/theme
 COPY ./plugins $WORKDIR/plugins
 COPY ./plugin_templates $WORKDIR/plugin_templates
-COPY ./themes $WORKDIR/themes
 COPY ./theme $WORKDIR/theme
 COPY ./codegen $WORKDIR/codegen
 COPY ./lib $WORKDIR/lib
