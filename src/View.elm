@@ -13,6 +13,7 @@ import Plugin.View as Plugin
 import RecordSetter as Rs
 import Route
 import Route.Pathfinder as Pathfinder
+import String.Format
 import Theme.Colors
 import Theme.ColorsDark
 import Theme.Html.Navbar as Nb
@@ -59,15 +60,22 @@ view vc model =
             Theme.ColorsDark.style
           )
             |> toUnstyled
-        , node "style" [] [ text """
+        , node "style"
+            []
+            [ """
            body { 
                overflow: hidden; 
                font-family: "Roboto", "system-ui", "BlinkMacSystemFont", "-apple-system", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "sans-serif";
                font-size: 0.77rem;
+               color: {{ }};
 
            }
            input { border: 0; }
-           """ ] |> toUnstyled
+           """
+                |> String.Format.value Theme.Colors.brandText
+                |> text
+            ]
+            |> toUnstyled
         , node "style" [] [ text """
            .gs-markdown { overflow-wrap: break-word; }
            .gs-markdown h1,
