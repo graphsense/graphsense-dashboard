@@ -50,7 +50,6 @@ view vc model =
            body { overflow: hidden; }
            input { border: 0; }
            """ ] |> toUnstyled
-        , node "style" [] [ text vc.theme.custom ] |> toUnstyled
         , node "style" [] [ text """
            .gs-markdown { overflow-wrap: break-word; }
            .gs-markdown h1,

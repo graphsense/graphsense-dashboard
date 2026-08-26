@@ -6,7 +6,6 @@ import Components.Tooltip as Tooltip
 import Config.Pathfinder as Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
-import Css.Graph
 import Css.Pathfinder as Css
 import Dict
 import Hovercard
@@ -47,7 +46,7 @@ import Util.ExternalLinks
 import Util.Graph
 import Util.Tooltip
 import Util.TooltipType
-import Util.View exposing (fixFillRule, hovercard, none)
+import Util.View exposing (fixFillRule, fullWidthCss, hovercard, none)
 import View.Controls as Controls
 import View.Graph.Transform as Transform
 import View.Locale as Locale
@@ -807,7 +806,11 @@ graphSvg vc gc model dim =
          , updTransform
             |> Transform.viewBox dim
             |> viewBox
-         , (Css.Graph.svgRoot vc ++ pointerStyle) |> css
+         , [ fullWidthCss
+           , Css.property "user-select" "none"
+           ]
+            ++ pointerStyle
+            |> css
          , UserClickedGraph model.dragging
             |> Svg.onClick
          , id Pathfinder.graphId

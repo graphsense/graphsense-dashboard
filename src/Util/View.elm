@@ -144,9 +144,8 @@ hovercard vc element zIndex =
         (Hovercard.defaultConfig
             |> Hovercard.withTickLength 16
             |> Hovercard.withZIndex zIndex
-            |> Hovercard.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
-            |> Hovercard.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
-            |> Hovercard.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
+            |> Hovercard.withBorderColorString Colors.grey50
+            |> Hovercard.withBackgroundColorString Colors.white
             |> Hovercard.withViewport vc.size
         )
         element

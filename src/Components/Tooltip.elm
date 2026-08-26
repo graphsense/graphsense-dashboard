@@ -1,7 +1,6 @@
 module Components.Tooltip exposing (Config, Effect, Model, Msg(..), Viewport, attributes, close, defaultConfig, eventHandlers, init, perform, reposition, subscriptions, update, view, withBackgroundColor, withBorderColor, withBorderWidth, withCloseDelay, withFixed, withKeepOpenOnHover, withMaxHeight, withMinWidth, withOpenDelay, withZIndex)
 
 import Basics.Extra exposing (flip)
-import Color exposing (Color)
 import Config.View exposing (Config)
 import Css
 import Hovercard
@@ -49,8 +48,8 @@ type alias Viewport =
 type alias ConfigInternal a msg =
     { tag : Msg a -> msg
     , zIndex : Int
-    , borderColor : Color
-    , backgroundColor : Color
+    , borderColor : String
+    , backgroundColor : String
     , borderWidth : Float
     , viewport : Maybe Viewport
     , fixed : Bool
@@ -71,8 +70,8 @@ defaultConfig tag =
     Config
         { tag = tag
         , zIndex = 0
-        , borderColor = Color.black
-        , backgroundColor = Color.white
+        , borderColor = "black"
+        , backgroundColor = "white"
         , borderWidth = 1.0
         , viewport = Nothing
         , fixed = False
@@ -97,7 +96,7 @@ withZIndex zIndex (Config cfg) =
 -- | Set the border color of the Config
 
 
-withBorderColor : Color -> Config a msg -> Config a msg
+withBorderColor : String -> Config a msg -> Config a msg
 withBorderColor borderColor (Config cfg) =
     Config { cfg | borderColor = borderColor }
 
@@ -106,15 +105,14 @@ withBorderColor borderColor (Config cfg) =
 -- | Set the background color of the Config
 
 
-withBackgroundColor : Color -> Config a msg -> Config a msg
+withBackgroundColor : String -> Config a msg -> Config a msg
 withBackgroundColor backgroundColor (Config cfg) =
     Config { cfg | backgroundColor = backgroundColor }
 
 
-
--- | Set the border width of the Config
-
-
+{-| Set the border width of the Config
+@test-helper
+-}
 withBorderWidth : Float -> Config a msg -> Config a msg
 withBorderWidth borderWidth (Config cfg) =
     Config { cfg | borderWidth = borderWidth }
@@ -383,8 +381,8 @@ view (Config config) (Model model) view_ =
                                     (Hovercard.defaultConfig
                                         |> Hovercard.withTickLength 16
                                         |> Hovercard.withZIndex config.zIndex
-                                        |> Hovercard.withBorderColor config.borderColor
-                                        |> Hovercard.withBackgroundColor config.backgroundColor
+                                        |> Hovercard.withBorderColorString config.borderColor
+                                        |> Hovercard.withBackgroundColorString config.backgroundColor
                                         |> Hovercard.withBorderWidth config.borderWidth
                                         |> Hovercard.withViewport config.viewport
                                         |> Hovercard.withFixed config.fixed

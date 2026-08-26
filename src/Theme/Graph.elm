@@ -40,8 +40,6 @@ type alias Graph =
     , navbarLeft : List Style
     , navbarRight : List Style
     , tool : Bool -> Tool.Status -> List Style
-    , categoryToColor : String -> Color
-    , highlightsColorScheme : List Color
     , lightnessFactor :
         Bool
         ->
@@ -54,7 +52,6 @@ type alias Graph =
             { entity : Float
             , address : Float
             }
-    , defaultColor : Color
     , searchTextarea : Bool -> List Style
     , toolbox : Bool -> Bool -> List Style
     , legendItem : List Style
@@ -113,8 +110,6 @@ default =
     , navbarLeft = []
     , navbarRight = []
     , tool = \_ _ -> []
-    , categoryToColor = \_ -> Color.white
-    , highlightsColorScheme = []
     , lightnessFactor =
         \_ ->
             { entity = 1
@@ -125,7 +120,6 @@ default =
             { entity = 1
             , address = 1
             }
-    , defaultColor = Color.rgb 255 255 255
     , searchTextarea = \_ -> []
     , toolbox = \_ _ -> []
     , legendItem = []

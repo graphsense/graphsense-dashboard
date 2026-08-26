@@ -34,7 +34,6 @@ import Components.Tooltip
 import Config.Update
 import Config.View
 import Css.Pathfinder
-import Css.Search
 import Css.Table
 import Css.View
 import Effect.Api
@@ -69,7 +68,6 @@ import View.Autocomplete
 import View.Button
 import View.Controls
 import View.CurrencyMeta
-import View.Dialog
 import View.Graph.Table
 import View.Locale
 import View.Pathfinder.ContextMenuItem
@@ -237,10 +235,6 @@ surface =
     -- Css.Pathfinder
     , ref Css.Pathfinder.fullWidth
 
-    -- Css.Search
-    , ref Css.Search.resultLine
-    , ref Css.Search.resultLineHighlighted
-
     -- Css.Table
     , ref Css.Table.styles
 
@@ -402,9 +396,6 @@ surface =
 
     -- View.CurrencyMeta
     , ref View.CurrencyMeta.getHumanReadableName
-
-    -- View.Dialog
-    , ref View.Dialog.part
 
     -- View.Graph.Table
     , ref View.Graph.Table.customizations

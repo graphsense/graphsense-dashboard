@@ -59,7 +59,6 @@ type alias Theme =
     , footer : List Style
     , hovercard : Bool -> Hovercard
     , buttonsRow : List Style
-    , custom : String
     , switchLabel : List Style
     , switchRoot : List Style
     , switchOnColor : Bool -> Color
@@ -116,7 +115,6 @@ default =
     , contextMenu = ContextMenu.default
     , table = Table.default
     , buttonsRow = []
-    , custom = ""
     , switchLabel = []
     , switchRoot = []
     , switchOnColor = \_ -> Color.rgba 0 0 0 0

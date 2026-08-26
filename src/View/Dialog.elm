@@ -1,9 +1,9 @@
-module View.Dialog exposing (part, view)
+module View.Dialog exposing (view)
 
 import Config.View exposing (Config)
 import Css.Dialog as Css
 import Css.View
-import Html.Styled exposing (Html, div, h4, li, text, ul)
+import Html.Styled exposing (Html, div, li, text, ul)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
@@ -136,21 +136,6 @@ options_ vc { message, options } =
             , headerText = Locale.string vc.locale "Please-select"
             }
         }
-
-
-part : Config -> String -> List (Html msg) -> Html msg
-part vc title content =
-    div
-        [ Css.part vc |> css
-        ]
-        (h4
-            [ Css.heading vc |> css
-            ]
-            [ Locale.string vc.locale title
-                |> text
-            ]
-            :: content
-        )
 
 
 error : Config -> ErrorConfig Msg -> Html Msg

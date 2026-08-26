@@ -3,7 +3,6 @@ module Main exposing (main)
 import Basics.Extra exposing (uncurry)
 import Browser
 import Browser.Navigation as Nav
-import Config exposing (config)
 import Config.UserSettings exposing (default)
 import Effect exposing (perform)
 import Init exposing (init)
@@ -32,10 +31,7 @@ main =
                 |> mapSecond Cmd.batch
 
         uc =
-            { defaultColor = config.theme.graph.defaultColor
-            , categoryToColor = config.theme.graph.categoryToColor
-            , highlightsColorScheme = config.theme.graph.highlightsColorScheme
-            , locale = Locale.init (default "en") |> first
+            { locale = Locale.init (default "en") |> first
             , size = Nothing
             , abuseConcepts = []
             , allConcepts = []

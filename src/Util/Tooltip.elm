@@ -16,6 +16,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..), OverlayWindows(..))
 import RecordSetter as Rs
 import Set
+import Theme.Colors as Colors
 import Theme.Html.GraphComponents as GraphComponents
 import Theme.Html.TagsComponents as TagsComponents
 import Tuple exposing (pair)
@@ -36,11 +37,10 @@ tooltipConfig vc tag =
 
 
 tooltipProperties : View.Config -> Tooltip.Config a msg -> Tooltip.Config a msg
-tooltipProperties vc =
+tooltipProperties _ =
     Tooltip.withZIndex (Css.zIndexMainValue + 10000)
-        >> Tooltip.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
-        >> Tooltip.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
-        >> Tooltip.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
+        >> Tooltip.withBorderColor Colors.grey50
+        >> Tooltip.withBackgroundColor Colors.white
         >> Tooltip.withCloseDelay 100
         >> Tooltip.withFixed
 
