@@ -35,6 +35,7 @@ type Capability
     = Relations
     | Clusters
     | Tags
+    | Conversions
 
 
 capabilityKey : Capability -> String
@@ -48,6 +49,9 @@ capabilityKey capability =
 
         Tags ->
             "tags"
+
+        Conversions ->
+            "conversions"
 
 
 fromBuildConfig : List String -> NetworkCapabilities

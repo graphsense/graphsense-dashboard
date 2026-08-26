@@ -5765,15 +5765,19 @@ autoLoadConversions _ tx model =
                 Tx.Utxo utxoTx ->
                     ( utxoTx.raw.currency, utxoTx.raw.txHash )
     in
-    ( model
-    , BrowserGotConversions tx
-        |> Api.GetConversionEffect
-            { currency = currency
-            , txHash = txHash
-            }
-        |> ApiEffect
-        |> List.singleton
-    )
+    if not (NetworkCapabilities.supports NetworkCapabilities.Conversions model.config.networkCapabilities currency) then
+        ( model, [] )
+
+    else
+        ( model
+        , BrowserGotConversions tx
+            |> Api.GetConversionEffect
+                { currency = currency
+                , txHash = txHash
+                }
+            |> ApiEffect
+            |> List.singleton
+        )
 
 
 autoLoadAddresses : Plugins -> Bool -> Tx -> Model -> ( Model, List Effect )

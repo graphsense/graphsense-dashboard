@@ -43,6 +43,7 @@ suite =
                         [ \caps -> NC.isLimitedNetwork caps "eth" |> Expect.equal False
                         , \caps -> NC.supports NC.Relations caps "eth" |> Expect.equal True
                         , \caps -> NC.supports NC.Tags caps "eth" |> Expect.equal True
+                        , \caps -> NC.supports NC.Conversions caps "eth" |> Expect.equal True
                         ]
         , test "empty capabilities list = lite network supporting nothing" <|
             \_ ->
@@ -53,6 +54,7 @@ suite =
                         , \caps -> NC.supports NC.Relations caps "arb" |> Expect.equal False
                         , \caps -> NC.supports NC.Clusters caps "arb" |> Expect.equal False
                         , \caps -> NC.supports NC.Tags caps "arb" |> Expect.equal False
+                        , \caps -> NC.supports NC.Conversions caps "arb" |> Expect.equal False
                         ]
         , test "declared feature is supported, others are not, network stays lite" <|
             \_ ->

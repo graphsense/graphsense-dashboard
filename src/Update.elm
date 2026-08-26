@@ -402,6 +402,12 @@ update plugins uc msg model =
                         Err ( _, _, Effect.Api.GetMeEffect _ ) ->
                             True
 
+                        -- a conversions 501 is the backend declining to resolve
+                        -- THIS tx's conversions (external-backend adapters refuse
+                        -- rather than guess); render "no conversions", not an error
+                        Err ( Http.BadStatus 501, _, Effect.Api.GetConversionEffect _ _ ) ->
+                            True
+
                         _ ->
                             False
 
