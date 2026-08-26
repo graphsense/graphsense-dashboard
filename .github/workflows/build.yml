@@ -34,7 +34,6 @@ jobs:
         with:
           node-version: '20.x'
       - run: npm ci
-      - run: cp config/Config.elm.tmp config/Config.elm
       - run: cp env.template .env
       - run: make e2e-install
       - run: make e2e
