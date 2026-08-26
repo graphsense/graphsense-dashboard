@@ -2,118 +2,142 @@ module Css.Table exposing (Styles, row, styles, table)
 
 import Config.View as View exposing (Config)
 import Css exposing (..)
+import Theme.Colors as Colors
 
 
 root : Config -> List Style
 root vc =
-    displayFlex
-        :: flexDirection Css.row
-        :: overflowX auto
-        :: position relative
-        :: vc.theme.table.root
+    [ displayFlex
+    , flexDirection Css.row
+    , overflowX auto
+    , position relative
+    ]
 
 
 tableRoot : Config -> List Style
 tableRoot vc =
-    overflowY auto
-        :: overflowX auto
-        :: displayFlex
-        :: flexDirection column
-        :: maxHeight (px vc.theme.table.maxHeight)
-        :: vc.theme.table.tableRoot
-
-
-sidebar : Config -> List Style
-sidebar vc =
-    vc.theme.table.sidebar vc.lightmode
-
-
-sidebarIcon : Config -> Bool -> List Style
-sidebarIcon vc =
-    vc.theme.table.sidebarIcon vc.lightmode
-
-
-filter : Config -> List Style
-filter vc =
-    vc.theme.table.filter
-
-
-filterInput : Config -> List Style
-filterInput vc =
-    vc.theme.table.filterInput vc.lightmode
+    [ overflowY auto
+    , overflowX auto
+    , displayFlex
+    , flexDirection column
+    ]
 
 
 table : Config -> List Style
 table vc =
-    vc.theme.table.table
+    [ 0.22 |> rem |> padding
+    ]
+
+
+fontBold : Style
+fontBold =
+    fontWeight (int 500)
 
 
 headCell : Config -> List Style
-headCell vc =
-    vc.theme.table.headCell vc.lightmode
+headCell _ =
+    [ textAlign left
+    , fontBold
+    , position sticky
+    , top <| px 0
+    , zIndex <| int 1
+    ]
 
 
 headRow : Config -> List Style
-headRow vc =
-    vc.theme.table.headRow
+headRow _ =
+    [ textAlign left
+    , fontBold
+    , position sticky
+    , top <| px 0
+    , zIndex <| int 1
+    ]
 
 
 headCellSortable : Config -> List Style
 headCellSortable vc =
-    vc.theme.table.headCellSortable
+    [ cursor pointer
+    ]
 
 
 row : Config -> List Style
 row vc =
-    vc.theme.table.row vc.lightmode
+    [ nthChild "2n"
+        [ Css.property "background-color" Colors.grey200
+        ]
+    , nthChild "2n+1"
+        [ Css.property "background-color" Colors.grey100
+        ]
+    , 20 |> px |> height
+    ]
 
 
 cell : Config -> List Style
 cell vc =
-    vc.theme.table.cell
+    [ tableCell ]
 
 
 valuesCell : Config -> Bool -> List Style
 valuesCell vc isNegative =
-    vc.theme.table.valuesCell vc.lightmode isNegative
+    numberCell vc
+        ++ (if isNegative then
+                [ Css.property "color" Colors.red100 ]
+
+            else
+                []
+           )
+
+
+tableCell : Style
+tableCell =
+    [ 0.22 |> rem |> padding
+    , whiteSpace noWrap
+    , verticalAlign middle
+    ]
+        |> batch
 
 
 numberCell : Config -> List Style
-numberCell vc =
-    vc.theme.table.numberCell
+numberCell _ =
+    [ tableCell
+    , textAlign right
+    ]
 
 
 loadingSpinner : Config -> List Style
 loadingSpinner vc =
-    vc.theme.table.loadingSpinner
+    [ px 24 |> height
+    , px 24 |> width
+    , px 12 |> padding
+    ]
 
 
 emptyHint : Config -> List Style
 emptyHint vc =
-    vc.theme.table.emptyHint
+    [ displayFlex
+    , flexGrow (int 1)
+    , alignItems center
+    , justifyContent center
+    ]
 
 
 tick : Config -> List Style
 tick vc =
-    display inlineBlock :: vc.theme.table.tick
+    [ display inlineBlock ]
 
 
 info : Config -> List Style
 info vc =
-    position absolute
-        :: bottom zero
-        :: left zero
-        :: vc.theme.table.info vc.lightmode
+    [ position absolute
+    , bottom zero
+    , left zero
+    ]
 
 
 type alias Styles =
     { root : View.Config -> List Style
     , tableRoot : View.Config -> List Style
-    , filter : View.Config -> List Style
-    , filterInput : View.Config -> List Style
     , loadingSpinner : View.Config -> List Style
-    , sidebar : View.Config -> List Style
-    , sidebarIcon : View.Config -> Bool -> List Style
     , table : View.Config -> List Style
     , row : View.Config -> List Style
     , headRow : View.Config -> List Style
@@ -132,11 +156,7 @@ styles : Styles
 styles =
     { root = root
     , tableRoot = tableRoot
-    , filter = filter
-    , filterInput = filterInput
     , loadingSpinner = loadingSpinner
-    , sidebar = sidebar
-    , sidebarIcon = sidebarIcon
     , table = table
     , row = row
     , headRow = headRow

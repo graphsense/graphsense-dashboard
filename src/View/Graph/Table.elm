@@ -31,35 +31,14 @@ noTools =
     }
 
 
-table : Styles -> View.Config -> List (Attribute msg) -> Tools msg -> Table.Config data msg -> T.Table data -> Html msg
-table styles vc attributes tools config tbl =
+table : Styles -> View.Config -> List (Attribute msg) -> Table.Config data msg -> T.Table data -> Html msg
+table styles vc attributes config tbl =
     div
         [ styles.root vc |> css
         ]
         [ div
             ((styles.tableRoot vc |> css) :: attributes)
-            ((Maybe.map2
-                (\term fm ->
-                    div
-                        [ styles.filter vc |> css
-                        ]
-                        [ input
-                            [ styles.filterInput vc |> css
-                            , type_ "text"
-                            , onInput (Just >> fm)
-                            , id "tableFilter"
-                            , autocomplete False
-                            , spellcheck False
-                            , value term
-                            ]
-                            []
-                        ]
-                )
-                tbl.searchTerm
-                tools.filter
-                |> Maybe.withDefault Util.View.none
-             )
-                :: Table.view config tbl.state tbl.filtered
+            (Table.view config tbl.state tbl.filtered
                 :: (if tbl.loading then
                         [ Loadingspinner.html [ css (styles.loadingSpinner vc) ]
                         ]
@@ -76,54 +55,7 @@ table styles vc attributes tools config tbl =
                         []
                    )
             )
-        , if tools == noTools then
-            none
-
-          else
-            [ Maybe.map (filterTool styles vc tbl) tools.filter
-            , Maybe.map (csvTool styles vc) tools.csv
-            ]
-                |> List.filterMap identity
-                |> div
-                    [ styles.sidebar vc |> css
-                    ]
         ]
-
-
-filterTool : Styles -> View.Config -> T.Table data -> (Maybe String -> msg) -> Html msg
-filterTool styles vc tbl filterMsg =
-    let
-        isInactive =
-            tbl.searchTerm == Nothing
-    in
-    FontAwesome.icon FontAwesome.search
-        |> Html.Styled.fromUnstyled
-        |> List.singleton
-        |> div
-            [ onClick
-                (filterMsg
-                    (if isInactive then
-                        Just ""
-
-                     else
-                        Nothing
-                    )
-                )
-            , not isInactive |> styles.sidebarIcon vc |> css
-            , Locale.string vc.locale "Filter table" |> title
-            ]
-
-
-csvTool : Styles -> View.Config -> msg -> Html msg
-csvTool styles vc msg =
-    FontAwesome.icon FontAwesome.download
-        |> Html.Styled.fromUnstyled
-        |> List.singleton
-        |> div
-            [ onClick msg
-            , styles.sidebarIcon vc False |> css
-            , Locale.string vc.locale "Download table as CSV" |> title
-            ]
 
 
 customizations : Styles -> View.Config -> Table.Customizations data msg

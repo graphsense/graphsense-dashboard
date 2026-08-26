@@ -799,46 +799,6 @@ theme =
             )
         |> s_table
             (Table.default
-                |> s_sidebar
-                    (\lightmode ->
-                        [ borderLeftWidth (px 1)
-                        , borderStyle solid
-                        , switchColor lightmode colors.greyLightest |> toCssColor |> borderColor
-                        , scaled 2 |> rem |> marginLeft
-                        , scaled 2 |> rem |> paddingLeft
-                        , scaled 1 |> rem |> paddingTop
-                        ]
-                    )
-                |> s_sidebarIcon
-                    (\lightmode active ->
-                        [ cursor pointer
-                        , scaled 2 |> rem |> paddingBottom
-                        , (if active then
-                            iconActive
-
-                           else
-                            iconInactive
-                          )
-                            |> switchColor lightmode
-                            |> toCssColor
-                            |> color
-                        , hover
-                            [ switchColor lightmode iconHovered |> toCssColor |> color
-                            ]
-                        ]
-                    )
-                |> s_filter
-                    [ displayFlex
-                    , justifyContent flexEnd
-                    , padding (px 2)
-                    ]
-                |> s_filterInput
-                    (\lightmode ->
-                        [ inputStyle lightmode
-                        , scaled 3 |> rem |> fontSize
-                        , width <| ex 40
-                        ]
-                    )
                 |> s_urlMaxLength 20
                 |> s_table
                     [ scaled 1 |> rem |> padding
@@ -859,7 +819,6 @@ theme =
                 |> s_headCellSortable
                     [ cursor pointer
                     ]
-                |> s_maxHeight 300
                 |> s_rowHeight
                     rowHeight
                 |> s_row
