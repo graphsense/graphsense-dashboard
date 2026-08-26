@@ -23,7 +23,6 @@ Elm itself is not a separate install; it comes in via npm and is run through `np
 ```bash
 npm install
 make install                              # installs the pre-commit and pre-push hooks
-cp config/Config.elm.tmp config/Config.elm # plugin registration and theme
 cp env.template .env                       # then set VITE_GS_REST_URL
 ```
 

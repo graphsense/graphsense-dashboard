@@ -26,6 +26,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Removed
 
 - Pathfinder 1.0, the legacy graph tool. Any `/graph/*` URL now lands on a dedicated "Pathfinder 1.0 retired" page linking to the current Pathfinder, and opening a legacy pf1 `.gs` file shows that notice instead of a generic decode error
+- Removed legacy theme based styling (from directory ./themes and configured in config/Config.elm)
+- Removed config/Config.elm. Plugins are installed from the ./plugins directory directly. Configuration of plugins is achived via environment variables.
 
 ### Fixed
 
