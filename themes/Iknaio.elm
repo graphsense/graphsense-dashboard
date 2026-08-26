@@ -13,7 +13,6 @@ import Theme.ContextMenu as ContextMenu
 import Theme.Dialog as Dialog
 import Theme.Graph as Graph
 import Theme.Search as Search
-import Theme.Statusbar as Statusbar
 import Theme.SwitchableColor as Theme
 import Theme.Table as Table
 import Theme.Theme as Theme exposing (Theme)
@@ -937,74 +936,6 @@ theme =
                         , hover
                             [ switchColor lightmode backgroundHoverColor |> toCssColor |> backgroundColor
                             ]
-                        ]
-                    )
-            )
-        |> s_statusbar
-            (Statusbar.default
-                |> s_root
-                    (\lightmode visible ->
-                        [ Css.property "background-color" Theme.Colors.white
-                        , (if visible then
-                            50
-
-                           else
-                            4
-                          )
-                            |> scaled
-                            |> rem
-                            |> minHeight
-                        , scaled 50 |> rem |> maxHeight
-                        , colors.greyDark |> colorWithLightmode lightmode
-                        , scaled 3 |> rem |> fontSize
-                        ]
-                            ++ (if visible then
-                                    [ scaled 2 |> rem |> padding
-                                    , scaled 1 |> rem |> paddingLeft
-                                    , Css.Transitions.transition
-                                        [ Css.Transitions.minHeight 200
-                                        ]
-                                    , overflowY auto
-                                    ]
-
-                                else
-                                    [ cursor pointer
-                                    , displayFlex
-                                    , justifyContent spaceBetween
-                                    , alignItems center
-                                    ]
-                               )
-                    )
-                |> s_loadingSpinner
-                    [ loadingSpinner
-                    , padding (px 0)
-                    , scaled 1 |> rem |> paddingRight
-                    ]
-                |> s_log
-                    (\lightmode noerror ->
-                        displayFlex
-                            :: (if noerror then
-                                    [ alignItems center
-                                    ]
-
-                                else
-                                    [ colorWithLightmode lightmode colors.brandRed
-                                    , fontWeight bold
-                                    , scaled 4 |> rem |> fontSize
-                                    ]
-                               )
-                    )
-                |> s_logIcon
-                    (\_ _ -> [ scaled 1 |> rem |> paddingRight ])
-                |> s_close
-                    (\lightmode ->
-                        [ colors.brandText |> colorWithLightmode lightmode
-                        , backgroundColor transparent
-                        , border (px 0)
-                        , position absolute
-                        , scaled 2 |> rem |> top
-                        , scaled 4 |> rem |> right
-                        , cursor pointer
                         ]
                     )
             )

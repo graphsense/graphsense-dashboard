@@ -8,7 +8,6 @@ import Theme.ContextMenu as ContextMenu exposing (ContextMenu)
 import Theme.Dialog as Dialog exposing (Dialog)
 import Theme.Graph as Graph exposing (Graph)
 import Theme.Search as Search exposing (Search)
-import Theme.Statusbar as Statusbar exposing (Statusbar)
 import Theme.Table as Table exposing (Table)
 
 
@@ -50,7 +49,6 @@ type alias Theme =
     , table : Table
     , tool : List Style
     , dialog : Dialog
-    , statusbar : Statusbar
     , footer : List Style
     , buttonsRow : List Style
     , switchLabel : List Style
@@ -100,7 +98,6 @@ default =
     , button = Button.default
     , tool = []
     , dialog = Dialog.default
-    , statusbar = Statusbar.default
     , footer = []
     , graph = Graph.default
     , contextMenu = ContextMenu.default
