@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [26.08.0] - Unreleased
+## [26.08.0] - 2026-08-28
 
 ### Added
 
@@ -22,12 +22,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `tools/check_lang.mjs` finds a `View.Locale` key that elm-format put on the line after the call. Every interpolated string in the codebase is written that way, and read a line at a time they were not reported as computed but missed outright — the one failure mode this check must not have. Six more keys in core are now covered
 - Production builds minify with rolldown's oxc minifier (vite 8's default) instead of terser, cutting minification from 16.5s to 4.1s per bundle. Shipped size is unchanged in practice: 5.7% smaller uncompressed, within 1.6% gzipped
 - Dead-code detection (unused exports, type constructors and constructor arguments) now runs in CI, and about 3,400 lines of already-unreachable code are gone: pf1 leftovers, 16 modules nothing imported, and four features whose messages nothing could send. Detection was previously impossible to run reliably because plugins live in separate repositories and are not always checked out, so a core function only a plugin used looked dead; `src/PluginApi.elm` now records that surface
+- The landing page, the search field, the statistics page and the status bar are rendered from the generated Figma components instead of the hand-written theme layer, which is what made removing that layer possible. They match the rest of the app and do the same things as before
+- Dependencies with published advisories are bumped, and `elm-hovercard` moves to 5.1.0
 
 ### Removed
 
 - Pathfinder 1.0, the legacy graph tool. Any `/graph/*` URL now lands on a dedicated "Pathfinder 1.0 retired" page linking to the current Pathfinder, and opening a legacy pf1 `.gs` file shows that notice instead of a generic decode error
 - Removed legacy theme based styling (from directory ./themes and configured in config/Config.elm)
-- Removed config/Config.elm. Plugins are installed from the ./plugins directory directly. Configuration of plugins is achived via environment variables.
+- Removed config/Config.elm. Plugins are installed from the ./plugins directory directly. Configuration of plugins is achieved via environment variables.
 
 ### Fixed
 
@@ -40,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Search missed hits when the query was pasted from a PDF: letter pairs such as `ff` arrive as single ligature glyphs, which are now folded where the query enters the model, so the request, prefix filter, highlighting and Enter-navigation all agree
 - Long notification messages without an explicit title (e.g. the Case Connect no-writable-group warning) did not wrap and overflowed the toast — they now wrap within the notification
 - Opening a tag label or actor whose name contains `/`, `?` or `#` did not work: the name went into the URL unescaped, so a slash silently dropped the route and a question mark truncated the name. Labels and actor ids are now percent-encoded in the URL and decoded when it is read; links written before this still open
+- The German heading for the addresses of a cluster read `Adressen des Clusterss` — one `s` too many
 
 ## [26.07.3] - 2026-07-17
 
