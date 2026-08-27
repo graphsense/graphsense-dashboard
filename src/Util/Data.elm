@@ -1,4 +1,4 @@
-module Util.Data exposing (absValues, addValues, addressCluster, averageFiatValue, isAccountLike, isEvmHexNetwork, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, parseMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addValues, addressCluster, averageFiatValue, isAccountLike, isEvmHexNetwork, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, normalizeTxIdentifier, parseMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -154,6 +154,22 @@ normalizeIdCasing network identifier =
 
     else
         identifier
+
+
+{-| Canonical form of a TX identifier for graph node ids and API requests:
+served identifiers carry no "0x" and case-SENSITIVE sub-tx markers
+("\_T1"/"\_I1"), so only the hex part before the first "\_" may be
+lowercased and a leading "0x" is stripped. Never use `normalizeIdentifier`
+(the ADDRESS normalizer) on a tx: its whole-string toLower turns "\_T2"
+into the invalid "\_t2" and its ensure0x mismatches served tx ids.
+-}
+normalizeTxIdentifier : String -> String -> String
+normalizeTxIdentifier net txId =
+    if isEvmHexNetwork net then
+        normalizeIdCasing net (removeLeading0x (String.trim txId))
+
+    else
+        txId
 
 
 normalizeIdentifier : String -> String -> String

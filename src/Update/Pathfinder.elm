@@ -4267,7 +4267,7 @@ addPathToGraph plugins uc model net config list =
                     MSelectedAddress (Id.init net (Data.normalizeIdentifier net x))
 
                 TxHop txh ->
-                    MSelectedTx (Id.init net txh)
+                    MSelectedTx (Id.init net (Data.normalizeTxIdentifier net txh))
 
         startAddressCoords =
             list
@@ -4351,7 +4351,7 @@ addPathToGraph plugins uc model net config list =
                             loadAddressWithPosition plugins config.autolinkInTraceMode (Fixed x_ y_) ( net, Data.normalizeIdentifier net adr )
 
                         Route.TxHop h ->
-                            loadTxWithPosition (Fixed x_ y_) config.autolinkInTraceMode False plugins ( net, h )
+                            loadTxWithPosition (Fixed x_ y_) config.autolinkInTraceMode False plugins ( net, Data.normalizeTxIdentifier net h )
 
                 annotations =
                     case a of
@@ -4424,7 +4424,7 @@ updateByRoute_ plugins uc route model =
         Route.Network network (Route.Tx a) ->
             let
                 id =
-                    Id.init network (Data.normalizeIdentifier network a)
+                    Id.init network (Data.normalizeTxIdentifier network a)
             in
             { model | network = Network.clearSelection model.network }
                 |> loadTxWithPosition viewportCenter True True plugins id
