@@ -52,8 +52,8 @@ init us =
             , hideForExport = NoExport
             , aggEdgeFilter = AllAggEdges
 
-            -- seeded from build config; refined by /stats declarations
-            -- (BrowserGotStatistics) once they arrive
+            -- seeded from build config; replaced by the /capabilities
+            -- declaration (BrowserGotCapabilities) once it arrives
             , networkCapabilities = NetworkCapabilities.fromBuildConfig Config.limitedNetworks
             }
       , pointerTool = Drag

@@ -39,6 +39,7 @@ apiAddress freshClusterId =
     , totalTokensSpent = Nothing
     , aggregatesTruncated = Nothing
     , cutoffFloorFields = Nothing
+    , isPossibleService = Nothing
     }
 
 

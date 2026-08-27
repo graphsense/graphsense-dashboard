@@ -72,6 +72,7 @@ type Effect msg
         }
         (Api.Data.SearchResult -> msg)
     | GetStatisticsEffect (Api.Data.Stats -> msg)
+    | GetCapabilitiesEffect (Api.Data.Capabilities -> msg)
     | GetConceptsEffect String (List Api.Data.Concept -> msg)
     | ListSupportedTokensEffect String (Api.Data.TokenConfigs -> msg)
     | GetMeEffect (UserInfo -> msg)
@@ -441,6 +442,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetStatisticsEffect
 
+        GetCapabilitiesEffect m ->
+            m
+                >> mapMsg
+                |> GetCapabilitiesEffect
+
         GetConceptsEffect eff m ->
             m
                 >> mapMsg
@@ -658,6 +664,10 @@ perform apiKey wrapMsg cancelMsg effect =
 
         GetStatisticsEffect toMsg ->
             Api.Request.General.getStatistics
+                |> send apiKey wrapMsg effect toMsg
+
+        GetCapabilitiesEffect toMsg ->
+            Api.Request.General.getCapabilities
                 |> send apiKey wrapMsg effect toMsg
 
         GetConceptsEffect taxonomy toMsg ->
@@ -1284,6 +1294,9 @@ retryToken effect =
         -- Everything else: sha256 over a parameter-bearing fingerprint.
         GetStatisticsEffect _ ->
             hash "GetStatisticsEffect"
+
+        GetCapabilitiesEffect _ ->
+            hash "GetCapabilitiesEffect"
 
         GetConceptsEffect taxonomy _ ->
             hash (join [ "GetConceptsEffect", taxonomy ])

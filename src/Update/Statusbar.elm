@@ -331,6 +331,9 @@ messageFromApiEffect model effect =
             Api.GetStatisticsEffect _ ->
                 Nothing
 
+            Api.GetCapabilitiesEffect _ ->
+                Nothing
+
             Api.GetMeEffect _ ->
                 Nothing
 

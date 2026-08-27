@@ -4,21 +4,22 @@ module Model.NetworkCapabilities exposing
     , fromBuildConfig
     , isLimitedNetwork
     , supports
-    , withStats
+    , withCapabilities
     )
 
 {-| Which core-GraphSense features each network's serving backend answers.
 
-Wire contract (the `capabilities` extension field of a per-currency /stats
-entry, sent by external-backend deployments): ABSENT means full core
-GraphSense; PRESENT (even empty) means a lite network limited to exactly the
-named features. Unknown vocabulary words must be ignored. This module is the
+Wire contract (GET /capabilities, sent by external-backend deployments):
+per-network DISABLED feature flags. A network absent from the response is
+fully enabled; unknown vocabulary words must be tolerated (they are stored
+but map to no `Capability`). Old servers 404 the endpoint — the response
+then never arrives and only the build-time seed applies. This module is the
 only place that parses the contract — everything else asks `supports` /
 `isLimitedNetwork`.
 
 The build-time `Config.limitedNetworks` list seeds networks as
-capability-less lite entries, covering backends that do not declare
-themselves and requests fired before /stats has arrived.
+fully-disabled lite entries, covering requests fired before /capabilities
+has arrived and backends without the endpoint.
 
 -}
 
@@ -54,43 +55,49 @@ capabilityKey capability =
             "conversions"
 
 
+{-| Every capability word the seed disables — includes flags without a
+`Capability` constructor yet (exact\_stats), which only consumers gaining
+one later will read.
+-}
+allCapabilityKeys : Set String
+allCapabilityKeys =
+    Set.fromList [ "relations", "clusters", "tags", "conversions", "exact_stats" ]
+
+
 fromBuildConfig : List String -> NetworkCapabilities
 fromBuildConfig networks =
     networks
-        |> List.map (\network -> ( String.toLower network, Set.empty ))
+        |> List.map (\network -> ( String.toLower network, allCapabilityKeys ))
         |> Dict.fromList
         |> NetworkCapabilities
 
 
-{-| Fold the declarations of a /stats response in. A currency declaring a
-capabilities list overwrites its build-config seed (the server knows its
-deployment better); a currency without the field leaves the seed untouched —
-absence is the baseline's silence, not a statement of full support.
+{-| Take a /capabilities response as the whole truth: the server knows its
+deployment, so its declaration replaces the build-config seed entirely — a
+network absent from the response (or listing no disabled features) is fully
+enabled.
 -}
-withStats : Api.Data.Stats -> NetworkCapabilities -> NetworkCapabilities
-withStats stats (NetworkCapabilities networks) =
-    stats.currencies
-        |> List.foldl
-            (\currency acc ->
-                case currency.capabilities of
-                    Just capabilities ->
-                        Dict.insert (String.toLower currency.name)
-                            (capabilities |> List.map String.toLower |> Set.fromList)
-                            acc
-
-                    Nothing ->
-                        acc
+withCapabilities : Api.Data.Capabilities -> NetworkCapabilities -> NetworkCapabilities
+withCapabilities capabilities _ =
+    capabilities.networks
+        |> List.map
+            (\entry ->
+                ( String.toLower entry.network
+                , entry.disabled |> List.map String.toLower |> Set.fromList
+                )
             )
-            networks
+        |> Dict.fromList
         |> NetworkCapabilities
 
 
-{-| Lite = the backend declared a capability subset (or the build config
-listed the network). Core networks support every feature.
+{-| Lite = at least one feature is disabled (declared by the backend or
+seeded by the build config). Networks without disabled features are core.
 -}
 isLimitedNetwork : NetworkCapabilities -> String -> Bool
 isLimitedNetwork (NetworkCapabilities networks) network =
-    Dict.member (String.toLower network) networks
+    Dict.get (String.toLower network) networks
+        |> Maybe.map (Set.isEmpty >> not)
+        |> Maybe.withDefault False
 
 
 supports : Capability -> NetworkCapabilities -> String -> Bool
@@ -99,5 +106,5 @@ supports capability (NetworkCapabilities networks) network =
         Nothing ->
             True
 
-        Just capabilities ->
-            Set.member (capabilityKey capability) capabilities
+        Just disabled ->
+            Set.member (capabilityKey capability) disabled |> not

@@ -25,6 +25,7 @@ module Api.Data exposing
     , AddressOutput
     , Block
     , BlockAtDate
+    , Capabilities, NetworkDisabledCapabilities
     , ChangeHeuristics
     , Concept
     , ConsensusEntry
@@ -180,6 +181,7 @@ module Api.Data exposing
     , searchResultLevel5Decoder
     , searchResultLevel6Decoder
     , statsDecoder
+    , capabilitiesDecoder
     , tagDecoder
     , tagCloudEntryDecoder
     , tagSummaryDecoder
@@ -256,6 +258,9 @@ type alias Address =
     -- of the true value (render as "N+")
     , aggregatesTruncated : Maybe Bool
     , cutoffFloorFields : Maybe (List String)
+    -- server-side "possible service" verdict (same extension class): when
+    -- present it overrides the dashboard's local heuristic
+    , isPossibleService : Maybe Bool
     }
 
 
@@ -476,10 +481,6 @@ type alias CurrencyStats =
     , coinTicker : Maybe String
     , coinDecimals : Maybe Int
     , networkName : Maybe String
-    -- capability discovery (same extension class): ABSENT = full core
-    -- GraphSense; PRESENT (even empty) = lite network limited to exactly the
-    -- named features. Parsed only by Model.NetworkCapabilities.
-    , capabilities : Maybe (List String)
     }
 
 
@@ -728,6 +729,21 @@ type alias Stats =
     { currencies : List (CurrencyStats)
     , requestTimestamp : String
     , version : String
+    }
+
+
+-- hand-added extension code (absent from the core API): the GET /capabilities
+-- discovery contract of external-backend deployments. Per-network DISABLED
+-- feature flags; a network absent from the list is fully enabled. Parsed only
+-- by Model.NetworkCapabilities.
+type alias NetworkDisabledCapabilities =
+    { network : String
+    , disabled : List String
+    }
+
+
+type alias Capabilities =
+    { networks : List (NetworkDisabledCapabilities)
     }
 
 
@@ -2704,6 +2720,7 @@ addressDecoder =
         |> maybeDecode "total_tokens_spent" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
         |> maybeDecode "aggregates_truncated" Json.Decode.bool Nothing
         |> maybeDecode "cutoff" (Json.Decode.field "floor_fields" (Json.Decode.list Json.Decode.string)) Nothing
+        |> maybeDecode "is_possible_service" Json.Decode.bool Nothing
 
 
 addressStatusDecoder : Json.Decode.Decoder AddressStatus
@@ -2862,7 +2879,6 @@ currencyStatsDecoder =
         |> maybeDecode "coin_ticker" Json.Decode.string Nothing
         |> maybeDecode "coin_decimals" Json.Decode.int Nothing
         |> maybeDecode "network_name" Json.Decode.string Nothing
-        |> maybeDecode "capabilities" (Json.Decode.list Json.Decode.string) Nothing
 
 
 clusterDecoder : Json.Decode.Decoder Cluster
@@ -3165,9 +3181,23 @@ searchResultLevel6Decoder =
 statsDecoder : Json.Decode.Decoder Stats
 statsDecoder =
     Json.Decode.succeed Stats
-        |> decode "currencies" (Json.Decode.list currencyStatsDecoder) 
-        |> decode "request_timestamp" Json.Decode.string 
-        |> decode "version" Json.Decode.string 
+        |> decode "currencies" (Json.Decode.list currencyStatsDecoder)
+        |> decode "request_timestamp" Json.Decode.string
+        |> decode "version" Json.Decode.string
+
+
+-- hand-added extension code, see NetworkDisabledCapabilities
+networkDisabledCapabilitiesDecoder : Json.Decode.Decoder NetworkDisabledCapabilities
+networkDisabledCapabilitiesDecoder =
+    Json.Decode.succeed NetworkDisabledCapabilities
+        |> decode "network" Json.Decode.string
+        |> decode "disabled" (Json.Decode.list Json.Decode.string)
+
+
+capabilitiesDecoder : Json.Decode.Decoder Capabilities
+capabilitiesDecoder =
+    Json.Decode.succeed Capabilities
+        |> decode "networks" (Json.Decode.list networkDisabledCapabilitiesDecoder)
 
 
 tagDecoder : Json.Decode.Decoder Tag

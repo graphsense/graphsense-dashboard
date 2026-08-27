@@ -104,7 +104,9 @@ getStatistics : ( Model key, List Effect ) -> ( Model key, List Effect )
 getStatistics ( model, eff ) =
     if model.stats == NotAsked then
         ( { model | stats = RemoteData.Loading }
-        , ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics) :: eff
+        , ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics)
+            :: ApiEffect (Effect.Api.GetCapabilitiesEffect BrowserGotCapabilities)
+            :: eff
         )
 
     else

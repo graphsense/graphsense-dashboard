@@ -206,24 +206,10 @@ update plugins uc msg model =
                                 Effect.Api.ListSupportedTokensEffect currency (BrowserGotSupportedTokens currency)
                                     |> ApiEffect
                             )
-
-                pathfinder =
-                    model.pathfinder
-
-                pathfinderConfig =
-                    pathfinder.config
             in
             n
                 { model
                     | stats = RD.Success stats
-                    , pathfinder =
-                        { pathfinder
-                            | config =
-                                { pathfinderConfig
-                                    | networkCapabilities =
-                                        NetworkCapabilities.withStats stats pathfinderConfig.networkCapabilities
-                                }
-                        }
                     , statusbar = Statusbar.updateLastBlocks stats model.statusbar
                     , search =
                         if model.page == Graph then
@@ -239,6 +225,26 @@ update plugins uc msg model =
                 }
                 |> Tuple.mapSecond (\effects -> PluginEffect cmd :: (tokenCurrencyEffects ++ effects))
                 |> updateByPluginOutMsg plugins uc outMsg
+
+        BrowserGotCapabilities capabilities ->
+            let
+                pathfinder =
+                    model.pathfinder
+
+                pathfinderConfig =
+                    pathfinder.config
+            in
+            n
+                { model
+                    | pathfinder =
+                        { pathfinder
+                            | config =
+                                { pathfinderConfig
+                                    | networkCapabilities =
+                                        NetworkCapabilities.withCapabilities capabilities pathfinderConfig.networkCapabilities
+                                }
+                        }
+                }
 
         -- Plugin handling
         BrowserGotEntityTaxonomy concepts ->
@@ -400,6 +406,11 @@ update plugins uc msg model =
                             True
 
                         Err ( _, _, Effect.Api.GetMeEffect _ ) ->
+                            True
+
+                        -- old servers have no /capabilities endpoint; any
+                        -- failure means "fully enabled" (build-time seed applies)
+                        Err ( _, _, Effect.Api.GetCapabilitiesEffect _ ) ->
                             True
 
                         -- a conversions 501 is the backend declining to resolve
@@ -2889,6 +2900,10 @@ handleResponse plugins uc result model =
         Err ( BadStatus 404, headers, eff ) ->
             case eff of
                 Effect.Api.ListSupportedTokensEffect _ _ ->
+                    { model | user = updateRequestLimit headers model.user }
+                        |> n
+
+                Effect.Api.GetCapabilitiesEffect _ ->
                     { model | user = updateRequestLimit headers model.user }
                         |> n
 

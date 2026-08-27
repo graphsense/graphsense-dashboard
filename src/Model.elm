@@ -94,6 +94,7 @@ type Msg
     | UserRequestsUrl UrlRequest
     | BrowserChangedUrl Url
     | BrowserGotStatistics Api.Data.Stats
+    | BrowserGotCapabilities Api.Data.Capabilities
     | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Headers, Effect.Api.Effect Msg ) ( Headers, Msg ))
     | UserSwitchesLocale String
     | UserSubmitsApiKeyForm

@@ -199,23 +199,43 @@ getClusterId { data } =
         |> Maybe.map Id.initClusterIdFromAddress
 
 
+{-| The server-side `is_possible_service` verdict, when present, replaces the
+structural judgment (cluster shape / degree thresholds); the actor still
+decides known vs. unknown. Absent (old server) = local heuristics.
+-}
 getAddressType : Address -> Maybe Api.Data.Cluster -> AddressServiceType
 getAddressType address cluster =
-    if Maybe.map isPossibleServiceUtxo cluster |> Maybe.withDefault False then
-        if address.actor == Nothing then
-            LikelyUnknownService
+    case address.data |> RemoteData.toMaybe |> Maybe.andThen .isPossibleService of
+        Just True ->
+            if address.actor == Nothing then
+                LikelyUnknownService
 
-        else
-            KnownService
+            else
+                KnownService
 
-    else if (address.id |> Id.network |> isAccountLike) && (address.actor |> Maybe.Extra.isJust) then
-        KnownService
+        Just False ->
+            if (address.id |> Id.network |> isAccountLike) && (address.actor |> Maybe.Extra.isJust) then
+                KnownService
 
-    else if (address.id |> Id.network |> isAccountLike) && isPossibleServiceAccountLike address then
-        LikelyUnknownService
+            else
+                UnknownService
 
-    else
-        UnknownService
+        Nothing ->
+            if Maybe.map isPossibleServiceUtxo cluster |> Maybe.withDefault False then
+                if address.actor == Nothing then
+                    LikelyUnknownService
+
+                else
+                    KnownService
+
+            else if (address.id |> Id.network |> isAccountLike) && (address.actor |> Maybe.Extra.isJust) then
+                KnownService
+
+            else if (address.id |> Id.network |> isAccountLike) && isPossibleServiceAccountLike address then
+                LikelyUnknownService
+
+            else
+                UnknownService
 
 
 isPossibleServiceAccountLike : Address -> Bool
