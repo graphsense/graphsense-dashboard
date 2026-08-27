@@ -212,8 +212,17 @@ e2e-ui: build-e2e
 build-e2e:
 	$(MAKE) build VITE_GS_REST_URL=$(E2E_REST_URL)
 
+# `--with-deps` shells out to apt-get, so it exits 127 on any non-Debian host
+# (CI is ubuntu-latest; developer machines are not necessarily). Chromium's own
+# libraries are usually present anyway, so fall back to fetching just the
+# browser rather than failing the target.
 e2e-install:
-	npx playwright install --with-deps chromium
+	@if command -v apt-get >/dev/null 2>&1; then \
+		npx playwright install --with-deps chromium; \
+	else \
+		echo "no apt-get on this host: installing the browser only, system libraries are your package manager's job"; \
+		npx playwright install chromium; \
+	fi
 
 # Regenerates tests/Fixtures/Api.elm from the response examples in the OpenAPI
 # spec. The result is committed so `make test` needs no network; re-run this

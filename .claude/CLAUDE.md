@@ -295,7 +295,7 @@ A spec example can also be incomplete: `stats` and `address_tag` omit fields a l
 ### The browser layer (`e2e/`)
 
 ```bash
-make e2e-install    # once: fetch the browser
+make e2e-install    # once: fetch the browser (skips --with-deps off apt hosts)
 make e2e            # build + run
 make e2e-ui         # the same, in Playwright's UI mode
 ```
