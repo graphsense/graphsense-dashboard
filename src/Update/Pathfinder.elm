@@ -1400,7 +1400,7 @@ updateByMsg uc msg model =
                 fetchTagSummariesForNeigbors neighbors =
                     neighbors
                         |> List.map (.address >> .address)
-                        |> fetchTagSummaryForIds True model.tagSummaries BrowserGotTagSummaries network
+                        |> fetchTagSummaryForIds True model BrowserGotTagSummaries network
                         |> pair model
                         |> and
                             (AddressDetails.update uc subm
@@ -1414,7 +1414,7 @@ updateByMsg uc msg model =
                 AddressDetails.BrowserGotAddressesForTags _ addresses ->
                     addresses
                         |> List.map .address
-                        |> fetchTagSummaryForIds False model.tagSummaries BrowserGotTagSummaries network
+                        |> fetchTagSummaryForIds False model BrowserGotTagSummaries network
                         |> pair model
                         |> and
                             (AddressDetails.update uc subm
@@ -5106,15 +5106,19 @@ isTagSummaryLoaded includeBestClusterTag existing id =
             False
 
 
-fetchTagSummaryForIds : Bool -> Dict Id HavingTags -> (Bool -> List ( Id, Api.Data.TagSummary ) -> Msg) -> String -> List String -> List Effect
-fetchTagSummaryForIds includeBestClusterTag existing toMsg network ids =
+{-| Bulk tag summaries for the ids not loaded yet. Nothing is requested on a
+network whose backend serves no tags — the bulk endpoint answers 501 there, and
+callers treat an empty effect list as "all loaded".
+-}
+fetchTagSummaryForIds : Bool -> Model -> (Bool -> List ( Id, Api.Data.TagSummary ) -> Msg) -> String -> List String -> List Effect
+fetchTagSummaryForIds includeBestClusterTag model toMsg network ids =
     let
         idsToLoad =
             ids
                 |> List.map (Id.init network)
-                |> List.filter (isTagSummaryLoaded includeBestClusterTag existing >> not)
+                |> List.filter (isTagSummaryLoaded includeBestClusterTag model.tagSummaries >> not)
     in
-    if List.isEmpty idsToLoad then
+    if List.isEmpty idsToLoad || not (supports NetworkCapabilities.Tags network model) then
         []
 
     else
@@ -6005,14 +6009,14 @@ getTagsForExport addressId table data model =
                 |> List.concatMap (\tx -> [ tx.fromAddress, tx.toAddress ])
                 |> Set.fromList
                 |> Set.toList
-                |> fetchTagSummaryForIds True model.tagSummaries toMsg (Id.network addressId)
+                |> fetchTagSummaryForIds True model toMsg (Id.network addressId)
     in
     ( model
-    , if List.isEmpty effects || not (supports NetworkCapabilities.Tags (Id.network addressId) model) then
+    , if List.isEmpty effects then
         -- Nothing left to fetch — every tag summary is already in the model, there
-        -- are no rows at all, or the network serves no tags (bulk tag summaries
-        -- answer 501 there). Complete the export anyway: waiting on a response
-        -- that will never come leaves the spinner turning forever.
+        -- are no rows at all, or the network serves no tags. Complete the export
+        -- anyway: waiting on a response that will never come leaves the spinner
+        -- turning forever.
         [ InternalEffect (toMsg True []) ]
 
       else
@@ -6352,24 +6356,20 @@ exportGraphTxs uc conf model =
         ( newModel, _ ) =
             ExportCSV.update (ExportCSV.BrowserGotTime conf.time) config model.exportCSVGraph
                 |> mapFirst (flip s_exportCSVGraph model)
+
+        fetchEffects =
+            missingByNetwork
+                |> List.concatMap
+                    (\( network, addrs ) ->
+                        fetchTagSummaryForIds True model (BrowserGotTagSummariesForExportGraphTxsAsCSV conf.area conf.onlyVisibleIos) network addrs
+                    )
     in
-    if List.isEmpty missingByNetwork then
-        -- All tag summaries already loaded, proceed with export
+    if List.isEmpty fetchEffects then
+        -- every tag summary is already loaded, or nothing can be fetched:
+        -- proceed with the export
         generateGraphTxsExport uc conf.area conf.onlyVisibleIos newModel
 
     else
-        -- Need to fetch missing tag summaries first
-        let
-            toMsg =
-                BrowserGotTagSummariesForExportGraphTxsAsCSV conf.area conf.onlyVisibleIos
-
-            fetchEffects =
-                missingByNetwork
-                    |> List.concatMap
-                        (\( network, addrs ) ->
-                            fetchTagSummaryForIds True model.tagSummaries toMsg network addrs
-                        )
-        in
         ( newModel, fetchEffects )
 
 
