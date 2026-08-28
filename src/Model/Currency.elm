@@ -15,9 +15,9 @@ type alias AssetIdentifier =
 
 nativeAsset : String -> String
 nativeAsset network =
-    -- the GAS coin of a network: L2s differ from their network code (arbitrum
-    -- pays gas in ETH; "ARB" quotes the governance token). Mirrors the REST
-    -- stats field `native_coin` — keep in sync until this is seeded from /stats.
+    -- the native currency of a network (what pays gas): L2s differ from
+    -- their network code (arbitrum pays gas in ETH; "ARB" quotes the
+    -- governance token). Hardcoded — the servers send no such field yet.
     case network of
         "arb" ->
             "eth"
