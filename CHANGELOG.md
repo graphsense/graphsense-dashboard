@@ -3,6 +3,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.09.0] - Unreleased
+
+### Added
+
+- BNB Smart Chain (`bnb`) and Arbitrum (`arb`) render like Ethereum: lowercased `0x` identifiers, 18-decimal units, names, icons and explorer links. Native amounts on Arbitrum are labelled ETH, the coin fees are paid in
+- The app asks the backend once at startup which features it serves per network (`GET /capabilities`) and hides what is missing: neighbor tables, automatic edge discovery, the cluster-addresses tab, bridge conversions and tag lookups stay off on a network whose backend has no relations, clusters, conversions or tags. A backend without the endpoint leaves everything enabled. A deep link that loads an address or transaction waits for that answer, so no request goes out before the app knows what the backend serves
+- Counts and totals the backend reports as lower bounds are shown with a trailing "+" (`500+`), taken from the response's `qualifiers` map; nothing is capped or guessed client-side
+- The backend's `is_possible_service` verdict drives the "possible service" warning where present; the local degree/transaction-count rule remains the fallback
+
+### Changed
+
+- Address nodes on a network without relations are drawn faded in relationship-based tracing mode
+- The transaction CSV exports complete without actor columns on a network whose backend serves no tags, instead of failing on the bulk tag request
+
+### Fixed
+
+- A deep link with a checksummed (mixed-case) address loaded the node but never selected it, so the side panel stayed closed
+- A deep link to a token transfer or internal call (`…_T2`, `…_I0`) answered 400: the address normaliser lowercased the whole identifier, including the case-sensitive marker
+- Opening a value-carrying account transaction from a deep link or the search never showed its details panel
+- The token list under "Balance" clipped after about five rows, hiding tokens without a fiat price
+
 ## [26.08.1] - 2026-08-28
 
 ### Fixed
