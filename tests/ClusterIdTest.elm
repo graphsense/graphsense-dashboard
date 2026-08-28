@@ -40,6 +40,7 @@ apiAddress freshClusterId =
     , aggregatesTruncated = Nothing
     , cutoffFloorFields = Nothing
     , isPossibleService = Nothing
+    , qualifiers = Nothing
     }
 
 

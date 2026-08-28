@@ -254,11 +254,11 @@ utxo plugins pluginStates vc model id viewState address =
         , sidePanelAddressDetails = sidePanelAddressDetails
         , sidePanelAddressHeader = sidePanelAddressHeader
         , titleOfBalance = { infoLabel = Locale.string vc.locale "Balance" }
-        , valueOfBalance = viewState.address.data |> RemoteData.map (.balance >> valuesToCell vc assetId) |> RemoteData.withDefault emptyCell
+        , valueOfBalance = viewState.address.data |> RemoteData.map (qualifiedValueCell vc assetId "balance" .balance) |> RemoteData.withDefault emptyCell
         , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
-        , valueOfTotalReceived = viewState.address.data |> RemoteData.map (.totalReceived >> valuesToCell vc assetId) |> RemoteData.withDefault emptyCell
+        , valueOfTotalReceived = viewState.address.data |> RemoteData.map (qualifiedValueCell vc assetId "total_received" .totalReceived) |> RemoteData.withDefault emptyCell
         , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
-        , valueOfTotalSent = viewState.address.data |> RemoteData.map (.totalSpent >> valuesToCell vc assetId) |> RemoteData.withDefault emptyCell
+        , valueOfTotalSent = viewState.address.data |> RemoteData.map (qualifiedValueCell vc assetId "total_spent" .totalSpent) |> RemoteData.withDefault emptyCell
         , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
         , valueOfLastUsage = viewState.address.data |> RemoteData.map (.lastTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
@@ -268,19 +268,41 @@ utxo plugins pluginStates vc model id viewState address =
 
 {-| "+" when the serving backend flags the field as a budget-cutoff LOWER BOUND
 (iknaio-rest degradation contract): "63,037" would present a floor as exact,
-"63,037+" says at least that many.
+"63,037+" says at least that many. Driven ONLY by the server's qualifier map
+(`qualifiers[field] == "gt"`; the older `cutoff.floor_fields` list is the
+fallback) — never by a client-side threshold. Core (baseline-indexed) data
+carries neither, so it renders unqualified.
 -}
 floorQualifier : String -> Api.Data.Address -> String
 floorQualifier field data =
-    if
-        data.cutoffFloorFields
-            |> Maybe.map (List.member field)
-            |> Maybe.withDefault False
-    then
+    let
+        qualifiedGt =
+            data.qualifiers
+                |> Maybe.andThen (Dict.get field)
+                |> Maybe.map ((==) "gt")
+                |> Maybe.withDefault False
+
+        inFloorList =
+            data.cutoffFloorFields
+                |> Maybe.map (List.member field)
+                |> Maybe.withDefault False
+    in
+    if qualifiedGt || inFloorList then
         "+"
 
     else
         ""
+
+
+{-| Append the floor qualifier to a value cell's first row ("1,234.56 ETH+").
+-}
+qualifiedValueCell : View.Config -> Model.Currency.AssetIdentifier -> String -> (Api.Data.Address -> Api.Data.Values) -> Api.Data.Address -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
+qualifiedValueCell vc assetId field getValues a =
+    let
+        cell =
+            valuesToCell vc assetId (getValues a)
+    in
+    { cell | firstRowText = cell.firstRowText ++ floorQualifier field a }
 
 
 neighborsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Direction -> Html AddressDetails.Msg

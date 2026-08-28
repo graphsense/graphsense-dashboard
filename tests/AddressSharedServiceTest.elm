@@ -33,6 +33,7 @@ apiAddress isContract =
     , aggregatesTruncated = Nothing
     , cutoffFloorFields = Nothing
     , isPossibleService = Nothing
+    , qualifiers = Nothing
     }
 
 

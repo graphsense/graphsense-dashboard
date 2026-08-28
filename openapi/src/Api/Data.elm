@@ -261,6 +261,9 @@ type alias Address =
     -- server-side "possible service" verdict (same extension class): when
     -- present it overrides the dashboard's local heuristic
     , isPossibleService : Maybe Bool
+    -- flat field -> qualifier map ("gt" = reported value is a lower bound,
+    -- "approx" = approximate); the consumer-facing form of the cutoff object
+    , qualifiers : Maybe (Dict.Dict String String)
     }
 
 
@@ -2721,6 +2724,7 @@ addressDecoder =
         |> maybeDecode "aggregates_truncated" Json.Decode.bool Nothing
         |> maybeDecode "cutoff" (Json.Decode.field "floor_fields" (Json.Decode.list Json.Decode.string)) Nothing
         |> maybeDecode "is_possible_service" Json.Decode.bool Nothing
+        |> maybeDecode "qualifiers" (Json.Decode.dict Json.Decode.string) Nothing
 
 
 addressStatusDecoder : Json.Decode.Decoder AddressStatus
