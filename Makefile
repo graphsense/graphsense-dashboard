@@ -2,7 +2,24 @@
 
 
 API_ELM=openapi/src/Api.elm
-REST_URL?=https://app.ikna.io
+# Only a round-trip marker for `make openapi`: mangle-openapi.py writes it into
+# the spec's `servers` list so the generator emits it as the client's base path,
+# and generate-openapi.sh then substitutes it for the {{VITE_GS_REST_URL}}
+# placeholder. The value is arbitrary; it just has to survive generation intact.
+REST_URL?=https://app.iknaio.com
+
+# Where `make openapi` and `make api-fixtures` read the spec from -- a URL or a
+# local path. `?=` alone is not enough: env.template ships `OPENAPI_LOCATION=` as
+# an empty-but-defined assignment and `-include .env` runs first, so ?= would
+# leave it blank and `make openapi` would fail on a fresh checkout. Fall back
+# whenever the value is blank, not only when it is unset. Keep in step with
+# DEFAULT_SPEC in tools/gen_api_fixtures.mjs, which is the fallback when that
+# script is run directly.
+DEFAULT_OPENAPI_LOCATION=https://api.iknaio.com/openapi.json
+OPENAPI_LOCATION?=$(DEFAULT_OPENAPI_LOCATION)
+ifeq ($(strip $(OPENAPI_LOCATION)),)
+OPENAPI_LOCATION=$(DEFAULT_OPENAPI_LOCATION)
+endif
 CONFIG=./config/Config.elm
 CODEGEN_CONFIG=$(CODEGEN)/$(CONFIG)
 FIGMA_JSON=./theme/figma.json
@@ -20,12 +37,19 @@ PLUGINS_DIR=./plugins
 # `--` is the elm comment marker: skip commented-out plugin registrations. Pass it
 # after `--` instead of escaping it; `\-` is not a valid escape and makes every
 # single make invocation print "grep: warning: stray \ before -".
-PLUGINS=$(shell grep -v -e '--' ${CONFIG} | sed -n 's/.*>\s*Plugin\.\([^} ]*\).*/\1/p' | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
+#PLUGINS=$(shell grep -v -e '--' ${CONFIG} | sed -n 's/.*>\s*Plugin\.\([^} ]*\).*/\1/p' | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
+PLUGINS=$(shell ls -1 $(PLUGINS_DIR) 2>/dev/null | grep -v -e '^EMPTY$$' | tr -d ' ')
 SRC_FILES=$(shell find src $(PLUGINS_DIR) -type f -name \*.elm -not -path '*/node_modules/*')
 PLUGIN_TEMPLATES=$(shell find plugin_templates -type f -name \*.mustache)
 
+# Plugin directories actually linked into $(PLUGINS_DIR), regardless of whether
+# they are registered in $(CONFIG). The dead-code rules can only see what is
+# present on disk, so this -- not $(PLUGINS) -- decides whether an unused-export
+# finding can be trusted.
+LINKED_PLUGINS=$(shell ls -1 $(PLUGINS_DIR) 2>/dev/null | grep -v -e '^EMPTY$$' | wc -l | tr -d ' ')
+
 GENERATED_PLUGINS=$(GENERATED)/$(PLUGINS_DIR)
-GENERATED_PLUGIN_ELM=$(GENERATED_PLUGINS)/Plugin.elm
+GENERATED_PLUGIN_ELM=$(GENERATED_PLUGINS)/index.js
 GENERATED_UTILS=$(GENERATED)/utils
 GENERATED_THEME=$(GENERATED)/theme
 GENERATED_PUBLIC=$(GENERATED)/$(PUBLIC_DIR)
@@ -47,6 +71,12 @@ export ELM_HOME=$(PWD)/elm_packages
 # The compiler keeps its packages in $(ELM_HOME)/<compiler version>/packages.
 # Derive the version from the installed binary: a hardcoded path silently drops
 # the patched packages of virtual-dom-fix on every compiler upgrade.
+# Absolute paths to the toolchain. `npx` resolves from the *current* directory, so
+# lint-plugins -- which runs from inside a plugin -- would look in that plugin's
+# node_modules and, finding nothing, try to fetch elm-review from the network.
+ELM_BIN=$(CURDIR)/node_modules/.bin/elm
+ELM_REVIEW_BIN=$(CURDIR)/node_modules/.bin/elm-review
+
 ELM_VERSION=$(shell npx elm --version)
 ELM_PACKAGES_DIR=$(ELM_HOME)/$(ELM_VERSION)/packages
 
@@ -60,8 +90,11 @@ export NODE_OPTIONS=--max-old-space-size=8192
 serve: prepare gen
 	npm run dev
 
-build: prepare gen
+npm-build:
 	npm run build
+
+build: prepare gen
+	$(MAKE) npm-build
 
 compile: prepare gen
 	npm run compile
@@ -73,7 +106,7 @@ compile: prepare gen
 compile-quiet: SHELL := /bin/bash
 compile-quiet:
 	@$(MAKE) prepare gen > /dev/null
-	@elm make src/Main.elm --output=/dev/null | tr '\r' '\n' | grep -v "^Compiling"; exit $${PIPESTATUS[0]}
+	@npx elm make src/Main.elm --output=/dev/null | tr '\r' '\n' | grep -v "^Compiling"; exit $${PIPESTATUS[0]}
 
 check-plugin-folders:
 	@bash -c 'cd $(PLUGINS_DIR); for i in *; do \
@@ -155,8 +188,47 @@ $(CODEGEN_RECORDSETTER): $(CODEGEN_SRC)
 		mkdir -p $(GENERATED); \
 		npx setem --output $(GENERATED) && touch $(GENERATED)/RecordSetter.elm
 
-test:
+test: check-lang
 	npx elm-test-rs
+
+# Fails when a locale lost a key the code (or lang/en.yaml) still uses. Known
+# gaps live in lang/untranslated-baseline.json; refresh it with
+# `node tools/check_lang.mjs --update-baseline`.
+check-lang:
+	node tools/check_lang.mjs
+
+# Browser tests. Builds with a REST url nothing listens on, so an un-mocked
+# request fails loudly instead of reaching a real backend; the value is passed
+# as a make variable because a plain env var loses to the `-include .env` above.
+# `make e2e-install` once, to fetch the browser.
+E2E_REST_URL=http://127.0.0.1:19999/api
+
+e2e: build-e2e
+	npx playwright test
+
+e2e-ui: build-e2e
+	npx playwright test --ui
+
+build-e2e:
+	$(MAKE) build VITE_GS_REST_URL=$(E2E_REST_URL)
+
+# `--with-deps` shells out to apt-get, so it exits 127 on any non-Debian host
+# (CI is ubuntu-latest; developer machines are not necessarily). Chromium's own
+# libraries are usually present anyway, so fall back to fetching just the
+# browser rather than failing the target.
+e2e-install:
+	@if command -v apt-get >/dev/null 2>&1; then \
+		npx playwright install --with-deps chromium; \
+	else \
+		echo "no apt-get on this host: installing the browser only, system libraries are your package manager's job"; \
+		npx playwright install chromium; \
+	fi
+
+# Regenerates tests/Fixtures/Api.elm from the response examples in the OpenAPI
+# spec. The result is committed so `make test` needs no network; re-run this
+# (and `make test`) after every `make openapi`.
+api-fixtures:
+	node tools/gen_api_fixtures.mjs $(OPENAPI_LOCATION)
 
 prepare: check-plugin-folders node_modules elm.json virtual-dom-fix plugins-install theme plugin-themes
 
@@ -164,7 +236,9 @@ build-docker:
 	docker build . -t graphsense-dashboard
 
 serve-docker: build-docker
-	docker run -it --network='host' -e REST_URL=http://localhost:9000 localhost/graphsense-dashboard:latest
+	# No backend env var here: VITE_GS_REST_URL is compiled into the bundle when
+	# the image is built, so passing one at run time would have no effect.
+	docker run -it --network='host' localhost/graphsense-dashboard:latest
 
 format:
 	npx elm-format --yes src tests 
@@ -172,18 +246,115 @@ format:
 format-plugins:
 	npx elm-format --yes $(PLUGINS_DIR)
 
-lint: 
-	npx elm-review
+# Runs the note afterwards whatever elm-review returns, so it is the last thing
+# on screen when there *are* findings to act on.
+lint:
+	@npx elm-review; status=$$?; $(MAKE) --no-print-directory lint-coverage-note; exit $$status
 
-lint-fix: 
+# Speaks at the one moment someone is about to make the wrong call: deleting a
+# core export that elm-review called unused. That verdict is only trustworthy if
+# every plugin was visible to the analysis -- with none linked, which is normal
+# when working on core alone, a plugin-only export looks exactly like dead code.
+lint-coverage-note:
+	@if [ "$(LINKED_PLUGINS)" = "0" ]; then \
+		echo ""; \
+		echo "note: no plugins are linked into $(PLUGINS_DIR)."; \
+		echo "      Unused-export and unused-constructor findings may be plugin-facing."; \
+		echo "      Before deleting a core export, link the plugins and run"; \
+		echo "      \"make plugin-api\" to confirm nothing still needs it."; \
+	else \
+		missing=""; \
+		for p in $(PLUGINS); do \
+			[ -e "$(PLUGINS_DIR)/$$p" ] || missing="$$missing $$p"; \
+		done; \
+		if [ -n "$$missing" ]; then \
+			echo ""; \
+			echo "note: registered but not linked:$$missing"; \
+			echo "      Their use of core is invisible, so unused-export findings may be"; \
+			echo "      plugin-facing. Link them and run \"make plugin-api\" before deleting."; \
+		fi; \
+	fi
+
+# Guarded: --fix-all removes exports the rules call unused, and in a checkout
+# missing a plugin that includes the ones only that plugin uses. Run `make lint`
+# to see the report without touching anything.
+lint-fix: require-all-plugins
 	npx elm-review --fix-all
 
+# Regenerate src/PluginApi.elm, the list of core symbols the plugins use.
+# The dead-code rules in review/ are only correct because that module keeps
+# those symbols referenced from inside core: elm.json's source-directories are
+# generated from $(CONFIG), so elm-review only sees the plugins that happen to
+# be checked out, and CI (config/Config.elm.tmp) has none.
+#
+# This target only ever *adds*, so it is safe to run with plugins missing from
+# the working tree -- which is routine, since building without the ones you are
+# not touching is faster. Use plugin-api-prune to remove entries.
+plugin-api:
+	python3 tools/gen_plugin_api.py
+	npx elm-format --yes src/PluginApi.elm
+
+# Drops entries no longer referenced by any plugin. Unlike `plugin-api` this can
+# shrink the list, so it needs every registered plugin present -- running it
+# without one would delete symbols that plugin still uses in production.
+plugin-api-prune: require-all-plugins
+	python3 tools/gen_plugin_api.py --prune
+	npx elm-format --yes src/PluginApi.elm
+
+# Fails when src/PluginApi.elm is missing a symbol a plugin has started using.
+# Safe in any checkout: regeneration is additive, so plugins absent from the
+# working tree simply contribute nothing and the diff stays empty.
+check-plugin-api:
+	@tmp=$$(mktemp -d) && trap 'rm -rf "$$tmp"' EXIT; \
+	python3 tools/gen_plugin_api.py "$$tmp/PluginApi.elm" >/dev/null; \
+	npx elm-format --yes "$$tmp/PluginApi.elm" >/dev/null; \
+	if ! diff -u src/PluginApi.elm "$$tmp/PluginApi.elm" >/dev/null; then \
+		diff -u src/PluginApi.elm "$$tmp/PluginApi.elm" | head -40; \
+		echo "src/PluginApi.elm is out of date -- run \"make plugin-api\" and commit."; \
+		exit 1; \
+	fi; \
+	echo "check-plugin-api: up to date"
+
+# Every plugin registered in $(CONFIG) must actually be on disk. Required by any
+# target that can *delete* a core export: without the full set, a plugin's usage
+# of a core symbol is invisible, the symbol looks dead, and removing it breaks
+# that plugin. Checking only that $(PLUGINS) is non-empty is not enough -- the
+# registrations and the symlinks in $(PLUGINS_DIR) drift apart independently.
+require-all-plugins:
+	@if [ -z "$(PLUGINS)" ]; then \
+		echo "This target needs every plugin checked out; none are registered in $(CONFIG)."; \
+		echo "Without them, core exports that only plugins use look dead."; \
+		exit 1; \
+	fi
+	@missing=""; for p in $(PLUGINS); do \
+		[ -e "$(PLUGINS_DIR)/$$p" ] || missing="$$missing $$p"; \
+	done; \
+	if [ -n "$$missing" ]; then \
+		echo "Registered in $(CONFIG) but not in $(PLUGINS_DIR):$$missing"; \
+		echo "Those plugins' use of core is invisible right now, so this target"; \
+		echo "could delete symbols they still need. Check them out, or unregister"; \
+		echo "them in $(CONFIG) if they are really gone."; \
+		exit 1; \
+	fi
+	@echo "all $(words $(PLUGINS)) registered plugins present"
+
+# Runs each plugin's own elm-review config. A plugin's sources are invisible to the
+# core `lint` -- they are not in core's review project -- so without this nothing ever
+# checks them.
+#
+# Three things this has to get right, all of which it previously got wrong:
+#   * a subshell, not `cd X; ...; cd -`, so a failure cannot leave the loop elsewhere;
+#   * `|| exit 1`, or the recipe's status is `cd -`'s and findings never fail anything;
+#   * `--compiler`, because elm-review shells out to `elm` by name and the plugin
+#     directory has no node_modules/.bin on PATH.
+# A plugin's review/elm.json must also declare the compiler version this project uses;
+# elm-review refuses to compile a configuration whose elm.json names a different one.
 lint-plugins:
 	@for p in $(PLUGINS); do \
 		if [ -e $(PLUGINS_DIR)/$$p/elm.json -a -e $(PLUGINS_DIR)/$$p/review ]; then \
 			echo "Linting $$p ..."; \
-			cd plugins/$$p; npx elm-review; cd -; \
-		fi \
+			( cd $(PLUGINS_DIR)/$$p && $(ELM_REVIEW_BIN) --compiler $(ELM_BIN) ) || exit 1; \
+		fi; \
 	done
 
 $(CODEGEN_CONFIG):
@@ -197,7 +368,7 @@ $(FIGMA_JSON):
 	$(CODEGEN_TOOL) --refresh --file-id=$(FIGMA_FILE_ID) --api-token=$(FIGMA_API_TOKEN)
 
 $(GENERATED_THEME_COLORMAPS): $(FIGMA_JSON) $(CODEGEN_CONFIG) $(CODEGEN_SRC) $(CODEGEN_RECORDSETTER)
-	/usr/bin/time -v $(CODEGEN_TOOL) -w="$(FIGMA_WHITELIST_FRAMES)" -c="$(FIGMA_WHITELIST_COMPONENTS)"
+	$(CODEGEN_TOOL) -w="$(FIGMA_WHITELIST_FRAMES)" -c="$(FIGMA_WHITELIST_COMPONENTS)"
 
 check-plugin-exists:
 	@if [ ! -z "$(PLUGIN_NAME)" -a ! -e $(PLUGINS_DIR)/$(PLUGIN_NAME) ]; then \
@@ -217,7 +388,7 @@ $(PLUGINS_DIR)/%/$(FIGMA_JSON):
 plugin-theme: check-plugin-exists $(GENERATED_THEME_THEME)/$(PLUGIN_NAME)/$(THEME_GENERATED_MARKER) setem
 
 $(GENERATED_THEME_THEME)/%/$(THEME_GENERATED_MARKER): $(GENERATED_THEME_COLORMAPS) $(CODEGEN_RECORDSETTER) $(PLUGINS_DIR)/%/$(FIGMA_JSON)
-	/usr/bin/time -v $(CODEGEN_TOOL) --plugin=$* 
+	$(CODEGEN_TOOL) --plugin=$* 
 	mkdir -p $(GENERATED_THEME_THEME)/$*
 	touch $@
 
@@ -254,8 +425,12 @@ elm.json: elm.json.base
 
 gen: copy-public $(GENERATED_PLUGIN_ELM) setem
 
-$(GENERATED_PLUGIN_ELM): elm.json $(GENERATE_JS) $(CONFIG) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
-	node $(GENERATE_JS) $(PLUGINS) 
+plugin-gen: 
+	rm $(GENERATED_PLUGIN_ELM)
+	$(MAKE) $(GENERATED_PLUGIN_ELM) FLAGS=--skip-elm-json
+
+$(GENERATED_PLUGIN_ELM): elm.json $(GENERATE_JS) $(PLUGIN_TEMPLATES) $(wildcard ./lang/*) $(wildcard $(PLUGINS_DIR)/*/lang/*)
+	node $(GENERATE_JS) $(FLAGS) $(PLUGINS) 
 
 # Mirror ./public and every plugin's public/ into generated/public. A `cp -r` into
 # the already existing target nested the whole tree a second time as
@@ -333,4 +508,4 @@ tag-version:
 	git tag $(VERSION)
 	@echo "Created version $(VERSION)"
 
-.PHONY: openapi serve test format format-plugins lint lint-fix lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix tag-version compile-quiet
+.PHONY: openapi serve test check-lang api-fixtures e2e e2e-ui build-e2e e2e-install format format-plugins lint lint-coverage-note lint-fix plugin-api plugin-api-prune check-plugin-api require-all-plugins lint-ci build build-docker serve-docker gen theme-refresh virtual-dom-fix tag-version compile-quiet

@@ -11,7 +11,6 @@ import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
-import Css.View
 import Dict exposing (Dict)
 import Html.Styled as Html exposing (Html, div, object, text)
 import Html.Styled.Attributes as HA
@@ -38,7 +37,7 @@ import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder exposing (OverlayWindows(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View as Plugin
 import RecordSetter as Rs
 import RemoteData exposing (WebData)
 import Set
@@ -59,7 +58,8 @@ import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
 import Util.Tooltip
 import Util.TooltipType
-import Util.View exposing (HintPosition(..), copyIconPathfinderAbove, emptyCell, iconWithHint, loadingSpinner, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.View exposing (HintPosition(..), copyIconPathfinderAbove, emptyCell, iconWithHint, none, timeToCell, truncateLongIdentifierWithLengths)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Button as Button
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
@@ -72,18 +72,18 @@ import View.Pathfinder.Table.RelatedAddressesTable as RelatedAddressesTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 
 
-view : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg
-view plugins pluginStates vc model id viewState =
+view : ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Html Pathfinder.Msg
+view pluginStates vc model id viewState =
     div []
         [ model.network.addresses
             |> Dict.get id
             |> Maybe.map
                 (\address ->
                     if Data.isAccountLike (Id.network id) then
-                        account plugins pluginStates vc model id viewState address
+                        account pluginStates vc model id viewState address
 
                     else
-                        utxo plugins pluginStates vc model id viewState address
+                        utxo pluginStates vc model id viewState address
                 )
             |> Maybe.withDefault none
         ]
@@ -94,8 +94,8 @@ categoriesMaxWidth =
     300
 
 
-utxo : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
-utxo plugins pluginStates vc model id viewState address =
+utxo : ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
+utxo pluginStates vc model id viewState address =
     let
         crosschainTargets =
             crosschainLedgerTargets id address
@@ -129,10 +129,10 @@ utxo plugins pluginStates vc model id viewState address =
             makeSidePanelData vc model id pluginTagsVisible crosschainVisible
 
         pluginList =
-            Plugin.addressSidePanelHeader plugins pluginStates vc address
+            Plugin.addressSidePanelHeader pluginStates vc address
 
         pluginTagsList =
-            Plugin.addressSidePanelHeaderTags plugins pluginStates vc address
+            Plugin.addressSidePanelHeaderTags pluginStates vc address
 
         cluster =
             viewState.address.data
@@ -168,7 +168,7 @@ utxo plugins pluginStates vc model id viewState address =
             , clusterInfoInstance =
                 cluster
                     |> Maybe.withDefault RemoteData.NotAsked
-                    |> RemoteData.unpack (\_ -> loadingSpinner vc Css.View.loadingSpinner)
+                    |> RemoteData.unpack (\_ -> Loadingspinner.html [])
                         (clusterInfoView vc viewState.isClusterDetailsOpen model.colors
                             >> Html.map (Pathfinder.AddressDetailsMsg id)
                         )
@@ -216,7 +216,7 @@ utxo plugins pluginStates vc model id viewState address =
                 (viewState.address.data
                     |> RemoteData.map
                         (\_ -> Nothing)
-                    |> RemoteData.withDefault (loadingSpinner vc Css.View.loadingSpinner |> Just)
+                    |> RemoteData.withDefault (Loadingspinner.html [] |> Just)
                 )
          -- |> Rs.s_iconsBinanceL
          --     (Just sidePanelData.actorIconInstance)
@@ -266,28 +266,14 @@ utxo plugins pluginStates vc model id viewState address =
         }
 
 
-{-| "+" when the serving backend flags the field as a budget-cutoff LOWER BOUND
-(iknaio-rest degradation contract): "63,037" would present a floor as exact,
-"63,037+" says at least that many. Driven ONLY by the server's qualifier map
-(`qualifiers[field] == "gt"`; the older `cutoff.floor_fields` list is the
-fallback) — never by a client-side threshold. Core (baseline-indexed) data
-carries neither, so it renders unqualified.
+{-| "+" when the backend reports the field as a lower bound: "63,037" would
+present a capped count as exact, "63,037+" says at least that many. Driven only
+by the server's qualifier map (`qualifiers[field] == "gt"`), never by a
+client-side threshold; a body without qualifiers renders unqualified.
 -}
 floorQualifier : String -> Api.Data.Address -> String
 floorQualifier field data =
-    let
-        qualifiedGt =
-            data.qualifiers
-                |> Maybe.andThen (Dict.get field)
-                |> Maybe.map ((==) "gt")
-                |> Maybe.withDefault False
-
-        inFloorList =
-            data.cutoffFloorFields
-                |> Maybe.map (List.member field)
-                |> Maybe.withDefault False
-    in
-    if qualifiedGt || inFloorList then
+    if (data.qualifiers |> Maybe.andThen (Dict.get field)) == Just "gt" then
         "+"
 
     else
@@ -508,7 +494,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                         Html.text "error"
 
                                     RemoteData.Loading ->
-                                        loadingSpinner vc Css.View.loadingSpinner
+                                        Loadingspinner.html []
 
                                     RemoteData.NotAsked ->
                                         none
@@ -539,7 +525,7 @@ relatedAddressesDataTab vc model _ viewState cluster =
                                         Html.text "error"
 
                                     RemoteData.Loading ->
-                                        loadingSpinner vc Css.View.loadingSpinner
+                                        Loadingspinner.html []
 
                                     RemoteData.NotAsked ->
                                         none
@@ -596,9 +582,9 @@ clusterInfoView vc open colors clstr =
 
             clusterColor =
                 Colors.getAssignedColor Colors.Clusters clstrid colors
-                    |> Maybe.map (.color >> Util.View.toCssColor)
-                    |> Maybe.withDefault (Css.rgba 0 0 0 0)
-                    |> Css.fill
+                    |> Maybe.map .color
+                    |> Maybe.withDefault "transparent"
+                    |> Css.property "fill"
                     |> Css.important
                     |> List.singleton
                     |> css
@@ -958,8 +944,8 @@ accountValueRundown vc conf =
             }
 
 
-account : Plugins -> ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
-account plugins pluginStates vc model id viewState address =
+account : ModelState -> View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Address -> Html Pathfinder.Msg
+account pluginStates vc model id viewState address =
     let
         crosschainTargets =
             crosschainLedgerTargets id address
@@ -987,10 +973,10 @@ account plugins pluginStates vc model id viewState address =
                 ++ [ crosschainMoreInfoButton vc id ]
 
         pluginList =
-            Plugin.addressSidePanelHeader plugins pluginStates vc address
+            Plugin.addressSidePanelHeader pluginStates vc address
 
         pluginTagsList =
-            Plugin.addressSidePanelHeaderTags plugins pluginStates vc address
+            Plugin.addressSidePanelHeaderTags pluginStates vc address
 
         pluginTagsVisible =
             List.length pluginTagsList > 0
@@ -1064,12 +1050,12 @@ account plugins pluginStates vc model id viewState address =
                     )
 
         onLimitedNetwork =
-            NetworkCapabilities.isLimitedNetwork model.config.networkCapabilities (Id.network id)
+            Pathfinder.isLimitedNetwork (Id.network id) model
 
         -- no clusters capability = no cluster/entity data (locally minted
         -- ids only): no cluster-addresses tab
         relatedAddressesTab =
-            if NetworkCapabilities.supports NetworkCapabilities.Clusters model.config.networkCapabilities (Id.network id) then
+            if Pathfinder.supports NetworkCapabilities.Clusters (Id.network id) model then
                 [ relatedAddressesDataTab vc model id viewState RemoteData.NotAsked ]
 
             else
@@ -1080,9 +1066,8 @@ account plugins pluginStates vc model id viewState address =
                 ++ relatedAddressesTab
                 |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.address.id))
 
-        -- limited networks serve total received/sent as budget-capped floors or
-        -- not at all (no precomputed aggregates): hide the two rows entirely
-        -- (user decision 2026-07-27)
+        -- a limited network has no precomputed aggregates; total received/sent
+        -- are capped there or missing, so the two rows are hidden entirely
         hideOnLimitedNetwork =
             if onLimitedNetwork then
                 [ css [ Css.display Css.none ] ]
@@ -1155,7 +1140,7 @@ account plugins pluginStates vc model id viewState address =
                 (viewState.address.data
                     |> RemoteData.map
                         (\_ -> Nothing)
-                    |> RemoteData.withDefault (loadingSpinner vc Css.View.loadingSpinner |> Just)
+                    |> RemoteData.withDefault (Loadingspinner.html [] |> Just)
                 )
         )
         { pluginList = pluginList
@@ -1216,7 +1201,7 @@ transactionsOrNeighborsDataTabs vc model id viewState =
             -- counterparty listing is unavailable, so aggregate mode falls
             -- back to the transactions tab (pair edges on the graph keep
             -- working)
-            if not (NetworkCapabilities.supports NetworkCapabilities.Relations model.config.networkCapabilities (Id.network id)) then
+            if not (Pathfinder.supports NetworkCapabilities.Relations (Id.network id) model) then
                 [ transactionsDataTab vc model id viewState
                 ]
 

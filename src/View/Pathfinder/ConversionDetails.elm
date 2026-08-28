@@ -18,7 +18,7 @@ import Svg.Styled.Attributes exposing (css)
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Util.Css exposing (spread)
 import Util.View exposing (copyIconPathfinder, copyIconPathfinderAbove, none, timeToCell, truncateLongIdentifierWithLengths)
-import View.Graph.Table exposing (noTools)
+import View.Graph.Table
 import View.Locale as Locale
 import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
 import View.Pathfinder.Table.ConversionTransactionTable as CTable
@@ -70,7 +70,6 @@ txTab vc isTxOnGraph viewState =
         tableStyles
         vc
         []
-        noTools
         (CTable.config tableStyles vc viewState.raw.id isTxOnGraph)
         viewState.table
     ]

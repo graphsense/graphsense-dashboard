@@ -1,6 +1,5 @@
-module Model.Search exposing (Model, ResultLine(..), SearchType(..), addRecent, addToAutoComplete, filteredRecents, firstResult, getLatestBlocks, getMulti, isCompatibleWithSearchType, isLikelyPathSearchInput, lastResult, maxRecentSearches, minSearchInputLength, minSearchLengthWithResultExpected, persistRecentSearches, query, searchInputId, selectedValue, setIsPickingCurrency, setQuery)
+module Model.Search exposing (Model, ResultLine(..), SearchType(..), addRecent, addToAutoComplete, filteredRecents, firstResult, getMulti, isLikelyPathSearchInput, lastResult, minSearchInputLength, minSearchLengthWithResultExpected, persistRecentSearches, query, searchInputId, selectedValue, setQuery)
 
-import Api.Data
 import Autocomplete exposing (Autocomplete)
 import RecordSetter as Rs
 
@@ -164,32 +163,6 @@ addToAutoComplete rl m =
             c ++ [ rl ]
     in
     m |> Rs.s_autocomplete (m.autocomplete |> Autocomplete.setChoices nc)
-
-
-getLatestBlocks : Api.Data.Stats -> List ( String, Int )
-getLatestBlocks =
-    .currencies
-        >> List.map (\{ name, noBlocks } -> ( name, noBlocks - 1 ))
-
-
-setIsPickingCurrency : Model -> Model
-setIsPickingCurrency model =
-    { model
-        | searchType =
-            case model.searchType of
-                SearchAll sa ->
-                    { sa | pickingCurrency = True }
-                        |> SearchAll
-
-                SearchAddressAndTx x ->
-                    SearchAddressAndTx x
-
-                SearchTagsOnly ->
-                    SearchTagsOnly
-
-                SearchActorsOnly ->
-                    SearchActorsOnly
-    }
 
 
 searchInputId : String

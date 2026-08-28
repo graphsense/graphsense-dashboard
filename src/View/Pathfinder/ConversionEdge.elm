@@ -1,4 +1,4 @@
-module View.Pathfinder.ConversionEdge exposing (edge, view)
+module View.Pathfinder.ConversionEdge exposing (view)
 
 import Api.Data
 import Config.View as View
@@ -367,8 +367,3 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
 
 
 -- Keep the original edge function for backward compatibility with default curvature
-
-
-edge : View.Config -> Highlight -> ConversionEdge -> Int -> Address -> Address -> Svg Msg
-edge vc searchHighlight conversionEdge displacementIndex inputAddress outputAddress =
-    view vc searchHighlight conversionEdge displacementIndex inputAddress outputAddress

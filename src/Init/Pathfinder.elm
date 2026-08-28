@@ -3,8 +3,7 @@ module Init.Pathfinder exposing (init)
 import AssocList
 import Components.ExportCSV as ExportCSV
 import Components.Tooltip as Tooltip
-import Config
-import Config.Pathfinder exposing (AggEdgeFilter(..), HideForExport(..), TracingMode(..))
+import Config.Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Dict
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
@@ -50,12 +49,8 @@ init us =
             , tracingMode = us.tracingMode |> Maybe.withDefault TransactionTracingMode
             , avoidOverlapingNodes = us.avoidOverlapingNodes |> Maybe.withDefault True
             , hideForExport = NoExport
-            , aggEdgeFilter = AllAggEdges
-
-            -- seeded from build config; replaced by the /capabilities
-            -- declaration (BrowserGotCapabilities) once it arrives
-            , networkCapabilities = NetworkCapabilities.fromBuildConfig Config.limitedNetworks
             }
+      , networkCapabilities = NetworkCapabilities.none
       , pointerTool = Drag
       , modPressed = False
       , isDirty = False

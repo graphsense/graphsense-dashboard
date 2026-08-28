@@ -3,18 +3,13 @@ module Plugin.View exposing (..)
 {{#plugins}}
 import {{package}}.Model
 import {{package}}.Msg
+import {{package}}.Interface.View
 {{/plugins}}
 import Config.View as View
-import Config.Graph as Graph
 import Html.Styled as Html exposing (Html)
 import Maybe.Extra
 import Model
-import Model.Address as A
-import Model.Entity as E
-import Model.Graph.Address exposing (Address)
-import Model.Node as Node
 import Model.Pathfinder.Address as Pathfinder
-import Msg.Graph as Graph
 import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
 import Plugin.Model
@@ -27,73 +22,23 @@ import Util.View
 
 
 type alias Plugins =
-    { {{#plugins}}{{name}} : Maybe (PluginInterface.View.View {{package}}.Model.Model {{package}}.Model.AddressState {{package}}.Model.EntityState {{package}}.Msg.Msg)
+    { {{#plugins}}{{name}} : PluginInterface.View.View {{package}}.Model.Model {{package}}.Model.AddressState {{package}}.Msg.Msg
     {{^last}}, {{/last}}{{/plugins}}
     }
 
 
-addressFlags : Plugins -> Plugin.Model.AddressState -> View.Config -> (Float, List (Svg Graph.Msg))
-addressFlags plugins addressState vc =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map2
-                    (\fun state ->
-                        fun vc state
-                    )
-                    plugin.addressFlags
-                    addressState.{{name}}
-                    |> Maybe.map (mapSecond (List.map (Svg.map Plugin.Msg.{{package}}Msg)))
-            )
-    {{^last}}, {{/last}}{{/plugins}}
-    ]
-        |> List.filterMap identity
-        |> List.foldl
-            (\( width, flags ) ( accWidth, accFlags ) ->
-                ( accWidth + width, accFlags ++ flags )
-            )
-            ( 0, [] )
-        |> mapSecond (List.map (Svg.map Graph.PluginMsg))
-
-
-entityFlags : Plugins -> Plugin.Model.EntityState -> View.Config -> (Float, List (Svg Graph.Msg))
-entityFlags plugins entityState vc =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map2
-                    (\fun state ->
-                        fun vc state
-                    )
-                    plugin.entityFlags
-                    entityState.{{name}}
-                    |> Maybe.map (mapSecond (List.map (Svg.map Plugin.Msg.{{package}}Msg)))
-            )
-    {{^last}}, {{/last}}{{/plugins}}
-    ]
-        |> List.filterMap identity
-        |> List.foldl
-            (\( width, flags ) ( accWidth, accFlags ) ->
-                ( accWidth + width, accFlags ++ flags )
-            )
-            ( 0, [] )
-        |> mapSecond (List.map (Svg.map Graph.PluginMsg))
-
-
-addressContextMenu : Plugins -> Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (ContextMenuItem Pathfinder.Msg)
-addressContextMenu plugins states vc address =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map3
-                    (\fun ->
-                        fun vc address
-                    )
-                    plugin.addressContextMenu
-                    states.{{name}}
-                    address.plugins.{{name}}
-                    |> Maybe.map (List.map (ContextMenuItem.map Plugin.Msg.{{package}}Msg))
-            )
+addressContextMenu : Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (ContextMenuItem Pathfinder.Msg)
+addressContextMenu states vc address =
+    [ {{#plugins}}
+        
+            Maybe.map3
+                (\fun ->
+                    fun vc address
+                )
+                {{package}}.Interface.View.plugin.addressContextMenu
+                states.{{name}}
+                address.plugins.{{name}}
+            |> Maybe.map (List.map (ContextMenuItem.map Plugin.Msg.{{package}}Msg))
     {{^last}}, {{/last}}{{/plugins}}
     ]
         |> List.filterMap identity
@@ -102,32 +47,28 @@ addressContextMenu plugins states vc address =
 
 
 
-addressSidePanelHeader : Plugins -> Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (Html Pathfinder.Msg)
-addressSidePanelHeader plugins states vc address =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                (Maybe.map3
+addressSidePanelHeader : Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (Html Pathfinder.Msg)
+addressSidePanelHeader states vc address =
+    [ {{#plugins}}
+        Maybe.map3
+            (\fun ->
+                fun vc address
+            )
+            {{package}}.Interface.View.plugin.addressSidePanelHeaderWithPriority
+            states.{{name}}
+            address.plugins.{{name}}
+          |> Maybe.Extra.join
+          |> Maybe.map (\x -> {priority = x.priority, content = x.content |> Html.map Plugin.Msg.{{package}}Msg})
+        |> Maybe.Extra.orElseLazy (\_ ->
+                Maybe.map3
                     (\fun ->
                         fun vc address
                     )
-                    plugin.addressSidePanelHeaderWithPriority
+                    {{package}}.Interface.View.plugin.addressSidePanelHeader
                     states.{{name}}
                     address.plugins.{{name}}
-                    |> Maybe.Extra.join
-                    |> Maybe.map (\x -> {priority = x.priority, content = x.content |> Html.map Plugin.Msg.{{package}}Msg}))
-                |> Maybe.Extra.or (
-                                Maybe.map3
-                                    (\fun ->
-                                        fun vc address
-                                    )
-                                    plugin.addressSidePanelHeader
-                                    states.{{name}}
-                                    address.plugins.{{name}}
-                                    |> Maybe.map (\x -> {priority = 0, content = x |> Html.map Plugin.Msg.{{package}}Msg})
-                                )
-                
-            )
+                |> Maybe.map (\x -> {priority = 0, content = x |> Html.map Plugin.Msg.{{package}}Msg})
+        )
     {{^last}}, {{/last}}{{/plugins}}
     ]
 
@@ -137,147 +78,59 @@ addressSidePanelHeader plugins states vc address =
         |> List.map (.content)
         |> List.map (Html.map Pathfinder.PluginMsg)
 
-addressSidePanelHeaderTags : Plugins -> Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (Html Pathfinder.Msg)
-addressSidePanelHeaderTags plugins states vc address =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.Extra.andThen3
-                    (\fun ->
-                        fun vc address
-                    )
-                    plugin.addressSidePanelHeaderTags
-                    states.{{name}}
-                    address.plugins.{{name}}
-                    |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
-            )
+addressSidePanelHeaderTags : Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (Html Pathfinder.Msg)
+addressSidePanelHeaderTags states vc address =
+    [ {{#plugins}}
+            Maybe.Extra.andThen3
+                (\fun ->
+                    fun vc address
+                )
+                {{package}}.Interface.View.plugin.addressSidePanelHeaderTags
+                states.{{name}}
+                address.plugins.{{name}}
+            |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
     {{^last}}, {{/last}}{{/plugins}}
     ]
         |> List.filterMap identity
         |> List.map (Html.map Pathfinder.PluginMsg)
 
-addressNodeTagIcon: Plugins ->  Plugin.Model.AddressState -> View.Config -> Pathfinder.Address -> List (Svg Pathfinder.Msg)
-addressNodeTagIcon plugins addressStates vc address =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.Extra.andThen2
-                    (\fun ->
-                        fun vc address
-                    )
-                    plugin.addressNodeTagIcon
-                    addressStates.{{name}}
-                    |> Maybe.map (Svg.map Plugin.Msg.{{package}}Msg)
-            )
+addressNodeTagIcon: Plugin.Model.AddressState -> View.Config -> Pathfinder.Address -> List (Svg Pathfinder.Msg)
+addressNodeTagIcon addressStates vc address =
+    [ {{#plugins}}
+            Maybe.map2
+                (\fun ->
+                    fun vc address
+                )
+                {{package}}.Interface.View.plugin.addressNodeTagIcon
+                addressStates.{{name}}
+            |> Maybe.Extra.join
+            |> Maybe.map (Svg.map Plugin.Msg.{{package}}Msg)
     {{^last}}, {{/last}}{{/plugins}}
     ]
         |> List.filterMap identity
         |> List.map (Html.map Pathfinder.PluginMsg)
 
 
-addressProperties : Plugins -> Plugin.Model.ModelState -> Plugin.Model.AddressState -> View.Config -> Graph.Config -> List (Html Graph.Msg)
-addressProperties plugins states addressStates vc gc =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map3
-                    (\fun ->
-                        fun vc gc
-                    )
-                    plugin.addressProperties
-                    states.{{name}}
-                    addressStates.{{name}}
-                    |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
-            )
-    {{^last}}, {{/last}}{{/plugins}}
-    ]
-        |> List.filterMap identity
-        |> List.concat
-        |> List.map (Html.map Graph.PluginMsg)
-
-
-entityProperties : Plugins -> Plugin.Model.ModelState -> Plugin.Model.EntityState -> View.Config -> Graph.Config -> List (Html Graph.Msg)
-entityProperties plugins states entityStates vc gc =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map3
-                    (\fun ->
-                        fun vc gc
-                    )
-                    plugin.entityProperties
-                    states.{{name}}
-                    entityStates.{{name}}
-                    |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
-            )
-    {{^last}}, {{/last}}{{/plugins}}
-    ]
-        |> List.filterMap identity
-        |> List.concat
-        |> List.map (Html.map Graph.PluginMsg)
-
-
-browser : Plugins -> View.Config -> Graph.Config -> (Node.Node A.Address E.Entity -> Bool) -> Plugin.Model.ModelState -> List (Html Graph.Msg)
-browser plugins vc gc hasNode states =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map2
-                    (\fun state ->
-                        fun vc gc hasNode state
-                    )
-                    plugin.browser
-                    states.{{name}}
-                    |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
-            )
-    {{^last}}, {{/last}}{{/plugins}}
-    ]
-        |> List.filterMap identity
-        |> List.concat
-        |> List.map (Html.map Graph.PluginMsg)
-
-
-graphNavbarLeft : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Graph.Msg)
-graphNavbarLeft plugins states vc =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map2
-                    (\fun state ->
-                        fun vc state
-                    )
-                    plugin.graphNavbarLeft
-                    states.{{name}}
-                    |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
-            )
-    {{^last}}, {{/last}}{{/plugins}}
-    ]
-        |> List.filterMap identity
-        |> List.concat
-        |> List.map (Html.map Graph.PluginMsg)
-
-
-searchPlaceholder : Plugins -> View.Config -> List String
-searchPlaceholder plugins vc =
-    [ {{#plugins}}plugins.{{name}} |> Maybe.andThen .searchPlaceholder |> Maybe.map (\fun -> fun vc)
+searchPlaceholder : View.Config -> List String
+searchPlaceholder vc =
+    [ {{#plugins}}
+        {{package}}.Interface.View.plugin.searchPlaceholder
+            |> Maybe.map (\f -> f vc)
     {{^last}}, {{/last}}{{/plugins}}
     ]
         |> List.filterMap identity
 
 
-searchResultList : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Search.Msg)
-searchResultList plugins states vc =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map2
-                    (\fun state ->
-                        fun vc state
-                    )
-                    plugin.searchResultList
-                    states.{{name}}
-                    |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
-            )
+searchResultList : Plugin.Model.ModelState -> View.Config -> List (Html Search.Msg)
+searchResultList states vc =
+    [ {{#plugins}}
+            Maybe.map2
+                (\fun state ->
+                    fun vc state
+                )
+                {{package}}.Interface.View.plugin.searchResultList
+                states.{{name}}
+            |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
     {{^last}}, {{/last}}{{/plugins}}
     ]
         |> List.filterMap identity
@@ -285,21 +138,18 @@ searchResultList plugins states vc =
         |> List.map (Html.map Search.PluginMsg)
 
 
-sidebar : Plugins -> Plugin.Model.ModelState -> Model.Page -> View.Config -> List (Html Model.Msg)
-sidebar plugins states page vc =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map2
-                    (\fun ->
-                        page
-                            == Model.Plugin Plugin.Model.{{package}}
-                            |> fun vc
-                    )
-                    plugin.sidebar
-                    states.{{name}}
-            )
-        |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
+sidebar : Plugin.Model.ModelState -> Model.Page -> View.Config -> List (Html Model.Msg)
+sidebar states page vc =
+    [ {{#plugins}}
+            Maybe.map2
+                (\fun ->
+                    page
+                        == Model.Plugin Plugin.Model.{{package}}
+                        |> fun vc
+                )
+                {{package}}.Interface.View.plugin.sidebar
+                states.{{name}}
+            |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
     {{^last}}, {{/last}}{{/plugins}}
     ]
         |> List.filterMap identity
@@ -307,97 +157,78 @@ sidebar plugins states page vc =
         |> List.map (Html.map Model.PluginMsg)
 
 
-contents : Plugins -> Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> Maybe (List (Html Model.Msg))
-contents plugins states type_ vc =
+contents : Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> Maybe (List (Html Model.Msg))
+contents states type_ vc =
     {{^plugins}}Nothing{{/plugins}}{{#plugins.length}}case type_ of{{#plugins}} 
         Plugin.Model.{{package}} ->
-            plugins.{{name}}
-                |> Maybe.andThen
-                    (\plugin ->
-                        Maybe.map2
-                            (\fun ->
-                                fun vc
-                            )
-                            plugin.contents
-                            states.{{name}}
-                            |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
+                Maybe.map2
+                    (\fun ->
+                        fun vc
                     )
+                    {{package}}.Interface.View.plugin.contents
+                    states.{{name}}
+                |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
                 |> Maybe.map (List.map (Html.map Model.PluginMsg))
 {{/plugins}}
 {{/plugins.length}}
 
 
-navbar : Plugins -> Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> Maybe (List (Html Model.Msg))
-navbar plugins states type_ vc =
+navbar : Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> Maybe (List (Html Model.Msg))
+navbar states type_ vc =
     {{^plugins}}Nothing{{/plugins}}{{#plugins.length}}case type_ of{{#plugins}} 
         Plugin.Model.{{package}} ->
-            plugins.{{name}}
-                |> Maybe.andThen
-                    (\plugin ->
-                        Maybe.map2
-                            (\fun ->
-                                fun vc
-                            )
-                            plugin.navbar
-                            states.{{name}}
-                            |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
+                Maybe.map2
+                    (\fun ->
+                        fun vc
                     )
+                    {{package}}.Interface.View.plugin.navbar
+                    states.{{name}}
+                |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
                 |> Maybe.map (List.map (Html.map Model.PluginMsg))
 {{/plugins}}
 {{/plugins.length}}
 
 
-hovercards : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Graph.Msg)
-hovercards plugins states vc =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map2
-                    (\fun ->
-                        fun vc
-                    )
-                    plugin.hovercards
-                    states.{{name}}
-                    |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
-            )
-    {{^last}}, {{/last}}{{/plugins}}
-    ]
-        |> List.filterMap identity
-        |> List.concat
-        |> List.map (Html.map Graph.PluginMsg)
-
-
-title : Plugins -> Plugin.Model.ModelState -> View.Config -> List String
-title plugins states vc =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map2
-                    (\fun ->
-                        fun vc
-                    )
-                    plugin.title
-                    states.{{name}}
-            )
+title : Plugin.Model.ModelState -> View.Config -> List String
+title states vc =
+    [ {{#plugins}}
+            Maybe.map2
+                (\fun ->
+                    fun vc
+                )
+                {{package}}.Interface.View.plugin.title
+                states.{{name}}
     {{^last}}, {{/last}}{{/plugins}}
     ]
         |> List.filterMap identity
         |> List.concat
 
 
-profile : Plugins -> Plugin.Model.ModelState -> View.Config -> List (String, Html Model.Msg)
-profile plugins states vc =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
+pageTitle : Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> List String
+pageTitle states type_ vc =
+    {{^plugins}}[]{{/plugins}}{{#plugins.length}}case type_ of{{#plugins}} 
+        Plugin.Model.{{package}} ->
                 Maybe.map2
                     (\fun ->
                         fun vc
                     )
-                    plugin.profile
+                    {{package}}.Interface.View.plugin.pageTitle
                     states.{{name}}
-                    |> Maybe.map (List.map (mapSecond (Html.map Plugin.Msg.{{package}}Msg)))
-            )
+                |> Maybe.withDefault []
+{{/plugins}}
+{{/plugins.length}}
+
+
+profile : Plugin.Model.ModelState -> View.Config -> List (String, Html Model.Msg)
+profile states vc =
+    [ {{#plugins}}
+            Maybe.map2
+                (\fun ->
+                    fun vc
+                )
+                {{package}}.Interface.View.plugin.profile
+                states.{{name}}
+            |> Maybe.map (List.map (mapSecond (Html.map Plugin.Msg.{{package}}Msg)))
     {{^last}}, {{/last}}{{/plugins}}
     ]
         |> List.filterMap identity
@@ -405,19 +236,16 @@ profile plugins states vc =
         |> List.map (mapSecond (Html.map Model.PluginMsg))
 
 
-login : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Model.Msg)
-login plugins states vc =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map2
-                    (\fun ->
-                        fun vc
-                    )
-                    plugin.login
-                    states.{{name}}
-                    |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
-            )
+login : Plugin.Model.ModelState -> View.Config -> List (Html Model.Msg)
+login states vc =
+    [ {{#plugins}}
+            Maybe.map2
+                (\fun ->
+                    fun vc
+                )
+                {{package}}.Interface.View.plugin.login
+                states.{{name}}
+            |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
     {{^last}}, {{/last}}{{/plugins}}
     ]
         |> List.filterMap identity
@@ -425,74 +253,71 @@ login plugins states vc =
         |> List.map (Html.map Model.PluginMsg)
 
 
-dialog : Plugins -> Plugin.Model.ModelState -> View.Config -> Maybe (Html Model.Msg)
-dialog plugins states vc =
+dialog : Plugin.Model.ModelState -> View.Config -> Maybe (Html Model.Msg)
+dialog states vc =
     Nothing
 {{#plugins}}   
-    |> Maybe.Extra.orElseLazy (\_ -> plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.Extra.andThen2
-                    (\fun ->
-                        fun vc
-                    )
-                    plugin.dialog
-                    states.{{name}}
-                    |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
-            )
+    |> Maybe.Extra.orElseLazy (\_ ->
+            Maybe.map2
+                (\fun ->
+                    fun vc
+                )
+                {{package}}.Interface.View.plugin.dialog
+                states.{{name}}
+            |> Maybe.Extra.join
+            |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
     )
 {{/plugins}}
     |> Maybe.map (Html.map Model.PluginMsg)
 
 
-tooltip : Plugins -> Plugin.Model.ModelState -> View.Config -> Maybe (List (Html Model.Msg))
-tooltip plugins states vc =
-    Nothing
-{{#plugins}}   
-    |> Maybe.Extra.orElseLazy (\_ -> plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.Extra.andThen2
-                    (\fun ->
-                        fun vc
-                    )
-                    plugin.tooltip
-                    states.{{name}}
-                    |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
-            )
-    )
-{{/plugins}}
-    |> Maybe.map (List.map (Html.map Model.PluginMsg))
+-- Additive, not first-wins: every plugin renders its own tooltip. A plugin's hook
+-- cannot report "nothing to show" -- `Components.Tooltip.Model` is opaque, so the hook
+-- returns `Just` whatever `Tooltip.view` gives it, which is an empty node while closed
+-- -- so short-circuiting on the first `Just` silently swallowed the tooltips of every
+-- plugin but the alphabetically first one.
+tooltip : Plugin.Model.ModelState -> View.Config -> List (Html Model.Msg)
+tooltip states vc =
+    [ {{#plugins}}
+            Maybe.map2
+                (\fun ->
+                    fun vc
+                )
+                {{package}}.Interface.View.plugin.tooltip
+                states.{{name}}
+            |> Maybe.Extra.join
+            |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
+    {{^last}}, {{/last}}{{/plugins}}
+    ]
+        |> List.filterMap identity
+        |> List.concat
+        |> List.map (Html.map Model.PluginMsg)
 
 
-pathfinderUpperLeftPanel : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Pathfinder.Msg)
-pathfinderUpperLeftPanel plugins states vc =
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin ->
-                Maybe.map2
-                    (\fun ->
-                        fun vc
-                    )
-                    plugin.pathfinderUpperLeftPanel
-                    states.{{name}}
-                    |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
-            )
+pathfinderUpperLeftPanel : Plugin.Model.ModelState -> View.Config -> List (Html Pathfinder.Msg)
+pathfinderUpperLeftPanel states vc =
+    [ {{#plugins}}
+            Maybe.map2
+                (\fun ->
+                    fun vc
+                )
+                {{package}}.Interface.View.plugin.pathfinderUpperLeftPanel
+                states.{{name}}
+            |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
     {{^last}}, {{/last}}{{/plugins}}
     ]
         |> List.filterMap identity
         |> List.map (Html.map Pathfinder.PluginMsg)
 
 
-getLegendIconItems: Plugins ->  View.Config -> List ({ description : String, icon : Html Model.Msg, label : String })
-getLegendIconItems plugins vc =
+getLegendIconItems: View.Config -> List ({ description : String, icon : Html Model.Msg, label : String })
+getLegendIconItems vc =
     let
         mapItem wMsg {description, icon, label} = {description=description, icon = icon |> Html.map wMsg, label = label}
     in
-    [ {{#plugins}}plugins.{{name}}
-        |> Maybe.andThen
-            (\plugin -> plugin.getLegendIconItems |> Maybe.map (\f -> f vc |> List.map (mapItem Plugin.Msg.{{package}}Msg))
-            )
+    [ {{#plugins}}
+        {{package}}.Interface.View.plugin.getLegendIconItems
+            |> Maybe.map (\f -> f vc |> List.map (mapItem Plugin.Msg.{{package}}Msg))
     {{^last}}, {{/last}}{{/plugins}}
     ] 
     |> List.filterMap identity

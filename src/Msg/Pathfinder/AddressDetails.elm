@@ -28,14 +28,12 @@ relatedAddressTypeOptions =
 
 
 type Msg
-    = UserClickedToggleTokenBalancesSelect
-    | UserClickedToggleTransactionTable
+    = UserClickedToggleTransactionTable
     | UserClickedToggleNeighborsTable Direction
     | UserClickedToggleBalanceDetails
     | UserClickedToggleTotalReceivedDetails
     | UserClickedToggleTotalSpentDetails
     | UserClickedToggleClusterDetailsOpen
-    | UserClickedToggleDisplayAllTagsInDetails
     | UserClickedShowPubkeyRelatedAddresses
     | TransactionsTableSubTableMsg InfiniteTable.Msg
     | NeighborsTableSubTableMsg Direction InfiniteTable.Msg

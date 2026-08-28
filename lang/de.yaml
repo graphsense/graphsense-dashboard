@@ -241,10 +241,16 @@ Multi Input Cluster Help: Adressen wurden zusammen in Transaktionen verwendet (d
   wahrscheinlich durch derselben Besitzer).
 Pubkey Cluster Help: Adressen wurden durch denselben Schlüssel erzeugt (dh. durch
   derselben Besitzer).
-pf1_deprecation_notice: Pathfinder 1.0 ist veraltet und wird bald entfernt. Bitte
-  wechseln Sie zum neuen Pathfinder, der über die Seitenleiste verfügbar ist. Haben
-  Sie Probleme mit dem Auslaufen des alten Pathfinders? Kontaktieren Sie den Support
-  per E-Mail unter contact@ikna.io.
+pf1_retired_title: Pathfinder 1.0 wurde eingestellt
+pf1_gs_file_not_supported: Diese .gs-Datei wurde mit dem alten Pathfinder 1.0
+  erstellt, der eingestellt wurde. Alte Graph-Dateien werden nicht mehr unterstützt.
+  Haben Sie Probleme mit der Einstellung des alten Pathfinders? Kontaktieren Sie
+  den Support per E-Mail unter contact@iknaio.com.
+pf1_retired_notice: Pathfinder 1.0 wurde eingestellt und ist nicht mehr verfügbar.
+  Bitte verwenden Sie stattdessen den neuen Pathfinder. Haben Sie Probleme mit der
+  Einstellung des alten Pathfinders? Kontaktieren Sie den Support per E-Mail unter
+  contact@iknaio.com.
+Open Pathfinder: Pathfinder öffnen
 tags_release_warnings: Die von Ihnen hinzugefügten Tags sind für alle Benutzer sichtbar.
   Bitte stellen Sie sicher, dass Ihre Tags keine urheberrechtsverletzenden Materialien
   enthalten, wie z. B. Tags oder Inhalte von anderen Tool-Anbietern. Geben Sie außerdem
@@ -316,7 +322,7 @@ incoming-neighbors-of-address: Eingehende Nachbarn der Adresse {0} ({1})
 outgoing-neighbors-of-address: Ausgehende Nachbarn der Adresse {0} ({1})
 incoming-neighbors-of-entity: Eingehende Nachbarn des Clusters {0} ({1})
 outgoing-neighbors-of-entity: Ausgehende Nachbarn des Clusters {0} ({1})
-addresses-of-entity: Adressen des Clusterss {0} ({1})
+addresses-of-entity: Adressen des Clusters {0} ({1})
 total-received-assets-of-address: Eingänge aller Assets der Adresse {0} ({1})
 final-balance-assets-of-address: Bilanz aller Assets der Adresse {0} ({1})
 transactions-of-block: Transaktionen des Blocks {0} ({1})
@@ -350,7 +356,7 @@ jurisdictions: Gerichtsbarkeit
 any category: beliebige Kategorie
 graph: Graph
 statistics: Statistiken
-landingpage-start-new: Starte eine neue Nachforschung
+landingpage-start-new: Eine neue Nachforschung starten
 landingpage-load-file: Eine bestehende .gs Datei laden
 landingpage-try-example: Beispiele
 table-no-rows-match-filter: Keine Einträge vorhanden, die Ihren Filtereinstellungen
@@ -522,6 +528,7 @@ date-time-format: 'dd.MMMM yyyy HH:mm'
 time-format: "HH:mm"
 date-format: "dd.MM.yy"
 open in new tab: in neuem Tab öffnen
+or: oder
 align vertically: Vertikal ausrichten
 align horizontally: Horizontal ausrichten
 export pdf: Als PDF exportieren
@@ -590,3 +597,4 @@ export-dialog-only-visible-inoutputs: "nur sichtbare Ein-/Ausgänge exportieren"
 export-dialog-only-visible-inoutputs-help: "Wenn aktiviert, enthält die CSV nur Flüsse zwischen Ein- und Ausgängen, die im Graphen sichtbar sind. Deaktivieren, um die vollständige Ein-/Ausgangs-Matrix zu exportieren — bei Transaktionen mit vielen Ein- und Ausgängen kann dies eine sehr große Datei erzeugen."
 csv-note-capped: "Transaktion zu groß – nur Flüsse mit einer sichtbaren Adresse wurden exportiert, auf das Exportlimit gekürzt."
 csv-note-visible-only: "Nur Flüsse mit einer sichtbaren Adresse wurden exportiert."
+unknown url: "Unbekannte URL: {0}"

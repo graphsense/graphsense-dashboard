@@ -28,7 +28,6 @@ init networkHasRelations txsFilter address =
     { neighborsTableOpen = False
     , networkHasRelations = networkHasRelations
     , transactionsTableOpen = False
-    , tokenBalancesOpen = False
     , txs = RemoteData.NotAsked
     , neighborsOutgoing = RemoteData.NotAsked
     , neighborsIncoming = RemoteData.NotAsked
@@ -45,6 +44,5 @@ init networkHasRelations txsFilter address =
     , incomingNeighborsTableOpen = False
     , copyIconChevronOpen = False
     , isClusterDetailsOpen = False
-    , displayAllTagsInDetails = False
     , txsFilter = txsFilter
     }

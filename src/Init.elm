@@ -1,12 +1,10 @@
-module Init exposing (init)
+module Init exposing (init, viewConfigFromSettings)
 
-import Config exposing (config)
 import Config.Update as Update
 import Config.UserSettings
 import Config.View exposing (characterDimensionsDecoder)
-import Dict
+import Dict exposing (Dict)
 import Effect.Api
-import Init.Graph as Graph
 import Init.Locale as Locale
 import Init.Notification as Notification
 import Init.Pathfinder as Pathfinder
@@ -15,7 +13,7 @@ import Init.Statusbar as Statusbar
 import Json.Decode
 import Model exposing (..)
 import Model.Locale as Locale
-import Plugin.Update as Plugin exposing (Plugins)
+import Plugin.Update as Plugin
 import RemoteData exposing (RemoteData(..))
 import Tuple exposing (first)
 import Update exposing (updateByPluginOutMsg)
@@ -23,8 +21,8 @@ import Url exposing (Url)
 import Util.ThemedSelectBox as TSelectBox
 
 
-init : Plugins -> Update.Config -> Flags -> Url -> key -> ( Model key, List Effect )
-init plugins uc flags url key =
+init : Update.Config -> Flags -> Url -> key -> ( Model key, List Effect )
+init uc flags url key =
     let
         settings =
             flags.localStorage
@@ -40,34 +38,16 @@ init plugins uc flags url key =
             Locale.init settings
 
         ( pluginStates, outMsgs, cmd ) =
-            Plugin.init plugins flags.pluginFlags
+            Plugin.init flags.pluginFlags
 
         ( pathfinderState, pathfinderCmd ) =
             Pathfinder.init settings
     in
     ( { url = url
       , key = key
-      , config =
-            { locale = locale
-            , theme = config.theme
-            , lightmode = settings.lightMode |> Maybe.withDefault True
-            , size = Nothing
-            , showDatesInUserLocale = settings.showDatesInUserLocale |> Maybe.withDefault True
-            , showTimeZoneOffset = settings.showTimeZoneOffset |> Maybe.withDefault False
-            , showTimestampOnTxEdge = settings.showTimestampOnTxEdge |> Maybe.withDefault True
-            , showValuesInFiat = settings.showValuesInFiat |> Maybe.withDefault False
-            , preferredFiatCurrency = settings.preferredFiatCurrency |> Maybe.withDefault "usd"
-            , showHash = settings.showHash |> Maybe.withDefault False
-            , showLabelsInTaggingOverview = False
-            , allConcepts = []
-            , abuseConcepts = []
-            , showConversionEdges = True
-            , characterDimensions = cd
-            , showBothValues = False
-            }
+      , config = viewConfigFromSettings locale cd settings
       , page = Home
       , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) settings.recentSearches
-      , graph = Graph.init settings flags.now
       , pathfinder = pathfinderState
       , user =
             { apiKey = ""
@@ -75,6 +55,7 @@ init plugins uc flags url key =
             , hovercard = Nothing
             }
       , stats = NotAsked
+      , capabilities = NotAsked
       , width = flags.width
       , height = flags.height
       , error = ""
@@ -86,6 +67,7 @@ init plugins uc flags url key =
       , notifications = Notification.init
       , localeSelectBox = TSelectBox.init <| List.map first Locale.locales
       , navbarSubMenu = Nothing
+      , fileDragOver = False
       }
     , List.map LocaleEffect localeEffect
         ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy
@@ -97,13 +79,13 @@ init plugins uc flags url key =
            ]
     )
         |> getStatistics
-        |> updateByPluginOutMsg plugins uc outMsgs
+        |> updateByPluginOutMsg uc outMsgs
 
 
 getStatistics : ( Model key, List Effect ) -> ( Model key, List Effect )
 getStatistics ( model, eff ) =
     if model.stats == NotAsked then
-        ( { model | stats = RemoteData.Loading }
+        ( { model | stats = RemoteData.Loading, capabilities = RemoteData.Loading }
         , ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics)
             :: ApiEffect (Effect.Api.GetCapabilitiesEffect BrowserGotCapabilities)
             :: eff
@@ -111,3 +93,35 @@ getStatistics ( model, eff ) =
 
     else
         ( model, eff )
+
+
+{-| Restore the view config from the settings the last session saved.
+
+Split out of `init` so it can be tested: `init` takes a `Plugin.Model.Flags`
+record whose shape is generated per registered plugin, so no value of that type
+can be written portably and the function cannot be called from a test at all.
+This part needs none of it.
+
+Worth keeping honest -- a field that is persisted by
+`Model.userSettingsFromMainModel` but hardcoded here is saved on every change and
+then silently dropped at the next boot, which is what `showBothValues` did.
+
+-}
+viewConfigFromSettings : Locale.Model -> Dict String Config.View.CharacterDimension -> Config.UserSettings.UserSettings -> Config.View.Config
+viewConfigFromSettings locale characterDimensions settings =
+    { locale = locale
+    , lightmode = settings.lightMode |> Maybe.withDefault True
+    , size = Nothing
+    , showDatesInUserLocale = settings.showDatesInUserLocale |> Maybe.withDefault True
+    , showTimeZoneOffset = settings.showTimeZoneOffset |> Maybe.withDefault False
+    , showTimestampOnTxEdge = settings.showTimestampOnTxEdge |> Maybe.withDefault True
+    , showValuesInFiat = settings.showValuesInFiat |> Maybe.withDefault False
+    , preferredFiatCurrency = settings.preferredFiatCurrency |> Maybe.withDefault "usd"
+    , showHash = settings.showHash |> Maybe.withDefault False
+    , showLabelsInTaggingOverview = False
+    , allConcepts = []
+    , abuseConcepts = []
+    , showConversionEdges = True
+    , characterDimensions = characterDimensions
+    , showBothValues = settings.showBothValues |> Maybe.withDefault False
+    }

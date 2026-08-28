@@ -1,4 +1,4 @@
-module Config.View exposing (CharacterDimension, Config, characterDimensionsDecoder, getAbuseName, getConceptName, toCurrency)
+module Config.View exposing (CharacterDimension, Config, characterDimensionsDecoder, getConceptName, toCurrency)
 
 import Api.Data
 import Dict exposing (Dict)
@@ -7,12 +7,10 @@ import List.Extra
 import Model.Currency exposing (Currency(..))
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale as Locale
-import Theme.Theme exposing (Theme)
 
 
 type alias Config =
-    { theme : Theme
-    , locale : Locale.Model
+    { locale : Locale.Model
     , lightmode : Bool
     , size : Maybe BBox -- position and size of the main pane
     , showDatesInUserLocale : Bool
@@ -71,12 +69,6 @@ getConceptName vc cat =
     else
         List.Extra.find (.id >> (==) cat) vc.allConcepts
             |> Maybe.map .label
-
-
-getAbuseName : { t | abuseConcepts : List Api.Data.Concept } -> Maybe String -> Maybe String
-getAbuseName gc =
-    Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.abuseConcepts)
-        >> Maybe.map .label
 
 
 toCurrency : Config -> Currency

@@ -1,13 +1,9 @@
-module View.Search exposing (SearchConfig, SearchConfigWithMoreCss, default, search, searchWithMoreCss)
+module View.Search exposing (SearchConfigWithMoreCss, default, searchWithMoreCss)
 
 import Autocomplete
 import Autocomplete.Styled as Autocomplete
 import Config.View exposing (Config)
 import Css exposing (Style)
-import Css.Autocomplete
-import Css.Button
-import Css.Search as Css
-import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -15,27 +11,23 @@ import Json.Decode
 import List.Extra
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
-import Plugin.View as Plugin exposing (Plugins)
+import Plugin.View as Plugin
+import RecordSetter as Rs
 import String.Extra
-import Theme.Colors as TColor
+import Theme.Colors as Colors
+import Theme.Html.Icons as Icons
+import Theme.Html.SearchComponents as SearchComponents
+import Theme.Html.SettingsComponents as SettingsComponents
 import Util exposing (removeLeading0x)
 import Util.Data as Data
-import Util.View exposing (loadingSpinner)
+import Util.View exposing (fullWidthCss, pointer)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Autocomplete as Autocomplete
 import View.Locale as Locale
 
 
-type alias SearchConfig =
-    { css : String -> List Style
-    , resultsAsLink : Bool
-    , multiline : Bool
-    , showIcon : Bool
-    }
-
-
 type alias SearchConfigWithMoreCss msg =
-    { css : String -> List Style
-    , formCss : List Style
+    { formCss : List Style
     , frameCss : List Style
     , button : List Style
     , resultLine : List Style
@@ -44,21 +36,16 @@ type alias SearchConfigWithMoreCss msg =
     , resultGroupTitle : List Style
     , resultLineIcon : List Style
     , resultTextEmphasized : List Style
-    , resultsAsLink : Bool
     , dropdownFrame : List Style
     , dropdownResult : List Style
     , multiline : Bool
-    , showIcon : Bool
     , inputAttributes : List (Html.Styled.Attribute msg)
     }
 
 
 default : SearchConfigWithMoreCss msg
 default =
-    { css = \_ -> []
-    , resultsAsLink = False
-    , multiline = False
-    , showIcon = False
+    { multiline = False
     , formCss = []
     , frameCss = []
     , button = []
@@ -74,32 +61,8 @@ default =
     }
 
 
-search : Plugins -> Config -> SearchConfig -> Model -> Html Msg
-search plugins vc sc model =
-    searchWithMoreCss plugins
-        vc
-        { css = sc.css
-        , resultsAsLink = sc.resultsAsLink
-        , multiline = sc.multiline
-        , showIcon = sc.showIcon
-        , formCss = []
-        , frameCss = []
-        , button = []
-        , resultLine = []
-        , resultLineHighlighted = []
-        , resultGroup = []
-        , resultGroupTitle = []
-        , resultLineIcon = []
-        , resultTextEmphasized = []
-        , dropdownFrame = []
-        , dropdownResult = []
-        , inputAttributes = []
-        }
-        model
-
-
-searchWithMoreCss : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg
-searchWithMoreCss plugins vc sc model =
+searchWithMoreCss : Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg
+searchWithMoreCss vc sc model =
     let
         { inputEvents } =
             Autocomplete.events
@@ -111,17 +74,30 @@ searchWithMoreCss plugins vc sc model =
             Autocomplete.viewState model.autocomplete
     in
     Html.Styled.form
-        [ Css.form vc sc.showIcon |> css
+        [ css
+            [ Css.flexGrow <| Css.num 1
+            , Css.height Css.auto |> Css.important
+            ]
         , css sc.formCss
         , stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
         , onSubmit UserClicksResultLine
         ]
         [ div
-            [ Css.frame vc |> css
+            [ --Css.frame vc |> css
+              css
+                [ Css.height <| Css.pct 100
+                , Css.marginRight Css.zero |> Css.important
+                ]
             , css sc.frameCss
             ]
             [ input
-                ([ sc.css query |> css
+                ([ css
+                    (Css.outline Css.none
+                        :: Css.pseudoClass "placeholder" SettingsComponents.searchBarFieldStatePlaceholderSearchInputField_details.styles
+                        :: (Css.width <| Css.pct 100)
+                        :: SettingsComponents.searchBarFieldStateTypingSearchInputField_details.styles
+                        ++ SettingsComponents.searchBarFieldStateTypingSearchText_details.styles
+                    )
                  , autocomplete False
                  , spellcheck False
                  , Locale.string vc.locale "The search" |> title
@@ -136,7 +112,7 @@ searchWithMoreCss plugins vc sc model =
                             SearchAll _ ->
                                 [ "Address", "transaction", "label", "block", "actor" ]
                                     |> List.map (Locale.string vc.locale)
-                                    |> (\st -> st ++ Plugin.searchPlaceholder plugins vc)
+                                    |> (\st -> st ++ Plugin.searchPlaceholder vc)
                                     |> String.join ", "
                                     |> placeholder
                                     |> List.singleton
@@ -144,7 +120,7 @@ searchWithMoreCss plugins vc sc model =
                             SearchAddressAndTx _ ->
                                 [ "Address", "transaction" ]
                                     |> List.map (Locale.string vc.locale)
-                                    |> (\st -> st ++ Plugin.searchPlaceholder plugins vc)
+                                    |> (\st -> st ++ Plugin.searchPlaceholder vc)
                                     |> String.join ", "
                                     |> placeholder
                                     |> List.singleton
@@ -162,29 +138,13 @@ searchWithMoreCss plugins vc sc model =
                     ++ sc.inputAttributes
                 )
                 []
-            , searchResult plugins vc sc model
+            , searchResult vc sc model
             ]
-        , if sc.showIcon then
-            button
-                [ [ Css.Button.button vc |> Css.batch
-                  , Css.Button.neutral vc |> Css.batch
-                  , Css.button vc |> Css.batch
-                  ]
-                    |> css
-                , css sc.button
-                , type_ "submit"
-                ]
-                [ FontAwesome.icon FontAwesome.search
-                    |> Html.Styled.fromUnstyled
-                ]
-
-          else
-            Util.View.none
         ]
 
 
-searchResult : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg
-searchResult plugins vc sc model =
+searchResult : Config -> SearchConfigWithMoreCss Msg -> Model -> Html Msg
+searchResult vc sc model =
     let
         viewState =
             Autocomplete.viewState model.autocomplete
@@ -193,9 +153,16 @@ searchResult plugins vc sc model =
             viewState.status == Autocomplete.Fetching
 
         config1 =
-            { frame = sc.dropdownFrame
-            , result = sc.dropdownResult
-            , loadingSpinner = loadingSpinner vc Css.Autocomplete.loadingSpinner
+            { frame = Css.property "background-color" Colors.white :: sc.dropdownFrame
+            , result = Css.property "background-color" Colors.white :: sc.dropdownResult
+            , loadingSpinner =
+                Loadingspinner.html
+                    [ css
+                        [ Css.position Css.absolute
+                        , Css.top Css.zero
+                        , Css.right Css.zero
+                        ]
+                    ]
             }
 
         config2 =
@@ -213,6 +180,13 @@ searchResult plugins vc sc model =
         lengthOfMutliInput =
             Data.parseMultiIdentifierInput viewState.query
                 |> List.length
+
+        msg =
+            text
+                >> List.singleton
+                >> div
+                    [ css [ Css.paddingBottom <| Css.px 1 ] ]
+                >> List.singleton
     in
     if String.isEmpty viewState.query && model.visible && not (List.isEmpty (filteredRecents model.searchType model.recentSearches)) then
         recentList vc sc model
@@ -222,14 +196,14 @@ searchResult plugins vc sc model =
                 config2
 
     else if (viewState.query |> removeLeading0x |> String.length) < min_search_length && model.visible then
-        [ text (Locale.interpolated vc.locale "Hint-minimum-input" [ String.fromInt min_search_length ]) ]
+        msg (Locale.interpolated vc.locale "Hint-minimum-input" [ String.fromInt min_search_length ])
             |> Autocomplete.dropdownStyled
                 config1
                 vc
                 config2
 
     else if (viewState.query |> removeLeading0x |> String.length) > 0 && model.visible && noResults then
-        [ text (Locale.string vc.locale "No-results-found") ]
+        msg (Locale.string vc.locale "No-results-found")
             |> Autocomplete.dropdownStyled
                 config1
                 vc
@@ -239,14 +213,14 @@ searchResult plugins vc sc model =
                 }
 
     else if (lengthOfMutliInput > 1) && model.visible then
-        [ text (Locale.interpolated vc.locale "Hint-multiple-search-terms" [ String.fromInt lengthOfMutliInput ]) ]
+        msg (Locale.interpolated vc.locale "Hint-multiple-search-terms" [ String.fromInt lengthOfMutliInput ])
             |> Autocomplete.dropdownStyled
                 config1
                 vc
                 config2
 
     else if model.visible then
-        resultList plugins vc sc model
+        resultList vc sc model
             |> Autocomplete.dropdownStyled
                 config1
                 vc
@@ -329,32 +303,24 @@ groupBadges vc searchType choices =
             currencyBadges
 
         SearchAll _ ->
-            currencyBadges ++ [ actorBadge, labelBadge ]
+            currencyBadges ++ [ actorBadge ]
 
 
 badgeToResult : Config -> SearchConfigWithMoreCss Msg -> (( Int, ResultLine ) -> Html Msg) -> Bool -> Badge -> Html Msg
-badgeToResult vc sc renderLine showTitle { title, badge } =
-    div
-        [ Css.resultGroup vc |> css
-        , css sc.resultGroup
-        ]
-        ((if showTitle then
-            [ div
-                [ Css.resultGroupTitle vc |> css
-                , css sc.resultGroupTitle
-                ]
-                [ text title
-                ]
-            ]
-
-          else
-            []
-         )
-            ++ [ badge
-                    |> List.map renderLine
-                    |> ol [ Css.resultGroupList vc |> css ]
-               ]
+badgeToResult _ sc renderLine showTitle { title, badge } =
+    SearchComponents.autocompleteGroupWithAttributes
+        (SearchComponents.autocompleteGroupAttributes
+            |> Rs.s_root [ css (fullWidthCss :: sc.resultGroup) ]
+            |> Rs.s_btc (css sc.resultGroupTitle :: Util.View.conditionalHide showTitle)
         )
+        { rowList =
+            badge
+                |> List.map renderLine
+        }
+        { root =
+            { label = title
+            }
+        }
 
 
 {-| Render the non-empty badges as result groups. When only a single group
@@ -383,7 +349,7 @@ recentList vc sc model =
             ]
 
         renderLine ( _, rl ) =
-            resultLineToHtml vc "" sc Nothing (lineEvents rl) rl
+            resultLineToHtml "" sc Nothing (lineEvents rl) rl
 
         groups =
             groupBadges vc model.searchType recents
@@ -393,22 +359,19 @@ recentList vc sc model =
         []
 
     else
-        div
-            [ Css.resultGroup vc |> css
-            , css sc.resultGroup
-            ]
-            [ div
-                [ Css.resultGroupTitle vc |> css
-                , css sc.resultGroupTitle
-                ]
-                [ text (Locale.string vc.locale "Recent searches")
-                ]
-            ]
-            :: groups
+        [ SearchComponents.autocompleteGroupWithAttributes
+            (SearchComponents.autocompleteGroupAttributes
+                |> Rs.s_root [ css (fullWidthCss :: sc.resultGroup) ]
+                |> Rs.s_btc [ css sc.resultGroupTitle ]
+            )
+            { rowList = groups
+            }
+            { root = { label = Locale.string vc.locale "Recent searches" } }
+        ]
 
 
-resultList : Plugins -> Config -> SearchConfigWithMoreCss Msg -> Model -> List (Html Msg)
-resultList _ vc sc { autocomplete, searchType } =
+resultList : Config -> SearchConfigWithMoreCss Msg -> Model -> List (Html Msg)
+resultList vc sc { autocomplete, searchType } =
     let
         choices =
             Autocomplete.choices autocomplete
@@ -427,7 +390,7 @@ resultList _ vc sc { autocomplete, searchType } =
             Autocomplete.selectedValue autocomplete
 
         renderLine ( index, rl ) =
-            resultLineToHtml vc q sc selectedValue (choiceEvents index) rl
+            resultLineToHtml q sc selectedValue (choiceEvents index) rl
     in
     groupBadges vc searchType choices
         |> renderBadges vc sc renderLine
@@ -437,105 +400,102 @@ resultList _ vc sc { autocomplete, searchType } =
 --++ Plugin.searchResultList plugins pluginStates vc
 
 
-resultLineToHtml : Config -> String -> SearchConfigWithMoreCss Msg -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
-resultLineToHtml vc query sc selectedValue choiceEvents resultLine =
+resultLineToHtml : String -> SearchConfigWithMoreCss Msg -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
+resultLineToHtml query sc selectedValue choiceEvents resultLine =
     let
-        ( icon, label, ( highlight_suffix, resultLineStyles ) ) =
+        ( icon, label, highlight_suffix ) =
             let
                 search_prefix_length =
                     Basics.max 8 (String.length (removeLeading0x query) + 2)
             in
             case resultLine of
                 Address _ a ->
-                    ( FontAwesome.at
+                    ( Icons.iconsAddress {}
                     , Util.View.truncateLongIdentifierWithLengths search_prefix_length 4 a
                       -- Util.View.truncate 50 a
-                    , ( True
-                      , []
-                      )
+                    , True
                     )
 
                 Tx _ a ->
-                    ( FontAwesome.exchangeAlt
+                    ( Icons.iconsTransaction {}
                     , Util.View.truncateLongIdentifierWithLengths search_prefix_length 8 a
                       -- Util.View.truncate 70 a
-                    , ( True
-                      , []
-                      )
+                    , True
                     )
 
                 Block _ a ->
-                    ( FontAwesome.cube
+                    ( Icons.iconsCopyS {}
                     , String.fromInt a
-                    , ( True
-                      , []
-                      )
+                    , True
                     )
 
                 Label a ->
-                    ( FontAwesome.tag, a, ( False, [] ) )
+                    ( Icons.iconsTagS {}, a, False )
 
                 Actor ( _, lbl ) ->
-                    ( FontAwesome.user, lbl, ( True, [] ) )
+                    ( Icons.iconsActor {}, lbl, True )
 
                 Custom x ->
-                    ( FontAwesome.plus, x.label, ( False, [ Css.color (TColor.blue300_color |> Util.View.toCssColor) |> Css.important ] ) )
+                    ( Icons.iconsPlusSnoPadding {}
+                    , x.label
+                    , False
+                    )
 
         querycomp =
             removeLeading0x query
-    in
-    span
-        ((Css.resultLine vc
-            ++ (if selectedValue == Just resultLine then
-                    Css.resultLineHighlighted vc
-                        ++ sc.resultLineHighlighted
+
+        ( regularText, boldText ) =
+            if not (String.isEmpty querycomp) && String.startsWith querycomp (removeLeading0x label) && highlight_suffix then
+                let
+                    left =
+                        String.Extra.leftOf querycomp label
+
+                    right =
+                        String.Extra.rightOf querycomp label
+
+                    total =
+                        left ++ querycomp ++ right
+                in
+                if total /= label then
+                    ( label, "" )
 
                 else
-                    []
-               )
-            |> css
-         )
-            :: css sc.resultLine
-            :: css resultLineStyles
-            :: choiceEvents
-        )
-        [ FontAwesome.icon icon
-            |> Html.Styled.fromUnstyled
-            |> List.singleton
-            |> span
-                [ Css.resultLineIcon vc |> css
-                , css sc.resultLineIcon
-                ]
-        , if not (String.isEmpty querycomp) && String.startsWith querycomp (removeLeading0x label) && highlight_suffix then
-            let
-                left =
-                    String.Extra.leftOf querycomp label
-
-                right =
-                    String.Extra.rightOf querycomp label
-
-                total =
-                    left ++ querycomp ++ right
-            in
-            if total /= label then
-                text label
+                    ( left ++ querycomp
+                    , right
+                    )
 
             else
-                span
-                    []
-                    [ text (left ++ querycomp)
-                    , span
-                        [ css
-                            [ Css.fontWeight Css.bold
-                            ]
-                        , css sc.resultTextEmphasized
-                        ]
-                        [ text right ]
+                ( label, "" )
+    in
+    SearchComponents.autocompleteRowWithAttributes
+        (SearchComponents.autocompleteRowAttributes
+            |> Rs.s_root
+                (css
+                    [ Css.hover SearchComponents.autocompleteRowHighlightedTrue_details.styles
+                    , fullWidthCss
                     ]
+                    :: css sc.resultLine
+                    :: pointer
+                    :: choiceEvents
+                )
+        )
+        { root =
+            { highlighted =
+                if selectedValue == Just resultLine then
+                    SearchComponents.AutocompleteRowHighlightedTrue
 
-          else
-            text label
-        ]
+                else
+                    SearchComponents.AutocompleteRowHighlightedFalse
+            , regularText = regularText
+            , boldText = boldText
+            , icon =
+                div
+                    [ css sc.resultLineIcon
+                    ]
+                    [ icon
+                    ]
+            }
+        }
 
 
 resultLineCurrency : ResultLine -> Maybe String

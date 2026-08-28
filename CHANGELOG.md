@@ -3,17 +3,59 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [26.07.3] - Unreleased
+## [26.08.1] - 2026-08-28
+
+### Fixed
+- Version number was left on rc.2
+
+## [26.08.0] - 2026-08-28
+
+### Added
+
+- A `.gs` file can be opened by dragging it onto the load box on the landing page. The box grows while a file hovers over it, and the drop runs through the same validation and import path as the toolbar's open button, so a legacy pf1 file still gets the retired notice rather than a decode error. Dropping a file anywhere else on the page no longer makes the browser navigate away from the app
+- Middle-clicking the logo opens the start page in a new tab; a plain click still navigates in place
+- Plugins can set the browser page title per route, through a new `pageTitle` hook on the view interface
+- Regression coverage for the parts of the app that are reachable without a browser — routes, `.gs` serialization, i18n, the generated API client, and Pathfinder scenarios driven through the real update and view. Fixtures come from the response examples in the OpenAPI spec, so the suite needs no API key and no network
+- The settings page shows the username above the expiration date, taken from the `username` field of the user endpoint's response. The row is left out when that field is absent or blank, so nothing changes against a backend that does not send it
+- A browser test layer (`make e2e`, Playwright) covering what `Update`/`View` cannot reach: that the shipped bundle boots without console errors or uncaught exceptions, that the elm-safe-virtual-dom patches are actually present in the build, and that the ports work end to end — saving a `.gs` file and reading it back, the Ctrl/Cmd+S chord the browser competes for, and settings surviving a reload via localStorage. All backend requests are answered by fixtures matched on path, so the suite needs no API key and cannot reach a real instance
+- The production build now fails when it would ship without the elm-safe-virtual-dom patches, which previously produced runtime DOM crashes that no check caught: the existing guard inspects the patched package clones, not the compiled output
+
+### Changed
+
+- Plugins are discovered from whatever is checked out in `plugins/` instead of being registered by hand in `config/Config.elm`, which no longer mentions them at all. Core calls each plugin's hooks directly rather than through a record of functions threaded through the update loop
+- `tools/check_lang.mjs` takes `--lang-dir`, `--src` and `--baseline`, so a plugin can point it at its own `lang/` and `src/` from its own repository. Nothing checked plugin translations before: core's run only ever sees core's files, so a key added to a plugin's `en.yaml` and forgotten in its other locales showed English to those users in silence
+- `tools/check_lang.mjs` finds a `View.Locale` key that elm-format put on the line after the call. Every interpolated string in the codebase is written that way, and read a line at a time they were not reported as computed but missed outright — the one failure mode this check must not have. Six more keys in core are now covered
+- Production builds minify with rolldown's oxc minifier (vite 8's default) instead of terser, cutting minification from 16.5s to 4.1s per bundle. Shipped size is unchanged in practice: 5.7% smaller uncompressed, within 1.6% gzipped
+- Dead-code detection (unused exports, type constructors and constructor arguments) now runs in CI, and about 3,400 lines of already-unreachable code are gone: pf1 leftovers, 16 modules nothing imported, and four features whose messages nothing could send. Detection was previously impossible to run reliably because plugins live in separate repositories and are not always checked out, so a core function only a plugin used looked dead; `src/PluginApi.elm` now records that surface
+- The landing page, the search field, the statistics page and the status bar are rendered from the generated Figma components instead of the hand-written theme layer, which is what made removing that layer possible. They match the rest of the app and do the same things as before
+- Dependencies with published advisories are bumped, and `elm-hovercard` moves to 5.1.0
+
+### Removed
+
+- Pathfinder 1.0, the legacy graph tool. Any `/graph/*` URL now lands on a dedicated "Pathfinder 1.0 retired" page linking to the current Pathfinder, and opening a legacy pf1 `.gs` file shows that notice instead of a generic decode error
+- Removed legacy theme based styling (from directory ./themes and configured in config/Config.elm)
+- Removed config/Config.elm. Plugins are installed from the ./plugins directory directly. Configuration of plugins is achieved via environment variables.
+
+### Fixed
+
+- Every plugin's tooltip is rendered, not just the first one's. The generated `tooltip` hook stopped at the first plugin that returned something, and a plugin cannot report "no tooltip open" — `Components.Tooltip.Model` is opaque and its view is an empty node while closed — so a second plugin's tooltips silently never appeared
+- A URL that could never parse — a typo, or a link into a plugin namespace that has since been renamed — put the app into a 50ms busy loop that no user action escaped. Such URLs are still retried while the statistics response is outstanding, since a deep link cannot resolve its network segment before then, but once that has settled the app stays on the current page and reports the unknown URL
+- Exporting the address transaction table as CSV with the utxo-only filter set hung: those rows come from the `WorkflowNextUtxoTx` chain walk, whose responses go to the table rather than to the export, so the download never started and the spinner kept turning. The export now writes out the rows the table holds, since no server-side query reproduces that filter
+- Exporting a transaction table that no rows matched hung for the same reason from the other end: with no addresses to look up there was no tag request to answer, and nothing completed the export
+- The "show fiat and crypto" display setting was saved but never restored, so it reverted to off on every reload
+- The open-graph dialog did nothing: the removed `exportGraphics` port was still wired up in `main.js` and threw during startup, which silently killed every subscription registered after it — file open, plugin ports and settings persistence included
+- Search missed hits when the query was pasted from a PDF: letter pairs such as `ff` arrive as single ligature glyphs, which are now folded where the query enters the model, so the request, prefix filter, highlighting and Enter-navigation all agree
+- Long notification messages without an explicit title (e.g. the Case Connect no-writable-group warning) did not wrap and overflowed the toast — they now wrap within the notification
+- Opening a tag label or actor whose name contains `/`, `?` or `#` did not work: the name went into the URL unescaped, so a slash silently dropped the route and a question mark truncated the name. Labels and actor ids are now percent-encoded in the URL and decoded when it is read; links written before this still open
+- The German heading for the addresses of a cluster read `Adressen des Clusterss` — one `s` too many
+
+## [26.07.3] - 2026-07-17
 
 ### Changed
 
 - upgrade elm-test-rs
 - remove "Dev" suffix for new figma components
 - add "width:100%" for text nodes
-
-### Fixed
-
-- Long notification messages without an explicit title (e.g. the Case Connect no-writable-group warning) did not wrap and overflowed the toast — they now wrap within the notification
 
 ## [26.07.2] - 2026-07-14
 

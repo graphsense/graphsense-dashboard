@@ -7,7 +7,6 @@ import Config.View as View
 import Css
 import Css.Pathfinder exposing (fullWidth, sidePanelCss)
 import Css.Table
-import Css.View
 import Html.Styled exposing (Html, div)
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -25,7 +24,8 @@ import Tuple exposing (first, second)
 import Util exposing (allAndNotEmpty)
 import Util.Css exposing (spread)
 import Util.Tooltip
-import Util.View exposing (loadingSpinner, makeValuesList, none, truncateLongIdentifier)
+import Util.View exposing (makeValuesList, none, truncateLongIdentifier)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
 import View.Pathfinder.Details exposing (closeAttrs, dataTab)
 import View.Pathfinder.InfiniteTable as InfiniteTable
@@ -76,7 +76,7 @@ view vc model id viewState =
                 (SidePanelComponents.sidePanelRelationshipValuesRowInstances
                     |> Rs.s_leftValue
                         (if RemoteData.isLoading viewState.aggEdge.b2a then
-                            loadingSpinner vc Css.View.loadingSpinner
+                            Loadingspinner.html []
                                 |> Just
 
                          else
@@ -84,7 +84,7 @@ view vc model id viewState =
                         )
                     |> Rs.s_rightValue
                         (if RemoteData.isLoading viewState.aggEdge.a2b then
-                            loadingSpinner vc Css.View.loadingSpinner
+                            Loadingspinner.html []
                                 |> Just
 
                          else
@@ -194,7 +194,7 @@ tableTab vc model edgeId viewState isA2b =
                 (SidePanelComponents.sidePanelListHeaderTitleRelationInstances
                     |> Rs.s_totalNumber
                         (if RemoteData.isLoading relation then
-                            loadingSpinner vc Css.View.loadingSpinner |> Just
+                            Loadingspinner.html [] |> Just
 
                          else
                             Nothing

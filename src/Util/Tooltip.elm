@@ -1,4 +1,4 @@
-module Util.Tooltip exposing (linkRow, tooltipConfig, tooltipProperties, tooltipRow, tooltipRowCustomValue, view)
+module Util.Tooltip exposing (tooltipConfig, tooltipProperties, tooltipRow, tooltipRowCustomValue, view)
 
 import Api.Data exposing (Actor, TagSummary)
 import Basics.Extra exposing (flip)
@@ -17,6 +17,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..), OverlayWindows(..))
 import RecordSetter as Rs
 import Set
+import Theme.Colors as Colors
 import Theme.Html.GraphComponents as GraphComponents
 import Theme.Html.TagsComponents as TagsComponents
 import Tuple exposing (pair)
@@ -37,11 +38,10 @@ tooltipConfig vc tag =
 
 
 tooltipProperties : View.Config -> Tooltip.Config a msg -> Tooltip.Config a msg
-tooltipProperties vc =
+tooltipProperties _ =
     Tooltip.withZIndex (Css.zIndexMainValue + 10000)
-        >> Tooltip.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
-        >> Tooltip.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
-        >> Tooltip.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
+        >> Tooltip.withBorderColor Colors.grey50
+        >> Tooltip.withBackgroundColor Colors.white
         >> Tooltip.withCloseDelay 100
         >> Tooltip.withFixed
 
@@ -61,7 +61,7 @@ view vc model tt =
         Address id ->
             model.network.addresses
                 |> Dict.get id
-                |> Maybe.map (address vc model.config.networkCapabilities (getTagSummary model id))
+                |> Maybe.map (address vc model.networkCapabilities (getTagSummary model id))
                 |> Maybe.withDefault []
 
         TagLabel addrId lblid ->
@@ -404,8 +404,8 @@ address vc capabilities tags adr =
                 |> Maybe.withDefault ""
                 |> val vc
         }
-        :: -- lite networks serve totals as budget-capped floors: hide them
-           -- here like in the side panel (user decision 2026-07-27)
+        :: -- a limited network serves totals capped or not at all: hide them
+           -- here like in the side panel
            (if NetworkCapabilities.isLimitedNetwork capabilities net then
                 []
 

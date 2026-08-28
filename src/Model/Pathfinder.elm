@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), DraggingAggEdgeLabel, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, coordsWithUnit, getHavingTags, getImageExport, getLoadedAddress, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, unit)
+module Model.Pathfinder exposing (Details(..), DraggingAggEdgeLabel, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, isLimitedNetwork, supports, unit)
 
 import Api.Data exposing (Actor, Cluster)
 import AssocList
@@ -13,7 +13,7 @@ import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords, isInBBox)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
-import Model.Pathfinder.Address exposing (Address)
+import Model.NetworkCapabilities as NetworkCapabilities exposing (NetworkCapabilities)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
@@ -44,6 +44,20 @@ unit =
     GraphComponents.addressNodeNodeFrame_details.width
 
 
+{-| Does the backend serve this feature on the given network?
+-}
+supports : NetworkCapabilities.Capability -> String -> Model -> Bool
+supports capability network model =
+    NetworkCapabilities.supports capability model.networkCapabilities network
+
+
+{-| At least one feature is disabled on the given network.
+-}
+isLimitedNetwork : String -> Model -> Bool
+isLimitedNetwork network model =
+    NetworkCapabilities.isLimitedNetwork model.networkCapabilities network
+
+
 type alias Model =
     { route : Route
     , network : Network
@@ -62,6 +76,7 @@ type alias Model =
     , history : History.Model Entry.Model
     , details : Maybe Details
     , config : Config
+    , networkCapabilities : NetworkCapabilities
     , pointerTool : PointerTool
     , modPressed : Bool
     , isDirty : Bool
@@ -140,11 +155,6 @@ getImageExport ex =
 
         ExportingImage e ->
             e
-
-
-getLoadedAddress : Model -> Id -> Maybe Address
-getLoadedAddress m id =
-    Dict.get id m.network.addresses
 
 
 getHavingTags : Model -> Id -> HavingTags

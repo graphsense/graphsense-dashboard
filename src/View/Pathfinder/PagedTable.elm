@@ -4,7 +4,7 @@ import Components.PagedTable as PagedTable
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (emptyTableMsg, fullWidth)
-import Css.Table exposing (Styles, loadingSpinner, styles)
+import Css.Table exposing (Styles, styles)
 import Html.Styled exposing (Attribute, Html, div, text)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
@@ -16,6 +16,7 @@ import Theme.Html.SidePanelComponents as SidePanelComponents
 import Tuple3
 import Util.Css
 import Util.View
+import Util.View.Loadingspinner as Loadingspinner
 import View.Graph.Table exposing (simpleThead)
 import View.Locale as Locale
 
@@ -177,7 +178,7 @@ view vc attributes config tblPaged msgTag =
         )
         (Table.view config tbl.state filteredData
             :: (if tbl.loading then
-                    Util.View.loadingSpinner vc loadingSpinner
+                    Loadingspinner.html []
                         |> wrapNote
 
                 else if List.isEmpty tbl.data then

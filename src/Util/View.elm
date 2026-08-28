@@ -1,27 +1,22 @@
-module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, aa, addDot, colorToHex, conditionalHide, contextMenuRule, copyIcon, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyIconWithAttr, copyIconWithAttrPathfinder, copyIconWithoutHint, copyableLongIdentifier, copyableLongIdentifierPathfinder, emptyCell, firstToUpper, fixFillRule, frame, fullWidthCss, hovercard, hovercardFullViewPort, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, loadingSpinner, longIdentifier, makeValuesList, noTextSelection, nona, none, onClickWithStop, onOffSwitch, p, pointer, setAlpha, switch, switchInternal, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, emptyCell, firstToUpper, fixFillRule, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, makeValuesList, noTextSelection, none, onClickWithStop, onMiddleClick, p, pointer, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Api.Data
 import Basics.Extra exposing (flip)
 import Color as BColor
 import Config.View as View
-import Css exposing (Color, Style, paddingLeft, px)
-import Css.Graph
-import Css.View as Css
+import Css exposing (Color, Style)
 import Dict
-import FontAwesome
 import Hex
 import Hovercard
 import Html as BHtml
-import Html.Attributes
-import Html.Styled exposing (Attribute, Html, div, img, span, text)
-import Html.Styled.Attributes exposing (classList, css, src, title)
-import Html.Styled.Events exposing (stopPropagationOn)
+import Html.Styled exposing (Attribute, Html, span)
+import Html.Styled.Attributes exposing (attribute, css)
+import Html.Styled.Events exposing (on, stopPropagationOn)
 import Json.Decode
 import List.Extra
 import Model.Currency as Currency exposing (AssetIdentifier)
 import Model.Locale as Locale
 import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_triangle)
-import Switch
 import Theme.Colors as Colors
 import Theme.Html.Fields as Fields
 import Theme.Html.GraphComponents
@@ -31,19 +26,49 @@ import Util.Data as Data
 import View.Locale as Locale
 
 
+{-| A stable hook for browser tests, naming what an element _is_.
+
+Names are prefixed `gs-` because plugins render into this same DOM from their
+own repositories; the prefix keeps their hooks and ours from colliding. Write
+the prefix out at the call site rather than adding it here, so a name found in
+`e2e/` can be grepped for in `src/` and vice versa.
+
+A name describes a kind, not an instance: several nodes share `gs-address-node`.
+Playwright's strict mode fails an assertion whose locator matches more than one
+element, so pair it with [`testKey`](#testKey) when a test needs a particular
+one.
+
+The markup is generated from Figma and styled with elm-css, so class names are
+content hashes that change with any styling tweak, and visible text is
+translated and truncated. Neither survives as a selector. This attribute exists
+only so `e2e/` can find an element; it has no effect at runtime.
+
+Add one at the _call site_ of a generated component (its `WithAttributes`
+variant takes an attribute list per node) — never inside `generated/`, which the
+next codegen run overwrites.
+
+-}
+testId : String -> Attribute msg
+testId =
+    attribute "data-testid"
+
+
+{-| Identifies _which_ of a kind an element is, for tests that need one in
+particular:
+
+    [ testId "gs-address-node", testKey (Id.toString address.id) ]
+
+selects with `[data-testid="gs-address-node"][data-testkey="btc1Archive…"]`.
+
+-}
+testKey : String -> Attribute msg
+testKey =
+    attribute "data-testkey"
+
+
 none : Html msg
 none =
     span [] []
-
-
-nona : Attribute msg
-nona =
-    classList []
-
-
-aa : (a -> Attribute msg) -> Maybe a -> List (Attribute msg) -> List (Attribute msg)
-aa toAttr value =
-    (++) (value |> Maybe.map (toAttr >> List.singleton) |> Maybe.withDefault [])
 
 
 toCssColor : BColor.Color -> Color
@@ -52,15 +77,6 @@ toCssColor color =
         |> (\{ red, green, blue, alpha } ->
                 Css.rgba (red * 255 |> Basics.round) (green * 255 |> Basics.round) (blue * 255 |> Basics.round) alpha
            )
-
-
-loadingSpinner : View.Config -> (View.Config -> List Style) -> Html msg
-loadingSpinner vc css_ =
-    img
-        [ src vc.theme.loadingSpinnerUrl
-        , css_ vc |> css
-        ]
-        []
 
 
 firstToUpper : String -> String
@@ -120,146 +136,31 @@ truncateLongIdentifierWithLengths start end str =
         str
 
 
-setAlpha : Float -> BColor.Color -> BColor.Color
-setAlpha alpha =
-    BColor.toRgba
-        >> (\c -> { c | alpha = alpha })
-        >> BColor.fromRgba
-
-
-hovercardFullViewPort : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
-hovercardFullViewPort vc element zIndex =
-    Hovercard.view
-        (Hovercard.defaultConfig
-            |> Hovercard.withTickLength 16
-            |> Hovercard.withZIndex zIndex
-            |> Hovercard.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
-            |> Hovercard.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
-            |> Hovercard.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
-        )
-        element
-        (Css.hovercard vc
-            |> List.map (\( k, v ) -> Html.Attributes.style k v)
-        )
-        >> Html.Styled.fromUnstyled
-
-
 hovercard : View.Config -> Hovercard.Model -> Int -> List (BHtml.Html msg) -> Html.Styled.Html msg
 hovercard vc element zIndex =
     Hovercard.view
         (Hovercard.defaultConfig
             |> Hovercard.withTickLength 16
             |> Hovercard.withZIndex zIndex
-            |> Hovercard.withBorderColor (vc.theme.hovercard vc.lightmode).borderColor
-            |> Hovercard.withBackgroundColor (vc.theme.hovercard vc.lightmode).backgroundColor
-            |> Hovercard.withBorderWidth (vc.theme.hovercard vc.lightmode).borderWidth
+            |> Hovercard.withBorderColorString Colors.grey50
+            |> Hovercard.withBackgroundColorString Colors.white
             |> Hovercard.withViewport vc.size
+            |> Hovercard.styleTickOnly True
         )
         element
-        (Css.hovercard vc
-            |> List.map (\( k, v ) -> Html.Attributes.style k v)
-        )
+        []
         >> Html.Styled.fromUnstyled
 
 
-switch : View.Config -> List (Attribute msg) -> String -> Html msg
-switch =
-    switchInternal False
-
-
-onOffSwitch : View.Config -> List (Attribute msg) -> String -> Html msg
-onOffSwitch =
-    switchInternal True
-
-
-switchInternal : Bool -> View.Config -> List (Attribute msg) -> String -> Html msg
-switchInternal showOnColor vc attrs title =
-    div
-        [ Css.switchRoot vc |> css
-        ]
-        [ Switch.switch 2 1 Css.rem
-            |> Switch.duration 200
-            |> Switch.onStyle
-                (if showOnColor then
-                    [ vc.theme.switchOnColor vc.lightmode
-                        |> toCssColor
-                        |> Css.backgroundColor
-                    ]
-
-                 else
-                    []
-                )
-            |> Switch.offStyle
-                [ (if vc.lightmode then
-                    Css.rgba 0 0 0 0.2
-
-                   else
-                    Css.rgba 255 255 255 0.2
-                  )
-                    |> Css.backgroundColor
-                ]
-            |> Switch.knobStyle
-                [ (if vc.lightmode then
-                    Css.rgb 0 0 0
-
-                   else
-                    Css.rgb 255 255 255
-                  )
-                    |> Css.backgroundColor
-                ]
-            |> Switch.attributes attrs
-            |> Switch.render
-        , title
-            |> text
-            |> List.singleton
-            |> span [ Css.switchLabel vc |> css ]
-        ]
-
-
-p : View.Config -> List (Attribute msg) -> List (Html msg) -> Html msg
-p vc attrs =
+p : List (Attribute msg) -> List (Html msg) -> Html msg
+p attrs =
     Html.Styled.p
-        ((Css.paragraph vc |> css) :: attrs)
+        (([ 2 * 0.22 |> Css.rem |> Css.marginBottom ] |> css) :: attrs)
 
 
 addDot : String -> String
 addDot s =
     s ++ "."
-
-
-contextMenuRule : View.Config -> List (Html msg)
-contextMenuRule vc =
-    [ Html.Styled.hr [ Css.Graph.contextMenuRule vc |> css ] [] ]
-
-
-copyableLongIdentifier : View.Config -> List (Attribute msg) -> String -> Html msg
-copyableLongIdentifier vc attr identifier =
-    span
-        [ Css.longIdentifier vc |> css
-        ]
-        [ text (truncateLongIdentifier identifier)
-            |> List.singleton
-            |> span
-                (title identifier
-                    :: attr
-                )
-        , copyIcon vc identifier
-        ]
-
-
-copyableLongIdentifierPathfinder : View.Config -> List (Attribute msg) -> String -> Html msg
-copyableLongIdentifierPathfinder vc attr identifier =
-    span
-        [ Css.longIdentifier vc |> css
-        ]
-        [ text (truncateLongIdentifierWithLengths 8 4 identifier)
-            |> List.singleton
-            |> span
-                (title identifier
-                    :: attr
-                )
-        , copyIconPathfinder vc identifier
-        ]
 
 
 type HintPosition
@@ -280,11 +181,6 @@ copyIconPathfinderFixed =
 copyIconPathfinderAbove : View.Config -> String -> Html msg
 copyIconPathfinderAbove =
     copyIconWithAttrPathfinderInternal False Above False (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
-
-
-copyIconWithoutHint : View.Config -> String -> Html msg
-copyIconWithoutHint =
-    copyIconWithAttrPathfinder True (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
 
 
 copyIconWithAttrPathfinder : Bool -> List (Attribute msg) -> View.Config -> String -> Html msg
@@ -313,7 +209,7 @@ copyIconWithAttrPathfinderInternal fixedHint hp hideHint attr vc value =
                     )
     in
     Html.Styled.a
-        ((Css.copyIcon vc |> css)
+        (pointer
             :: attr
         )
         [ Html.Styled.node "copy-icon"
@@ -442,37 +338,6 @@ iconWithHint vc { position, hint, hide, icon } attr =
         ]
 
 
-copyIcon : View.Config -> String -> Html msg
-copyIcon =
-    copyIconWithAttr ([ paddingLeft (px 3) ] |> css |> List.singleton)
-
-
-copyIconWithAttr : List (Attribute msg) -> View.Config -> String -> Html msg
-copyIconWithAttr attr vc value =
-    Html.Styled.a
-        ([ Css.copyIcon vc |> css
-         , title (Locale.string vc.locale "copy")
-         ]
-            ++ attr
-        )
-        [ Html.Styled.node "copy-icon"
-            [ Html.Styled.Attributes.attribute "data-value" value
-            ]
-            [ FontAwesome.icon FontAwesome.clone
-                |> Html.Styled.fromUnstyled
-            ]
-        ]
-
-
-longIdentifier : View.Config -> String -> Html msg
-longIdentifier vc address =
-    span
-        [ Css.longIdentifier vc |> css
-        ]
-        [ text (truncateLongIdentifier address)
-        ]
-
-
 colorToHex : BColor.Color -> String
 colorToHex cl =
     let
@@ -485,16 +350,24 @@ colorToHex cl =
         |> String.concat
 
 
-frame : View.Config -> List (Attribute msg) -> List (Html msg) -> Html msg
-frame vc attr =
-    div
-        ((Css.frame vc |> css) :: attr)
-
-
 onClickWithStop : msg -> Attribute msg
 onClickWithStop msg =
     Json.Decode.succeed ( msg, True )
         |> stopPropagationOn "click"
+
+
+onMiddleClick : msg -> Attribute msg
+onMiddleClick msg =
+    Json.Decode.field "button" Json.Decode.int
+        |> Json.Decode.andThen
+            (\button ->
+                if button == 1 then
+                    Json.Decode.succeed msg
+
+                else
+                    Json.Decode.fail "not the middle button"
+            )
+        |> on "auxclick"
 
 
 pointer : Attribute msg

@@ -8,7 +8,6 @@ import Components.Tooltip as Tooltip
 import Config.View as View
 import Css
 import Css.Table exposing (Styles)
-import Css.View
 import Html.Styled exposing (div, span)
 import Html.Styled.Attributes exposing (css, style, title)
 import Html.Styled.Events exposing (onClick)
@@ -30,7 +29,8 @@ import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenc
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags, isExchangeNode)
 import Util.Tooltip
 import Util.TooltipType as TooltipType
-import Util.View exposing (copyIconPathfinder, loadingSpinner, none, pointer, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, none, pointer, truncateLongIdentifierWithLengths)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
 import View.Pathfinder.InfiniteTable as PathfinderInfiniteTable
 import View.Pathfinder.PagedTable exposing (customizations)
@@ -65,8 +65,8 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
                         |> Css.height
                     ]
                 ]
-                [ loadingSpinner vc
-                    (\_ ->
+                [ Loadingspinner.html
+                    [ css
                         [ Css.position Css.absolute
                         , Icons.iconsNodeOpenRightStateActivBackground_details.height
                             |> Css.px
@@ -81,7 +81,7 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
                             |> Css.px
                             |> Css.top
                         ]
-                    )
+                    ]
                 ]
 
         styles_ =
@@ -202,8 +202,8 @@ config styles vc ioDirection isCheckedFn allChecked ioColumnConfig =
         ]
     , customizations = cc
     , tag = IoTableMsg ioDirection
-    , loadingPlaceholderAbove = PathfinderInfiniteTable.loadingPlaceholderAbove vc
-    , loadingPlaceholderBelow = PathfinderInfiniteTable.loadingPlaceholderBelow vc
+    , loadingPlaceholderAbove = PathfinderInfiniteTable.loadingPlaceholderAbove
+    , loadingPlaceholderBelow = PathfinderInfiniteTable.loadingPlaceholderBelow
     }
 
 
@@ -241,7 +241,7 @@ ioColumn vc { label, accessor, onClick } { network, hasTags, getChangeInfo } =
                     , Css.position Css.absolute
                     ]
                 ]
-                [ loadingSpinner vc Css.View.loadingSpinner
+                [ Loadingspinner.html []
                 ]
 
         hasTags_ =

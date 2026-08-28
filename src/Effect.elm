@@ -4,28 +4,25 @@ module Effect exposing (perform)
 
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
-import Config
 import Config.UserSettings
 import Effect.Api
-import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Pathfinder as Pathfinder
 import Effect.Search as Search
 import Http
 import Model exposing (Effect(..), Model, Msg(..))
 import Model.Notification
-import Msg.Graph as Graph
 import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
-import Plugin.Effects as Plugin exposing (Plugins)
+import Plugin.Effects as Plugin
 import Ports
 import Process
 import Route
 import Task
 
 
-perform : Plugins -> Model Nav.Key -> Maybe String -> String -> Effect -> Cmd Msg
-perform plugins model statusbarToken apiKey effect =
+perform : Model Nav.Key -> Maybe String -> String -> Effect -> Cmd Msg
+perform model statusbarToken apiKey effect =
     case effect of
         NavLoadEffect url ->
             Nav.load url
@@ -36,10 +33,6 @@ perform plugins model statusbarToken apiKey effect =
         NavBackEffect steps ->
             Nav.back model.key steps
 
-        GetElementEffect { id, msg } ->
-            Dom.getElement id
-                |> Task.attempt msg
-
         GetContentsElementEffect ->
             Dom.getElement "contents"
                 |> Task.attempt BrowserGotContentsElement
@@ -49,7 +42,7 @@ perform plugins model statusbarToken apiKey effect =
                 |> Cmd.map LocaleMsg
 
         LogoutEffect ->
-            Nav.load Config.logoutUrl
+            Nav.load "{{VITE_LOGOUT_URL}}"
 
         SaveUserSettingsEffect m ->
             Config.UserSettings.encoder m
@@ -80,12 +73,11 @@ perform plugins model statusbarToken apiKey effect =
 
                 Pathfinder.BatchEffect effs ->
                     effs
-                        |> List.map (PathfinderEffect >> perform plugins model statusbarToken apiKey)
+                        |> List.map (PathfinderEffect >> perform model statusbarToken apiKey)
                         |> Cmd.batch
 
                 Pathfinder.SearchEffect e ->
                     handleSearchEffect apiKey
-                        Nothing
                         (Pathfinder.SearchMsg >> PathfinderMsg)
                         e
 
@@ -103,55 +95,8 @@ perform plugins model statusbarToken apiKey effect =
                     Pathfinder.perform eff
                         |> Cmd.map PathfinderMsg
 
-        GraphEffect eff ->
-            case eff of
-                Graph.ApiEffect apiEff ->
-                    Effect.Api.map GraphMsg apiEff
-                        |> Effect.Api.perform apiKey
-                            (BrowserGotResponseWithHeaders statusbarToken)
-                            BrowserCancelledRequest
-
-                Graph.NavPushRouteEffect route ->
-                    Route.graphRoute route
-                        |> Route.toUrl
-                        |> Nav.pushUrl model.key
-
-                Graph.GetBrowserElementEffect ->
-                    Graph.perform eff
-                        |> Cmd.map GraphMsg
-
-                Graph.InternalGraphAddedAddressesEffect ids ->
-                    Task.succeed ids
-                        |> Task.perform (Graph.InternalGraphAddedAddresses >> GraphMsg)
-
-                Graph.InternalGraphAddedEntitiesEffect ids ->
-                    Task.succeed ids
-                        |> Task.perform (Graph.InternalGraphAddedEntities >> GraphMsg)
-
-                Graph.InternalGraphSelectedAddressEffect id ->
-                    Task.succeed id
-                        |> Task.perform (Graph.InternalGraphSelectedAddress >> GraphMsg)
-
-                Graph.PluginEffect _ ->
-                    Graph.perform eff
-                        |> Cmd.map GraphMsg
-
-                Graph.TagSearchEffect e ->
-                    handleSearchEffect apiKey
-                        Nothing
-                        (Graph.TagSearchMsg >> GraphMsg)
-                        e
-
-                Graph.CmdEffect cmd ->
-                    cmd
-                        |> Cmd.map GraphMsg
-
-                Graph.DownloadCSVEffect _ ->
-                    Graph.perform eff
-                        |> Cmd.map GraphMsg
-
         SearchEffect msgMap e ->
-            handleSearchEffect apiKey (Just plugins) msgMap e
+            handleSearchEffect apiKey msgMap e
 
         NotificationEffect e ->
             Model.Notification.perform e
@@ -172,8 +117,8 @@ perform plugins model statusbarToken apiKey effect =
                 |> Task.perform (\_ -> RuntimePostponedUpdateByUrl url)
 
 
-handleSearchEffect : String -> Maybe Plugins -> (Search.Msg -> Msg) -> Search.Effect -> Cmd Msg
-handleSearchEffect apiKey plugins tag effect =
+handleSearchEffect : String -> (Search.Msg -> Msg) -> Search.Effect -> Cmd Msg
+handleSearchEffect apiKey tag effect =
     case effect of
         Search.SearchEffect { query, currency, limit, config, toMsg } ->
             (Effect.Api.SearchEffect
@@ -187,9 +132,7 @@ handleSearchEffect apiKey plugins tag effect =
                     (BrowserGotResponseWithHeaders Nothing)
                     BrowserCancelledRequest
             )
-                :: (plugins
-                        |> Maybe.map (\p -> Plugin.search p query)
-                        |> Maybe.withDefault []
+                :: (Plugin.search query
                         |> List.map (Cmd.map PluginMsg)
                    )
                 |> Cmd.batch

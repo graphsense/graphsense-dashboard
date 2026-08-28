@@ -16,8 +16,29 @@ jobs:
         with:
           node-version: '20.x'
       - run: npm ci
-      - run: cp config/Config.elm.tmp config/Config.elm
       - run: cp env.template .env
       - run: make build
       - run: make test
       - run: make lint
+
+  e2e:
+    name: Browser tests
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+      - run: npm ci
+      - run: cp env.template .env
+      - run: make e2e-install
+      - run: make e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

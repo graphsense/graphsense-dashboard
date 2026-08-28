@@ -98,8 +98,8 @@ config styles vc addressId isCheckedFn allChecked =
         ]
     , customizations = cc
     , tag = TransactionsTableSubTableMsg
-    , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove vc
-    , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow vc
+    , loadingPlaceholderAbove = InfiniteTable.loadingPlaceholderAbove
+    , loadingPlaceholderBelow = InfiniteTable.loadingPlaceholderBelow
     }
 
 

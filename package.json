@@ -12,6 +12,7 @@
     "compile": "elm make src/Main.elm --output=/dev/null"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
     "elm": "^0.19.2-0",
     "elm-codegen": "^0.6.3",
     "elm-format": "^0.8.8",
@@ -39,6 +40,7 @@
   },
   "overrides": {
     "cross-spawn": ">=7.0.3",
-    "minimatch": ">=10.0.0"
+    "minimatch": ">=10.2.6",
+    "brace-expansion": ">=5.0.9"
   }
 }

@@ -3,24 +3,17 @@ module Main exposing (main)
 import Basics.Extra exposing (uncurry)
 import Browser
 import Browser.Navigation as Nav
-import Config exposing (config)
 import Config.UserSettings exposing (default)
 import Effect exposing (perform)
 import Init exposing (init)
 import Init.Locale as Locale
 import Model exposing (Flags, Model, Msg(..))
-import Plugin
 import Sub exposing (subscriptions)
 import Tuple exposing (..)
 import Update exposing (update, updateByUrl)
 import Update.Notification as Notification
 import Update.Statusbar as Statusbar
 import View exposing (view)
-
-
-plugins : Plugin.Plugins
-plugins =
-    Config.plugins
 
 
 main : Program Flags (Model Nav.Key) Msg
@@ -32,40 +25,31 @@ main =
                 |> mapSecond
                     (List.map
                         (\( statusbarToken, eff ) ->
-                            perform (Plugin.effectsPlugins plugins) model statusbarToken model.user.apiKey eff
+                            perform model statusbarToken model.user.apiKey eff
                         )
                     )
                 |> mapSecond Cmd.batch
 
         uc =
-            { defaultColor = config.theme.graph.defaultColor
-            , categoryToColor = config.theme.graph.categoryToColor
-            , highlightsColorScheme = config.theme.graph.highlightsColorScheme
-            , locale = Locale.init (default "en") |> first
+            { locale = Locale.init (default "en") |> first
             , size = Nothing
             , abuseConcepts = []
             , allConcepts = []
             }
-
-        updPlug =
-            Plugin.updatePlugins plugins
-
-        viewPlugins =
-            Plugin.viewPlugins plugins
     in
     Browser.application
         { init =
             \flags url key ->
                 let
                     ( model, effects ) =
-                        init updPlug uc flags url key
+                        init uc flags url key
                 in
-                updateByUrl updPlug uc url model
+                updateByUrl uc url model
                     |> mapSecond ((++) effects)
                     |> performEffect
         , update =
             \msg model ->
-                update updPlug
+                update
                     { uc
                         | locale = model.config.locale
                         , size = model.config.size
@@ -78,7 +62,6 @@ main =
         , view =
             \model ->
                 view
-                    viewPlugins
                     model.config
                     model
         , subscriptions = subscriptions

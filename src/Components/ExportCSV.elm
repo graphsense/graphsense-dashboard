@@ -1,11 +1,11 @@
 module Components.ExportCSV exposing (Config, Model, Msg(..), attributes, config, getNumberOfRows, gotData, icon, init, isDownloading, onCompleted, update)
 
 import Config.Update as Update
-import Config.View as View
 import Css.Pathfinder exposing (fullWidth)
 import Csv.Encode
 import File.Download
 import Html.Styled exposing (Attribute, Html)
+import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Maybe.Extra
 import Model.Notification as Notification exposing (Notification)
@@ -13,7 +13,8 @@ import RecordSetter exposing (s_isEphemeral, s_showClose, s_title, s_variables)
 import Task
 import Theme.Html.Icons as HIcons
 import Time
-import Util.View exposing (loadingSpinner)
+import Util.View
+import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
 
 
@@ -175,10 +176,10 @@ attributes (Model { downloading }) =
         ]
 
 
-icon : View.Config -> Model -> Html msg
-icon vc (Model { downloading }) =
+icon : Model -> Html msg
+icon (Model { downloading }) =
     if downloading then
-        loadingSpinner vc (\_ -> fullWidth)
+        Loadingspinner.html [ css fullWidth ]
 
     else
         HIcons.iconsExport {}

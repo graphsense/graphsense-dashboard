@@ -1,4 +1,4 @@
-module Util.Data exposing (absValues, addValues, addressCluster, averageFiatValue, isAccountLike, isEvmHexNetwork, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, normalizeTxIdentifier, parseMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addressCluster, isAccountLike, isEvmHexNetwork, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, normalizeTxIdentifier, parseMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -20,15 +20,6 @@ timestampToPosix : Int -> Time.Posix
 timestampToPosix =
     (*) 1000
         >> Time.millisToPosix
-
-
-averageFiatValue : Api.Data.Values -> Float
-averageFiatValue { fiatValues } =
-    (fiatValues
-        |> List.map .value
-        |> List.sum
-    )
-        / (toFloat <| List.length fiatValues)
 
 
 {-| The cluster an address belongs to. Prefers the fresh (incrementally

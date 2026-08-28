@@ -1,7 +1,6 @@
 module View.Pathfinder.Address exposing (toNodeIconHtml, view)
 
 import Animation as A
-import Color
 import Components.Tooltip as Tooltip
 import Config.Pathfinder as Pathfinder exposing (HideForExport(..), TracingMode(..))
 import Config.View as View
@@ -15,17 +14,17 @@ import List.Extra
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
-import Model.NetworkCapabilities as NetworkCapabilities
+import Model.NetworkCapabilities as NetworkCapabilities exposing (NetworkCapabilities)
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address, AddressServiceType(..), Txs(..), expandAllowed, getTxs, isSmartContract, txsGetSet)
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.SearchBox exposing (Highlight(..), dimmedOpacity)
 import Msg.Pathfinder exposing (Msg(..))
-import Plugin.View exposing (Plugins)
+import Plugin.View
 import RecordSetter as Rs
 import RemoteData
-import Svg.Styled as Svg exposing (Svg, g, image, text)
+import Svg.Styled as Svg exposing (Svg, g, text)
 import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
 import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
 import Theme.Svg.GraphComponents as GraphComponents
@@ -34,21 +33,16 @@ import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Graph exposing (decodeCoords, translate)
 import Util.Tooltip
 import Util.TooltipType as TooltipType
-import Util.View exposing (none, onClickWithStop, truncateLongIdentifierWithLengths)
+import Util.View exposing (none, onClickWithStop, testId, testKey, truncateLongIdentifierWithLengths)
+import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Highlight -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
-view plugins vc pc searchHighlight address annotation =
+view : View.Config -> Pathfinder.Config -> NetworkCapabilities -> Highlight -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
+view vc pc capabilities searchHighlight address annotation =
     let
         data =
             RemoteData.toMaybe address.data
-
-        halfAlpha x =
-            Color.fromRgba { red = x.red, green = x.green, blue = x.blue, alpha = x.alpha / 2 }
-
-        clusterColorLight =
-            address.clusterColor |> Maybe.map (Color.toRgba >> halfAlpha)
 
         clusterSiblingHovered =
             pc.highlightClusterFriends
@@ -63,10 +57,10 @@ view plugins vc pc searchHighlight address annotation =
                 && (address.selected || isCurrentSearchMatch)
 
         clusterStroke =
-            case ( clusterColorLight, pc.highlightClusterFriends ) of
+            case ( address.clusterColor, pc.highlightClusterFriends ) of
                 ( Just color, True ) ->
                     [ css
-                        [ Css.property "stroke" (Color.toCssString color) |> Css.important
+                        [ Css.property "stroke" color |> Css.important
                         , Css.property "stroke-width"
                             (if clusterSiblingHovered then
                                 "5"
@@ -143,7 +137,7 @@ view plugins vc pc searchHighlight address annotation =
                     )
 
         pluginTagIcons =
-            Plugin.View.addressNodeTagIcon plugins address.plugins vc address
+            Plugin.View.addressNodeTagIcon address.plugins vc address
 
         offset =
             2
@@ -216,14 +210,13 @@ view plugins vc pc searchHighlight address annotation =
             |> Html.attribute "data-selected"
          ]
             ++ dimmedOpacity searchHighlight
-            ++ -- relationship-based tracing has no aggregate edges on limited
-               -- networks (relations are disabled backend-side, see
-               -- DASHBOARD_CHANGES.md D-2/D-10) — grey those nodes out so only
-               -- core networks read as participating in this mode
+            ++ -- relationship-based tracing grows no aggregate edges where the
+               -- backend has no relations: grey those nodes out so only
+               -- networks that take part in this mode read as active
                (if
                     pc.tracingMode
                         == AggregateTracingMode
-                        && not (NetworkCapabilities.supports NetworkCapabilities.Relations pc.networkCapabilities (Id.network address.id))
+                        && not (NetworkCapabilities.supports NetworkCapabilities.Relations capabilities (Id.network address.id))
                 then
                     [ opacity "0.3", css [ Css.property "filter" "grayscale(1)" ] ]
 
@@ -234,7 +227,9 @@ view plugins vc pc searchHighlight address annotation =
         (GraphComponents.addressNodeWithAttributes
             (GraphComponents.addressNodeAttributes
                 |> Rs.s_root
-                    ([ A.animate address.clock address.opacity
+                    ([ testId "gs-address-node"
+                     , testKey (Id.toString address.id)
+                     , A.animate address.clock address.opacity
                         |> String.fromFloat
                         |> opacity
                      , UserClickedAddress address.id |> onClickWithStop
@@ -284,7 +279,7 @@ view plugins vc pc searchHighlight address annotation =
                         none
 
                     else
-                        expandHandleLoadingSpinner vc address Incoming Icons.iconsNodeOpenLeftStateActiv_details
+                        expandHandleLoadingSpinner address Incoming Icons.iconsNodeOpenLeftStateActiv_details
                             |> Maybe.withDefault
                                 (Icons.iconsNodeOpenLeftWithAttributes
                                     (Icons.iconsNodeOpenLeftAttributes
@@ -307,7 +302,7 @@ view plugins vc pc searchHighlight address annotation =
                         none
 
                     else
-                        expandHandleLoadingSpinner vc address Outgoing Icons.iconsNodeOpenRightStateActiv_details
+                        expandHandleLoadingSpinner address Outgoing Icons.iconsNodeOpenRightStateActiv_details
                             |> Maybe.withDefault
                                 (Icons.iconsNodeOpenRightWithAttributes
                                     (Icons.iconsNodeOpenRightAttributes
@@ -341,29 +336,27 @@ view plugins vc pc searchHighlight address annotation =
         )
 
 
-expandHandleLoadingSpinner : View.Config -> Address -> Direction -> { x : Float, y : Float, width : Float, height : Float, renderedWidth : Float, renderedHeight : Float, strokeWidth : Float, styles : List Css.Style } -> Maybe (Svg Msg)
-expandHandleLoadingSpinner vc address direction details =
+expandHandleLoadingSpinner : Address -> Direction -> { x : Float, y : Float, width : Float, height : Float, renderedWidth : Float, renderedHeight : Float, strokeWidth : Float, styles : List Css.Style } -> Maybe (Svg Msg)
+expandHandleLoadingSpinner address direction details =
     if getTxs address direction == TxsLoading then
         let
             offset =
                 5
         in
-        image
+        g
             [ translate
                 (details.x + offset / 2)
                 (details.y + offset / 2)
                 |> Svg.transform
-            , details.width
-                - offset
-                |> String.fromFloat
-                |> Svg.width
-            , details.height
-                - offset
-                |> String.fromFloat
-                |> Svg.height
-            , Html.attribute "href" vc.theme.loadingSpinnerUrl
             ]
-            []
+            [ Loadingspinner.svg
+                (details.width
+                    - offset
+                )
+                (details.height
+                    - offset
+                )
+            ]
             |> Just
 
     else

@@ -25,7 +25,7 @@ module Api.Data exposing
     , AddressOutput
     , Block
     , BlockAtDate
-    , Capabilities, NetworkDisabledCapabilities
+    , Capabilities
     , ChangeHeuristics
     , Concept
     , ConsensusEntry
@@ -44,6 +44,7 @@ module Api.Data exposing
     , NeighborAddresses
     , NeighborClusters
     , NeighborCluster
+    , NetworkDisabledCapabilities
     , OneTimeChangeHeuristic
     , Rate
     , Rates
@@ -87,6 +88,7 @@ module Api.Data exposing
     , encodeAddressOutput
     , encodeBlock
     , encodeBlockAtDate
+    , encodeCapabilities
     , encodeChangeHeuristics
     , encodeConcept
     , encodeConsensusEntry
@@ -105,6 +107,7 @@ module Api.Data exposing
     , encodeNeighborAddresses
     , encodeNeighborClusters
     , encodeNeighborCluster
+    , encodeNetworkDisabledCapabilities
     , encodeOneTimeChangeHeuristic
     , encodeRate
     , encodeRates
@@ -148,6 +151,7 @@ module Api.Data exposing
     , addressOutputDecoder
     , blockDecoder
     , blockAtDateDecoder
+    , capabilitiesDecoder
     , changeHeuristicsDecoder
     , conceptDecoder
     , consensusEntryDecoder
@@ -166,6 +170,7 @@ module Api.Data exposing
     , neighborAddressesDecoder
     , neighborClustersDecoder
     , neighborClusterDecoder
+    , networkDisabledCapabilitiesDecoder
     , oneTimeChangeHeuristicDecoder
     , rateDecoder
     , ratesDecoder
@@ -181,7 +186,6 @@ module Api.Data exposing
     , searchResultLevel5Decoder
     , searchResultLevel6Decoder
     , statsDecoder
-    , capabilitiesDecoder
     , tagDecoder
     , tagCloudEntryDecoder
     , tagSummaryDecoder
@@ -253,16 +257,10 @@ type alias Address =
     , totalSpent : Values
     , totalTokensReceived : Maybe (Dict.Dict String (Values))
     , totalTokensSpent : Maybe (Dict.Dict String (Values))
-    -- iknaio-rest degradation contract: set on budget-truncated bodies, where
-    -- cutoffFloorFields names the count/degree/sum fields that are LOWER BOUNDS
-    -- of the true value (render as "N+")
-    , aggregatesTruncated : Maybe Bool
-    , cutoffFloorFields : Maybe (List String)
-    -- server-side "possible service" verdict (same extension class): when
-    -- present it overrides the dashboard's local heuristic
+    -- extension fields of backends that serve networks without a full index:
+    -- the server's "possible service" verdict, and per field the qualifier of a
+    -- reported number ("gt" = lower bound, "approx" = estimate)
     , isPossibleService : Maybe Bool
-    -- flat field -> qualifier map ("gt" = reported value is a lower bound,
-    -- "approx" = approximate); the consumer-facing form of the cutoff object
     , qualifiers : Maybe (Dict.Dict String String)
     }
 
@@ -478,12 +476,6 @@ type alias CurrencyStats =
     , noTaggedAddresses : Int
     , noTxs : Int
     , timestamp : Int
-    -- optional network-behavior fields sent by external-backend deployments
-    -- (absent from the core API): the gas coin's ticker, its decimals, and a
-    -- display name — lets the app stop hardcoding per-network tables
-    , coinTicker : Maybe String
-    , coinDecimals : Maybe Int
-    , networkName : Maybe String
     }
 
 
@@ -735,18 +727,17 @@ type alias Stats =
     }
 
 
--- hand-added extension code (absent from the core API): the GET /capabilities
--- discovery contract of external-backend deployments. Per-network DISABLED
--- feature flags; a network absent from the list is fully enabled. Parsed only
--- by Model.NetworkCapabilities.
-type alias NetworkDisabledCapabilities =
-    { network : String
-    , disabled : List String
+-- GET /capabilities of backends that serve networks without a full index:
+-- per network the DISABLED features; a network absent from the list is fully
+-- enabled. Read only by Model.NetworkCapabilities.
+type alias Capabilities =
+    { networks : List (NetworkDisabledCapabilities)
     }
 
 
-type alias Capabilities =
-    { networks : List (NetworkDisabledCapabilities)
+type alias NetworkDisabledCapabilities =
+    { network : String
+    , disabled : List String
     }
 
 
@@ -998,6 +989,8 @@ encodeAddressPairs model =
             , encode "total_spent" encodeValues model.totalSpent
             , maybeEncode "total_tokens_received" (Json.Encode.dict identity encodeValues) model.totalTokensReceived
             , maybeEncode "total_tokens_spent" (Json.Encode.dict identity encodeValues) model.totalTokensSpent
+            , maybeEncode "is_possible_service" Json.Encode.bool model.isPossibleService
+            , maybeEncode "qualifiers" (Json.Encode.dict identity Json.Encode.string) model.qualifiers
             ]
     in
     pairs
@@ -2260,6 +2253,37 @@ encodeStatsPairs model =
     pairs
 
 
+encodeCapabilities : Capabilities -> Json.Encode.Value
+encodeCapabilities =
+    encodeObject << encodeCapabilitiesPairs
+
+
+encodeCapabilitiesPairs : Capabilities -> List EncodedField
+encodeCapabilitiesPairs model =
+    let
+        pairs =
+            [ encode "networks" (Json.Encode.list encodeNetworkDisabledCapabilities) model.networks
+            ]
+    in
+    pairs
+
+
+encodeNetworkDisabledCapabilities : NetworkDisabledCapabilities -> Json.Encode.Value
+encodeNetworkDisabledCapabilities =
+    encodeObject << encodeNetworkDisabledCapabilitiesPairs
+
+
+encodeNetworkDisabledCapabilitiesPairs : NetworkDisabledCapabilities -> List EncodedField
+encodeNetworkDisabledCapabilitiesPairs model =
+    let
+        pairs =
+            [ encode "network" Json.Encode.string model.network
+            , encode "disabled" (Json.Encode.list Json.Encode.string) model.disabled
+            ]
+    in
+    pairs
+
+
 encodeTag : Tag -> Json.Encode.Value
 encodeTag =
     encodeObject << encodeTagPairs
@@ -2717,12 +2741,10 @@ addressDecoder =
         |> decode "out_degree" Json.Decode.int 
         |> decode "status" addressStatusDecoder 
         |> maybeDecode "token_balances" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
-        |> decode "total_received" valuesDecoder
-        |> decode "total_spent" valuesDecoder
+        |> decode "total_received" valuesDecoder 
+        |> decode "total_spent" valuesDecoder 
         |> maybeDecode "total_tokens_received" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
         |> maybeDecode "total_tokens_spent" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
-        |> maybeDecode "aggregates_truncated" Json.Decode.bool Nothing
-        |> maybeDecode "cutoff" (Json.Decode.field "floor_fields" (Json.Decode.list Json.Decode.string)) Nothing
         |> maybeDecode "is_possible_service" Json.Decode.bool Nothing
         |> maybeDecode "qualifiers" (Json.Decode.dict Json.Decode.string) Nothing
 
@@ -2871,18 +2893,15 @@ conceptDecoder =
 currencyStatsDecoder : Json.Decode.Decoder CurrencyStats
 currencyStatsDecoder =
     Json.Decode.succeed CurrencyStats
-        |> decode "name" Json.Decode.string
-        |> decode "no_address_relations" Json.Decode.int
-        |> decode "no_addresses" Json.Decode.int
-        |> decode "no_blocks" Json.Decode.int
-        |> decode "no_entities" Json.Decode.int
-        |> decode "no_labels" Json.Decode.int
-        |> decode "no_tagged_addresses" Json.Decode.int
-        |> decode "no_txs" Json.Decode.int
-        |> decode "timestamp" Json.Decode.int
-        |> maybeDecode "coin_ticker" Json.Decode.string Nothing
-        |> maybeDecode "coin_decimals" Json.Decode.int Nothing
-        |> maybeDecode "network_name" Json.Decode.string Nothing
+        |> decode "name" Json.Decode.string 
+        |> decode "no_address_relations" Json.Decode.int 
+        |> decode "no_addresses" Json.Decode.int 
+        |> decode "no_blocks" Json.Decode.int 
+        |> decode "no_entities" Json.Decode.int 
+        |> decode "no_labels" Json.Decode.int 
+        |> decode "no_tagged_addresses" Json.Decode.int 
+        |> decode "no_txs" Json.Decode.int 
+        |> decode "timestamp" Json.Decode.int 
 
 
 clusterDecoder : Json.Decode.Decoder Cluster
@@ -3185,23 +3204,22 @@ searchResultLevel6Decoder =
 statsDecoder : Json.Decode.Decoder Stats
 statsDecoder =
     Json.Decode.succeed Stats
-        |> decode "currencies" (Json.Decode.list currencyStatsDecoder)
-        |> decode "request_timestamp" Json.Decode.string
-        |> decode "version" Json.Decode.string
-
-
--- hand-added extension code, see NetworkDisabledCapabilities
-networkDisabledCapabilitiesDecoder : Json.Decode.Decoder NetworkDisabledCapabilities
-networkDisabledCapabilitiesDecoder =
-    Json.Decode.succeed NetworkDisabledCapabilities
-        |> decode "network" Json.Decode.string
-        |> decode "disabled" (Json.Decode.list Json.Decode.string)
+        |> decode "currencies" (Json.Decode.list currencyStatsDecoder) 
+        |> decode "request_timestamp" Json.Decode.string 
+        |> decode "version" Json.Decode.string 
 
 
 capabilitiesDecoder : Json.Decode.Decoder Capabilities
 capabilitiesDecoder =
     Json.Decode.succeed Capabilities
-        |> decode "networks" (Json.Decode.list networkDisabledCapabilitiesDecoder)
+        |> decode "networks" (Json.Decode.list networkDisabledCapabilitiesDecoder) 
+
+
+networkDisabledCapabilitiesDecoder : Json.Decode.Decoder NetworkDisabledCapabilities
+networkDisabledCapabilitiesDecoder =
+    Json.Decode.succeed NetworkDisabledCapabilities
+        |> decode "network" Json.Decode.string 
+        |> decode "disabled" (Json.Decode.list Json.Decode.string) 
 
 
 tagDecoder : Json.Decode.Decoder Tag

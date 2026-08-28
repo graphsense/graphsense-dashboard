@@ -4,11 +4,11 @@ import Model.Pathfinder exposing (Model)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.RelationDetails as RelationDetails
-import Plugin.Update as Plugin exposing (Plugins)
+import Plugin.Update as Plugin
 
 
-shallPushHistory : Plugins -> Msg -> Model -> Bool
-shallPushHistory plugins msg _ =
+shallPushHistory : Msg -> Model -> Bool
+shallPushHistory msg _ =
     case msg of
         InternalConversionLoopAddressesLoaded _ ->
             False
@@ -38,7 +38,7 @@ shallPushHistory plugins msg _ =
             False
 
         PluginMsg pmsg ->
-            Plugin.shallPushHistory plugins pmsg
+            Plugin.shallPushHistory pmsg
 
         UserPushesLeftMouseButtonOnAddress _ _ ->
             False
@@ -117,9 +117,6 @@ shallPushHistory plugins msg _ =
                 AddressDetails.UserClickedToggleNeighborsTable _ ->
                     False
 
-                AddressDetails.UserClickedToggleTokenBalancesSelect ->
-                    False
-
                 AddressDetails.UserClickedToggleTransactionTable ->
                     False
 
@@ -136,9 +133,6 @@ shallPushHistory plugins msg _ =
                     False
 
                 AddressDetails.UserClickedToggleClusterDetailsOpen ->
-                    False
-
-                AddressDetails.UserClickedToggleDisplayAllTagsInDetails ->
                     False
 
                 AddressDetails.UserClickedShowPubkeyRelatedAddresses ->
@@ -374,9 +368,6 @@ shallPushHistory plugins msg _ =
         UserPushesLeftMouseButtonOnAggEdgeLabel _ _ _ ->
             False
 
-        UserSelectedAggEdgeFilter _ ->
-            False
-
         ToolbarHovercardMsg _ ->
             False
 
@@ -463,9 +454,6 @@ shallPushHistory plugins msg _ =
 
         ConversionDetailsMsg _ _ ->
             False
-
-        UserClickedContextMenuAlignVertically ->
-            True
 
         UserClickedContextMenuAlignHorizontally ->
             True

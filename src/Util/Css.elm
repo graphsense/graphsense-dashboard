@@ -1,4 +1,4 @@
-module Util.Css exposing (alignItemsStretch, overrideBlack, overwriteGreen300, overwriteIconWithDisabledColor, overwritePrimary, spread, zIndexMain, zIndexMainValue)
+module Util.Css exposing (alignItemsStretch, overrideBlack, overwriteIconWithDisabledColor, spread, zIndexMain, zIndexMainValue)
 
 import Css exposing (Style, int, zIndex)
 import Html.Styled exposing (Attribute)

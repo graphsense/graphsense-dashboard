@@ -4,11 +4,10 @@ import Components.InfiniteTable as InfiniteTable
 import Config.View as View
 import Css
 import Css.Pathfinder exposing (emptyTableMsg)
-import Css.Table exposing (loadingSpinner)
 import Html.Styled exposing (Attribute, Html, div, text)
 import Html.Styled.Attributes exposing (css)
 import InfiniteScroll
-import Util.View
+import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
 
 
@@ -43,7 +42,7 @@ view vc attributes config tblInfinite =
                     ]
                 ]
                 (if InfiniteTable.isLoading tblInfinite then
-                    loadingPlaceholderBelow vc
+                    loadingPlaceholderBelow
 
                  else
                     [ tableHint vc "no records found" ]
@@ -54,9 +53,9 @@ view vc attributes config tblInfinite =
         ]
 
 
-loadingPlaceholderAbove : View.Config -> List (Html msg)
-loadingPlaceholderAbove vc =
-    Util.View.loadingSpinner vc loadingSpinner
+loadingPlaceholderAbove : List (Html msg)
+loadingPlaceholderAbove =
+    Loadingspinner.html []
         |> List.singleton
         |> div
             [ css
@@ -68,7 +67,7 @@ loadingPlaceholderAbove vc =
         |> List.singleton
 
 
-loadingPlaceholderBelow : View.Config -> List (Html msg)
-loadingPlaceholderBelow vc =
-    Util.View.loadingSpinner vc loadingSpinner
+loadingPlaceholderBelow : List (Html msg)
+loadingPlaceholderBelow =
+    Loadingspinner.html []
         |> List.singleton

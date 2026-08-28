@@ -2,18 +2,16 @@ module View.Pathfinder.AddTagDialog exposing (view)
 
 import Config.View as View
 import Css
-import Html.Styled as Html exposing (Html, textarea)
+import Html.Styled as Html exposing (Html, div, textarea)
 import Html.Styled.Attributes exposing (css, placeholder, value)
 import Html.Styled.Events exposing (onClick, onInput)
 import Model exposing (AddTagDialogMsgs(..), Msg(..))
 import Model.Dialog as Dialog
-import Plugin.View exposing (Plugins)
 import RecordSetter as Rs
 import Theme.Colors as Colors
 import Theme.Html.Dialogs as Dialogs
 import Theme.Html.Fields as F
 import Theme.Html.Icons as Icons
-import Theme.Html.SettingsComponents as Sc
 import Tuple exposing (second)
 import Util.Css exposing (alignItemsStretch)
 import Util.View
@@ -40,8 +38,8 @@ willBePublishedAlertView vc =
         ]
 
 
-view : Plugins -> View.Config -> Dialog.AddTagConfig Msg -> Html Msg
-view plugins vc model =
+view : View.Config -> Dialog.AddTagConfig Msg -> Html Msg
+view vc model =
     let
         actorField =
             case model.selectedActor of
@@ -56,55 +54,26 @@ view plugins vc model =
                         { root = { closeVisible = True, label = name } }
 
                 _ ->
-                    View.Search.searchWithMoreCss plugins
-                        vc
-                        (View.Search.default
-                            |> Rs.s_showIcon False
-                            |> Rs.s_resultGroupTitle [ Css.display Css.none ]
-                            |> Rs.s_resultLineIcon [ Css.display Css.none ]
-                            |> Rs.s_css
-                                (\_ ->
-                                    Css.outline Css.none
-                                        :: Css.pseudoClass "placeholder" Sc.searchBarFieldStatePlaceholderSearchInputField_details.styles
-                                        :: (Css.width <| Css.pct 100)
-                                        :: Util.View.inputFieldStyles False
-                                )
-                            |> Rs.s_formCss
-                                [ Css.flexGrow <| Css.num 1
-                                , Css.height Css.auto |> Css.important
-                                ]
-                            |> Rs.s_frameCss
-                                [ Css.height <| Css.pct 100
-                                , Css.marginRight Css.zero |> Css.important
-                                ]
-                            |> Rs.s_resultLine
-                                [ Css.property "background-color" Colors.white
-                                , Css.height (Css.px 20)
-                                , Css.displayFlex |> Css.important
-                                , Css.width Css.auto
-                                , Css.alignItems Css.center
-                                , Css.paddingLeft (Css.px 5)
-                                , Css.hover
-                                    [ Css.property "background-color" Colors.greyBlue50
-                                        |> Css.important
-                                    , Css.borderRadius (Css.px 5)
+                    div
+                        [ css
+                            [ Css.displayFlex
+                            , Css.flexDirection Css.row
+                            , Css.property "gap" "5px"
+                            ]
+                        ]
+                        [ View.Search.searchWithMoreCss
+                            vc
+                            (View.Search.default
+                                |> Rs.s_resultGroupTitle [ Css.display Css.none |> Css.important ]
+                                |> Rs.s_resultLineIcon [ Css.display Css.none ]
+                                |> Rs.s_inputAttributes
+                                    [ placeholder (Locale.interpolated vc.locale "e.g." [ "Binance" ])
+                                    , css (Util.View.inputFieldStyles False)
                                     ]
-                                ]
-                            |> Rs.s_resultLineHighlighted
-                                [ Css.property "background-color" Colors.greyBlue50
-                                , Css.borderRadius (Css.px 5)
-                                ]
-                            |> Rs.s_resultsAsLink True
-                            |> Rs.s_dropdownResult
-                                [ Css.property "background-color" Colors.white
-                                ]
-                            |> Rs.s_dropdownFrame
-                                [ Css.property "background-color" Colors.white
-                                ]
-                            |> Rs.s_inputAttributes [ placeholder (Locale.interpolated vc.locale "e.g." [ "Binance" ]) ]
-                        )
-                        model.search
-                        |> Html.map (SearchMsgAddTagDialog >> AddTagDialog)
+                            )
+                            model.search
+                            |> Html.map (SearchMsgAddTagDialog >> AddTagDialog)
+                        ]
 
         textFieldAttributes =
             F.textFieldWithHelpAttributes

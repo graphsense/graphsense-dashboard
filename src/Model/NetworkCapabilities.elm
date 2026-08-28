@@ -1,25 +1,20 @@
 module Model.NetworkCapabilities exposing
     ( Capability(..)
     , NetworkCapabilities
-    , fromBuildConfig
+    , fromApi
     , isLimitedNetwork
+    , none
     , supports
-    , withCapabilities
     )
 
-{-| Which core-GraphSense features each network's serving backend answers.
+{-| Which optional features the backend serves per network.
 
-Wire contract (GET /capabilities, sent by external-backend deployments):
-per-network DISABLED feature flags. A network absent from the response is
-fully enabled; unknown vocabulary words must be tolerated (they are stored
-but map to no `Capability`). Old servers 404 the endpoint — the response
-then never arrives and only the build-time seed applies. This module is the
-only place that parses the contract — everything else asks `supports` /
-`isLimitedNetwork`.
-
-The build-time `Config.limitedNetworks` list seeds networks as
-fully-disabled lite entries, covering requests fired before /capabilities
-has arrived and backends without the endpoint.
+`GET /capabilities` lists, per network, the features that are DISABLED. A
+network absent from the response is fully enabled, and so is every network
+when the endpoint does not exist (older backends answer 404). Words the app
+does not know are kept, so a network that only disables something we have no
+constructor for still counts as limited. This module is the only place that
+reads the wire format; everything else asks `supports` or `isLimitedNetwork`.
 
 -}
 
@@ -55,30 +50,16 @@ capabilityKey capability =
             "conversions"
 
 
-{-| Every capability word the seed disables — includes flags without a
-`Capability` constructor yet (exact\_stats), which only consumers gaining
-one later will read.
+{-| Every network fully enabled — the state before the response arrives and
+the state a backend without the endpoint leaves us in.
 -}
-allCapabilityKeys : Set String
-allCapabilityKeys =
-    Set.fromList [ "relations", "clusters", "tags", "conversions", "exact_stats" ]
+none : NetworkCapabilities
+none =
+    NetworkCapabilities Dict.empty
 
 
-fromBuildConfig : List String -> NetworkCapabilities
-fromBuildConfig networks =
-    networks
-        |> List.map (\network -> ( String.toLower network, allCapabilityKeys ))
-        |> Dict.fromList
-        |> NetworkCapabilities
-
-
-{-| Take a /capabilities response as the whole truth: the server knows its
-deployment, so its declaration replaces the build-config seed entirely — a
-network absent from the response (or listing no disabled features) is fully
-enabled.
--}
-withCapabilities : Api.Data.Capabilities -> NetworkCapabilities -> NetworkCapabilities
-withCapabilities capabilities _ =
+fromApi : Api.Data.Capabilities -> NetworkCapabilities
+fromApi capabilities =
     capabilities.networks
         |> List.map
             (\entry ->
@@ -90,8 +71,7 @@ withCapabilities capabilities _ =
         |> NetworkCapabilities
 
 
-{-| Lite = at least one feature is disabled (declared by the backend or
-seeded by the build config). Networks without disabled features are core.
+{-| At least one feature is disabled on this network.
 -}
 isLimitedNetwork : NetworkCapabilities -> String -> Bool
 isLimitedNetwork (NetworkCapabilities networks) network =

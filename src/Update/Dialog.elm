@@ -1,4 +1,4 @@
-module Update.Dialog exposing (addressNotFoundError, confirm, generalError, httpError, info, mapMsg, options, txNotFoundError)
+module Update.Dialog exposing (addressNotFoundError, confirm, generalError, httpError, info, mapMsg, txNotFoundError)
 
 import Html.Styled as Html
 import Http
@@ -9,11 +9,6 @@ import Set
 confirm : ConfirmConfig msg -> Model msg
 confirm =
     Confirm
-
-
-options : OptionsConfig msg -> Model msg
-options =
-    Options
 
 
 addressNotFoundError : String -> Maybe (Model msg) -> msg -> Model msg

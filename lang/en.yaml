@@ -30,9 +30,15 @@ Add_Tag_description: Help improve our data by reporting an entity linked to this
 Multi Input Cluster Help: Addresses have been used in the same transaction (ie. likely
   by same owner).
 Pubkey Cluster Help: Addresses have been created from the same key (ie. by same owner).
-pf1_deprecation_notice: 'Pathfinder 1.0 is deprecated and will be removed
-  soon. Please switch to the new Pathfinder available from the sidebar. Do you have
-  issues with the retirement of the old pathfinder? Contact support by email at contact@ikna.io.'
+pf1_retired_title: Pathfinder 1.0 has been retired
+pf1_gs_file_not_supported: This .gs file was created with the old Pathfinder 1.0,
+  which has been retired. Old graph files are not supported anymore. Do you have
+  issues with the retirement of the old pathfinder? Contact support by email at
+  contact@iknaio.com.
+pf1_retired_notice: Pathfinder 1.0 has been retired and is no longer available.
+  Please use the new Pathfinder instead. Do you have issues with the retirement
+  of the old pathfinder? Contact support by email at contact@iknaio.com.
+Open Pathfinder: Open Pathfinder
 tx-tracing-mode-help-text: In transaction mode, you can trace the flow of funds through
   individual transactions. This mode is useful for following specific transactions
   and understanding their paths.
@@ -504,6 +510,7 @@ date-time-format: "MM/dd/yyyy hh:mm tt"
 time-format: "hh:mm tt"
 date-format: "MM/dd/yy"
 open in new tab: open in new tab
+or: or
 align vertically: Align vertically
 align horizontally: Align horizontally
 export pdf: Export PDF
@@ -573,3 +580,4 @@ export-dialog-only-visible-inoutputs: "only export visible inputs/outputs"
 export-dialog-only-visible-inoutputs-help: "When enabled, the CSV only contains flows between inputs and outputs that are visible on the graph. Disable to export the full input/output matrix — for transactions with many inputs and outputs this can produce a very large file."
 csv-note-capped: "Transaction too large — only flows touching a visible address were exported, truncated to the export size limit."
 csv-note-visible-only: "Only flows touching a visible address were exported."
+unknown url: "Unknown URL: {0}"

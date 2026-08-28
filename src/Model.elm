@@ -1,4 +1,4 @@
-module Model exposing (AddTagDialogMsgs(..), Auth(..), Effect(..), Flags, Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..), RequestLimit(..), RequestLimitInterval(..), SettingsMsg(..), Thing(..), UserModel, requestLimitIntervalToString, showResetCounterAtRemaining, userSettingsFromMainModel)
+module Model exposing (AddTagDialogMsgs(..), Auth(..), Effect(..), Flags, Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..), RequestLimit(..), RequestLimitInterval(..), SettingsMsg(..), UserModel, requestLimitIntervalToString, showResetCounterAtRemaining, userSettingsFromMainModel)
 
 import Api.Data
 import Browser exposing (UrlRequest)
@@ -8,7 +8,6 @@ import Config.UserSettings exposing (UserSettings)
 import Config.View
 import Dict exposing (Dict)
 import Effect.Api
-import Effect.Graph
 import Effect.Locale
 import Effect.Pathfinder
 import Effect.Search
@@ -16,14 +15,13 @@ import Hovercard
 import Http
 import Json.Encode
 import Model.Dialog
-import Model.Graph
+import Model.NetworkCapabilities exposing (NetworkCapabilities)
 import Model.Notification
 import Model.Pathfinder
 import Model.Pathfinder.Id exposing (Id)
 import Model.Search
 import Model.Statusbar
 import Msg.ExportDialog
-import Msg.Graph
 import Msg.Locale
 import Msg.Pathfinder
 import Msg.Search
@@ -53,10 +51,10 @@ type alias Model navigationKey =
     , config : Config.View.Config
     , page : Page
     , search : Model.Search.Model
-    , graph : Model.Graph.Model
     , pathfinder : Model.Pathfinder.Model
     , user : UserModel
     , stats : WebData Api.Data.Stats
+    , capabilities : WebData NetworkCapabilities
     , width : Int
     , height : Int
     , error : String
@@ -68,6 +66,7 @@ type alias Model navigationKey =
     , localeSelectBox : SelectBox.Model String
     , dirty : Bool
     , navbarSubMenu : Maybe NavbarSubMenu
+    , fileDragOver : Bool
     }
 
 
@@ -84,8 +83,8 @@ type Page
     = Home
     | Stats
     | Settings
-    | Graph
     | Pathfinder
+    | RetiredGraph
     | Plugin Plugin.PluginType
 
 
@@ -97,10 +96,8 @@ type Msg
     | BrowserGotCapabilities Api.Data.Capabilities
     | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Headers, Effect.Api.Effect Msg ) ( Headers, Msg ))
     | UserSwitchesLocale String
-    | UserSubmitsApiKeyForm
     | UserInputsApiKeyForm String
     | UserClickedUserIcon String
-    | UserLeftUserHovercard
     | UserClickedLayout
     | UserClickedConfirm Msg
     | UserClickedOption Msg
@@ -112,7 +109,6 @@ type Msg
     | BrowserChangedWindowSize Int Int
     | BrowserGotEntityTaxonomy (List Api.Data.Concept)
     | BrowserGotAbuseTaxonomy (List Api.Data.Concept)
-    | BrowserGotElementForPlugin (Result Browser.Dom.Error Browser.Dom.Element -> Plugin.Msg) (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotSupportedTokens String Api.Data.TokenConfigs
     | BrowserGotUserInfo Effect.Api.UserInfo
     | UserClickedStatusbar
@@ -123,7 +119,6 @@ type Msg
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
     | AddTagDialog AddTagDialogMsgs
-    | GraphMsg Msg.Graph.Msg
     | PathfinderMsg Msg.Pathfinder.Msg
     | PluginMsg Plugin.Msg
     | UserClickedExampleSearch String
@@ -133,12 +128,16 @@ type Msg
     | LocaleSelectBoxMsg (SelectBox.Msg String)
     | UserClickedNavBack
     | UserClickedNavHome
+    | UserMiddleClickedNavHome
+    | UserDroppedFileOnLoadBox Json.Encode.Value
+    | UserDraggedFileOverLoadBox Bool
     | NotificationMsg Model.Notification.Msg
     | ShowNotification Model.Notification.Notification
     | RuntimePostponedUpdateByUrl Url
     | UserToggledNavbarSubMenu NavbarSubMenuType
     | UserClosesNavbarSubMenu
     | BrowserGotUncaughtError Json.Encode.Value
+    | BrowserGotDeserializedGS ( String, Json.Encode.Value )
     | DebouncePluginOutMsg Plugin.OutMsg
     | BrowserCancelledRequest String
     | BrowserRetryApiEffect String (Effect.Api.Effect Msg) Int
@@ -203,6 +202,7 @@ type Auth
     = Authorized
         { requestLimit : RequestLimit
         , expiration : Maybe Time.Posix
+        , username : Maybe String
         , loggingOut : Bool
         }
     | Unauthorized Bool (List (Effect.Api.Effect Msg))
@@ -213,11 +213,9 @@ type Effect
     = NavLoadEffect String
     | NavPushUrlEffect String
     | NavBackEffect Int
-    | GetElementEffect { id : String, msg : Result Browser.Dom.Error Browser.Dom.Element -> Msg }
     | GetContentsElementEffect
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect (Msg.Search.Msg -> Msg) Effect.Search.Effect
-    | GraphEffect Effect.Graph.Effect
     | PathfinderEffect Effect.Pathfinder.Effect
     | ApiEffect (Effect.Api.Effect Msg)
     | PluginEffect (Cmd Plugin.Msg)
@@ -229,10 +227,6 @@ type Effect
     | PostponeUpdateByUrlEffect Url
 
 
-type Thing
-    = Entity Api.Data.Cluster
-
-
 userSettingsFromMainModel : Model key -> UserSettings
 userSettingsFromMainModel model =
     { selectedLanguage = model.config.locale.locale
@@ -240,12 +234,7 @@ userSettingsFromMainModel model =
     , valueDetail = Just model.config.locale.valueDetail
     , preferredFiatCurrency = Just model.config.preferredFiatCurrency
     , showValuesInFiat = Just model.config.showValuesInFiat
-    , addressLabel = Just model.graph.config.addressLabelType
-    , edgeLabel = Just model.graph.config.txLabelType
-    , showAddressShadowLinks = Just model.graph.config.showAddressShadowLinks
-    , showClusterShadowLinks = Just model.graph.config.showEntityShadowLinks
     , showDatesInUserLocale = Just model.config.showDatesInUserLocale
-    , showZeroValueTxs = Just model.graph.config.showZeroTransactions
     , showTimeZoneOffset = Just model.config.showTimeZoneOffset
     , showTimestampOnTxEdge = Just model.config.showTimestampOnTxEdge
     , highlightClusterFriends = Just model.pathfinder.config.highlightClusterFriends
