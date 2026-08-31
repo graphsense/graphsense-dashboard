@@ -64,6 +64,10 @@ type alias Model =
     , actors : Dict String Actor
     , tagSummaries : Dict Id HavingTags
     , clusters : Dict Id (WebData Cluster)
+
+    -- address details fetched in the background for the counterparties of
+    -- prefetched next-txs; consumed (and removed) by loadAddressWithPosition
+    , prefetchedAddresses : Dict Id Api.Data.Address
     , colors : ScopedColorAssignment
     , annotations : AnnotationModel
     , dragging : Dragging Id

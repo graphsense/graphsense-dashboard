@@ -86,6 +86,7 @@ type Msg
     | BrowserGotAddressData AddingAddressConfig Api.Data.Address
     | BrowserGotAddressPubkeyRelations Id Api.Data.RelatedAddresses
     | BrowserGotAddressDataToRefresh Api.Data.Address
+    | BrowserGotPrefetchedAddressData Id Api.Data.Address
       -- the Id is the cluster id the entity request was made with (fresh-aware,
       -- via Data.addressCluster) and is the key of the clusters dict; the
       -- response's .cluster field is normalized to it at the request site

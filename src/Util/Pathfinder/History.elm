@@ -332,6 +332,9 @@ shallPushHistory msg _ =
         WorkflowNextTxByTimePrefetch _ _ ->
             False
 
+        BrowserGotPrefetchedAddressData _ _ ->
+            False
+
         UserPushesLeftMouseButtonOnUtxoTx _ _ ->
             False
 

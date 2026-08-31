@@ -34,6 +34,7 @@ init us =
       , colors = Colors.init
       , annotations = Annotations.empty
       , clusters = Dict.empty
+      , prefetchedAddresses = Dict.empty
       , selection = NoSelection
       , hovered = NoHover
       , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) us.recentSearches

@@ -2602,6 +2602,9 @@ updateByMsg uc msg model =
             WorkflowNextTxByTime.update config wm
                 |> flip (handlePrefetchWorkflowNextTxByTime config) model
 
+        BrowserGotPrefetchedAddressData id data ->
+            n { model | prefetchedAddresses = Dict.insert id data model.prefetchedAddresses }
+
         BrowserGotTagSummaries includesBestClusterTag data ->
             List.foldl
                 (\( id, ts ) ->
@@ -4327,8 +4330,9 @@ handlePrefetchWorkflowNextTxByTime : WorkflowNextTxByTime.Config -> WorkflowNext
 handlePrefetchWorkflowNextTxByTime config wf model =
     case wf of
         Workflow.Ok tx ->
-            storePrefetchResult config (TxsPrefetched tx) model
-                |> n
+            ( storePrefetchResult config (TxsPrefetched tx) model
+            , prefetchCounterpartyEffects config tx model
+            )
 
         Workflow.Next eff ->
             eff
@@ -4338,6 +4342,45 @@ handlePrefetchWorkflowNextTxByTime config wf model =
 
         Workflow.Err WorkflowNextTxByTime.NoTxFound ->
             n model
+
+
+{-| Background-fetch the address on the far side of a freshly prefetched
+next-tx (user decision 2026-08-31): placing that address after an expand click
+is the remaining round-trip, and on external-backend networks it is the most
+expensive one. Account txs only — a UTXO tx has no single counterparty (the
+user picks one from the io lists). One hop, no recursion: a stored address
+does not prefetch anything further until it is actually placed on the graph.
+-}
+prefetchCounterpartyEffects : { a | addressId : Id, direction : Direction } -> Api.Data.Tx -> Model -> List Effect
+prefetchCounterpartyEffects config tx model =
+    case tx of
+        Api.Data.TxTxAccount t ->
+            let
+                cid =
+                    Id.init t.network
+                        (case config.direction of
+                            Incoming ->
+                                t.fromAddress
+
+                            Outgoing ->
+                                t.toAddress
+                        )
+            in
+            if Network.hasAddress cid model.network || Dict.member cid model.prefetchedAddresses || cid == config.addressId then
+                []
+
+            else
+                [ BrowserGotPrefetchedAddressData cid
+                    |> Api.GetAddressEffect
+                        { currency = Id.network cid
+                        , address = Id.id cid
+                        , includeActors = True
+                        }
+                    |> ApiEffect
+                ]
+
+        Api.Data.TxTxUtxo _ ->
+            []
 
 
 {-| The background twin of `getNextTxEffects` (addAnyLinks semantics, no
@@ -4765,22 +4808,40 @@ loadAddressWithPosition : Bool -> FindPosition -> Id -> Model -> ( Model, List E
 loadAddressWithPosition autoLinkTxInTraceMode position id model =
     let
         request =
-            ( -- don't add the address here because it is not loaded yet
-              --{ model | network = Network.addAddressWithPosition plugins position id model.network }
-              model
-            , [ BrowserGotAddressData
-                    { id = id
-                    , pos = position
-                    , autoLinkTxInTraceMode = autoLinkTxInTraceMode
-                    }
-                    |> Api.GetAddressEffect
-                        { currency = Id.network id
-                        , address = Id.id id
-                        , includeActors = True
-                        }
-                    |> ApiEffect
-              ]
-            )
+            case Dict.get id model.prefetchedAddresses of
+                Just data ->
+                    -- a background prefetch already holds this address: replay
+                    -- it through the normal arrival path, no request at all
+                    ( { model | prefetchedAddresses = Dict.remove id model.prefetchedAddresses }
+                    , [ BrowserGotAddressData
+                            { id = id
+                            , pos = position
+                            , autoLinkTxInTraceMode = autoLinkTxInTraceMode
+                            }
+                            data
+                            |> Task.succeed
+                            |> Task.perform identity
+                            |> CmdEffect
+                      ]
+                    )
+
+                Nothing ->
+                    ( -- don't add the address here because it is not loaded yet
+                      --{ model | network = Network.addAddressWithPosition plugins position id model.network }
+                      model
+                    , [ BrowserGotAddressData
+                            { id = id
+                            , pos = position
+                            , autoLinkTxInTraceMode = autoLinkTxInTraceMode
+                            }
+                            |> Api.GetAddressEffect
+                                { currency = Id.network id
+                                , address = Id.id id
+                                , includeActors = True
+                                }
+                            |> ApiEffect
+                      ]
+                    )
     in
     Dict.get id model.network.addresses
         |> Maybe.map
