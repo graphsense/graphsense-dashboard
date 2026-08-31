@@ -1,4 +1,4 @@
-module View.Stats exposing (stats)
+module View.Stats exposing (cappedTokenPills, stats)
 
 import Api.Data
 import Config.View exposing (Config)
@@ -71,12 +71,30 @@ supportedTokens configs =
     configs.tokenConfigs |> List.map (.ticker >> String.toUpper)
 
 
+maxTokenPills : Int
+maxTokenPills =
+    10
+
+
+{-| At most `maxTokenPills` pills: above that, the last pill reads "N+" for
+the N tickers that did not get one of the 9 remaining slots.
+-}
+cappedTokenPills : List String -> List String
+cappedTokenPills tickers =
+    if List.length tickers > maxTokenPills then
+        List.take (maxTokenPills - 1) tickers
+            ++ [ String.fromInt (List.length tickers - (maxTokenPills - 1)) ++ "+" ]
+
+    else
+        tickers
+
+
 supportedTokensRow : Config -> Maybe Api.Data.TokenConfigs -> List (Html msg)
 supportedTokensRow vc tokens =
     tokens
         |> Maybe.map supportedTokens
         |> Maybe.andThen (List.Nonempty.fromList >> Maybe.map List.Nonempty.toList)
-        |> Maybe.map (statsRowBadge vc "Supported tokens" >> List.singleton)
+        |> Maybe.map (cappedTokenPills >> statsRowBadge vc "Supported tokens" >> List.singleton)
         |> Maybe.withDefault []
 
 
