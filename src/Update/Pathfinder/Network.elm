@@ -646,11 +646,13 @@ insertAddress pc model newAddress =
                             Incoming ->
                                 { addr
                                     | outgoingTxs = txsInsertId tx.id addr.outgoingTxs
+                                    , incomingTxs = Address.invalidatePrefetched addr.incomingTxs
                                 }
 
                             Outgoing ->
                                 { addr
                                     | incomingTxs = txsInsertId tx.id addr.incomingTxs
+                                    , outgoingTxs = Address.invalidatePrefetched addr.outgoingTxs
                                 }
                         , setAddressInTx pc tx.id direction newAddress nw
                         )
@@ -1186,12 +1188,21 @@ insertTx pc network tx =
 
                         Incoming ->
                             ( .outgoingTxs, s_outgoingTxs )
+
+                ( getOpposite, setOpposite ) =
+                    case dir of
+                        Outgoing ->
+                            ( .outgoingTxs, s_outgoingTxs )
+
+                        Incoming ->
+                            ( .incomingTxs, s_incomingTxs )
             in
             if Set.member tx.id <| txsToSet <| get addr then
                 addr
 
             else
                 set (get addr |> txsInsertId tx.id) addr
+                    |> (\a -> setOpposite (Address.invalidatePrefetched (getOpposite a)) a)
     in
     Dict.get tx.id nw.txs
         |> Maybe.map
