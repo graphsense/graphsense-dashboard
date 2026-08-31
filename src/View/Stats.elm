@@ -7,6 +7,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Http
 import List.Nonempty
+import Model.NetworkCapabilities as NetworkCapabilities exposing (NetworkCapabilities)
 import RemoteData exposing (WebData)
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes exposing (d, viewBox)
@@ -19,8 +20,8 @@ import View.CurrencyMeta exposing (networks)
 import View.Locale as Locale
 
 
-stats : Config -> WebData Api.Data.Stats -> Dict String Api.Data.TokenConfigs -> Html msg
-stats vc sts tokens =
+stats : Config -> NetworkCapabilities -> WebData Api.Data.Stats -> Dict String Api.Data.TokenConfigs -> Html msg
+stats vc capabilities sts tokens =
     Page.pageWithTitleWithAttributes
         Page.pageWithTitleAttributes
         { root =
@@ -32,7 +33,7 @@ stats vc sts tokens =
                         { onFailure = statsLoadFailure vc
                         , onNotAsked = text ""
                         , onLoading = statsLoading
-                        , onSuccess = statsLoaded vc tokens
+                        , onSuccess = statsLoaded vc capabilities tokens
                         }
             }
         }
@@ -49,12 +50,18 @@ statsLoading =
     Loadingspinner.html []
 
 
-statsLoaded : Config -> Dict String Api.Data.TokenConfigs -> Api.Data.Stats -> Html msg
-statsLoaded vc tokens sts =
+statsLoaded : Config -> NetworkCapabilities -> Dict String Api.Data.TokenConfigs -> Api.Data.Stats -> Html msg
+statsLoaded vc capabilities tokens sts =
     Stats.networks
         { networkList =
             sts.currencies
-                |> List.map (\v -> currency vc v (Dict.get v.name tokens))
+                |> List.map
+                    (\v ->
+                        currency vc
+                            (NetworkCapabilities.supports NetworkCapabilities.ExactStats capabilities v.name)
+                            v
+                            (Dict.get v.name tokens)
+                    )
         }
         {}
 
@@ -73,8 +80,32 @@ supportedTokensRow vc tokens =
         |> Maybe.withDefault []
 
 
-currency : Config -> Api.Data.CurrencyStats -> Maybe Api.Data.TokenConfigs -> Html msg
-currency vc cs tokens =
+currency : Config -> Bool -> Api.Data.CurrencyStats -> Maybe Api.Data.TokenConfigs -> Html msg
+currency vc hasExactStats cs tokens =
+    let
+        -- A backend that disables "exact_stats" serves placeholder zeros for
+        -- the pipeline numbers: hide those rows (and the percentage, whose
+        -- denominator is one of them) instead of rendering the zeros.
+        pipelineRows =
+            if hasExactStats then
+                [ Locale.intWithoutValueDetailFormatting vc.locale cs.noTxs
+                    |> statsRow vc "transactions"
+                , Locale.intWithoutValueDetailFormatting vc.locale cs.noAddresses
+                    |> statsRow vc "Addresses"
+                , Locale.intWithoutValueDetailFormatting vc.locale cs.noEntities
+                    |> statsRow vc "Entities"
+                ]
+
+            else
+                []
+
+        taggedAddresses =
+            if hasExactStats then
+                taggedAddressesWithPercentage vc cs
+
+            else
+                Locale.intWithoutValueDetailFormatting vc.locale cs.noTaggedAddresses
+    in
     Stats.network
         { dataRowList =
             [ Data.timestampToPosix cs.timestamp
@@ -82,17 +113,13 @@ currency vc cs tokens =
                 |> statsRow vc "Last update"
             , Locale.intWithoutValueDetailFormatting vc.locale (cs.noBlocks - 1)
                 |> statsRow vc "Latest block"
-            , Locale.intWithoutValueDetailFormatting vc.locale cs.noTxs
-                |> statsRow vc "transactions"
-            , Locale.intWithoutValueDetailFormatting vc.locale cs.noAddresses
-                |> statsRow vc "Addresses"
-            , Locale.intWithoutValueDetailFormatting vc.locale cs.noEntities
-                |> statsRow vc "Entities"
-            , Locale.intWithoutValueDetailFormatting vc.locale cs.noLabels
-                |> statsRow vc "Labels"
-            , taggedAddressesWithPercentage vc cs
-                |> statsRow vc "Tagged addresses"
             ]
+                ++ pipelineRows
+                ++ [ Locale.intWithoutValueDetailFormatting vc.locale cs.noLabels
+                        |> statsRow vc "Labels"
+                   , taggedAddresses
+                        |> statsRow vc "Tagged addresses"
+                   ]
                 ++ supportedTokensRow vc tokens
         }
         { root =

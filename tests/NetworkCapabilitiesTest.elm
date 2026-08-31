@@ -59,6 +59,14 @@ suite =
                         , \caps -> NC.supports NC.Tags caps "arb" |> Expect.equal True
                         , \caps -> NC.isLimitedNetwork caps "arb" |> Expect.equal True
                         ]
+        , test "exact_stats is part of the vocabulary" <|
+            \_ ->
+                NC.fromApi (capabilities [ ( "arb", [ "exact_stats" ] ) ])
+                    |> Expect.all
+                        [ \caps -> NC.supports NC.ExactStats caps "arb" |> Expect.equal False
+                        , \caps -> NC.supports NC.ExactStats caps "eth" |> Expect.equal True
+                        , \caps -> NC.isLimitedNetwork caps "arb" |> Expect.equal True
+                        ]
         , test "matching is case-insensitive on network and capability" <|
             \_ ->
                 NC.fromApi (capabilities [ ( "ARB", [ "Tags" ] ) ])

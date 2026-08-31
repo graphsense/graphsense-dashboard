@@ -5,8 +5,10 @@ import Css
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model exposing (Model, Msg(..), Page(..))
+import Model.NetworkCapabilities as NetworkCapabilities
 import Plugin.View as Plugin
 import RecordSetter as Rs
+import RemoteData
 import Route
 import Route.Pathfinder
 import Theme.Html.Page as Page
@@ -29,7 +31,10 @@ view vc model =
                 |> main_ vc
 
         Stats ->
-            Stats.stats vc model.stats model.supportedTokens
+            Stats.stats vc
+                (model.capabilities |> RemoteData.withDefault NetworkCapabilities.none)
+                model.stats
+                model.supportedTokens
 
         Settings ->
             Settings.view vc model

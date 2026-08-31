@@ -32,6 +32,7 @@ type Capability
     | Clusters
     | Tags
     | Conversions
+    | ExactStats
 
 
 capabilityKey : Capability -> String
@@ -48,6 +49,9 @@ capabilityKey capability =
 
         Conversions ->
             "conversions"
+
+        ExactStats ->
+            "exact_stats"
 
 
 {-| Every network fully enabled — the state before the response arrives and

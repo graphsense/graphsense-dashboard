@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - BNB Smart Chain (`bnb`) and Arbitrum (`arb`) render like Ethereum: lowercased `0x` identifiers, 18-decimal units, names, icons and explorer links. Native amounts on Arbitrum are labelled ETH, the currency its fees are paid in
 - The app asks the backend once at startup which features it serves per network (`GET /capabilities`) and hides what is missing: neighbor tables, automatic edge discovery, the cluster-addresses tab, bridge conversions and tag lookups stay off on a network whose backend has no relations, clusters, conversions or tags. A backend without the endpoint leaves everything enabled. A deep link that loads an address or transaction waits for that answer, so no request goes out before the app knows what the backend serves
 - Counts and totals the backend reports as lower bounds are shown with a trailing "+" (`500+`), taken from the response's `qualifiers` map; nothing is capped or guessed client-side
+- The ledger-statistics card hides the pipeline rows (transactions, addresses, entities) and the tagged-addresses percentage on a network whose backend disables `exact_stats` — those backends serve placeholder zeros; labels and tagged addresses still show their real TagStore counts
 - The backend's `is_possible_service` verdict drives the "possible service" warning where present; the local degree/transaction-count rule remains the fallback
 
 ### Changed
