@@ -326,6 +326,12 @@ shallPushHistory msg _ =
         WorkflowNextTxByTime _ _ _ ->
             False
 
+        WorkflowNextUtxoTxPrefetch _ _ ->
+            False
+
+        WorkflowNextTxByTimePrefetch _ _ ->
+            False
+
         UserPushesLeftMouseButtonOnUtxoTx _ _ ->
             False
 

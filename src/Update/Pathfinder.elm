@@ -2030,7 +2030,7 @@ updateByMsg uc msg model =
                 |> Maybe.map
                     (\address ->
                         if expandAllowed address then
-                            expandAddress address direction model
+                            expandAddress uc address direction model
 
                         else
                             ( model
@@ -2593,6 +2593,14 @@ updateByMsg uc msg model =
         WorkflowNextTxByTime config neighborId wm ->
             WorkflowNextTxByTime.update config wm
                 |> flip (handleWorkflowNextTxByTime uc config neighborId) model
+
+        WorkflowNextUtxoTxPrefetch config wm ->
+            WorkflowNextUtxoTx.update config wm
+                |> flip (handlePrefetchWorkflowNextUtxo config) model
+
+        WorkflowNextTxByTimePrefetch config wm ->
+            WorkflowNextTxByTime.update config wm
+                |> flip (handlePrefetchWorkflowNextTxByTime config) model
 
         BrowserGotTagSummaries includesBestClusterTag data ->
             List.foldl
@@ -3785,6 +3793,18 @@ browserGotAddressData uc providedId position data model =
                   ]
                 )
 
+        -- Pre-fetch the next transaction in both directions right after the
+        -- address data arrives, so a later expand click resolves without an
+        -- API round-trip (user decision 2026-08-31). Results are parked in
+        -- TxsPrefetched via the *Prefetch workflow messages; a reloaded
+        -- address (already on the graph with data) is not prefetched again.
+        prefetchEff =
+            if Network.hasLoadedAddress id model.network then
+                []
+
+            else
+                prefetchNextTxEffects net id
+
         transform =
             case position of
                 AtViewportCenter _ _ ->
@@ -3826,6 +3846,7 @@ browserGotAddressData uc providedId position data model =
                 ++ [ fetchAddressPubkeyRelations id Nothing
                    , InternalEffect (InternalPathfinderAddedAddress newAddress.id)
                    ]
+                ++ prefetchEff
             )
         |> and (checkSelection uc)
 
@@ -3983,8 +4004,8 @@ fitGraph uc model =
     }
 
 
-expandAddress : Address -> Direction -> Model -> ( Model, List Effect )
-expandAddress address direction model =
+expandAddress : Update.Config -> Address -> Direction -> Model -> ( Model, List Effect )
+expandAddress uc address direction model =
     let
         id =
             address.id
@@ -4003,6 +4024,9 @@ expandAddress address direction model =
     case getTxs address direction of
         Txs _ ->
             n newmodel
+
+        TxsPrefetched tx ->
+            applyPrefetchedTx uc { addressId = id, direction = direction } tx newmodel
 
         TxsLoading ->
             n newmodel
@@ -4215,6 +4239,158 @@ getNextTxEffects network addressId direction { addBetweenLinks, addAnyLinks } ne
 
                 else
                     []
+            )
+
+
+{-| Consume a prefetched next-tx on expand click: insert it into the graph the
+same way the live workflow's `Workflow.Ok` would, minus the skip statusbar
+logs (any change-hop skipping already happened silently at prefetch time).
+-}
+applyPrefetchedTx : Update.Config -> { addressId : Id, direction : Direction } -> Api.Data.Tx -> Model -> ( Model, List Effect )
+applyPrefetchedTx uc config tx model =
+    let
+        ( newModel, eff ) =
+            handleTx uc config Nothing tx model
+
+        -- mirror handleWorkflowNextUtxo's explicit tx-set insert: addTx's
+        -- per-address propagation misses the workflow direction on self-loop
+        -- txs, which would leave the expand handle stuck
+        modelWithLoadingCleared =
+            case tx of
+                Api.Data.TxTxUtxo t ->
+                    newModel
+                        |> s_network
+                            (Network.updateAddress config.addressId
+                                (\addr ->
+                                    case config.direction of
+                                        Incoming ->
+                                            { addr | incomingTxs = PathfinderAddress.txsInsertId (Id.init t.currency t.txHash) addr.incomingTxs }
+
+                                        Outgoing ->
+                                            { addr | outgoingTxs = PathfinderAddress.txsInsertId (Id.init t.currency t.txHash) addr.outgoingTxs }
+                                )
+                                newModel.network
+                            )
+
+                Api.Data.TxTxAccount _ ->
+                    newModel
+    in
+    ( modelWithLoadingCleared, eff )
+
+
+{-| Park a background prefetch result on the address — but only while the
+direction is still untouched: a click may have started the live workflow
+(TxsLoading) or even landed a tx (Txs \_) in the meantime, and the prefetch
+must never clobber that.
+-}
+storePrefetchResult : { a | addressId : Id, direction : Direction } -> Txs -> Model -> Model
+storePrefetchResult config txsState model =
+    model
+        |> s_network
+            (Network.updateAddress config.addressId
+                (\addr ->
+                    if getTxs addr config.direction == TxsNotFetched then
+                        txsSetter config.direction txsState addr
+
+                    else
+                        addr
+                )
+                model.network
+            )
+
+
+handlePrefetchWorkflowNextUtxo : WorkflowNextUtxoTx.Config -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
+handlePrefetchWorkflowNextUtxo config wf model =
+    case wf of
+        Workflow.Ok { tx } ->
+            storePrefetchResult config (TxsPrefetched (Api.Data.TxTxUtxo tx)) model
+                |> n
+
+        Workflow.Next eff ->
+            eff
+                |> List.map (Api.map (WorkflowNextUtxoTxPrefetch config))
+                |> List.map ApiEffect
+                |> pair model
+
+        Workflow.Err (WorkflowNextUtxoTx.MaxChangeHopsLimit _ lastTx) ->
+            storePrefetchResult config (TxsLastCheckedChangeTx lastTx) model
+                |> n
+
+        Workflow.Err WorkflowNextUtxoTx.NoTxFound ->
+            -- deliberately NOT stored: a later expand click re-runs the live
+            -- workflow and surfaces the "no adjacent tx" toast exactly as
+            -- before prefetching existed
+            n model
+
+
+handlePrefetchWorkflowNextTxByTime : WorkflowNextTxByTime.Config -> WorkflowNextTxByTime.Workflow -> Model -> ( Model, List Effect )
+handlePrefetchWorkflowNextTxByTime config wf model =
+    case wf of
+        Workflow.Ok tx ->
+            storePrefetchResult config (TxsPrefetched tx) model
+                |> n
+
+        Workflow.Next eff ->
+            eff
+                |> List.map (Api.map (WorkflowNextTxByTimePrefetch config))
+                |> List.map ApiEffect
+                |> pair model
+
+        Workflow.Err WorkflowNextTxByTime.NoTxFound ->
+            n model
+
+
+{-| The background twin of `getNextTxEffects` (addAnyLinks semantics, no
+neighbor anchoring): same workflow entry points, but results are routed to the
+\*Prefetch messages, which park the tx instead of inserting it.
+-}
+prefetchNextTxEffects : Network -> Id -> List Effect
+prefetchNextTxEffects network addressId =
+    [ Incoming, Outgoing ]
+        |> List.concatMap
+            (\direction ->
+                Network.getRecentTxForAddress network (Direction.flip direction) addressId
+                    |> Maybe.map
+                        (\tx ->
+                            case tx.type_ of
+                                Tx.Account t ->
+                                    let
+                                        config =
+                                            { addressId = addressId
+                                            , direction = direction
+                                            }
+                                    in
+                                    WorkflowNextTxByTime.startByHeight config t.raw.height t.raw.currency
+                                        |> Workflow.mapEffect (WorkflowNextTxByTimePrefetch config)
+                                        |> Workflow.next
+                                        |> List.map ApiEffect
+
+                                Tx.Utxo t ->
+                                    let
+                                        config =
+                                            { addressId = addressId
+                                            , direction = direction
+                                            , indexSelection = WorkflowNextUtxoTx.BiggestByValue
+                                            }
+                                    in
+                                    WorkflowNextUtxoTx.start config t.raw
+                                        |> Workflow.mapEffect (WorkflowNextUtxoTxPrefetch config)
+                                        |> Workflow.next
+                                        |> List.map ApiEffect
+                        )
+                    |> Maybe.Extra.withDefaultLazy
+                        (\_ ->
+                            let
+                                config =
+                                    { addressId = addressId
+                                    , direction = direction
+                                    }
+                            in
+                            WorkflowNextTxByTime.start config
+                                |> Workflow.mapEffect (WorkflowNextTxByTimePrefetch config)
+                                |> Workflow.next
+                                |> List.map ApiEffect
+                        )
             )
 
 

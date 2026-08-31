@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Counts and totals the backend reports as lower bounds are shown with a trailing "+" (`500+`), taken from the response's `qualifiers` map; nothing is capped or guessed client-side
 - The ledger-statistics card hides the pipeline rows (transactions, addresses, entities) and the tagged-addresses percentage on a network whose backend disables `exact_stats` — those backends serve placeholder zeros; labels and tagged addresses still show their real TagStore counts
 - The backend's `is_possible_service` verdict drives the "possible service" warning where present; the local degree/transaction-count rule remains the fallback
+- Right after an address loads, the next transaction in both directions is fetched in the background, so clicking an expand handle inserts it instantly instead of waiting for the API
 
 ### Changed
 

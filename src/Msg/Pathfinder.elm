@@ -113,6 +113,8 @@ type Msg
     | UserClickedAllAddressCheckboxInTable Direction
     | WorkflowNextUtxoTx WorkflowNextUtxoTx.Config (Maybe Id) WorkflowNextUtxoTx.Msg
     | WorkflowNextTxByTime WorkflowNextTxByTime.Config (Maybe Id) WorkflowNextTxByTime.Msg
+    | WorkflowNextUtxoTxPrefetch WorkflowNextUtxoTx.Config WorkflowNextUtxoTx.Msg
+    | WorkflowNextTxByTimePrefetch WorkflowNextTxByTime.Config WorkflowNextTxByTime.Msg
     | UserPushesLeftMouseButtonOnUtxoTx Id Coords
     | UserClickedRemoveAddressFromGraph Id
     | UserReleasedDeleteKey

@@ -66,6 +66,9 @@ type Txs
     | TxsLastCheckedChangeTx Api.Data.TxUtxo
     | TxsLoading
     | TxsNotFetched
+      -- background prefetch already resolved the next tx in this direction;
+      -- an expand click consumes it without any API round-trip
+    | TxsPrefetched Api.Data.Tx
 
 
 type AddressServiceType
