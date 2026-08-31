@@ -1417,7 +1417,11 @@ animateAddresses delta model =
                             }
                                 |> updateAddress id (always newAddr)
                         )
-                    |> Maybe.withDefault network
+                    |> Maybe.Extra.withDefaultLazy
+                        -- self-healing: an id whose address no longer exists can
+                        -- never satisfy the isDone check below, so evict it here
+                        -- instead of animating a ghost at 60fps forever
+                        (\_ -> { network | animatedAddresses = Set.remove id network.animatedAddresses })
             )
             model
 
@@ -1455,7 +1459,9 @@ animateTxs delta model =
                                         }
                                     )
                         )
-                    |> Maybe.withDefault network
+                    |> Maybe.Extra.withDefaultLazy
+                        -- self-healing, see animateAddresses
+                        (\_ -> { network | animatedTxs = Set.remove id network.animatedTxs })
             )
             model
 
@@ -1480,6 +1486,13 @@ deleteAddress id network =
                         )
                         { network
                             | addresses = Dict.remove id network.addresses
+
+                            -- also drop it from the animation set: the only other
+                            -- removal (in animateAddresses) sits behind a Dict.get
+                            -- that fails once the address is gone, so a stale id
+                            -- would keep the onAnimationFrameDelta subscription
+                            -- (and a 60fps full re-render) alive forever
+                            , animatedAddresses = Set.remove id network.animatedAddresses
                         }
                     |> (\nw ->
                             Dict.get id nw.addressAggEdgeMap
@@ -1534,6 +1547,10 @@ deleteTx id network =
                         )
                         { network2
                             | txs = Dict.remove id network2.txs
+
+                            -- see deleteAddress: a deleted tx must leave
+                            -- animatedTxs too, or the rAF subscription never ends
+                            , animatedTxs = Set.remove id network2.animatedTxs
                         }
             )
         |> Maybe.withDefault network

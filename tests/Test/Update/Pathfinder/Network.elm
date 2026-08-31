@@ -13,6 +13,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (Txs(..))
 import Model.Pathfinder.Id as ModelId
 import Model.Pathfinder.Network exposing (FindPosition(..), Network)
+import Set
 import Test exposing (Test)
 import Tuple
 import Update.Pathfinder.Network as Network
@@ -204,4 +205,29 @@ suite =
 
                     Nothing ->
                         Expect.fail "address was lost"
+        , Test.test "deleteTx removes the tx from animatedTxs" <|
+            \_ ->
+                let
+                    ( tx, network ) =
+                        Network.addTx config (Api.Data.TxTxUtxo Api.tx1) Data.oneAddress
+                in
+                -- deleting a tx while its entry animation is still running must
+                -- not leave its id behind in animatedTxs: a stale id keeps the
+                -- onAnimationFrameDelta subscription alive forever (the only
+                -- Set.remove sits behind a Dict.get that now fails), rendering
+                -- the whole graph at 60fps for the rest of the session
+                Network.deleteTx tx.id network
+                    |> .animatedTxs
+                    |> Expect.equalSets Set.empty
+        , Test.test "deleteAddress removes the address from animatedAddresses" <|
+            \_ ->
+                let
+                    network =
+                        Init.init
+                            |> Network.addAddress config Id.address1
+                            |> Tuple.second
+                in
+                Network.deleteAddress Id.address1 network
+                    |> .animatedAddresses
+                    |> Expect.equalSets Set.empty
         ]
