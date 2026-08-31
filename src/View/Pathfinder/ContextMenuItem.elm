@@ -1,4 +1,4 @@
-module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, init2, initLink2, map, setDisabled, view)
+module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, init2, initLink2, map, setDisabled, setTooltip, view)
 
 import Config.View as View
 import Css
@@ -29,12 +29,18 @@ type alias ContextMenuItemInternal msg =
     , text2 : Maybe String
     , action : ContextMenuItemActions msg
     , disabled : Bool
+    , tooltip : Maybe String
     }
 
 
 view : View.Config -> ContextMenuItem msg -> Html msg
-view vc (ContextMenuItem { icon, text1, text2, action, disabled }) =
+view vc (ContextMenuItem { icon, text1, text2, action, disabled, tooltip }) =
     let
+        tooltipAttr =
+            tooltip
+                |> Maybe.map (Locale.string vc.locale >> Html.Styled.Attributes.title >> List.singleton)
+                |> Maybe.withDefault []
+
         styledIcon =
             if disabled then
                 -- note overwriting black did not work since icon ins already overwrites it as primary
@@ -100,6 +106,7 @@ view vc (ContextMenuItem { icon, text1, text2, action, disabled }) =
                     |> css
                  )
                     :: msg
+                    ++ tooltipAttr
                 )
             |> Rs.s_placeholder1
                 unsetFontStyle
@@ -125,7 +132,7 @@ view vc (ContextMenuItem { icon, text1, text2, action, disabled }) =
 
 
 map : (a -> b) -> ContextMenuItem a -> ContextMenuItem b
-map mp (ContextMenuItem { icon, text1, text2, action, disabled }) =
+map mp (ContextMenuItem { icon, text1, text2, action, disabled, tooltip }) =
     ContextMenuItem
         { icon = Html.map mp icon
         , text1 = text1
@@ -138,6 +145,7 @@ map mp (ContextMenuItem { icon, text1, text2, action, disabled }) =
                 ClickLink blank l ->
                     ClickLink blank l
         , disabled = disabled
+        , tooltip = tooltip
         }
 
 
@@ -170,6 +178,7 @@ init2 { icon, text1, text2, msg } =
         , text2 = text2
         , action = ClickMsg msg
         , disabled = False
+        , tooltip = Nothing
         }
 
 
@@ -188,6 +197,7 @@ initLink2 { icon, text1, text2, blank, link } =
         , text2 = text2
         , action = ClickLink blank link
         , disabled = False
+        , tooltip = Nothing
         }
 
 
@@ -195,3 +205,11 @@ setDisabled : Bool -> ContextMenuItem msg -> ContextMenuItem msg
 setDisabled disabled (ContextMenuItem item) =
     ContextMenuItem
         { item | disabled = disabled }
+
+
+{-| Localized on render; shown as the native browser tooltip.
+-}
+setTooltip : String -> ContextMenuItem msg -> ContextMenuItem msg
+setTooltip tooltip (ContextMenuItem item) =
+    ContextMenuItem
+        { item | tooltip = Just tooltip }
