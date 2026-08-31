@@ -3798,8 +3798,11 @@ browserGotAddressData uc providedId position data model =
         -- API round-trip (user decision 2026-08-31). Results are parked in
         -- TxsPrefetched via the *Prefetch workflow messages; a reloaded
         -- address (already on the graph with data) is not prefetched again.
+        -- Limited (external-backend) networks are excluded: their pagesize-1
+        -- listings can be near-full-history provider scans, and two of those
+        -- per loaded node starve the shared request budget (2026-08-31).
         prefetchEff =
-            if Network.hasLoadedAddress id model.network then
+            if Network.hasLoadedAddress id model.network || isLimitedNetwork (Id.network id) model then
                 []
 
             else
