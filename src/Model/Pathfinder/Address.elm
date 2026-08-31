@@ -178,6 +178,14 @@ getClusterId { data } =
 {-| The server-side `is_possible_service` verdict, when present, replaces the
 structural judgment (cluster shape / degree thresholds); the actor still
 decides known vs. unknown. Absent (old server) = local heuristics.
+
+REMOVABLE: once every deployed backend serves `is_possible_service` on
+address detail (graphsense-lib >= the external-backend-capabilities release
+computes it for account AND utxo networks), the `Nothing` branch below,
+`isPossibleServiceAccountLike`, and `Model.Entity.isPossibleServiceUtxo` can
+be deleted — but only after checking that no code path feeds this function
+an embedded listing row (those carry no `is_possible_service`).
+
 -}
 getAddressType : Address -> Maybe Api.Data.Cluster -> AddressServiceType
 getAddressType address cluster =
