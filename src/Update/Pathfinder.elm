@@ -3798,15 +3798,12 @@ browserGotAddressData uc providedId position data model =
         -- API round-trip (user decision 2026-08-31). Results are parked in
         -- TxsPrefetched via the *Prefetch workflow messages; a reloaded
         -- address (already on the graph with data) is not prefetched again.
-        -- Limited (external-backend) networks are excluded: their pagesize-1
-        -- listings can be near-full-history provider scans, and two of those
-        -- per loaded node starve the shared request budget (2026-08-31).
         prefetchEff =
-            if Network.hasLoadedAddress id model.network || isLimitedNetwork (Id.network id) model then
+            if Network.hasLoadedAddress id model.network then
                 []
 
             else
-                prefetchNextTxEffects net id
+                prefetchNextTxEffects net id data
 
         transform =
             case position of
@@ -4346,10 +4343,18 @@ handlePrefetchWorkflowNextTxByTime config wf model =
 {-| The background twin of `getNextTxEffects` (addAnyLinks semantics, no
 neighbor anchoring): same workflow entry points, but results are routed to the
 \*Prefetch messages, which park the tx instead of inserting it.
+
+A direction whose tx count is 0 is skipped outright — the expand handle is not
+even rendered there (the view's `nonZero` rule), and on external-backend
+networks the doomed pagesize-1 listing would scan the whole history looking
+for a row that does not exist (2026-08-31, the spam-token-only address case).
+
 -}
-prefetchNextTxEffects : Network -> Id -> List Effect
-prefetchNextTxEffects network addressId =
-    [ Incoming, Outgoing ]
+prefetchNextTxEffects : Network -> Id -> Api.Data.Address -> List Effect
+prefetchNextTxEffects network addressId data =
+    [ ( Incoming, data.noIncomingTxs ), ( Outgoing, data.noOutgoingTxs ) ]
+        |> List.filter (\( _, count ) -> count > 0)
+        |> List.map Tuple.first
         |> List.concatMap
             (\direction ->
                 Network.getRecentTxForAddress network (Direction.flip direction) addressId
