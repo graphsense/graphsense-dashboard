@@ -256,7 +256,7 @@ request error: eroare cerere
 network error: eroare de rețea
 server error: eroare de server
 not found: negăsit
-not supported for networks with limited data: nu este acceptat pentru rețelele cu date limitate
+not supported on lite networks: nu este acceptat pe rețelele lite
 data error: eroare de date
 service not reachable: serviciul nu este accesibil.
 unexpected data format: format de date neașteptat.

@@ -264,7 +264,7 @@ request error: error de solicitud
 network error: error de red
 server error: error del servidor
 not found: no encontrado
-not supported for networks with limited data: no compatible con redes con datos limitados
+not supported on lite networks: no compatible con redes lite
 data error: error de datos
 service not reachable: servicio no accesible.
 unexpected data format: formato de datos inesperado.

@@ -21,7 +21,7 @@ suite =
             \_ ->
                 NC.none
                     |> Expect.all
-                        [ \caps -> NC.isLimitedNetwork caps "arb" |> Expect.equal False
+                        [ \caps -> NC.isLiteNetwork caps "arb" |> Expect.equal False
                         , \caps -> NC.supports NC.Relations caps "arb" |> Expect.equal True
                         , \caps -> NC.supports NC.Tags caps "arb" |> Expect.equal True
                         ]
@@ -29,7 +29,7 @@ suite =
             \_ ->
                 NC.fromApi (capabilities [ ( "arb", [ "relations" ] ) ])
                     |> Expect.all
-                        [ \caps -> NC.isLimitedNetwork caps "eth" |> Expect.equal False
+                        [ \caps -> NC.isLiteNetwork caps "eth" |> Expect.equal False
                         , \caps -> NC.supports NC.Relations caps "eth" |> Expect.equal True
                         , \caps -> NC.supports NC.Tags caps "eth" |> Expect.equal True
                         , \caps -> NC.supports NC.Conversions caps "eth" |> Expect.equal True
@@ -42,13 +42,13 @@ suite =
                         , \caps -> NC.supports NC.Clusters caps "arb" |> Expect.equal False
                         , \caps -> NC.supports NC.Conversions caps "arb" |> Expect.equal False
                         , \caps -> NC.supports NC.Tags caps "arb" |> Expect.equal True
-                        , \caps -> NC.isLimitedNetwork caps "arb" |> Expect.equal True
+                        , \caps -> NC.isLiteNetwork caps "arb" |> Expect.equal True
                         ]
         , test "empty disabled list = fully enabled network" <|
             \_ ->
                 NC.fromApi (capabilities [ ( "eth", [] ) ])
                     |> Expect.all
-                        [ \caps -> NC.isLimitedNetwork caps "eth" |> Expect.equal False
+                        [ \caps -> NC.isLiteNetwork caps "eth" |> Expect.equal False
                         , \caps -> NC.supports NC.Relations caps "eth" |> Expect.equal True
                         ]
         , test "unknown vocabulary words are tolerated and still mark the network as limited" <|
@@ -57,7 +57,7 @@ suite =
                     |> Expect.all
                         [ \caps -> NC.supports NC.Relations caps "arb" |> Expect.equal False
                         , \caps -> NC.supports NC.Tags caps "arb" |> Expect.equal True
-                        , \caps -> NC.isLimitedNetwork caps "arb" |> Expect.equal True
+                        , \caps -> NC.isLiteNetwork caps "arb" |> Expect.equal True
                         ]
         , test "exact_stats is part of the vocabulary" <|
             \_ ->
@@ -65,13 +65,13 @@ suite =
                     |> Expect.all
                         [ \caps -> NC.supports NC.ExactStats caps "arb" |> Expect.equal False
                         , \caps -> NC.supports NC.ExactStats caps "eth" |> Expect.equal True
-                        , \caps -> NC.isLimitedNetwork caps "arb" |> Expect.equal True
+                        , \caps -> NC.isLiteNetwork caps "arb" |> Expect.equal True
                         ]
         , test "matching is case-insensitive on network and capability" <|
             \_ ->
                 NC.fromApi (capabilities [ ( "ARB", [ "Tags" ] ) ])
                     |> Expect.all
                         [ \caps -> NC.supports NC.Tags caps "arb" |> Expect.equal False
-                        , \caps -> NC.isLimitedNetwork caps "Arb" |> Expect.equal True
+                        , \caps -> NC.isLiteNetwork caps "Arb" |> Expect.equal True
                         ]
         ]

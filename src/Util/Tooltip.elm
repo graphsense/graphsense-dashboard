@@ -404,9 +404,9 @@ address vc capabilities tags adr =
                 |> Maybe.withDefault ""
                 |> val vc
         }
-        :: -- a limited network serves totals capped or not at all: hide them
+        :: -- a lite network serves totals capped or not at all: hide them
            -- here like in the side panel
-           (if NetworkCapabilities.isLimitedNetwork capabilities net then
+           (if NetworkCapabilities.isLiteNetwork capabilities net then
                 []
 
             else

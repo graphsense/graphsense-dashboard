@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), DraggingAggEdgeLabel, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, isLimitedNetwork, supports, unit)
+module Model.Pathfinder exposing (Details(..), DraggingAggEdgeLabel, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, isLiteNetwork, supports, unit)
 
 import Api.Data exposing (Actor, Cluster)
 import AssocList
@@ -53,9 +53,9 @@ supports capability network model =
 
 {-| At least one feature is disabled on the given network.
 -}
-isLimitedNetwork : String -> Model -> Bool
-isLimitedNetwork network model =
-    NetworkCapabilities.isLimitedNetwork model.networkCapabilities network
+isLiteNetwork : String -> Model -> Bool
+isLiteNetwork network model =
+    NetworkCapabilities.isLiteNetwork model.networkCapabilities network
 
 
 type alias Model =

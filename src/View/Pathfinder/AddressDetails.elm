@@ -1049,8 +1049,8 @@ account pluginStates vc model id viewState address =
                             }
                     )
 
-        onLimitedNetwork =
-            Pathfinder.isLimitedNetwork (Id.network id) model
+        onLiteNetwork =
+            Pathfinder.isLiteNetwork (Id.network id) model
 
         -- no clusters capability = no cluster/entity data (locally minted
         -- ids only): no cluster-addresses tab
@@ -1066,10 +1066,10 @@ account pluginStates vc model id viewState address =
                 ++ relatedAddressesTab
                 |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.address.id))
 
-        -- a limited network has no precomputed aggregates; total received/sent
+        -- a lite network has no precomputed aggregates; total received/sent
         -- are capped there or missing, so the two rows are hidden entirely
-        hideOnLimitedNetwork =
-            if onLimitedNetwork then
+        hideOnLiteNetwork =
+            if onLiteNetwork then
                 [ css [ Css.display Css.none ] ]
 
             else
@@ -1113,23 +1113,23 @@ account pluginStates vc model id viewState address =
                  else
                     [ css [ Css.display Css.none ] ]
                 )
-            |> Rs.s_totalReceivedRow hideOnLimitedNetwork
-            |> Rs.s_totalSentRow hideOnLimitedNetwork
+            |> Rs.s_totalReceivedRow hideOnLiteNetwork
+            |> Rs.s_totalSentRow hideOnLiteNetwork
         )
         (SidePanelComponents.sidePanelEthAddressInstances
             |> Rs.s_labelOfActor (labelOfActor vc model id)
             -- an instance override REPLACES the default row that carries the
-            -- hideOnLimitedNetwork attributes, so it must stay Nothing there
+            -- hideOnLiteNetwork attributes, so it must stay Nothing there
             -- for the display:none default to render
             |> Rs.s_totalReceivedRow
-                (if onLimitedNetwork then
+                (if onLiteNetwork then
                     Nothing
 
                  else
                     totalReceivedRundown
                 )
             |> Rs.s_totalSentRow
-                (if onLimitedNetwork then
+                (if onLiteNetwork then
                     Nothing
 
                  else

@@ -581,4 +581,4 @@ export-dialog-only-visible-inoutputs-help: "When enabled, the CSV only contains 
 csv-note-capped: "Transaction too large — only flows touching a visible address were exported, truncated to the export size limit."
 csv-note-visible-only: "Only flows touching a visible address were exported."
 unknown url: "Unknown URL: {0}"
-not supported for networks with limited data: not supported for networks with limited data
+not supported on lite networks: not supported on lite networks

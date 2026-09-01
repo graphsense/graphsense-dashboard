@@ -190,7 +190,7 @@ timeout: tempo scaduto
 network error: errore di rete
 server error: errore del server
 not found: non trovato
-not supported for networks with limited data: non supportato per le reti con dati limitati
+not supported on lite networks: non supportato sulle reti lite
 data error: errore nei dati
 this table is empty: questa tabella è vuota
 for entities: per entità

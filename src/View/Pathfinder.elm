@@ -175,14 +175,14 @@ contextMenuView pluginStates vc model ( coords, menu ) =
 
             ContextMenu.AddressContextMenu id ->
                 let
-                    -- plugins can't serve networks with limited capabilities yet:
+                    -- plugins can't serve lite networks yet:
                     -- keep their entries visible but inert, so the user learns
                     -- why instead of missing the feature
-                    restrictOnLimitedNetwork item =
-                        if Pathfinder.isLimitedNetwork (Id.network id) model then
+                    restrictOnLiteNetwork item =
+                        if Pathfinder.isLiteNetwork (Id.network id) model then
                             item
                                 |> ContextMenuItem.setDisabled True
-                                |> ContextMenuItem.setTooltip "Not supported for networks with limited data"
+                                |> ContextMenuItem.setTooltip "Not supported on lite networks"
 
                         else
                             item
@@ -191,7 +191,7 @@ contextMenuView pluginStates vc model ( coords, menu ) =
                         Dict.get id model.network.addresses
                             |> Maybe.map
                                 (Plugin.addressContextMenu pluginStates vc
-                                    >> List.map (restrictOnLimitedNetwork >> ContextMenuItem.view vc)
+                                    >> List.map (restrictOnLiteNetwork >> ContextMenuItem.view vc)
                                 )
                             |> Maybe.withDefault []
                 in

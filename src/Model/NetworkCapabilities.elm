@@ -2,7 +2,7 @@ module Model.NetworkCapabilities exposing
     ( Capability(..)
     , NetworkCapabilities
     , fromApi
-    , isLimitedNetwork
+    , isLiteNetwork
     , none
     , supports
     )
@@ -13,8 +13,8 @@ module Model.NetworkCapabilities exposing
 network absent from the response is fully enabled, and so is every network
 when the endpoint does not exist (older backends answer 404). Words the app
 does not know are kept, so a network that only disables something we have no
-constructor for still counts as limited. This module is the only place that
-reads the wire format; everything else asks `supports` or `isLimitedNetwork`.
+constructor for still counts as lite. This module is the only place that
+reads the wire format; everything else asks `supports` or `isLiteNetwork`.
 
 -}
 
@@ -77,8 +77,8 @@ fromApi capabilities =
 
 {-| At least one feature is disabled on this network.
 -}
-isLimitedNetwork : NetworkCapabilities -> String -> Bool
-isLimitedNetwork (NetworkCapabilities networks) network =
+isLiteNetwork : NetworkCapabilities -> String -> Bool
+isLiteNetwork (NetworkCapabilities networks) network =
     Dict.get (String.toLower network) networks
         |> Maybe.map (Set.isEmpty >> not)
         |> Maybe.withDefault False
