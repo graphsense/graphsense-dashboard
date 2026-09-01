@@ -1876,28 +1876,61 @@ updateByPluginOutMsg uc outMsgs ( mo, effects ) =
                     PluginInterface.GetEntitiesForAddresses addresses toMsg ->
                         let
                             -- separate loaded clusters from loading ones
+                            clustersDisabled currency =
+                                model.capabilities
+                                    |> RD.toMaybe
+                                    |> Maybe.map
+                                        (\caps ->
+                                            NetworkCapabilities.supports NetworkCapabilities.Clusters caps currency
+                                                |> not
+                                        )
+                                    |> Maybe.withDefault False
+
                             ( ready, loading ) =
                                 addresses
                                     |> List.foldl
                                         (\address ( ready_, loading_ ) ->
                                             let
-                                                addr =
+                                                addressData =
                                                     Dict.get (Id.initFromRecord address) model.pathfinder.network.addresses
-                                                        |> Maybe.andThen (.data >> RD.toMaybe)
+                                                        |> Maybe.map .data
+                                            in
+                                            if clustersDisabled address.currency then
+                                                -- the backend serves no cluster data on this network;
+                                                -- since account-model clusters are singletons, derive
+                                                -- the cluster from the address itself instead of
+                                                -- fetching (which would 501), and keep polling while
+                                                -- the address data is still on its way
+                                                case addressData of
+                                                    Just (RD.Success a) ->
+                                                        ( ( address, Util.Data.selfCluster a ) :: ready_, loading_ )
+
+                                                    Just RD.Loading ->
+                                                        ( ready_, address :: loading_ )
+
+                                                    Just RD.NotAsked ->
+                                                        ( ready_, address :: loading_ )
+
+                                                    _ ->
+                                                        ( ready_, loading_ )
+
+                                            else
+                                                case
+                                                    addressData
+                                                        |> Maybe.andThen RD.toMaybe
                                                         |> Maybe.andThen
                                                             (\a ->
                                                                 Dict.get (Id.initClusterIdFromAddress a) model.pathfinder.clusters
                                                             )
-                                            in
-                                            case addr of
-                                                Just RD.Loading ->
-                                                    ( ready_, address :: loading_ )
+                                                of
+                                                    Just RD.Loading ->
+                                                        ( ready_, address :: loading_ )
 
-                                                Just (RD.Success c) ->
-                                                    ( ( address, c ) :: ready_, loading_ )
+                                                    Just (RD.Success c) ->
+                                                        ( ( address, c ) :: ready_, loading_ )
 
-                                                _ ->
-                                                    ( ready_, loading_ )
+                                                    _ ->
+                                                        ( ready_, loading_ )
                                         )
                                         ( [], [] )
                         in

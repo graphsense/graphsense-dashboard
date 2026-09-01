@@ -1,4 +1,4 @@
-module Util.Data exposing (absValues, addressCluster, isAccountLike, isEvmHexNetwork, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, normalizeTxIdentifier, parseMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addressCluster, isAccountLike, isEvmHexNetwork, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, normalizeTxIdentifier, parseMultiIdentifierInput, selfCluster, subValues, sumValues, timestampToPosix, valuesZero)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -29,6 +29,37 @@ enabled; falls back to the legacy transform's cluster id otherwise.
 addressCluster : Api.Data.Address -> Int
 addressCluster address =
     address.freshClusterId |> Maybe.withDefault address.cluster
+
+
+{-| The cluster of an address on a network that serves no cluster data.
+
+Account-model clusters are singletons — the server's own answer for e.g. eth
+is `root_address` = the address, `no_addresses` = 1 and every stat mirrored
+from the address — so the cluster can be derived locally instead of fetched.
+
+-}
+selfCluster : Api.Data.Address -> Api.Data.Cluster
+selfCluster a =
+    { actors = a.actors
+    , balance = a.balance
+    , bestAddressTag = Nothing
+    , currency = a.currency
+    , cluster = addressCluster a
+    , firstTx = a.firstTx
+    , inDegree = a.inDegree
+    , lastTx = a.lastTx
+    , noAddressTags = 0
+    , noAddresses = 1
+    , noIncomingTxs = a.noIncomingTxs
+    , noOutgoingTxs = a.noOutgoingTxs
+    , outDegree = a.outDegree
+    , rootAddress = a.address
+    , tokenBalances = a.tokenBalances
+    , totalReceived = a.totalReceived
+    , totalSpent = a.totalSpent
+    , totalTokensReceived = a.totalTokensReceived
+    , totalTokensSpent = a.totalTokensSpent
+    }
 
 
 isAccountLike : String -> Bool
