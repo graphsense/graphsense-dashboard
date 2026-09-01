@@ -1,4 +1,4 @@
-module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, init2, initLink2, map, setDisabled, setTooltip, view)
+module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, availableOnLiteNetworks, init, init2, initLink2, map, setAvailableOnLiteNetworks, setDisabled, setTooltip, view)
 
 import Config.View as View
 import Css
@@ -30,6 +30,7 @@ type alias ContextMenuItemInternal msg =
     , action : ContextMenuItemActions msg
     , disabled : Bool
     , tooltip : Maybe String
+    , availableOnLiteNetworks : Bool
     }
 
 
@@ -132,20 +133,21 @@ view vc (ContextMenuItem { icon, text1, text2, action, disabled, tooltip }) =
 
 
 map : (a -> b) -> ContextMenuItem a -> ContextMenuItem b
-map mp (ContextMenuItem { icon, text1, text2, action, disabled, tooltip }) =
+map mp (ContextMenuItem item) =
     ContextMenuItem
-        { icon = Html.map mp icon
-        , text1 = text1
-        , text2 = text2
+        { icon = Html.map mp item.icon
+        , text1 = item.text1
+        , text2 = item.text2
         , action =
-            case action of
+            case item.action of
                 ClickMsg msg ->
                     ClickMsg (mp msg)
 
                 ClickLink blank l ->
                     ClickLink blank l
-        , disabled = disabled
-        , tooltip = tooltip
+        , disabled = item.disabled
+        , tooltip = item.tooltip
+        , availableOnLiteNetworks = item.availableOnLiteNetworks
         }
 
 
@@ -179,6 +181,7 @@ init2 { icon, text1, text2, msg } =
         , action = ClickMsg msg
         , disabled = False
         , tooltip = Nothing
+        , availableOnLiteNetworks = False
         }
 
 
@@ -198,6 +201,7 @@ initLink2 { icon, text1, text2, blank, link } =
         , action = ClickLink blank link
         , disabled = False
         , tooltip = Nothing
+        , availableOnLiteNetworks = False
         }
 
 
@@ -213,3 +217,18 @@ setTooltip : String -> ContextMenuItem msg -> ContextMenuItem msg
 setTooltip tooltip (ContextMenuItem item) =
     ContextMenuItem
         { item | tooltip = Just tooltip }
+
+
+{-| Declares that this item's feature works on lite networks (backends that
+serve no relations/cluster data), so the menu must not disable it there.
+Off by default: an item that does not opt in is assumed to need full data.
+-}
+setAvailableOnLiteNetworks : ContextMenuItem msg -> ContextMenuItem msg
+setAvailableOnLiteNetworks (ContextMenuItem item) =
+    ContextMenuItem
+        { item | availableOnLiteNetworks = True }
+
+
+availableOnLiteNetworks : ContextMenuItem msg -> Bool
+availableOnLiteNetworks (ContextMenuItem item) =
+    item.availableOnLiteNetworks

@@ -175,11 +175,16 @@ contextMenuView pluginStates vc model ( coords, menu ) =
 
             ContextMenu.AddressContextMenu id ->
                 let
-                    -- plugins can't serve lite networks yet:
-                    -- keep their entries visible but inert, so the user learns
-                    -- why instead of missing the feature
+                    -- most plugin features need data a lite backend does not
+                    -- serve; items whose feature does work there opt in via
+                    -- ContextMenuItem.setAvailableOnLiteNetworks, the rest are
+                    -- kept visible but inert, so the user learns why instead
+                    -- of missing the feature
                     restrictOnLiteNetwork item =
-                        if Pathfinder.isLiteNetwork (Id.network id) model then
+                        if
+                            Pathfinder.isLiteNetwork (Id.network id) model
+                                && not (ContextMenuItem.availableOnLiteNetworks item)
+                        then
                             item
                                 |> ContextMenuItem.setDisabled True
                                 |> ContextMenuItem.setTooltip "Not supported on lite networks"
