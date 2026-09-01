@@ -122,4 +122,26 @@ suite =
                         |> Maybe.map (\cid -> isClusterFriendAlreadyOnGraph cid net)
                         |> Expect.equal (Just True)
             ]
+        , describe "initClusterId hex encoding"
+            -- Hex.toString hard-freezes on ints >= 2^35 (its `//` recursion
+            -- wraps to 32-bit signed), so initClusterId uses its own encoder;
+            -- these pin format parity for small ids and correct, terminating
+            -- output across the whole exact-Int range.
+            [ test "matches the legacy Hex.toString format for small ids" <|
+                \_ ->
+                    PathfinderId.initClusterId "btc" 264711
+                        |> Expect.equal ( "btc", "40a07" )
+            , test "zero" <|
+                \_ ->
+                    PathfinderId.initClusterId "btc" 0
+                        |> Expect.equal ( "btc", "0" )
+            , test "terminates and encodes a 48-bit server-minted id" <|
+                \_ ->
+                    PathfinderId.initClusterId "arb" 246237048184833
+                        |> Expect.equal ( "arb", "dff387c9a001" )
+            , test "handles the largest exact Int (2^53 - 1)" <|
+                \_ ->
+                    PathfinderId.initClusterId "eth" 9007199254740991
+                        |> Expect.equal ( "eth", "1fffffffffffff" )
+            ]
         ]
