@@ -10,6 +10,7 @@ import RecordSetter as Rs
 import Theme.Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsComponents as SettingsComponents
+import Util.Pathfinder.Shortcuts as Shortcuts
 import Util.View exposing (onClickWithStop, testId)
 import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
@@ -32,12 +33,21 @@ view : View.Config -> Config -> Html Msg
 view vc config =
     let
         iconsAttr tid titl disabled msg =
+            iconsAttrWithHint tid titl Nothing disabled msg
+
+        -- the tooltip carries the shortcut, e.g. "Save file (Ctrl+S)"
+        iconsAttrWithHint tid titl shortcut disabled msg =
             [ testId tid
             , css
                 [ Css.cursor Css.pointer
                 , Css.property "pointer-events" "bounding-box"
                 ]
-            , title (Locale.string vc.locale titl)
+            , Locale.string vc.locale titl
+                ++ (shortcut
+                        |> Maybe.map (Shortcuts.chord vc.isMac >> (\c -> " (" ++ c ++ ")"))
+                        |> Maybe.withDefault ""
+                   )
+                |> HA.title
             ]
                 ++ (if disabled then
                         [ css [ Css.opacity <| Css.num 0.3 ] ]
@@ -56,15 +66,11 @@ view vc config =
                         "transparent"
             , Css.borderRadius (Css.px 5)
             ]
-
-        title str =
-            Locale.string vc.locale str
-                |> HA.title
     in
     SettingsComponents.toolbarWithInstances
         (SettingsComponents.toolbarAttributes
             |> Rs.s_iconsDelete
-                (iconsAttr "gs-toolbar-delete" "Delete" config.deleteDisabled UserClickedToolbarDeleteIcon)
+                (iconsAttrWithHint "gs-toolbar-delete" "Delete" (Just Shortcuts.deleteSelection) config.deleteDisabled UserClickedToolbarDeleteIcon)
             |> Rs.s_iconsAnnotate
                 (id (toolbarHovercardTypeToId Annotation)
                     :: iconsAttr "gs-toolbar-annotate" "Annotate" config.annotateDisabled UserToggleAnnotationSettings
@@ -82,11 +88,11 @@ view vc config =
             |> Rs.s_iconsCenterGraph
                 (iconsAttr "gs-toolbar-center" "center graph" False UserClickedFitGraph)
             |> Rs.s_iconsSave
-                (iconsAttr "gs-toolbar-save" "save file" False (UserClickedSaveGraph Nothing))
+                (iconsAttrWithHint "gs-toolbar-save" "save file" (Just Shortcuts.save) False (UserClickedSaveGraph Nothing))
             |> Rs.s_iconsExport
-                (iconsAttr "gs-toolbar-export" "export graph" False (UserClickedExportGraph Nothing))
+                (iconsAttrWithHint "gs-toolbar-export" "export graph" (Just Shortcuts.export) False (UserClickedExportGraph Nothing))
             |> Rs.s_iconsOpen
-                (iconsAttr "gs-toolbar-open" "open" False UserClickedOpenGraph)
+                (iconsAttrWithHint "gs-toolbar-open" "open" (Just Shortcuts.open) False UserClickedOpenGraph)
             |> Rs.s_iconsHorizontalAlign
                 (iconsAttr "gs-toolbar-align-horizontal" "align horizontally" config.alignHorizontalDisabled UserClickedContextMenuAlignHorizontally)
         )
@@ -123,7 +129,7 @@ view vc config =
                 Icons.iconsRedoWithAttributes
                     (Icons.iconsRedoAttributes
                         |> Rs.s_root
-                            (iconsAttr "gs-toolbar-redo" "Redo" config.redoDisabled UserClickedRedo)
+                            (iconsAttrWithHint "gs-toolbar-redo" "Redo" (Just Shortcuts.redo) config.redoDisabled UserClickedRedo)
                     )
                     { root = { state = Icons.IconsRedoStateActive } }
             }
@@ -132,7 +138,7 @@ view vc config =
                 Icons.iconsUndoWithAttributes
                     (Icons.iconsUndoAttributes
                         |> Rs.s_root
-                            (iconsAttr "gs-toolbar-undo" "Undo" config.undoDisabled UserClickedUndo)
+                            (iconsAttrWithHint "gs-toolbar-undo" "Undo" (Just Shortcuts.undo) config.undoDisabled UserClickedUndo)
                     )
                     { root = { state = Icons.IconsUndoStateActive } }
             }

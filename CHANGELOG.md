@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+
+- Holding Ctrl (Cmd on macOS) on the Pathfinder for a moment shows a small overlay listing the keyboard shortcuts, the way command-line tools show their key bindings; it disappears with the key. The toolbar tooltips now carry the shortcut too, e.g. "Save file (Ctrl+S)", so daily users can find them without reading the docs
+- Ctrl+K (Cmd+K on macOS) focuses the address search box on the Pathfinder, so more addresses can be added without reaching for the mouse; Ctrl+F remains the find-on-graph search
+
 ## [26.08.1] - 2026-08-28
 
 ### Fixed

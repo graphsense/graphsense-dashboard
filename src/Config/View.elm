@@ -25,6 +25,7 @@ type alias Config =
     , abuseConcepts : List Api.Data.Concept
     , characterDimensions : Dict String { width : Float, height : Float }
     , showBothValues : Bool
+    , isMac : Bool -- shortcut hints read Cmd instead of Ctrl
     }
 
 

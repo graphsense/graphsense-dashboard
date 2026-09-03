@@ -45,7 +45,7 @@ init uc flags url key =
     in
     ( { url = url
       , key = key
-      , config = viewConfigFromSettings locale cd settings
+      , config = viewConfigFromSettings flags.isMac locale cd settings
       , page = Home
       , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) settings.recentSearches
       , pathfinder = pathfinderState
@@ -104,8 +104,8 @@ Worth keeping honest -- a field that is persisted by
 then silently dropped at the next boot, which is what `showBothValues` did.
 
 -}
-viewConfigFromSettings : Locale.Model -> Dict String Config.View.CharacterDimension -> Config.UserSettings.UserSettings -> Config.View.Config
-viewConfigFromSettings locale characterDimensions settings =
+viewConfigFromSettings : Bool -> Locale.Model -> Dict String Config.View.CharacterDimension -> Config.UserSettings.UserSettings -> Config.View.Config
+viewConfigFromSettings isMac locale characterDimensions settings =
     { locale = locale
     , lightmode = settings.lightMode |> Maybe.withDefault True
     , size = Nothing
@@ -121,4 +121,5 @@ viewConfigFromSettings locale characterDimensions settings =
     , showConversionEdges = True
     , characterDimensions = characterDimensions
     , showBothValues = settings.showBothValues |> Maybe.withDefault False
+    , isMac = isMac
     }

@@ -56,6 +56,7 @@ import View.Pathfinder.ConversionDetails as ConversionDetails
 import View.Pathfinder.Network as Network
 import View.Pathfinder.RelationDetails as RelationDetails
 import View.Pathfinder.SearchBox as OnGraphSearchView
+import View.Pathfinder.ShortcutHints as ShortcutHints
 import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.TxDetails as TxDetails
 import View.Search
@@ -86,6 +87,11 @@ view pluginStates vc model =
     , OnGraphSearchView.view vc model.onGraphSearch
     , Util.Tooltip.view vc model
         |> Tooltip.view (Util.Tooltip.tooltipConfig vc TooltipMsg) model.tooltip
+    , if model.showShortcutHints then
+        ShortcutHints.view vc
+
+      else
+        none
     ]
         ++ (model.toolbarHovercard
                 |> Maybe.map (toolbarHovercardView vc model)

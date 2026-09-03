@@ -51,6 +51,8 @@ init us =
             }
       , pointerTool = Drag
       , modPressed = False
+      , modKeyPressCount = 0
+      , showShortcutHints = False
       , isDirty = False
       , helpDropdownOpen = False
       , toolbarHovercard = Nothing

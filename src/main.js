@@ -77,6 +77,10 @@ const pluginFlags = {}
 
 const characterDimensions = measureCharacterDimensions()
 
+// Only decides whether shortcut hints read Cmd or Ctrl; the chords themselves
+// accept either modifier.
+const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
+
 for (const plugin in plugins) {
   pluginFlags[plugin] = plugins[plugin].flags()
 }
@@ -90,16 +94,17 @@ const app = Elm.Main.init(
     , now
     , pluginFlags 
     , locale
+    , isMac
     } 
   })
 
 !!document.body.elmTree || console.warn('safe virtual dom not installed!')
 
 // Pathfinder mod-key chords the browser would otherwise claim (find bar, save
-// page, focus search bar, open file). The shortcuts themselves are handled in
+// page, focus search bar, open file, K = browser search bar). The shortcuts themselves are handled in
 // Elm (Sub/Pathfinder.elm), on the same keydown — here we only suppress the
 // browser default.
-const shortCutKeys = ['f', 's', 'e', 'o']
+const shortCutKeys = ['f', 'k', 's', 'e', 'o']
 
 // Same, but these have a meaning of their own inside a text input (select all,
 // undo, redo), so there we leave them to the browser. Elm skips them in inputs too.

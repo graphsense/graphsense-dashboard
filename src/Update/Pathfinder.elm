@@ -116,6 +116,7 @@ import Util.Csv
 import Util.Data as Data
 import Util.EventualMessages as EventualMessages
 import Util.Pathfinder.History as History
+import Util.Pathfinder.Shortcuts as Shortcuts
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.TooltipType exposing (TooltipType)
 import View.Locale as Locale exposing (makeTimestampFilename)
@@ -924,10 +925,30 @@ updateByMsg uc msg model =
                 )
 
         UserPressedModKey ->
-            n { model | modPressed = True }
+            if model.modPressed then
+                -- keydown auto-repeats while the key is held
+                n model
+
+            else
+                let
+                    pressCount =
+                        model.modKeyPressCount + 1
+                in
+                ( { model | modPressed = True, modKeyPressCount = pressCount }
+                , [ Process.sleep Shortcuts.hintDelayMs
+                        |> Task.perform (\_ -> RuntimeModKeyHeld pressCount)
+                        |> CmdEffect
+                  ]
+                )
+
+        RuntimeModKeyHeld pressCount ->
+            -- The count ties the timer to the press that started it, so a
+            -- release and re-press inside the delay does not show the hints
+            -- for the old press.
+            n { model | showShortcutHints = model.modPressed && pressCount == model.modKeyPressCount }
 
         UserReleasedModKey ->
-            n { model | modPressed = False }
+            n { model | modPressed = False, showShortcutHints = False }
 
         UserReleasedEscape ->
             if model.onGraphSearch.visible then
@@ -969,6 +990,15 @@ updateByMsg uc msg model =
                 "f" ->
                     ( model
                     , [ InternalEffect UserPressedSearchHotkey ]
+                    )
+
+                "k" ->
+                    -- the address search box, to add more nodes
+                    ( model
+                    , [ Dom.focus Search.searchInputId
+                            |> Task.attempt (\_ -> NoOp)
+                            |> CmdEffect
+                      ]
                     )
 
                 "s" ->

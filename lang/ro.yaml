@@ -641,3 +641,10 @@ csv-note-capped: Tranzacție prea mare – au fost exportate doar fluxurile cu o
   trunchiate la limita de export.
 csv-note-visible-only: Au fost exportate doar fluxurile cu o adresă vizibilă.
 unknown url: "URL necunoscut: {0}"
+Keyboard shortcuts: "Scurtături de tastatură"
+Add address or tx: "Adaugă adresă sau tx"
+Select all: "Selectează tot"
+Delete selection: "Șterge selecția"
+Move the selection along the graph: "Mută selecția în graf"
+Close search or dialog: "Închide căutarea sau dialogul"
+Find on graph: "Caută în graf"
