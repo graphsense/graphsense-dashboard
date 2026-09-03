@@ -1823,7 +1823,7 @@ updateByMsg uc msg model =
                                 network
                             )
                                 |> (if model_.config.avoidOverlapingNodes then
-                                        Network.resolveOverlapsExcept Network.Compact (Just id)
+                                        Network.resolveOverlapsExcept Network.Compact (Set.singleton id)
 
                                     else
                                         identity
@@ -2918,9 +2918,26 @@ updateByMsg uc msg model =
                                 MSelectedTx id ->
                                     Network.updateTx id (Node.setY medianY) net
 
+                        -- The aligned nodes stay put; whatever they now overlap
+                        -- moves out of the way. Otherwise an unselected node in
+                        -- the same column just above the median row pushes the
+                        -- aligned node back off it.
+                        selectedIds =
+                            selections
+                                |> List.map
+                                    (\sel ->
+                                        case sel of
+                                            MSelectedAddress id ->
+                                                id
+
+                                            MSelectedTx id ->
+                                                id
+                                    )
+                                |> Set.fromList
+
                         newNetwork =
                             List.foldl moveToMedianY model.network selections
-                                |> Network.resolveOverlaps Network.Spacious
+                                |> Network.resolveOverlapsExcept Network.Spacious selectedIds
                     in
                     n { model | network = newNetwork, contextMenu = Nothing }
 

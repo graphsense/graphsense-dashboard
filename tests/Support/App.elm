@@ -6,6 +6,7 @@ module Support.App exposing
     , init
     , initAt
     , internalMsgs
+    , mapModel
     , model
     , outMsgs
     , respond
@@ -79,6 +80,14 @@ type App
 model : App -> Model
 model (App app) =
     app.model_
+
+
+{-| Puts the model into a state no message sequence reaches conveniently — a
+graph with nodes at chosen coordinates, say. Effects and out-messages are kept.
+-}
+mapModel : (Model -> Model) -> App -> App
+mapModel f (App app) =
+    App { app | model_ = f app.model_ }
 
 
 

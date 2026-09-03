@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- "Align horizontally" left a selected node off the row whenever an unselected node sat in the same column just above the target row: the overlap pass that follows the alignment pushed the aligned node away instead of the bystander. Aligned nodes now stay on the row and the other node moves
 - Plugin entries on an address's right-click menu (CSAM check, Case Connect, Quicklock) were still active on a multi-selection although they act on the one address that was clicked. They are now greyed out there, like core's own per-address entries
 
 ### Added
