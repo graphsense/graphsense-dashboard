@@ -344,6 +344,10 @@ A round-trip test that compares an encoder against its own decoder passes even w
 
 Runs on commit: `make format`, `make lint`, `make test`. On push: `tools/set_version.sh` (writes version to `Version.elm`).
 
+## Graph detail levels (semantic zoom)
+
+`Model.Pathfinder.DetailLevel` maps the zoom (`Transform.getZ`, larger = further out) to `Full | Reduced | Minimal`, computed once in `View.Pathfinder.graphSvg` and threaded into the lazily rendered layers (`Network.addresses`, `Network.relations`, `Tx.view`, `Address.view`). `Reduced` drops edge values, timestamps, tx hashes and tag icons; `Minimal` also drops address identifiers. Annotations, service labels and selected/hovered nodes keep full detail. Keep it a bucketed custom type passed as its own lazy argument: passing the raw zoom, or a `View.Config` rebuilt per render, defeats `Svg.lazy` memoization and makes every zoom tick re-render the whole graph. `aggRelations` sits exactly at the `lazy7` limit, so a further argument has to be packed into an existing one.
+
 ## InfiniteTable (Virtual Scrolling)
 
 `Components.InfiniteTable` provides virtual scrolling for large datasets. **It requires fixed/constant row heights.** The scroller estimates total content height as `rowHeight * itemCount` using a single sampled row. Variable-height rows cause spacer miscalculations, scrollbar jitter, and can prevent data loading at scroll boundaries. When converting a table to use `InfiniteTable`, always ensure rows have a fixed CSS height (no `height: auto`, no text wrapping that grows rows). If variable row content is needed, truncate with `text-overflow: ellipsis` and use tooltips for the full text.

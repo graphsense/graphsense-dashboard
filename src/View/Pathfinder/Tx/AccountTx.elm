@@ -16,6 +16,7 @@ import Model.Currency exposing (Currency(..), asset)
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.ContextMenu as ContextMenu
+import Model.Pathfinder.DetailLevel as DetailLevel exposing (DetailLevel(..))
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
@@ -38,9 +39,18 @@ import View.Pathfinder.Tx.Path exposing (pickPathFunction)
 import View.Pathfinder.Tx.Utils exposing (signX, toPosition)
 
 
-view : View.Config -> Pathfinder.Config -> Tx -> AccountTx -> Maybe Annotations.AnnotationItem -> Svg Msg
-view vc pc tx accTx annotation =
+view : View.Config -> Pathfinder.Config -> DetailLevel -> Tx -> AccountTx -> Maybe Annotations.AnnotationItem -> Svg Msg
+view vc pc level tx accTx annotation =
     let
+        full =
+            DetailLevel.forNode (tx.hovered || tx.selected) level == Full
+
+        showTimestamp =
+            vc.showTimestampOnTxEdge && full
+
+        showHash =
+            vc.showHash && full
+
         fd =
             GraphComponents.txNodeEthTransparentEllipse_details
 
@@ -58,7 +68,7 @@ view vc pc tx accTx annotation =
                 -GraphComponents.txNodeEthSecondValue_details.renderedHeight - 2
 
         offsetTxHash =
-            if vc.showHash then
+            if showHash then
                 0
 
             else
@@ -66,7 +76,7 @@ view vc pc tx accTx annotation =
 
         offset =
             2
-                + (if vc.showTimestampOnTxEdge then
+                + (if showTimestamp then
                     3
 
                    else
@@ -112,7 +122,10 @@ view vc pc tx accTx annotation =
                 fmt c =
                     Locale.currency c vc.locale [ ( asset accTx.raw.network accTx.raw.currency, accTx.value ) ]
             in
-            if vc.showBothValues then
+            if not full then
+                ( "", "" )
+
+            else if vc.showBothValues then
                 ( fmt Coin
                 , fmt (Fiat vc.preferredFiatCurrency)
                 )
@@ -163,12 +176,12 @@ view vc pc tx accTx annotation =
             }
             { root =
                 { highlightVisible = pc.hideForExport /= Exporting True && (tx.selected || tx.hovered)
-                , txHash = Util.View.truncateLongIdentifier ("0x" ++ accTx.raw.txHash) |> ifTrue vc.showHash
-                , date = Locale.timestampDateUniform vc.locale t |> ifTrue vc.showTimestampOnTxEdge
-                , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t |> ifTrue vc.showTimestampOnTxEdge
+                , txHash = Util.View.truncateLongIdentifier ("0x" ++ accTx.raw.txHash) |> ifTrue showHash
+                , date = Locale.timestampDateUniform vc.locale t |> ifTrue showTimestamp
+                , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t |> ifTrue showTimestamp
                 , firstValue = firstValue
                 , secondValue = secondValue
-                , timestampVisible = vc.showTimestampOnTxEdge || vc.showHash
+                , timestampVisible = showTimestamp || showHash
                 , startingPointVisible = tx.isStartingPoint || pc.hideForExport /= Exporting True && tx.selected
                 }
             , iconsNodeMarker =

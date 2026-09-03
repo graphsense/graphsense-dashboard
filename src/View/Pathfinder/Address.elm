@@ -17,6 +17,7 @@ import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address, AddressServiceType(..), Txs(..), expandAllowed, getTxs, isSmartContract, txsGetSet)
 import Model.Pathfinder.ContextMenu as ContextMenu
+import Model.Pathfinder.DetailLevel as DetailLevel exposing (DetailLevel(..))
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.SearchBox exposing (Highlight(..), dimmedOpacity)
 import Msg.Pathfinder exposing (Msg(..))
@@ -37,9 +38,12 @@ import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
 
 
-view : View.Config -> Pathfinder.Config -> Highlight -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
-view vc pc searchHighlight address annotation =
+view : View.Config -> Pathfinder.Config -> Highlight -> DetailLevel -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
+view vc pc searchHighlight level address annotation =
     let
+        detail =
+            DetailLevel.forNode address.selected level
+
         data =
             RemoteData.toMaybe address.data
 
@@ -166,18 +170,19 @@ view vc pc searchHighlight address annotation =
                 []
 
         icons =
-            [ ifTrue address.hasTags [ Icons.iconsTagSwithoutPaddingTypeDirect {} ]
-            , ifTrue (not address.hasTags && address.hasClusterTagsOnly)
-                [ Icons.iconsTagSwithoutPaddingTypeIndirectWithAttributes
-                    (Icons.iconsTagSwithoutPaddingTypeIndirectAttributes
-                        |> Rs.s_tagIcon Util.View.indirectTagFillAttr
-                    )
-                    {}
-                ]
-            , ifTrue (not <| List.isEmpty pluginTagIcons) pluginTagIcons
-            , ifTrue (Dict.size address.networks > 1) [ Icons.iconsCrosschainSwithoutPadding {} ]
-            ]
-                |> List.concat
+            ifTrue (detail == Full) <|
+                List.concat
+                    [ ifTrue address.hasTags [ Icons.iconsTagSwithoutPaddingTypeDirect {} ]
+                    , ifTrue (not address.hasTags && address.hasClusterTagsOnly)
+                        [ Icons.iconsTagSwithoutPaddingTypeIndirectWithAttributes
+                            (Icons.iconsTagSwithoutPaddingTypeIndirectAttributes
+                                |> Rs.s_tagIcon Util.View.indirectTagFillAttr
+                            )
+                            {}
+                        ]
+                    , ifTrue (not <| List.isEmpty pluginTagIcons) pluginTagIcons
+                    , ifTrue (Dict.size address.networks > 1) [ Icons.iconsCrosschainSwithoutPadding {} ]
+                    ]
 
         iconInstance items index =
             List.Extra.getAt index items
@@ -241,9 +246,13 @@ view vc pc searchHighlight address annotation =
             )
             { root =
                 { addressId =
-                    address.id
-                        |> Id.id
-                        |> truncateLongIdentifierWithLengths 8 4
+                    if detail == Minimal then
+                        ""
+
+                    else
+                        address.id
+                            |> Id.id
+                            |> truncateLongIdentifierWithLengths 8 4
                 , highlightVisible = highlightVisible
                 , clusterVisible = (address.clusterColor /= Nothing) && pc.highlightClusterFriends
                 , expandLeftVisible = expandVisible Incoming

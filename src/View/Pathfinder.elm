@@ -19,6 +19,7 @@ import Model.Graph.Transform exposing (Transition(..), getZ)
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
+import Model.Pathfinder.DetailLevel as DetailLevel
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Selection as Pathfinder
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, ToolbarHovercardType(..))
@@ -741,10 +742,10 @@ detailsView pluginStates vc model =
 graphSvg : View.Config -> Pathfinder.Config -> Pathfinder.Model -> { a | width : Float, height : Float } -> Svg Msg
 graphSvg vc gc model dim =
     let
-        -- hide always-on aggregate-edge labels when zoomed out far enough
-        -- (larger z = more zoomed out); they reappear when zoomed in
-        showAggLabels =
-            getZ model.transform <= 2.5
+        -- labels drop out in steps as the user zooms out (larger z = more
+        -- zoomed out) and come back when zooming in; see DetailLevel
+        detail =
+            DetailLevel.fromZoom (getZ model.transform)
 
         pointer =
             case ( model.dragging, model.pointerTool ) of
@@ -892,8 +893,8 @@ graphSvg vc gc model dim =
                     )
                 ]
                 dim
-        , Network.relations vc gc showAggLabels model.hovered model.selection model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
-        , Svg.lazy5 Network.addresses vc gc model.onGraphSearch model.annotations model.network.addresses
+        , Network.relations vc gc detail model.hovered model.selection model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
+        , Svg.lazy6 Network.addresses vc gc detail model.onGraphSearch model.annotations model.network.addresses
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system

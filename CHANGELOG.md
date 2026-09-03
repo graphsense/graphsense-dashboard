@@ -8,10 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - "Align horizontally" left a selected node off the row whenever an unselected node sat in the same column just above the target row: the overlap pass that follows the alignment pushed the aligned node away instead of the bystander. Aligned nodes now stay on the row and the other node moves
-- Plugin entries on an address's right-click menu (CSAM check, Case Connect, Quicklock) were still active on a multi-selection although they act on the one address that was clicked. They are now greyed out there, like core's own per-address entries
+- Plugin entries on an address's right-click menu were still active on a multi-selection although they act on the one address that was clicked. They are now greyed out there, like core's own per-address entries
 
 ### Added
 
+- The graph sheds labels in steps as it is zoomed out, so a large graph reads as structure instead of noise: first edge values, timestamps, tx hashes and tag icons go, then address identifiers. Annotations, service labels and everything on a selected or hovered node stay at every zoom level, and all labels return when zooming in. Relationship mode already did this for its edge values; transaction mode now does the same
 - Ctrl+D (Cmd+D on macOS) duplicates the whole graph into a new tab, positions and notes included, through the same hand-over as "Open in new tab" on a multi-selection
 - "Open in new tab" on the right-click menu of a multi-selection opens the selected nodes as their own graph in a new tab, positions and notes included. The selection is handed over as a `.gs` payload, so it goes through the same import path as an opened file; a selected transaction whose addresses are not selected opens as a lone transaction
 - Holding Ctrl (Cmd on macOS) on the Pathfinder for a moment shows a small overlay listing the keyboard shortcuts, the way command-line tools show their key bindings; it disappears with the key. The toolbar tooltips now carry the shortcut too, e.g. "Save file (Ctrl+S)", so daily users can find them without reading the docs

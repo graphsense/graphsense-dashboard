@@ -11,6 +11,7 @@ import Model.Pathfinder exposing (Hovered(..), unit)
 import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
+import Model.Pathfinder.DetailLevel exposing (DetailLevel(..))
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.SearchBox as SearchBox
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
@@ -30,13 +31,13 @@ import View.Pathfinder.Tx as Tx
 import View.Pathfinder.Tx.Utxo exposing (RenderLevel(..))
 
 
-addresses : View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
-addresses vc pc searchBox annotations =
+addresses : View.Config -> Pathfinder.Config -> DetailLevel -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
+addresses vc pc level searchBox annotations =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
             , Annotations.getAnnotation id annotations
-                |> Svg.lazy5 Address.view vc pc (SearchBox.highlightFor searchBox id) address
+                |> Svg.lazy6 Address.view vc pc (SearchBox.highlightFor searchBox id) level address
             )
                 :: svg
         )
@@ -60,23 +61,23 @@ suspect this swap before suspecting the model: the keyed children below are the
 part of the view whose structure changes underneath elm.
 
 -}
-relations : View.Config -> Pathfinder.Config -> Bool -> Hovered -> Selection -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
-relations vc gc showAggLabels hovered selection searchBox annotations txs agg conversions =
+relations : View.Config -> Pathfinder.Config -> DetailLevel -> Hovered -> Selection -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
+relations vc gc level hovered selection searchBox annotations txs agg conversions =
     case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
             -- Exactly at Svg.Styled.Lazy's lazy7 limit. Adding another argument
             -- means packing the scalars into one value, or memoization is lost.
-            Svg.lazy7 aggRelations vc showAggLabels hovered selection searchBox txs agg
+            Svg.lazy7 aggRelations vc level hovered selection searchBox txs agg
 
         Pathfinder.TransactionTracingMode ->
-            Svg.lazy6 txRelations vc gc searchBox annotations txs conversions
+            Svg.lazy7 txRelations vc gc level searchBox annotations txs conversions
 
 
 {-| Render aggregate-mode edges.
 
-  - `showAggLabels` — when False the always-on mid-point value labels are
-    omitted to reduce clutter when zoomed out; hovered/selected edges still
-    show their label via the highlight layer.
+  - `level` — below `Full` the always-on mid-point value labels are omitted to
+    reduce clutter when zoomed out; hovered/selected edges still show their
+    label via the highlight layer.
   - `hovered`/`selection` — the hovered and selected graph elements. When an
     edge is hovered/selected or an address is hovered/selected, edges not
     incident to that focus are dimmed so the relevant edges are easy to trace.
@@ -89,8 +90,8 @@ relations vc gc showAggLabels hovered selection searchBox annotations txs agg co
     so toggling between tx and aggregate mode keeps the same visual layout.
 
 -}
-aggRelations : View.Config -> Bool -> Hovered -> Selection -> SearchBox.Model -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Svg Msg
-aggRelations vc showAggLabels hovered selection searchBox txs agg =
+aggRelations : View.Config -> DetailLevel -> Hovered -> Selection -> SearchBox.Model -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Svg Msg
+aggRelations vc level hovered selection searchBox txs agg =
     let
         agg_ =
             Dict.values agg
@@ -192,7 +193,7 @@ aggRelations vc showAggLabels hovered selection searchBox txs agg =
             |> List.map
                 (\( edge, a, b ) -> aggEdgeEdge vc (isDimmed edge) (offsetFor edge) edge a b)
             |> Keyed.node "g" []
-        , if showAggLabels then
+        , if level == Full then
             placedEdges
                 |> List.map
                     (\( edge, a, b ) -> aggEdgeNode vc (isDimmed edge) (offsetFor edge) edge a b)
@@ -330,8 +331,8 @@ avgTxY txs txIds =
             Just (List.sum ys / toFloat (List.length ys))
 
 
-txRelations : View.Config -> Pathfinder.Config -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
-txRelations vc gc searchBox annotations txs conversions =
+txRelations : View.Config -> Pathfinder.Config -> DetailLevel -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
+txRelations vc gc level searchBox annotations txs conversions =
     let
         txs_ =
             Dict.values txs
@@ -367,7 +368,14 @@ txRelations vc gc searchBox annotations txs conversions =
                         )
                     )
                 |> Keyed.node "g" []
-           , txsRegular_
+           , -- edge value labels drop out when zoomed out; hovered and selected
+             -- txs are in the highlighted lists below and keep theirs
+             (if level == Full then
+                txsRegular_
+
+              else
+                []
+             )
                 |> List.map
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tl"
@@ -381,7 +389,7 @@ txRelations vc gc searchBox annotations txs conversions =
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tn"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy5 Tx.view vc gc (SearchBox.highlightFor searchBox tx.id) tx
+                            |> Svg.lazy6 Tx.view vc gc (SearchBox.highlightFor searchBox tx.id) level tx
                         )
                     )
                 |> Keyed.node "g" []
@@ -408,7 +416,7 @@ txRelations vc gc searchBox annotations txs conversions =
                     (\tx ->
                         ( Id.toString tx.id |> (++) "tnh"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy5 Tx.view vc gc (SearchBox.highlightFor searchBox tx.id) tx
+                            |> Svg.lazy6 Tx.view vc gc (SearchBox.highlightFor searchBox tx.id) level tx
                         )
                     )
                 |> Keyed.node "g" []
