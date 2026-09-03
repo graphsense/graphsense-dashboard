@@ -181,11 +181,22 @@ contextMenuView pluginStates vc model ( coords, menu ) =
 
             ContextMenu.AddressContextMenu id ->
                 let
+                    -- Plugin entries act on the one address that was right-clicked,
+                    -- so on a multi-selection they are greyed out like core's own
+                    -- per-address entries below (annotate, copy id, open in tab).
+                    isMultiSelect =
+                        case model.selection of
+                            Pathfinder.MultiSelect _ ->
+                                True
+
+                            _ ->
+                                False
+
                     pluginsList =
                         Dict.get id model.network.addresses
                             |> Maybe.map
                                 (Plugin.addressContextMenu pluginStates vc
-                                    >> List.map (ContextMenuItem.view vc)
+                                    >> List.map (ContextMenuItem.setDisabled isMultiSelect >> ContextMenuItem.view vc)
                                 )
                             |> Maybe.withDefault []
                 in

@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Plugin entries on an address's right-click menu (CSAM check, Case Connect, Quicklock) were still active on a multi-selection although they act on the one address that was clicked. They are now greyed out there, like core's own per-address entries
+
 ### Added
 
 - Holding Ctrl (Cmd on macOS) on the Pathfinder for a moment shows a small overlay listing the keyboard shortcuts, the way command-line tools show their key bindings; it disappears with the key. The toolbar tooltips now carry the shortcut too, e.g. "Save file (Ctrl+S)", so daily users can find them without reading the docs
