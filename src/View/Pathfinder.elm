@@ -270,6 +270,9 @@ contextMenuView pluginStates vc model ( coords, menu ) =
                                     Pathfinder.SelectedAddress _ ->
                                         False
 
+                                    Pathfinder.MultiSelect _ ->
+                                        False
+
                                     _ ->
                                         True
                                 )
@@ -350,6 +353,9 @@ contextMenuView pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.setDisabled
                                 (case model.selection of
                                     Pathfinder.SelectedTx _ ->
+                                        False
+
+                                    Pathfinder.MultiSelect _ ->
                                         False
 
                                     _ ->

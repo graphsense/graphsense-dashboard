@@ -52,7 +52,7 @@ Single test files: not supported by elm-test-rs natively; tests live in `tests/`
 - **Effect.elm** — Side-effect abstraction wrapping `Cmd msg` with batching
 - **Sub.elm** — Subscriptions (window resize, time, keyboard, etc.)
 - **Route.elm** — URL routing; routes: `Graph`, `Pathfinder`, `Home`, `Stats`, `Settings`, `Plugin`
-- **Ports.elm** — JavaScript interop (localStorage, clipboard, canvas, file export)
+- **Ports.elm** — JavaScript interop (localStorage, clipboard, canvas, file export). `openGraphInNewTab` parks an encoded selection in localStorage under `gs-handoff-<key>` and opens `/pathfinder?handoff=<key>`; `main.js` consumes it at boot through the same `deserialized` port as the file picker and the `?import=<id>` deep link
 - **main.js** — JS bootstrap, port wiring, external library initialization
 
 ### Directory Layout Under src/

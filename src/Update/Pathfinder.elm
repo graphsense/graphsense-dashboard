@@ -2800,26 +2800,19 @@ updateByMsg uc msg model =
             n (model |> s_helpDropdownOpen (model.helpDropdownOpen |> not))
 
         UserClickedContextMenuOpenInNewTab cm ->
-            ( model
-            , (case cm of
-                ContextMenu.AddressContextMenu id ->
-                    Route.Network (Id.network id) (Route.Address (Id.id id) Nothing)
+            case model.selection of
+                MultiSelect selections ->
+                    -- the whole selection, positions and notes included, as a
+                    -- .gs handed over to the new tab
+                    ( { model | contextMenu = Nothing }
+                    , [ Pathfinder.encodeSelection selections model
+                            |> Ports.openGraphInNewTab
+                            |> CmdEffect
+                      ]
+                    )
 
-                ContextMenu.TransactionContextMenu id ->
-                    Route.Network (Id.network id) (Route.Tx (Id.id id))
-
-                ContextMenu.TransactionIdChevronActions id ->
-                    Route.Network (Id.network id) (Route.Tx (Id.id id))
-
-                ContextMenu.AddressIdChevronActions id ->
-                    Route.Network (Id.network id) (Route.Address (Id.id id) Nothing)
-              )
-                |> GlobalRoute.pathfinderRoute
-                |> GlobalRoute.toUrl
-                |> Ports.newTab
-                |> CmdEffect
-                |> List.singleton
-            )
+                _ ->
+                    openInNewTab cm model
 
         UserClickedContextMenuIdToClipboard cm ->
             ( model
@@ -3109,6 +3102,30 @@ updateByMsg uc msg model =
             , Tooltip.reposition model.tooltip
                 |> List.map TooltipEffect
             )
+
+
+openInNewTab : ContextMenu.ContextMenuType -> Model -> ( Model, List Effect )
+openInNewTab cm model =
+    ( model
+    , (case cm of
+        ContextMenu.AddressContextMenu id ->
+            Route.Network (Id.network id) (Route.Address (Id.id id) Nothing)
+
+        ContextMenu.TransactionContextMenu id ->
+            Route.Network (Id.network id) (Route.Tx (Id.id id))
+
+        ContextMenu.TransactionIdChevronActions id ->
+            Route.Network (Id.network id) (Route.Tx (Id.id id))
+
+        ContextMenu.AddressIdChevronActions id ->
+            Route.Network (Id.network id) (Route.Address (Id.id id) Nothing)
+      )
+        |> GlobalRoute.pathfinderRoute
+        |> GlobalRoute.toUrl
+        |> Ports.newTab
+        |> CmdEffect
+        |> List.singleton
+    )
 
 
 selectFromContextMenu : ContextMenu.ContextMenuType -> Model -> ( Model, List Effect )

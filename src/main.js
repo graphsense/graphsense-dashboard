@@ -85,6 +85,24 @@ for (const plugin in plugins) {
   pluginFlags[plugin] = plugins[plugin].flags()
 }
 
+// Sub-graphs parked for a tab that never got to boot (closed before its
+// scripts ran) must not pile up, nor travel into the flags below. Runs at boot
+// and before every new hand-over, so a leftover lives at most TTL past the
+// next use of the app on this origin.
+const HANDOFF_PREFIX = 'gs-handoff-'
+const HANDOFF_TTL_MS = 5 * 60 * 1000
+function purgeStaleHandoffs () {
+  for (const k of Object.keys(localStorage)) {
+    if (!k.startsWith(HANDOFF_PREFIX)) continue
+    try {
+      if (Date.now() - JSON.parse(localStorage.getItem(k)).at > HANDOFF_TTL_MS) localStorage.removeItem(k)
+    } catch (_) {
+      localStorage.removeItem(k)
+    }
+  }
+}
+purgeStaleHandoffs()
+
 const app = Elm.Main.init(
   { flags: 
     { localStorage: {...localStorage}
@@ -565,6 +583,32 @@ async function importByApiDownloadId (id) {
   }
 }
 
+// Loads the sub-graph a sibling tab parked for us (openGraphInNewTab port).
+// One-shot: the entry is removed and the query parameter stripped, so a reload
+// leaves a plain Pathfinder tab, as after opening a .gs file.
+function importHandoff (key) {
+  const raw = localStorage.getItem(HANDOFF_PREFIX + key)
+  localStorage.removeItem(HANDOFF_PREFIX + key)
+  const url = new URL(window.location)
+  url.searchParams.delete('handoff')
+  history.replaceState(null, '', url)
+  const displayName = 'selection.gs'
+  try {
+    if (!raw) throw new Error('handoff-expired')
+    const data = JSON.parse(raw).body
+    if (!Array.isArray(data) || data.length === 0 || typeof data[0] !== 'string') {
+      throw new Error('invalid-import-payload')
+    }
+    data[0] = data[0].split(' ')[0].split('-')[0]
+    app.ports.deserialized.send([displayName, data])
+  } catch (error) {
+    reportImportFileError(error, displayName)
+  }
+}
+
+const handoffKey = new URLSearchParams(window.location.search).get('handoff')
+if (handoffKey) importHandoff(handoffKey)
+
 // Deep link: <app>/pathfinder?import=<id> downloads and opens that graph on load.
 const apiDownloadId = new URLSearchParams(window.location.search).get('import')
 if (apiDownloadId) importByApiDownloadId(apiDownloadId)
@@ -677,6 +721,29 @@ if(!customElements.get('resize-sensor')) {
 }
 
 app.ports.newTab.subscribe( url => window.open(url, '_blank'));
+
+// "Open selection in new tab": the sub-graph arrives as a .gs payload (the same
+// JSON the save button compresses). It is parked in localStorage -- same-origin,
+// shared across tabs, big enough -- under a one-time key, and the new tab picks
+// it up at boot via ?handoff=<key> (see importHandoff). A URL fragment would
+// make the link shareable, but a few hundred nodes already make it unwieldy.
+app.ports.openGraphInNewTab.subscribe(body => {
+  purgeStaleHandoffs()
+  const key = (crypto.randomUUID && crypto.randomUUID()) || (Date.now().toString(36) + Math.random().toString(36).slice(2))
+  const storageKey = HANDOFF_PREFIX + key
+  try {
+    localStorage.setItem(storageKey, JSON.stringify({ at: Date.now(), body }))
+  } catch (error) {
+    // quota exceeded, or storage disabled: nothing to hand over, so no tab
+    console.warn('Could not hand the selection over to a new tab', error)
+    return
+  }
+  const tab = window.open('/pathfinder?handoff=' + encodeURIComponent(key), '_blank')
+  if (!tab) {
+    // popup blocked: the entry would never be consumed
+    localStorage.removeItem(storageKey)
+  }
+})
 
 app.ports.toClipboard.subscribe(text => {
   navigator.clipboard.writeText(text);

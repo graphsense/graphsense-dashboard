@@ -1,4 +1,4 @@
-port module Ports exposing (blur, console, deserialize, deserializeFile, deserialized, exportGraph, exportGraphResult, getBBox, newTab, pluginsIn, pluginsOut, renderedImageForExport, saveToLocalStorage, sendBBox, serialize, setDirty, toClipboard, uncaughtError, windowBlurred)
+port module Ports exposing (blur, console, deserialize, deserializeFile, deserialized, exportGraph, exportGraphResult, getBBox, newTab, openGraphInNewTab, pluginsIn, pluginsOut, renderedImageForExport, saveToLocalStorage, sendBBox, serialize, setDirty, toClipboard, uncaughtError, windowBlurred)
 
 import Json.Encode exposing (Value)
 import Model.Graph.Coords as Coords
@@ -40,6 +40,13 @@ port pluginsIn : (( String, Value ) -> msg) -> Sub msg
 
 
 port newTab : String -> Cmd msg
+
+
+{-| Open a `.gs` payload (the encoded selection) as a graph in a new tab. main.js
+parks it in localStorage under a one-time key and opens `/pathfinder?handoff=<key>`;
+the new tab picks it up at boot through the `deserialized` port.
+-}
+port openGraphInNewTab : Value -> Cmd msg
 
 
 port toClipboard : String -> Cmd msg
