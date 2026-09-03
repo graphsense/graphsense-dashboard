@@ -115,6 +115,9 @@ toKeyDown { key, modHeld, repeat } =
                     "k" ->
                         UserPressedHotkey key |> Decode.succeed
 
+                    "d" ->
+                        UserPressedHotkey key |> Decode.succeed
+
                     "s" ->
                         UserPressedHotkey key |> Decode.succeed
 

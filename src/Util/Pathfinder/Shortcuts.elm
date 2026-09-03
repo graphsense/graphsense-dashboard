@@ -61,6 +61,11 @@ export =
     Shortcut [ "E" ] True "export graph"
 
 
+duplicate : Shortcut
+duplicate =
+    Shortcut [ "D" ] True "Duplicate graph in new tab"
+
+
 undo : Shortcut
 undo =
     Shortcut [ "Z" ] True "Undo"
@@ -100,6 +105,7 @@ all =
     , save
     , open
     , export
+    , duplicate
     , undo
     , redo
     , selectAll

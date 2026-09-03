@@ -119,10 +119,10 @@ const app = Elm.Main.init(
 !!document.body.elmTree || console.warn('safe virtual dom not installed!')
 
 // Pathfinder mod-key chords the browser would otherwise claim (find bar, save
-// page, focus search bar, open file, K = browser search bar). The shortcuts themselves are handled in
+// page, focus search bar, open file, K = browser search bar, D = bookmark). The shortcuts themselves are handled in
 // Elm (Sub/Pathfinder.elm), on the same keydown — here we only suppress the
 // browser default.
-const shortCutKeys = ['f', 'k', 's', 'e', 'o']
+const shortCutKeys = ['f', 'k', 's', 'e', 'o', 'd']
 
 // Same, but these have a meaning of their own inside a text input (select all,
 // undo, redo), so there we leave them to the browser. Elm skips them in inputs too.

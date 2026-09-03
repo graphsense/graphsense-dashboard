@@ -2,6 +2,7 @@ module Support.App exposing
     ( App
     , apiEffects
     , expectEffect
+    , expectNoEffects
     , html
     , init
     , initAt
@@ -232,6 +233,15 @@ expectEffect description predicate (App app) =
                 ++ (app.effects_ |> List.map name |> String.join ", ")
                 ++ "]"
             )
+
+
+{-| The last step asked the shell for nothing at all.
+-}
+expectNoEffects : App -> Expectation
+expectNoEffects (App app) =
+    app.effects_
+        |> List.map name
+        |> Expect.equalLists []
 
 
 name : Effect -> String

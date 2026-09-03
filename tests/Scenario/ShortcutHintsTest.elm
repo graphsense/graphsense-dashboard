@@ -6,6 +6,7 @@ press that started it, so a quick chord or a Ctrl+click never sees the overlay
 and a stale timer cannot show it for a later press.
 -}
 
+import Data.Pathfinder.Network as Network
 import Effect.Pathfinder exposing (Effect(..))
 import Expect
 import Html.Attributes
@@ -64,6 +65,17 @@ suite =
                     |> App.html
                     |> Query.find overlay
                     |> Query.has [ Selector.text "Add address or tx", Selector.text "Find on graph" ]
+        , test "Ctrl+D hands the whole graph to the browser for a new tab" <|
+            \_ ->
+                App.init
+                    |> App.mapModel (\m -> { m | network = Network.twoConnectedAddresses })
+                    |> App.step (UserPressedHotkey "d")
+                    |> App.expectEffect "the openGraphInNewTab port" isCmd
+        , test "Ctrl+D on an empty graph does nothing" <|
+            \_ ->
+                App.init
+                    |> App.step (UserPressedHotkey "d")
+                    |> App.expectNoEffects
         , test "Ctrl+K asks the browser to focus the address search box" <|
             \_ ->
                 -- Dom.focus is a Cmd, so all the harness can see is that one was issued

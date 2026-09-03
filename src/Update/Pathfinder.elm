@@ -992,6 +992,21 @@ updateByMsg uc msg model =
                     , [ InternalEffect UserPressedSearchHotkey ]
                     )
 
+                "d" ->
+                    -- the whole graph, positions and notes included, as a
+                    -- .gs handed over to a new tab; nothing to duplicate on
+                    -- an empty graph
+                    if Network.isEmpty model.network then
+                        n model
+
+                    else
+                        ( model
+                        , [ Pathfinder.encode model
+                                |> Ports.openGraphInNewTab
+                                |> CmdEffect
+                          ]
+                        )
+
                 "k" ->
                     -- the address search box, to add more nodes
                     ( model
