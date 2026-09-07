@@ -42,6 +42,7 @@ type alias Flags =
     , height : Int
     , pluginFlags : Plugin.Flags
     , locale : String
+    , isMac : Bool
     }
 
 

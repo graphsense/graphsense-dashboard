@@ -52,7 +52,7 @@ Single test files: not supported by elm-test-rs natively; tests live in `tests/`
 - **Effect.elm** — Side-effect abstraction wrapping `Cmd msg` with batching
 - **Sub.elm** — Subscriptions (window resize, time, keyboard, etc.)
 - **Route.elm** — URL routing; routes: `Graph`, `Pathfinder`, `Home`, `Stats`, `Settings`, `Plugin`
-- **Ports.elm** — JavaScript interop (localStorage, clipboard, canvas, file export)
+- **Ports.elm** — JavaScript interop (localStorage, clipboard, canvas, file export). `openGraphInNewTab` parks an encoded selection in localStorage under `gs-handoff-<key>` and opens `/pathfinder?handoff=<key>`; `main.js` consumes it at boot through the same `deserialized` port as the file picker and the `?import=<id>` deep link
 - **main.js** — JS bootstrap, port wiring, external library initialization
 
 ### Directory Layout Under src/
@@ -344,6 +344,10 @@ A round-trip test that compares an encoder against its own decoder passes even w
 
 Runs on commit: `make format`, `make lint`, `make test`. On push: `tools/set_version.sh` (writes version to `Version.elm`).
 
+## Graph detail levels (semantic zoom)
+
+`Model.Pathfinder.DetailLevel` maps the zoom (`Transform.getZ`, larger = further out) to `Full | Reduced | Minimal`, computed once in `View.Pathfinder.graphSvg` and threaded into the lazily rendered layers (`Network.addresses`, `Network.relations`, `Tx.view`, `Address.view`). `Reduced` drops edge values, timestamps, tx hashes and tag icons; `Minimal` also drops address identifiers. Annotations, service labels and selected/hovered nodes keep full detail. Keep it a bucketed custom type passed as its own lazy argument: passing the raw zoom, or a `View.Config` rebuilt per render, defeats `Svg.lazy` memoization and makes every zoom tick re-render the whole graph. `aggRelations` sits exactly at the `lazy7` limit, so a further argument has to be packed into an existing one.
+
 ## InfiniteTable (Virtual Scrolling)
 
 `Components.InfiniteTable` provides virtual scrolling for large datasets. **It requires fixed/constant row heights.** The scroller estimates total content height as `rowHeight * itemCount` using a single sampled row. Variable-height rows cause spacer miscalculations, scrollbar jitter, and can prevent data loading at scroll boundaries. When converting a table to use `InfiniteTable`, always ensure rows have a fixed CSS height (no `height: auto`, no text wrapping that grows rows). If variable row content is needed, truncate with `text-overflow: ellipsis` and use tooltips for the full text.
@@ -352,20 +356,24 @@ Runs on commit: `make format`, `make lint`, `make test`. On push: `tools/set_ver
 
 Current shortcuts (path: `/pathfinder` only):
 
-- **Ctrl/Cmd+F** — open on-graph search
+- **Ctrl/Cmd+K** — focus the address search box (to add nodes)
+- **Ctrl/Cmd+F** — open on-graph search (find nodes already on the graph)
 - **Ctrl/Cmd+S** — save graph (`.gs` file)
 - **Ctrl/Cmd+O** — open graph (`.gs` file). **Firefox caveat:** opening the native file picker needs *transient user activation*, which Firefox does not grant for a Ctrl/Cmd-modified keydown on a freshly loaded page. So a cold Ctrl/Cmd+O does nothing in Firefox until the user has clicked/interacted once (after that it works); Chrome always works, as does the toolbar open button (a real click). Not fixable in code — withheld activation cannot be synthesized.
 - **Ctrl/Cmd+E** — open export dialog
+- **Ctrl/Cmd+D** — duplicate the whole graph into a new tab (same `.gs` hand-over as "Open in new tab" on a multi-selection)
 - **Ctrl/Cmd+Z** — undo
 - **Ctrl/Cmd+Y** — redo
 - **Ctrl/Cmd+A** — select all
 - **Arrow keys / Backspace / Delete / Escape** — navigation and deletion
 
+**Hints:** `src/Util/Pathfinder/Shortcuts.elm` is the catalogue — one record per shortcut with keys and a translation key. Both the toolbar tooltips (`View.Pathfinder.Toolbar`, "Save file (Ctrl+S)") and the hint overlay (`View.Pathfinder.ShortcutHints`, shown after Ctrl/Cmd has been held for `hintDelayMs`) render from it, so a new shortcut goes there as well as into `Sub/Pathfinder.elm`. Whether hints read Cmd or Ctrl comes from the `isMac` flag `main.js` passes at boot (`Config.View.isMac`). The overlay timer is `RuntimeModKeyHeld n`, where `n` is the mod-key press count; a timer whose count no longer matches is ignored, so a release and re-press inside the delay cannot show hints for the old press.
+
 **Dispatch:** all shortcuts fire from a single `Browser.Events.onKeyDown` subscription in `src/Sub/Pathfinder.elm`. The chord is read off the keydown event itself (`ctrlKey`/`metaKey`), which is what `UserPressedHotkey` carries. Auto-repeat keydowns are dropped, and `onlyFireOutsideOfTextInput` keeps A/Z/Y from hijacking select-all/undo/redo while the user is typing.
 
-Do **not** move a chord back onto keyup gated by the `model.modPressed` flag (as it was until 2026-07): that made the shortcut depend on the *release order* — lifting Ctrl a few milliseconds before the letter cleared `modPressed` and silently swallowed the chord — and it never worked reliably on macOS, where browsers withhold keyup for character keys while Cmd is held. `modPressed` still exists, but only for Ctrl+click multi-select.
+Do **not** move a chord back onto keyup gated by the `model.modPressed` flag (as it was until 2026-07): that made the shortcut depend on the *release order* — lifting Ctrl a few milliseconds before the letter cleared `modPressed` and silently swallowed the chord — and it never worked reliably on macOS, where browsers withhold keyup for character keys while Cmd is held. `modPressed` still exists, but only for Ctrl+click multi-select and for the hint overlay timer.
 
-The browser default for a claimed chord (F = find bar, S = save page, E = focus search bar, O = open file) is suppressed by the `keydown` listener in `src/main.js`, which is path-gated to `/pathfinder` and ignores Shift/Alt-modified combos. To add a browser-claimed shortcut: add the key to `shortCutKeys` there (or `shortCutKeysOutsideTextInput` if the browser default is worth keeping inside inputs) and add a `case` to `toKeyDown` in `Sub/Pathfinder.elm`.
+The browser default for a claimed chord (F = find bar, K = browser search bar, S = save page, E = focus search bar, O = open file, D = bookmark) is suppressed by the `keydown` listener in `src/main.js`, which is path-gated to `/pathfinder` and ignores Shift/Alt-modified combos. To add a browser-claimed shortcut: add the key to `shortCutKeys` there (or `shortCutKeysOutsideTextInput` if the browser default is worth keeping inside inputs) and add a `case` to `toKeyDown` in `Sub/Pathfinder.elm`.
 
 **User-activation gotcha (file pickers):** anything that opens the native file picker (e.g. Ctrl/Cmd+O → open `.gs`) must be triggered **synchronously from a trusted `keydown`** event, because the picker requires a transient user-activation and only `keydown`/pointer events grant it. That is why Ctrl/Cmd+O calls `openGsFile()` straight from the `main.js` listener instead of routing through Elm, which would break the activation chain.
 

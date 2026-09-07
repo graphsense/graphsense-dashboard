@@ -72,6 +72,7 @@ type Msg
     | UserClosedDetailsView
     | UserPressedModKey
     | UserReleasedModKey
+    | RuntimeModKeyHeld Int
     | UserReleasedEscape
     | UserPressedHotkey String
     | UserPressedArrowKey Direction

@@ -76,6 +76,9 @@ shallPushHistory msg _ =
         UserReleasedModKey ->
             False
 
+        RuntimeModKeyHeld _ ->
+            False
+
         UserReleasedEscape ->
             False
 

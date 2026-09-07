@@ -117,6 +117,7 @@ import Util.Csv
 import Util.Data as Data
 import Util.EventualMessages as EventualMessages
 import Util.Pathfinder.History as History
+import Util.Pathfinder.Shortcuts as Shortcuts
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.TooltipType exposing (TooltipType)
 import View.Locale as Locale exposing (makeTimestampFilename)
@@ -925,10 +926,30 @@ updateByMsg uc msg model =
                 )
 
         UserPressedModKey ->
-            n { model | modPressed = True }
+            if model.modPressed then
+                -- keydown auto-repeats while the key is held
+                n model
+
+            else
+                let
+                    pressCount =
+                        model.modKeyPressCount + 1
+                in
+                ( { model | modPressed = True, modKeyPressCount = pressCount }
+                , [ Process.sleep Shortcuts.hintDelayMs
+                        |> Task.perform (\_ -> RuntimeModKeyHeld pressCount)
+                        |> CmdEffect
+                  ]
+                )
+
+        RuntimeModKeyHeld pressCount ->
+            -- The count ties the timer to the press that started it, so a
+            -- release and re-press inside the delay does not show the hints
+            -- for the old press.
+            n { model | showShortcutHints = model.modPressed && pressCount == model.modKeyPressCount }
 
         UserReleasedModKey ->
-            n { model | modPressed = False }
+            n { model | modPressed = False, showShortcutHints = False }
 
         UserReleasedEscape ->
             if model.onGraphSearch.visible then
@@ -970,6 +991,30 @@ updateByMsg uc msg model =
                 "f" ->
                     ( model
                     , [ InternalEffect UserPressedSearchHotkey ]
+                    )
+
+                "d" ->
+                    -- the whole graph, positions and notes included, as a
+                    -- .gs handed over to a new tab; nothing to duplicate on
+                    -- an empty graph
+                    if Network.isEmpty model.network then
+                        n model
+
+                    else
+                        ( model
+                        , [ Pathfinder.encode model
+                                |> Ports.openGraphInNewTab
+                                |> CmdEffect
+                          ]
+                        )
+
+                "k" ->
+                    -- the address search box, to add more nodes
+                    ( model
+                    , [ Dom.focus Search.searchInputId
+                            |> Task.attempt (\_ -> NoOp)
+                            |> CmdEffect
+                      ]
                     )
 
                 "s" ->
@@ -1794,7 +1839,7 @@ updateByMsg uc msg model =
                                 network
                             )
                                 |> (if model_.config.avoidOverlapingNodes then
-                                        Network.resolveOverlapsExcept Network.Compact (Just id)
+                                        Network.resolveOverlapsExcept Network.Compact (Set.singleton id)
 
                                     else
                                         identity
@@ -2796,26 +2841,19 @@ updateByMsg uc msg model =
             n (model |> s_helpDropdownOpen (model.helpDropdownOpen |> not))
 
         UserClickedContextMenuOpenInNewTab cm ->
-            ( model
-            , (case cm of
-                ContextMenu.AddressContextMenu id ->
-                    Route.Network (Id.network id) (Route.Address (Id.id id) Nothing)
+            case model.selection of
+                MultiSelect selections ->
+                    -- the whole selection, positions and notes included, as a
+                    -- .gs handed over to the new tab
+                    ( { model | contextMenu = Nothing }
+                    , [ Pathfinder.encodeSelection selections model
+                            |> Ports.openGraphInNewTab
+                            |> CmdEffect
+                      ]
+                    )
 
-                ContextMenu.TransactionContextMenu id ->
-                    Route.Network (Id.network id) (Route.Tx (Id.id id))
-
-                ContextMenu.TransactionIdChevronActions id ->
-                    Route.Network (Id.network id) (Route.Tx (Id.id id))
-
-                ContextMenu.AddressIdChevronActions id ->
-                    Route.Network (Id.network id) (Route.Address (Id.id id) Nothing)
-              )
-                |> GlobalRoute.pathfinderRoute
-                |> GlobalRoute.toUrl
-                |> Ports.newTab
-                |> CmdEffect
-                |> List.singleton
-            )
+                _ ->
+                    openInNewTab cm model
 
         UserClickedContextMenuIdToClipboard cm ->
             ( model
@@ -2914,9 +2952,26 @@ updateByMsg uc msg model =
                                 MSelectedTx id ->
                                     Network.updateTx id (Node.setY medianY) net
 
+                        -- The aligned nodes stay put; whatever they now overlap
+                        -- moves out of the way. Otherwise an unselected node in
+                        -- the same column just above the median row pushes the
+                        -- aligned node back off it.
+                        selectedIds =
+                            selections
+                                |> List.map
+                                    (\sel ->
+                                        case sel of
+                                            MSelectedAddress id ->
+                                                id
+
+                                            MSelectedTx id ->
+                                                id
+                                    )
+                                |> Set.fromList
+
                         newNetwork =
                             List.foldl moveToMedianY model.network selections
-                                |> Network.resolveOverlaps Network.Spacious
+                                |> Network.resolveOverlapsExcept Network.Spacious selectedIds
                     in
                     n { model | network = newNetwork, contextMenu = Nothing }
 
@@ -3088,6 +3143,30 @@ updateByMsg uc msg model =
             , Tooltip.reposition model.tooltip
                 |> List.map TooltipEffect
             )
+
+
+openInNewTab : ContextMenu.ContextMenuType -> Model -> ( Model, List Effect )
+openInNewTab cm model =
+    ( model
+    , (case cm of
+        ContextMenu.AddressContextMenu id ->
+            Route.Network (Id.network id) (Route.Address (Id.id id) Nothing)
+
+        ContextMenu.TransactionContextMenu id ->
+            Route.Network (Id.network id) (Route.Tx (Id.id id))
+
+        ContextMenu.TransactionIdChevronActions id ->
+            Route.Network (Id.network id) (Route.Tx (Id.id id))
+
+        ContextMenu.AddressIdChevronActions id ->
+            Route.Network (Id.network id) (Route.Address (Id.id id) Nothing)
+      )
+        |> GlobalRoute.pathfinderRoute
+        |> GlobalRoute.toUrl
+        |> Ports.newTab
+        |> CmdEffect
+        |> List.singleton
+    )
 
 
 selectFromContextMenu : ContextMenu.ContextMenuType -> Model -> ( Model, List Effect )

@@ -17,6 +17,7 @@ import Model.Currency exposing (Currency(..))
 import Model.Graph.Coords as Coords
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.ContextMenu as ContextMenu
+import Model.Pathfinder.DetailLevel as DetailLevel exposing (DetailLevel(..))
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
@@ -40,11 +41,20 @@ import View.Pathfinder.Tx.Path exposing (labelsSep, pickPathFunction)
 import View.Pathfinder.Tx.Utils exposing (signX, toPosition)
 
 
-view : View.Config -> Pathfinder.Config -> Tx -> UtxoTx -> Maybe Annotations.AnnotationItem -> Svg Msg
-view vc pc tx utxo annotation =
+view : View.Config -> Pathfinder.Config -> DetailLevel -> Tx -> UtxoTx -> Maybe Annotations.AnnotationItem -> Svg Msg
+view vc pc level tx utxo annotation =
     let
         id =
             tx.id
+
+        full =
+            DetailLevel.forNode (tx.hovered || tx.selected) level == Full
+
+        showTimestamp =
+            vc.showTimestampOnTxEdge && full
+
+        showHash =
+            vc.showHash && full
 
         colorFinal =
             annotation
@@ -79,7 +89,7 @@ view vc pc tx utxo annotation =
 
         offset =
             8
-                + (if vc.showTimestampOnTxEdge then
+                + (if showTimestamp then
                     0
 
                    else
@@ -88,7 +98,7 @@ view vc pc tx utxo annotation =
                 + offsetTxHash
 
         offsetTxHash =
-            if vc.showHash then
+            if showHash then
                 0
 
             else
@@ -173,10 +183,10 @@ view vc pc tx utxo annotation =
             { root =
                 { hasMultipleInOutputs = anyIsNotVisible utxo.inputs || anyIsNotVisible utxo.outputs
                 , highlightVisible = pc.hideForExport /= Exporting True && (tx.selected || tx.hovered)
-                , txHash = Util.View.truncateLongIdentifier utxo.raw.txHash |> ifTrue vc.showHash
-                , date = Locale.timestampDateUniform vc.locale t |> ifTrue vc.showTimestampOnTxEdge
-                , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t |> ifTrue vc.showTimestampOnTxEdge
-                , timestampVisible = vc.showTimestampOnTxEdge || vc.showHash
+                , txHash = Util.View.truncateLongIdentifier utxo.raw.txHash |> ifTrue showHash
+                , date = Locale.timestampDateUniform vc.locale t |> ifTrue showTimestamp
+                , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t |> ifTrue showTimestamp
+                , timestampVisible = showTimestamp || showHash
                 , startingPointVisible = tx.isStartingPoint || pc.hideForExport /= Exporting True && tx.selected
                 }
             , iconsNodeMarker =
