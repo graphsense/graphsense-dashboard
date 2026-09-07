@@ -24,7 +24,7 @@ import Model.Graph.Coords as Coords
 import Model.Locale as Locale
 import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary)
-import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
@@ -273,7 +273,7 @@ client-side threshold; a body without qualifiers renders unqualified.
 -}
 floorQualifier : String -> Api.Data.Address -> String
 floorQualifier field data =
-    if (data.qualifiers |> Maybe.andThen (Dict.get field)) == Just "gt" then
+    if Address.isFloored field data then
         "+"
 
     else
@@ -736,31 +736,21 @@ transactionsDataTab vc model id viewState =
         txOnGraphFn =
             flip Network.hasTx model.network
 
-        noIncomingTxs =
-            viewState.address.data
-                |> RemoteData.map .noIncomingTxs
-                |> RemoteData.withDefault 0
-
-        noOutgoingTxs =
-            viewState.address.data
-                |> RemoteData.map .noOutgoingTxs
-                |> RemoteData.withDefault 0
-
-        totalNumber =
-            noIncomingTxs + noOutgoingTxs
-
-        -- a sum with a floored operand is itself a floor
-        totalQualifier =
+        -- exact parts add up; with a floored part it is the larger part, as a floor
+        ( totalNumber, totalQualifier ) =
             viewState.address.data
                 |> RemoteData.map
-                    (\a ->
-                        if floorQualifier "no_incoming_txs" a ++ floorQualifier "no_outgoing_txs" a == "" then
-                            ""
+                    (Address.getTxTotal
+                        >> Tuple.mapSecond
+                            (\floored ->
+                                if floored then
+                                    "+"
 
-                        else
-                            "+"
+                                else
+                                    ""
+                            )
                     )
-                |> RemoteData.withDefault ""
+                |> RemoteData.withDefault ( 0, "" )
     in
     dataTab
         { title =

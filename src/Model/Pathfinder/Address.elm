@@ -11,7 +11,9 @@ module Model.Pathfinder.Address exposing
     , getCoords
     , getTotalReceived
     , getTotalSpent
+    , getTxTotal
     , getTxs
+    , isFloored
     , isSharedService
     , isSmartContract
     , txsGetSet
@@ -136,6 +138,30 @@ getActivityRange x =
         (\first last -> ( timestampToPosix first.timestamp, timestampToPosix last.timestamp ))
         x.firstTx
         x.lastTx
+
+
+{-| Whether the backend reports `field` as a lower bound
+(`qualifiers[field] == "gt"`): a capped count that must not be presented as
+exact. Driven only by the server's qualifier map, never by a client-side
+threshold; a body without qualifiers is unqualified.
+-}
+isFloored : String -> Api.Data.Address -> Bool
+isFloored field data =
+    (data.qualifiers |> Maybe.andThen (Dict.get field)) == Just "gt"
+
+
+{-| The transaction count shown as the address's total, and whether it is a
+floor. Exact parts add up; once either direction is a lower bound the sum is
+not a number the backend vouches for, so the total becomes the larger part,
+itself a floor -- "500+ in, 217 out" reads "500+" (user decision 2026-09-07).
+-}
+getTxTotal : Api.Data.Address -> ( Int, Bool )
+getTxTotal data =
+    if isFloored "no_incoming_txs" data || isFloored "no_outgoing_txs" data then
+        ( max data.noIncomingTxs data.noOutgoingTxs, True )
+
+    else
+        ( data.noIncomingTxs + data.noOutgoingTxs, False )
 
 
 getTxs : Address -> Direction -> Txs
