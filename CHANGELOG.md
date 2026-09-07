@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The cluster-addresses tab was hidden on a network whose backend serves no clusters, although it also carries the cross-chain table of the same address on other EVM networks, which such backends do serve. The tab now shows and lists those addresses
 - A deep link with a checksummed (mixed-case) address loaded the node but never selected it, so the side panel stayed closed
 - A deep link to a token transfer or internal call (`…_T2`, `…_I0`) answered 400: the address normaliser lowercased the whole identifier, including the case-sensitive marker
 - Opening a value-carrying account transaction from a deep link or the search never showed its details panel

@@ -1052,14 +1052,12 @@ account pluginStates vc model id viewState address =
         onLiteNetwork =
             Pathfinder.isLiteNetwork (Id.network id) model
 
-        -- no clusters capability = no cluster/entity data (locally minted
-        -- ids only): no cluster-addresses tab
+        -- the tab renders on every account network, INCLUDING lite ones: the
+        -- multi-input cluster is always empty here (account clusters are
+        -- singletons), but the same tab carries the cross-chain pubkey table,
+        -- which lite networks do serve. It disables itself when both are empty.
         relatedAddressesTab =
-            if Pathfinder.supports NetworkCapabilities.Clusters (Id.network id) model then
-                [ relatedAddressesDataTab vc model id viewState RemoteData.NotAsked ]
-
-            else
-                []
+            [ relatedAddressesDataTab vc model id viewState RemoteData.NotAsked ]
 
         relatedDataTabsList =
             transactionsOrNeighborsDataTabs vc model id viewState
