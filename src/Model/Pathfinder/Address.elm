@@ -124,14 +124,18 @@ isSmartContract a =
 
 getActivityRangeAddress : Address -> Maybe ( Posix, Posix )
 getActivityRangeAddress a =
-    RemoteData.unwrap Nothing (getActivityRange >> Just) a.data
+    RemoteData.unwrap Nothing getActivityRange a.data
 
 
-getActivityRange : Api.Data.Address -> ( Posix, Posix )
+{-| Nothing for an address with no transactions of its own — it has no span to
+report, so callers must not invent one.
+-}
+getActivityRange : Api.Data.Address -> Maybe ( Posix, Posix )
 getActivityRange x =
-    ( timestampToPosix x.firstTx.timestamp
-    , timestampToPosix x.lastTx.timestamp
-    )
+    Maybe.map2
+        (\first last -> ( timestampToPosix first.timestamp, timestampToPosix last.timestamp ))
+        x.firstTx
+        x.lastTx
 
 
 getTxs : Address -> Direction -> Txs

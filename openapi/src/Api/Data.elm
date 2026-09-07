@@ -244,10 +244,16 @@ type alias Address =
     , currency : String
     , cluster : Int
     , freshClusterId : Maybe Int
-    , firstTx : TxSummary
+    -- nullable and NOT required in the spec (address.first_tx/last_tx are
+    -- anyOf [tx_summary, null]): an address with no transactions of its own —
+    -- a coinbase-only or failed-gas-only account, or one whose whole history
+    -- is in tokens the backend does not index — has neither. The generated
+    -- client had both as required, so such a body decoded to a fatal
+    -- "Expecting an OBJECT with a field named `last_tx`".
+    , firstTx : Maybe TxSummary
     , inDegree : Int
     , isContract : Maybe Bool
-    , lastTx : TxSummary
+    , lastTx : Maybe TxSummary
     , noIncomingTxs : Int
     , noOutgoingTxs : Int
     , outDegree : Int
@@ -485,9 +491,14 @@ type alias Cluster =
     , bestAddressTag : Maybe AddressTag
     , currency : String
     , cluster : Int
-    , firstTx : TxSummary
+    -- REQUIRED and non-nullable on the wire (the decoder below still insists on
+    -- both), Maybe only so the app can build one itself: Util.Data.selfCluster
+    -- synthesizes the singleton cluster of an account address on a network that
+    -- serves no cluster data, and such an address may have no transactions of
+    -- its own to copy.
+    , firstTx : Maybe TxSummary
     , inDegree : Int
-    , lastTx : TxSummary
+    , lastTx : Maybe TxSummary
     , noAddressTags : Int
     , noAddresses : Int
     , noIncomingTxs : Int
@@ -976,10 +987,10 @@ encodeAddressPairs model =
             , encode "currency" Json.Encode.string model.currency
             , encode "cluster" Json.Encode.int model.cluster
             , maybeEncode "fresh_cluster_id" Json.Encode.int model.freshClusterId
-            , encode "first_tx" encodeTxSummary model.firstTx
+            , maybeEncode "first_tx" encodeTxSummary model.firstTx
             , encode "in_degree" Json.Encode.int model.inDegree
             , maybeEncode "is_contract" Json.Encode.bool model.isContract
-            , encode "last_tx" encodeTxSummary model.lastTx
+            , maybeEncode "last_tx" encodeTxSummary model.lastTx
             , encode "no_incoming_txs" Json.Encode.int model.noIncomingTxs
             , encode "no_outgoing_txs" Json.Encode.int model.noOutgoingTxs
             , encode "out_degree" Json.Encode.int model.outDegree
@@ -1592,9 +1603,9 @@ encodeClusterPairs model =
             , maybeEncode "best_address_tag" encodeAddressTag model.bestAddressTag
             , encode "currency" Json.Encode.string model.currency
             , encode "cluster" Json.Encode.int model.cluster
-            , encode "first_tx" encodeTxSummary model.firstTx
+            , maybeEncode "first_tx" encodeTxSummary model.firstTx
             , encode "in_degree" Json.Encode.int model.inDegree
-            , encode "last_tx" encodeTxSummary model.lastTx
+            , maybeEncode "last_tx" encodeTxSummary model.lastTx
             , encode "no_address_tags" Json.Encode.int model.noAddressTags
             , encode "no_addresses" Json.Encode.int model.noAddresses
             , encode "no_incoming_txs" Json.Encode.int model.noIncomingTxs
@@ -2732,11 +2743,11 @@ addressDecoder =
         |> decode "currency" Json.Decode.string
         |> decode "cluster" Json.Decode.int
         |> maybeDecode "fresh_cluster_id" Json.Decode.int Nothing
-        |> decode "first_tx" txSummaryDecoder
+        |> maybeDecode "first_tx" txSummaryDecoder Nothing
         |> decode "in_degree" Json.Decode.int
         |> maybeDecode "is_contract" Json.Decode.bool Nothing
-        |> decode "last_tx" txSummaryDecoder 
-        |> decode "no_incoming_txs" Json.Decode.int 
+        |> maybeDecode "last_tx" txSummaryDecoder Nothing
+        |> decode "no_incoming_txs" Json.Decode.int
         |> decode "no_outgoing_txs" Json.Decode.int 
         |> decode "out_degree" Json.Decode.int 
         |> decode "status" addressStatusDecoder 
@@ -2912,9 +2923,11 @@ clusterDecoder =
         |> maybeDecode "best_address_tag" addressTagDecoder Nothing
         |> decode "currency" Json.Decode.string
         |> decode "cluster" Json.Decode.int
-        |> decode "first_tx" txSummaryDecoder
+        -- still REQUIRED on the wire; Just-wrapped only because the field is a
+        -- Maybe in the type (see the type alias)
+        |> decode "first_tx" (Json.Decode.map Just txSummaryDecoder)
         |> decode "in_degree" Json.Decode.int
-        |> decode "last_tx" txSummaryDecoder
+        |> decode "last_tx" (Json.Decode.map Just txSummaryDecoder)
         |> decode "no_address_tags" Json.Decode.int
         |> decode "no_addresses" Json.Decode.int
         |> decode "no_incoming_txs" Json.Decode.int

@@ -24,10 +24,10 @@ apiAddress freshClusterId =
     , currency = "btc"
     , cluster = 1
     , freshClusterId = freshClusterId
-    , firstTx = { height = 1, timestamp = 0, txHash = "h" }
+    , firstTx = Just { height = 1, timestamp = 0, txHash = "h" }
     , inDegree = 1
     , isContract = Nothing
-    , lastTx = { height = 1, timestamp = 0, txHash = "h" }
+    , lastTx = Just { height = 1, timestamp = 0, txHash = "h" }
     , noIncomingTxs = 1
     , noOutgoingTxs = 1
     , outDegree = 1

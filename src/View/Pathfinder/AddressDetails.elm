@@ -260,9 +260,9 @@ utxo pluginStates vc model id viewState address =
         , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
         , valueOfTotalSent = viewState.address.data |> RemoteData.map (qualifiedValueCell vc assetId "total_spent" .totalSpent) |> RemoteData.withDefault emptyCell
         , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
-        , valueOfLastUsage = viewState.address.data |> RemoteData.map (.lastTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
+        , valueOfLastUsage = viewState.address.data |> RemoteData.toMaybe |> Maybe.andThen .lastTx |> usageCell vc
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
-        , valueOfFirstUsage = viewState.address.data |> RemoteData.map (.firstTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
+        , valueOfFirstUsage = viewState.address.data |> RemoteData.toMaybe |> Maybe.andThen .firstTx |> usageCell vc
         }
 
 
@@ -630,9 +630,9 @@ clusterInfoView vc open colors clstr =
                 , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
                 , valueOfTotalSent = valuesToCell vc assetId clstr.totalSpent
                 , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
-                , valueOfLastUsage = timeToCell vc clstr.lastTx.timestamp
+                , valueOfLastUsage = usageCell vc clstr.lastTx
                 , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
-                , valueOfFirstUsage = timeToCell vc clstr.firstTx.timestamp
+                , valueOfFirstUsage = usageCell vc clstr.firstTx
                 }
 
         else
@@ -1178,9 +1178,9 @@ account pluginStates vc model id viewState address =
             , clusterInfoInstance = none
             }
         , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
-        , valueOfLastUsage = viewState.address.data |> RemoteData.map (.lastTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
+        , valueOfLastUsage = viewState.address.data |> RemoteData.toMaybe |> Maybe.andThen .lastTx |> usageCell vc
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
-        , valueOfFirstUsage = viewState.address.data |> RemoteData.map (.firstTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
+        , valueOfFirstUsage = viewState.address.data |> RemoteData.toMaybe |> Maybe.andThen .firstTx |> usageCell vc
         , balanceRow = { iconInstance = none, title = "", value = "" }
         , totalSentRow = { iconInstance = none, title = "", value = "" }
         , sidePanelRowChevronOpen = { iconInstance = none, title = "", value = "" }
@@ -1282,6 +1282,15 @@ tagsList vc model id =
                         )
                 )
                     ++ [ learnMoreButton vc id ]
+
+
+{-| The "first usage"/"last usage" cell of a first\_tx/last\_tx that may be
+absent — an address with no transactions of its own has no usage to show, and
+renders the same empty cell as one whose data has not arrived.
+-}
+usageCell : View.Config -> Maybe Api.Data.TxSummary -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
+usageCell vc =
+    Maybe.map (.timestamp >> timeToCell vc) >> Maybe.withDefault emptyCell
 
 
 learnMoreButton : View.Config -> Id -> Html Pathfinder.Msg

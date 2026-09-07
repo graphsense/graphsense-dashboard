@@ -74,6 +74,35 @@ suite =
             , decodes "tx_value" Api.Data.txValueDecoder Fixture.txValue
             , decodes "values" Api.Data.valuesDecoder Fixture.values
             ]
+        , describe "an address with no transactions of its own"
+            -- first_tx/last_tx are nullable and NOT required in the spec: an
+            -- address that only ever paid a failed-tx gas fee, only received a
+            -- coinbase reward, or whose whole history is in tokens the backend
+            -- does not index has neither. The generated client had both as
+            -- required, so such a body failed to decode entirely and the UI
+            -- showed "Unexpected data format ... Expecting an OBJECT with a
+            -- field named `last_tx`" instead of the address.
+            [ test "decodes with the fields omitted, as exclude_none serializes them" <|
+                \_ ->
+                    txlessAddress
+                        |> Json.Decode.decodeString Api.Data.addressDecoder
+                        |> Result.map (\a -> ( a.firstTx, a.lastTx ))
+                        |> Expect.equal (Ok ( Nothing, Nothing ))
+            , test "decodes with the fields explicitly null" <|
+                \_ ->
+                    txlessAddressWithNulls
+                        |> Json.Decode.decodeString Api.Data.addressDecoder
+                        |> Result.map (\a -> ( a.firstTx, a.lastTx ))
+                        |> Expect.equal (Ok ( Nothing, Nothing ))
+            , test "a cluster still requires them — only local synthesis may omit them" <|
+                \_ ->
+                    -- the Maybe on Api.Data.Cluster exists for Util.Data.selfCluster,
+                    -- NOT because a server may leave them out
+                    """{"currency":"eth","entity":1,"cluster":1,"root_address":"0xab","balance":{"value":0,"fiat_values":[]},"total_received":{"value":0,"fiat_values":[]},"total_spent":{"value":0,"fiat_values":[]},"in_degree":0,"out_degree":0,"no_addresses":1,"no_incoming_txs":0,"no_outgoing_txs":0,"no_address_tags":0}"""
+                        |> Json.Decode.decodeString Api.Data.clusterDecoder
+                        |> Result.toMaybe
+                        |> Expect.equal Nothing
+            ]
         , describe "the client is stricter than the spec about nulls"
             -- The spec types both of these `anyOf: [string, null]`, the client
             -- as a plain String. A live instance does send them (checked
@@ -167,3 +196,19 @@ suite =
                         |> Expect.equal (Ok True)
             ]
         ]
+
+
+{-| The all-zero body a backend serves for an address it can see on chain but
+has no indexed transactions for. Serialized with exclude\_none, so the two
+nullable tx summaries are absent rather than null.
+-}
+txlessAddress : String
+txlessAddress =
+    """{"currency":"eth","address":"0xab","entity":1,"cluster":1,"status":"clean","balance":{"value":0,"fiat_values":[]},"total_received":{"value":0,"fiat_values":[]},"total_spent":{"value":0,"fiat_values":[]},"in_degree":0,"out_degree":0,"no_incoming_txs":0,"no_outgoing_txs":0}"""
+
+
+{-| The same body from a serializer that keeps nulls instead of dropping them.
+-}
+txlessAddressWithNulls : String
+txlessAddressWithNulls =
+    """{"currency":"eth","address":"0xab","entity":1,"cluster":1,"status":"clean","balance":{"value":0,"fiat_values":[]},"total_received":{"value":0,"fiat_values":[]},"total_spent":{"value":0,"fiat_values":[]},"in_degree":0,"out_degree":0,"no_incoming_txs":0,"no_outgoing_txs":0,"first_tx":null,"last_tx":null}"""

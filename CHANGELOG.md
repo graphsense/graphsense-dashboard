@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- An address with no transactions of its own — one that only ever paid gas for a failed transaction, or whose whole history is in tokens the backend does not index — could not be opened at all: the response has no first and last transaction, and the client rejected the whole body. Such an address now renders with empty usage fields and no date-range filter
 - The cluster-addresses tab was hidden on a network whose backend serves no clusters, although it also carries the cross-chain table of the same address on other EVM networks, which such backends do serve. The tab now shows and lists those addresses
 - A deep link with a checksummed (mixed-case) address loaded the node but never selected it, so the side panel stayed closed
 - A deep link to a token transfer or internal call (`…_T2`, `…_I0`) answered 400: the address normaliser lowercased the whole identifier, including the case-sensitive marker
