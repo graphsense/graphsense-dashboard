@@ -1,0 +1,83 @@
+[    3646ms] [ERROR] Problem with the given value:
+
+{
+        "currency": "base",
+        "address": "0x00000000000000000000000000000000deadbe01",
+        "entity": 123456789,
+        "balance": {
+            "value": 0,
+            "fiat_values": [
+                {
+                    "code": "eur",
+                    "value": 0
+                },
+                {
+                    "code": "usd",
+                    "value": 0
+                }
+            ]
+        },
+        "total_received": {
+            "value": 0,
+            "fiat_values": [
+                {
+                    "code": "eur",
+                    "value": 0
+                },
+                {
+                    "code": "usd",
+                    "value": 0
+                }
+            ]
+        },
+        "total_spent": {
+            "value": 0,
+            "fiat_values": [
+                {
+                    "code": "eur",
+                    "value": 0
+                },
+                {
+                    "code": "usd",
+                    "value": 0
+                }
+            ]
+        },
+        "in_degree": 0,
+        "out_degree": 0,
+        "no_incoming_txs": 0,
+        "no_outgoing_txs": 0,
+        "is_contract": false,
+        "status": "clean",
+        "cluster": 123456789
+    }
+
+Expecting an OBJECT with a field named `last_tx` @ http://localhost:3000/@vite/client:524
+[ 2072543ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355295280:0
+[ 2072544ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2077665ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355300716:0
+[ 2077666ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2084490ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355306945:0
+[ 2084490ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2102393ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355324962:0
+[ 2102393ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2183902ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355407103:0
+[ 2183902ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2190485ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355413578:0
+[ 2190486ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2199192ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355422136:0
+[ 2199192ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2216365ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355439094:0
+[ 2216365ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2232099ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355452943:0
+[ 2232100ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2248168ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355470212:0
+[ 2248169ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2266592ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355489610:0
+[ 2266593ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2271377ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355494141:0
+[ 2271378ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2289544ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355511791:0
+[ 2289545ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524
+[ 2313762ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/src/Main.elm?import&t=1788355536615:0
+[ 2313763ms] [ERROR] [vite] Failed to reload /src/Main.elm. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:3000/@vite/client:524

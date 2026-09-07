@@ -1,0 +1,164 @@
+- generic [ref=e2]:
+  - banner
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - img [ref=e7] [cursor=pointer]
+        - img [ref=e16]
+        - generic [ref=e20]:
+          - generic [ref=e145]:
+            - img [ref=e147]
+            - generic [ref=e155]: Pathfinder
+          - link "CaseConnect" [ref=e33] [cursor=pointer]:
+            - /url: /caseconnect/
+            - generic [ref=e34]:
+              - img [ref=e36]
+              - generic [ref=e51]: CaseConnect
+          - link "CSAM Check" [ref=e52] [cursor=pointer]:
+            - /url: /csam-check/
+            - generic [ref=e53]:
+              - img [ref=e55]
+              - generic [ref=e62]: CSAM Check
+          - link "QuickLock" [ref=e63] [cursor=pointer]:
+            - /url: /quicklock/
+            - generic [ref=e64]:
+              - img [ref=e66]
+              - generic [ref=e74]: QuickLock
+          - generic [ref=e76] [cursor=pointer]:
+            - img [ref=e78]
+            - generic [ref=e82]: More
+      - generic [ref=e83]:
+        - link "Settings" [ref=e84] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=e86]
+        - img [ref=e92]
+        - link "Statistics" [ref=e96] [cursor=pointer]:
+          - /url: /stats
+          - generic [ref=e98]: Statistics
+    - main [ref=e99]:
+      - generic [ref=e100]:
+        - img [ref=e156]:
+          - generic [ref=e168] [cursor=pointer]:
+            - generic [ref=e169]: 0x161ba15a…b645
+            - generic [ref=e170]: Binance
+        - generic:
+          - generic [ref=e212]:
+            - generic [ref=e213]: Open a case
+            - img [ref=e215]
+            - img [ref=e221] [cursor=pointer]
+          - generic [ref=e225]:
+            - generic [ref=e226]:
+              - generic [ref=e227]:
+                - img [ref=e229]
+                - img [ref=e234]
+              - textbox "Search" [ref=e240]:
+                - /placeholder: Address, transaction
+            - generic [ref=e241]:
+              - generic [ref=e242]:
+                - generic "Restart" [ref=e243] [cursor=pointer]:
+                  - img [ref=e244]
+                - generic "Save file" [ref=e248] [cursor=pointer]:
+                  - img [ref=e249]
+                - generic "Open" [ref=e255] [cursor=pointer]:
+                  - img [ref=e256]
+                - generic "Export graph" [ref=e262] [cursor=pointer]:
+                  - img [ref=e263]
+              - img [ref=e268]
+              - generic [ref=e272]:
+                - generic "Redo" [ref=e273] [cursor=pointer]:
+                  - img [ref=e274]
+                - generic "Undo" [ref=e278] [cursor=pointer]:
+                  - img [ref=e279]
+              - img [ref=e284]
+              - generic [ref=e288]:
+                - generic "Selection Tool" [ref=e289] [cursor=pointer]:
+                  - img [ref=e290]
+                - generic "Center graph" [ref=e296] [cursor=pointer]:
+                  - img [ref=e297]
+                - generic "Align horizontally" [ref=e301] [cursor=pointer]:
+                  - img [ref=e302]
+              - img [ref=e313]
+              - generic [ref=e317]:
+                - generic "Delete" [ref=e318] [cursor=pointer]:
+                  - img [ref=e319]
+                - generic "Annotate" [ref=e326] [cursor=pointer]:
+                  - img [ref=e327]
+              - img [ref=e332]
+              - generic "Display settings" [ref=e337] [cursor=pointer]:
+                - img [ref=e338]
+          - img [ref=e347] [cursor=pointer]
+        - generic [ref=e355]:
+          - generic [ref=e356]:
+            - generic [ref=e357]:
+              - img [ref=e359]
+              - generic [ref=e367]:
+                - generic [ref=e368]:
+                  - generic [ref=e369]: BNB Address
+                  - img [ref=e371] [cursor=pointer]
+                - generic [ref=e375]:
+                  - generic [ref=e376]: 0x161ba15a…b645
+                  - generic [ref=e377]:
+                    - img [ref=e383] [cursor=pointer]
+                    - img [ref=e392] [cursor=pointer]
+                    - img [ref=e408] [cursor=pointer]
+            - generic [ref=e413]:
+              - generic [ref=e419]: Binance
+              - generic [ref=e420]:
+                - img [ref=e422]
+                - generic [ref=e426]:
+                  - generic [ref=e429]: Exchange
+                  - generic [ref=e432]: User
+                  - generic [ref=e433]:
+                    - generic [ref=e434]: +
+                    - generic [ref=e435]: "5"
+                  - img [ref=e437] [cursor=pointer]
+              - generic [ref=e441]:
+                - img [ref=e443]
+                - generic [ref=e448]:
+                  - generic [ref=e451] [cursor=pointer]: BASE
+                  - generic [ref=e454] [cursor=pointer]: ETH
+                  - generic [ref=e457] [cursor=pointer]: POLYGON
+                  - img [ref=e459] [cursor=pointer]
+            - generic [ref=e463]:
+              - button "Find Services" [ref=e464]:
+                - img [ref=e468]
+                - generic [ref=e487]: Find Services
+              - button "Connect to Case" [ref=e488] [cursor=pointer]:
+                - img [ref=e490]
+                - generic [ref=e505]: Connect to Case
+          - generic [ref=e508]:
+            - generic [ref=e510] [cursor=pointer]:
+              - generic [ref=e511]:
+                - generic [ref=e512]: Balance
+                - img [ref=e515]
+              - generic [ref=e520]: 39.17m USD
+            - generic [ref=e521]:
+              - generic [ref=e522]:
+                - generic [ref=e524]: Last usage
+                - generic [ref=e525]:
+                  - generic [ref=e526]: Sep 02, 2026
+                  - generic [ref=e528]: 13:40:42
+              - generic [ref=e529]:
+                - generic [ref=e531]: First usage
+                - generic [ref=e532]:
+                  - generic [ref=e533]: Jun 11, 2021
+                  - generic [ref=e535]: 11:20:33
+          - generic [ref=e537] [cursor=pointer]:
+            - img [ref=e539]
+            - generic [ref=e543]:
+              - generic [ref=e544]: Transactions
+              - generic [ref=e545]:
+                - generic [ref=e546]: 1k+
+                - generic [ref=e547]: (
+                - img [ref=e549]
+                - generic [ref=e553]: 500+
+                - img [ref=e555]
+                - generic [ref=e559]: 500+
+                - generic [ref=e560]: )
+        - generic:
+          - generic [ref=e562] [cursor=pointer]:
+            - generic [ref=e564]: Transaction-based
+            - generic [ref=e566]: Relationship-based
+          - img [ref=e569]
+  - contentinfo [ref=e140]:
+    - generic [ref=e144]: v26.08.1+pflite.5

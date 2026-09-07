@@ -1,0 +1,16 @@
+Total messages: 15 (Errors: 0, Warnings: 0)
+Returning 13 messages for level "info"
+
+[LOG] [vite-plugin-elm] HMR enabled @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226175
+[LOG] [vite-plugin-elm] ports. console.subscribe called @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226330
+[LOG] [vite-plugin-elm] ports. getBBox.subscribe called @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226330
+[LOG] [vite-plugin-elm] ports. exportGraph.subscribe called @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226330
+[LOG] [vite-plugin-elm] ports. deserialize.subscribe called @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226330
+[LOG] [vite-plugin-elm] ports. deserializeFile.subscribe called @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226330
+[LOG] [vite-plugin-elm] ports. serialize.subscribe called @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226330
+[LOG] [vite-plugin-elm] ports. pluginsOut.subscribe called @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226330
+[LOG] [vite-plugin-elm] ports. newTab.subscribe called @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226330
+[LOG] [vite-plugin-elm] ports. toClipboard.subscribe called @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226330
+[LOG] [vite-plugin-elm] ports. setDirty.subscribe called @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226330
+[LOG] [vite-plugin-elm] ports. saveToLocalStorage.subscribe called @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226330
+[LOG] [vite-plugin-elm] ports. blur.subscribe called @ http://localhost:3000/src/Main.elm?import&t=1788349763792:226330

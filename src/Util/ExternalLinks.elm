@@ -31,6 +31,26 @@ blockExplorerLinks =
             , ( "https://www.oklink.com/arbitrum-one/address/", "Oklink" )
             ]
           )
+        , ( "base"
+          , [ ( "https://basescan.org/address/", "BaseScan" )
+            ]
+          )
+        , ( "opt"
+          , [ ( "https://optimistic.etherscan.io/address/", "Etherscan" )
+            ]
+          )
+        , ( "polygon"
+          , [ ( "https://polygonscan.com/address/", "PolygonScan" )
+            ]
+          )
+        , ( "avax"
+          , [ ( "https://snowtrace.io/address/", "Snowtrace" )
+            ]
+          )
+        , ( "gnosis"
+          , [ ( "https://gnosisscan.io/address/", "GnosisScan" )
+            ]
+          )
         , ( "btc"
           , [ ( "https://www.oklink.com/btc/address/", "Oklink" )
             , ( "https://www.blockchain.com/btc/address/", "Blockchain.com" )
@@ -73,6 +93,26 @@ blockExplorerTransactionLinks =
         , ( "arb"
           , [ ( "https://arbiscan.io/tx/0x", "Arbiscan" )
             , ( "https://www.oklink.com/arbitrum-one/tx/", "Oklink" )
+            ]
+          )
+        , ( "base"
+          , [ ( "https://basescan.org/tx/0x", "BaseScan" )
+            ]
+          )
+        , ( "opt"
+          , [ ( "https://optimistic.etherscan.io/tx/0x", "Etherscan" )
+            ]
+          )
+        , ( "polygon"
+          , [ ( "https://polygonscan.com/tx/0x", "PolygonScan" )
+            ]
+          )
+        , ( "avax"
+          , [ ( "https://snowtrace.io/tx/0x", "Snowtrace" )
+            ]
+          )
+        , ( "gnosis"
+          , [ ( "https://gnosisscan.io/tx/0x", "GnosisScan" )
             ]
           )
         , ( "trx"

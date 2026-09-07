@@ -22,6 +22,18 @@ nativeAsset network =
         "arb" ->
             "eth"
 
+        "base" ->
+            "eth"
+
+        "opt" ->
+            "eth"
+
+        "polygon" ->
+            "pol"
+
+        "gnosis" ->
+            "xdai"
+
         _ ->
             network
 
