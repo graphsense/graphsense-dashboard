@@ -226,6 +226,7 @@ type Effect
     | SaveUserSettingsEffect UserSettings
     | NotificationEffect Model.Notification.Effect
     | PostponeUpdateByUrlEffect Url
+    | PostponeDeserializeEffect ( String, Json.Encode.Value )
 
 
 userSettingsFromMainModel : Model key -> UserSettings

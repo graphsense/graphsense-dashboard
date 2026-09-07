@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- "Open in new tab" on a multi-selection and Ctrl+D showed a request error on a lite network: the new tab loaded the handed-over graph before it knew which features the backend serves, so it asked for pair edges the backend declines. The graph now waits for that answer, as a deep link does; opening the same graph from a file was never affected
 - An address with no transactions of its own — one that only ever paid gas for a failed transaction, or whose whole history is in tokens the backend does not index — could not be opened at all: the response has no first and last transaction, and the client rejected the whole body. Such an address now renders with empty usage fields and no date-range filter
 - The cluster-addresses tab was hidden on a network whose backend serves no clusters, although it also carries the cross-chain table of the same address on other EVM networks, which such backends do serve. The tab now shows and lists those addresses
 - A deep link with a checksummed (mixed-case) address loaded the node but never selected it, so the side panel stayed closed

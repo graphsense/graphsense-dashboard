@@ -1163,20 +1163,30 @@ update uc msg model =
                 ( { newModel | plugins = newPluginsState }, newEffects ++ [ PluginEffect cmd ] )
                     |> updateByPluginOutMsg uc outMsg
 
-        BrowserGotDeserializedGS ( filename, data ) ->
-            let
-                ( newPluginsState, outMsg, cmdp ) =
-                    PluginInterface.Reset
-                        |> Plugin.updateByCoreMsg uc model.plugins
-            in
-            ( { model | plugins = newPluginsState }
-            , [ PluginEffect cmdp ]
-            )
-                |> updateByPluginOutMsg uc outMsg
-                |> (\( mdl, eff ) ->
-                        deserialize uc filename data mdl
-                            |> mapSecond ((++) eff)
-                   )
+        BrowserGotDeserializedGS (( filename, data ) as payload) ->
+            if RD.isLoading model.capabilities || RD.isNotAsked model.capabilities then
+                -- A graph handed over to a fresh tab ("Open in new tab",
+                -- Ctrl+D) or a ?import= deep link arrives at boot, before
+                -- /capabilities has answered. Loading it decides per network
+                -- which optional requests it may fire (pair-edge discovery,
+                -- conversions), and without the answer every network counts
+                -- as fully enabled -- so it waits, exactly as a deep link does.
+                ( model, [ PostponeDeserializeEffect payload ] )
+
+            else
+                let
+                    ( newPluginsState, outMsg, cmdp ) =
+                        PluginInterface.Reset
+                            |> Plugin.updateByCoreMsg uc model.plugins
+                in
+                ( { model | plugins = newPluginsState }
+                , [ PluginEffect cmdp ]
+                )
+                    |> updateByPluginOutMsg uc outMsg
+                    |> (\( mdl, eff ) ->
+                            deserialize uc filename data mdl
+                                |> mapSecond ((++) eff)
+                       )
 
         UserClickedConfirm ms ->
             update uc ms model |> Tuple.mapFirst (s_dialog Nothing)

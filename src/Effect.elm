@@ -116,6 +116,10 @@ perform model statusbarToken apiKey effect =
             Process.sleep 50
                 |> Task.perform (\_ -> RuntimePostponedUpdateByUrl url)
 
+        PostponeDeserializeEffect payload ->
+            Process.sleep 50
+                |> Task.perform (\_ -> BrowserGotDeserializedGS payload)
+
 
 handleSearchEffect : String -> (Search.Msg -> Msg) -> Search.Effect -> Cmd Msg
 handleSearchEffect apiKey tag effect =

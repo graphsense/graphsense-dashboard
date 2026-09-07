@@ -131,6 +131,9 @@ messageFromEffect model effect =
         Model.PostponeUpdateByUrlEffect _ ->
             Nothing
 
+        Model.PostponeDeserializeEffect _ ->
+            Nothing
+
         Model.PathfinderEffect Pathfinder.RepositionTooltipEffect ->
             Nothing
 

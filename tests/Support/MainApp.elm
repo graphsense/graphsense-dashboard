@@ -264,6 +264,9 @@ name eff =
         PostponeUpdateByUrlEffect _ ->
             "PostponeUpdateByUrlEffect"
 
+        PostponeDeserializeEffect _ ->
+            "PostponeDeserializeEffect"
+
 
 
 -- THE RENDERED PAGE
