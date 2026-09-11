@@ -51,6 +51,10 @@ blockExplorerLinks =
           , [ ( "https://gnosisscan.io/address/", "GnosisScan" )
             ]
           )
+        , ( "robinhood"
+          , [ ( "https://robinscan.io/address/", "Robinscan" )
+            ]
+          )
         , ( "btc"
           , [ ( "https://www.oklink.com/btc/address/", "Oklink" )
             , ( "https://www.blockchain.com/btc/address/", "Blockchain.com" )
@@ -113,6 +117,10 @@ blockExplorerTransactionLinks =
           )
         , ( "gnosis"
           , [ ( "https://gnosisscan.io/tx/0x", "GnosisScan" )
+            ]
+          )
+        , ( "robinhood"
+          , [ ( "https://robinscan.io/tx/0x", "Robinscan" )
             ]
           )
         , ( "trx"

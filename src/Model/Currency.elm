@@ -34,6 +34,9 @@ nativeAsset network =
         "gnosis" ->
             "xdai"
 
+        "robinhood" ->
+            "eth"
+
         _ ->
             network
 
