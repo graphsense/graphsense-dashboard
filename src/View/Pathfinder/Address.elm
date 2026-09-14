@@ -24,8 +24,8 @@ import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View
 import RecordSetter as Rs
 import RemoteData
-import Svg.Styled as Svg exposing (Svg, g, text)
-import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
+import Svg.Styled as Svg exposing (Svg, g, path, svg, text)
+import Svg.Styled.Attributes as Svg exposing (css, d, height, opacity, transform, viewBox, width)
 import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
@@ -35,6 +35,7 @@ import Util.Tooltip
 import Util.TooltipType as TooltipType
 import Util.View exposing (none, onClickWithStop, testId, testKey, truncateLongIdentifierWithLengths)
 import Util.View.Loadingspinner as Loadingspinner
+import View.CurrencyMeta as CurrencyMeta
 import View.Locale as Locale
 
 
@@ -215,8 +216,8 @@ view vc pc searchHighlight level address annotation =
          ]
             ++ dimmedOpacity searchHighlight
         )
-        (GraphComponents.addressNodeWithAttributes
-            (GraphComponents.addressNodeAttributes
+        (GraphComponents.addressNodeDevWithAttributes
+            (GraphComponents.addressNodeDevAttributes
                 |> Rs.s_root
                     ([ testId "gs-address-node"
                      , testKey (Id.toString address.id)
@@ -267,6 +268,34 @@ view vc pc searchHighlight level address annotation =
                 , icon2Instance = iconInstance icons 1
                 , icon3Visible = iconVisible icons 2
                 , icon3Instance = iconInstance icons 2
+                , currencyIcon =
+                    let
+                        vs =
+                            100
+
+                        s =
+                            8.1
+
+                        viewboxsize =
+                            100
+
+                        vp =
+                            (viewboxsize - vs) / 2
+                    in
+                    case Dict.get (address.id |> Id.network |> String.toLower) CurrencyMeta.networks of
+                        Just currencyMeta ->
+                            svg
+                                [ width <| String.fromFloat s
+                                , height <| String.fromFloat s
+                                , [ vp, vp, vs, vs ]
+                                    |> List.map String.fromFloat
+                                    |> String.join " "
+                                    |> viewBox
+                                ]
+                                [ path [ d currencyMeta.icon ] [] ]
+
+                        Nothing ->
+                            text ""
                 }
             , iconsNodeOpenLeft =
                 { variant =
