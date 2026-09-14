@@ -1185,13 +1185,12 @@ transactionsOrNeighborsDataTabs vc model id viewState =
             ]
 
         AggregateTracingMode ->
-            -- no relations capability = no precomputed relations:
-            -- counterparty listing is unavailable, so aggregate mode falls
-            -- back to the transactions tab (pair edges on the graph keep
-            -- working)
+            -- no relations capability = no precomputed relations: the
+            -- network takes no part in this mode (its nodes are drawn
+            -- faded), so no table at all rather than a transactions table
+            -- where the user expects counterparties
             if not (Pathfinder.supports NetworkCapabilities.Relations (Id.network id) model) then
-                [ transactionsDataTab vc model id viewState
-                ]
+                []
 
             else
                 [ neighborsDataTab vc model id viewState Outgoing

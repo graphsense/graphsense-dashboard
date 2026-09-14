@@ -2,6 +2,7 @@ module Model.NetworkCapabilities exposing
     ( Capability(..)
     , NetworkCapabilities
     , fromApi
+    , inactiveInRelationshipMode
     , isLiteNetwork
     , none
     , supports
@@ -19,6 +20,7 @@ reads the wire format; everything else asks `supports` or `isLiteNetwork`.
 -}
 
 import Api.Data
+import Config.Pathfinder exposing (TracingMode(..))
 import Dict exposing (Dict)
 import Set exposing (Set)
 
@@ -82,6 +84,15 @@ isLiteNetwork (NetworkCapabilities networks) network =
     Dict.get (String.toLower network) networks
         |> Maybe.map (Set.isEmpty >> not)
         |> Maybe.withDefault False
+
+
+{-| Relationship-based tracing grows no aggregate edges where the backend has
+no relations, so such a network takes no part in that mode: its nodes are drawn
+faded and the side panel offers no counterparty table.
+-}
+inactiveInRelationshipMode : TracingMode -> NetworkCapabilities -> String -> Bool
+inactiveInRelationshipMode tracingMode capabilities network =
+    tracingMode == AggregateTracingMode && not (supports Relations capabilities network)
 
 
 supports : Capability -> NetworkCapabilities -> String -> Bool

@@ -218,14 +218,10 @@ view vc pc capabilities searchHighlight level address annotation =
             |> Html.attribute "data-selected"
          ]
             ++ dimmedOpacity searchHighlight
-            ++ -- relationship-based tracing grows no aggregate edges where the
-               -- backend has no relations: grey those nodes out so only
-               -- networks that take part in this mode read as active
-               (if
-                    pc.tracingMode
-                        == AggregateTracingMode
-                        && not (NetworkCapabilities.supports NetworkCapabilities.Relations capabilities (Id.network address.id))
-                then
+            ++ -- grey out the nodes of a network that takes no part in
+               -- relationship mode so only the active ones read as such;
+               -- the tooltip on such a node says why (Util.Tooltip.address)
+               (if NetworkCapabilities.inactiveInRelationshipMode pc.tracingMode capabilities (Id.network address.id) then
                     [ opacity "0.3", css [ Css.property "filter" "grayscale(1)" ] ]
 
                 else

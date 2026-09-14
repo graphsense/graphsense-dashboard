@@ -265,6 +265,7 @@ network error: error de red
 server error: error del servidor
 not found: no encontrado
 not supported on lite networks: no compatible con redes lite
+inactive in relationship mode on lite networks: "No forma parte del modo basado en relaciones: esta red lite no tiene datos de relaciones. Cambie al modo basado en transacciones para rastrear desde aquí."
 data error: error de datos
 service not reachable: servicio no accesible.
 unexpected data format: formato de datos inesperado.

@@ -3,6 +3,7 @@ module Util.Tooltip exposing (tooltipConfig, tooltipProperties, tooltipRow, tool
 import Api.Data exposing (Actor, TagSummary)
 import Basics.Extra exposing (flip)
 import Components.Tooltip as Tooltip
+import Config.Pathfinder exposing (TracingMode)
 import Config.View as View exposing (getConceptName)
 import Css
 import Css.Pathfinder as Css
@@ -61,7 +62,7 @@ view vc model tt =
         Address id ->
             model.network.addresses
                 |> Dict.get id
-                |> Maybe.map (address vc model.networkCapabilities (getTagSummary model id))
+                |> Maybe.map (address vc model.config.tracingMode model.networkCapabilities (getTagSummary model id))
                 |> Maybe.withDefault []
 
         TagLabel addrId lblid ->
@@ -383,8 +384,8 @@ tagLabel vc lbl tag =
             []
 
 
-address : View.Config -> NetworkCapabilities -> Maybe TagSummary -> Addr.Address -> List (Html msg)
-address vc capabilities tags adr =
+address : View.Config -> TracingMode -> NetworkCapabilities -> Maybe TagSummary -> Addr.Address -> List (Html msg)
+address vc tracingMode capabilities tags adr =
     let
         net =
             Id.network adr.id
@@ -392,51 +393,63 @@ address vc capabilities tags adr =
         curr =
             View.toCurrency vc
     in
-    (tooltipRow
-        { tooltipRowLabel = { title = Locale.string vc.locale "Balance" }
-        , tooltipRowValue =
-            Addr.getBalance adr
-                |> Maybe.map
-                    (pair (assetFromBase net)
-                        >> List.singleton
-                        >> Locale.currency curr vc.locale
-                    )
-                |> Maybe.withDefault ""
-                |> val vc
-        }
-        :: -- a lite network serves totals capped or not at all: hide them
-           -- here like in the side panel
-           (if NetworkCapabilities.isLiteNetwork capabilities net then
-                []
+    -- a faded node (View.Pathfinder.Address) would otherwise leave the user
+    -- guessing why it looks inactive: say so before the usual rows
+    (if NetworkCapabilities.inactiveInRelationshipMode tracingMode capabilities net then
+        [ div [ css baseRowStyle ]
+            [ Locale.string vc.locale "inactive in relationship mode on lite networks"
+                |> text
+            ]
+        ]
 
-            else
-                [ tooltipRow
-                    { tooltipRowLabel = { title = Locale.string vc.locale "Total received" }
-                    , tooltipRowValue =
-                        Addr.getTotalReceived adr
-                            |> Maybe.map
-                                (pair (assetFromBase net)
-                                    >> List.singleton
-                                    >> Locale.currency curr vc.locale
-                                )
-                            |> Maybe.withDefault ""
-                            |> val vc
-                    }
-                , tooltipRow
-                    { tooltipRowLabel = { title = Locale.string vc.locale "Total sent" }
-                    , tooltipRowValue =
-                        Addr.getTotalSpent adr
-                            |> Maybe.map
-                                (pair (assetFromBase net)
-                                    >> List.singleton
-                                    >> Locale.currency curr vc.locale
-                                )
-                            |> Maybe.withDefault ""
-                            |> val vc
-                    }
-                ]
-           )
+     else
+        []
     )
+        ++ (tooltipRow
+                { tooltipRowLabel = { title = Locale.string vc.locale "Balance" }
+                , tooltipRowValue =
+                    Addr.getBalance adr
+                        |> Maybe.map
+                            (pair (assetFromBase net)
+                                >> List.singleton
+                                >> Locale.currency curr vc.locale
+                            )
+                        |> Maybe.withDefault ""
+                        |> val vc
+                }
+                :: -- a lite network serves totals capped or not at all: hide them
+                   -- here like in the side panel
+                   (if NetworkCapabilities.isLiteNetwork capabilities net then
+                        []
+
+                    else
+                        [ tooltipRow
+                            { tooltipRowLabel = { title = Locale.string vc.locale "Total received" }
+                            , tooltipRowValue =
+                                Addr.getTotalReceived adr
+                                    |> Maybe.map
+                                        (pair (assetFromBase net)
+                                            >> List.singleton
+                                            >> Locale.currency curr vc.locale
+                                        )
+                                    |> Maybe.withDefault ""
+                                    |> val vc
+                            }
+                        , tooltipRow
+                            { tooltipRowLabel = { title = Locale.string vc.locale "Total sent" }
+                            , tooltipRowValue =
+                                Addr.getTotalSpent adr
+                                    |> Maybe.map
+                                        (pair (assetFromBase net)
+                                            >> List.singleton
+                                            >> Locale.currency curr vc.locale
+                                        )
+                                    |> Maybe.withDefault ""
+                                    |> val vc
+                            }
+                        ]
+                   )
+           )
         ++ (case tags of
                 Just ts ->
                     [ tooltipRow

@@ -257,6 +257,7 @@ network error: eroare de rețea
 server error: eroare de server
 not found: negăsit
 not supported on lite networks: nu este acceptat pe rețelele lite
+inactive in relationship mode on lite networks: "Nu face parte din modul bazat pe relații: această rețea lite nu are date despre relații. Treceți la modul bazat pe tranzacții pentru a urmări de aici."
 data error: eroare de date
 service not reachable: serviciul nu este accesibil.
 unexpected data format: format de date neașteptat.

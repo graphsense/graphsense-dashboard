@@ -191,6 +191,7 @@ network error: errore di rete
 server error: errore del server
 not found: non trovato
 not supported on lite networks: non supportato sulle reti lite
+inactive in relationship mode on lite networks: "Non fa parte della modalità basata sulle relazioni: questa rete lite non ha dati sulle relazioni. Passa alla modalità basata sulle transazioni per tracciare da qui."
 data error: errore nei dati
 this table is empty: questa tabella è vuota
 for entities: per entità

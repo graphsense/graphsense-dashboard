@@ -23,7 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Address nodes on a network without relations are drawn faded in relationship-based tracing mode
+- Address nodes on a network without relations are drawn faded in relationship-based tracing mode. The tooltip on such a node says why and points to transaction mode, and the side panel shows no table for it at all: the transactions table it used to show in place of the relations tables read as counterparties
 - The transaction CSV exports complete without actor columns on a network whose backend serves no tags, instead of failing on the bulk tag request
 
 ### Fixed
