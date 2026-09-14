@@ -24,9 +24,11 @@ import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View
 import RecordSetter as Rs
 import RemoteData
-import Svg.Styled as Svg exposing (Svg, g, path, svg, text)
-import Svg.Styled.Attributes as Svg exposing (css, d, height, opacity, transform, viewBox, width)
+import String.Format
+import Svg.Styled as Svg exposing (Svg, g, path, text)
+import Svg.Styled.Attributes as Svg exposing (css, d, opacity, transform)
 import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
+import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
@@ -270,29 +272,21 @@ view vc pc searchHighlight level address annotation =
                 , icon3Instance = iconInstance icons 2
                 , currencyIcon =
                     let
-                        vs =
-                            100
-
                         s =
                             8.1
 
                         viewboxsize =
                             100
-
-                        vp =
-                            (viewboxsize - vs) / 2
                     in
                     case Dict.get (address.id |> Id.network |> String.toLower) CurrencyMeta.networks of
                         Just currencyMeta ->
-                            svg
-                                [ width <| String.fromFloat s
-                                , height <| String.fromFloat s
-                                , [ vp, vp, vs, vs ]
-                                    |> List.map String.fromFloat
-                                    |> String.join " "
-                                    |> viewBox
+                            g
+                                [ "scale({{ }})"
+                                    |> String.Format.value
+                                        (s / viewboxsize |> String.fromFloat)
+                                    |> transform
                                 ]
-                                [ path [ d currencyMeta.icon ] [] ]
+                                [ path [ d currencyMeta.icon, css [ Css.property "fill" <| Colors.grey900 ] ] [] ]
 
                         Nothing ->
                             text ""
