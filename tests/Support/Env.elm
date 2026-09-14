@@ -68,4 +68,5 @@ viewConfig =
     , abuseConcepts = []
     , characterDimensions = Dict.empty
     , showBothValues = False
+    , isMac = False
     }

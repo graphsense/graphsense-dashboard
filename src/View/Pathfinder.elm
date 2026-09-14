@@ -19,6 +19,7 @@ import Model.Graph.Transform exposing (Transition(..), getZ)
 import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
+import Model.Pathfinder.DetailLevel as DetailLevel
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Selection as Pathfinder
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, ToolbarHovercardType(..))
@@ -56,6 +57,7 @@ import View.Pathfinder.ConversionDetails as ConversionDetails
 import View.Pathfinder.Network as Network
 import View.Pathfinder.RelationDetails as RelationDetails
 import View.Pathfinder.SearchBox as OnGraphSearchView
+import View.Pathfinder.ShortcutHints as ShortcutHints
 import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.TxDetails as TxDetails
 import View.Search
@@ -86,6 +88,11 @@ view pluginStates vc model =
     , OnGraphSearchView.view vc model.onGraphSearch
     , Util.Tooltip.view vc model
         |> Tooltip.view (Util.Tooltip.tooltipConfig vc TooltipMsg) model.tooltip
+    , if model.showShortcutHints then
+        ShortcutHints.view vc
+
+      else
+        none
     ]
         ++ (model.toolbarHovercard
                 |> Maybe.map (toolbarHovercardView vc model)
@@ -192,11 +199,22 @@ contextMenuView pluginStates vc model ( coords, menu ) =
                         else
                             item
 
+                    -- Plugin entries act on the one address that was right-clicked,
+                    -- so on a multi-selection they are greyed out like core's own
+                    -- per-address entries below (annotate, copy id, open in tab).
+                    disableByMultiSelect =
+                        case model.selection of
+                            Pathfinder.MultiSelect _ ->
+                                ContextMenuItem.setDisabled True
+
+                            _ ->
+                                identity
+
                     pluginsList =
                         Dict.get id model.network.addresses
                             |> Maybe.map
                                 (Plugin.addressContextMenu pluginStates vc
-                                    >> List.map (restrictOnLiteNetwork >> ContextMenuItem.view vc)
+                                    >> List.map (restrictOnLiteNetwork >> disableByMultiSelect >> ContextMenuItem.view vc)
                                 )
                             |> Maybe.withDefault []
                 in
@@ -268,6 +286,9 @@ contextMenuView pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.setDisabled
                                 (case model.selection of
                                     Pathfinder.SelectedAddress _ ->
+                                        False
+
+                                    Pathfinder.MultiSelect _ ->
                                         False
 
                                     _ ->
@@ -350,6 +371,9 @@ contextMenuView pluginStates vc model ( coords, menu ) =
                             |> ContextMenuItem.setDisabled
                                 (case model.selection of
                                     Pathfinder.SelectedTx _ ->
+                                        False
+
+                                    Pathfinder.MultiSelect _ ->
                                         False
 
                                     _ ->
@@ -735,10 +759,10 @@ detailsView pluginStates vc model =
 graphSvg : View.Config -> Pathfinder.Config -> Pathfinder.Model -> { a | width : Float, height : Float } -> Svg Msg
 graphSvg vc gc model dim =
     let
-        -- hide always-on aggregate-edge labels when zoomed out far enough
-        -- (larger z = more zoomed out); they reappear when zoomed in
-        showAggLabels =
-            getZ model.transform <= 2.5
+        -- labels drop out in steps as the user zooms out (larger z = more
+        -- zoomed out) and come back when zooming in; see DetailLevel
+        detail =
+            DetailLevel.fromZoom (getZ model.transform)
 
         pointer =
             case ( model.dragging, model.pointerTool ) of
@@ -886,8 +910,8 @@ graphSvg vc gc model dim =
                     )
                 ]
                 dim
-        , Network.relations vc gc showAggLabels model.hovered model.selection model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
-        , Svg.lazy6 Network.addresses vc gc model.networkCapabilities model.onGraphSearch model.annotations model.network.addresses
+        , Network.relations vc gc detail model.hovered model.selection model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
+        , Svg.lazy7 Network.addresses vc gc detail model.networkCapabilities model.onGraphSearch model.annotations model.network.addresses
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system

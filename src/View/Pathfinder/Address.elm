@@ -18,14 +18,15 @@ import Model.NetworkCapabilities as NetworkCapabilities exposing (NetworkCapabil
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address, AddressServiceType(..), Txs(..), expandAllowed, getTxs, isSmartContract, txsGetSet)
 import Model.Pathfinder.ContextMenu as ContextMenu
+import Model.Pathfinder.DetailLevel as DetailLevel exposing (DetailLevel(..))
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.SearchBox exposing (Highlight(..), dimmedOpacity)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View
 import RecordSetter as Rs
 import RemoteData
-import Svg.Styled as Svg exposing (Svg, g, text)
-import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
+import Svg.Styled as Svg exposing (Svg, g, path, svg, text)
+import Svg.Styled.Attributes as Svg exposing (css, d, height, opacity, transform, viewBox, width)
 import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
@@ -35,12 +36,16 @@ import Util.Tooltip
 import Util.TooltipType as TooltipType
 import Util.View exposing (none, onClickWithStop, testId, testKey, truncateLongIdentifierWithLengths)
 import Util.View.Loadingspinner as Loadingspinner
+import View.CurrencyMeta as CurrencyMeta
 import View.Locale as Locale
 
 
-view : View.Config -> Pathfinder.Config -> NetworkCapabilities -> Highlight -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
-view vc pc capabilities searchHighlight address annotation =
+view : View.Config -> Pathfinder.Config -> NetworkCapabilities -> Highlight -> DetailLevel -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
+view vc pc capabilities searchHighlight level address annotation =
     let
+        detail =
+            DetailLevel.forNode address.selected level
+
         data =
             RemoteData.toMaybe address.data
 
@@ -167,18 +172,19 @@ view vc pc capabilities searchHighlight address annotation =
                 []
 
         icons =
-            [ ifTrue address.hasTags [ Icons.iconsTagSwithoutPaddingTypeDirect {} ]
-            , ifTrue (not address.hasTags && address.hasClusterTagsOnly)
-                [ Icons.iconsTagSwithoutPaddingTypeIndirectWithAttributes
-                    (Icons.iconsTagSwithoutPaddingTypeIndirectAttributes
-                        |> Rs.s_tagIcon Util.View.indirectTagFillAttr
-                    )
-                    {}
-                ]
-            , ifTrue (not <| List.isEmpty pluginTagIcons) pluginTagIcons
-            , ifTrue (Dict.size address.networks > 1) [ Icons.iconsCrosschainSwithoutPadding {} ]
-            ]
-                |> List.concat
+            ifTrue (detail == Full) <|
+                List.concat
+                    [ ifTrue address.hasTags [ Icons.iconsTagSwithoutPaddingTypeDirect {} ]
+                    , ifTrue (not address.hasTags && address.hasClusterTagsOnly)
+                        [ Icons.iconsTagSwithoutPaddingTypeIndirectWithAttributes
+                            (Icons.iconsTagSwithoutPaddingTypeIndirectAttributes
+                                |> Rs.s_tagIcon Util.View.indirectTagFillAttr
+                            )
+                            {}
+                        ]
+                    , ifTrue (not <| List.isEmpty pluginTagIcons) pluginTagIcons
+                    , ifTrue (Dict.size address.networks > 1) [ Icons.iconsCrosschainSwithoutPadding {} ]
+                    ]
 
         iconInstance items index =
             List.Extra.getAt index items
@@ -224,8 +230,8 @@ view vc pc capabilities searchHighlight address annotation =
                     []
                )
         )
-        (GraphComponents.addressNodeWithAttributes
-            (GraphComponents.addressNodeAttributes
+        (GraphComponents.addressNodeDevWithAttributes
+            (GraphComponents.addressNodeDevAttributes
                 |> Rs.s_root
                     ([ testId "gs-address-node"
                      , testKey (Id.toString address.id)
@@ -255,9 +261,13 @@ view vc pc capabilities searchHighlight address annotation =
             )
             { root =
                 { addressId =
-                    address.id
-                        |> Id.id
-                        |> truncateLongIdentifierWithLengths 8 4
+                    if detail == Minimal then
+                        ""
+
+                    else
+                        address.id
+                            |> Id.id
+                            |> truncateLongIdentifierWithLengths 8 4
                 , highlightVisible = highlightVisible
                 , clusterVisible = (address.clusterColor /= Nothing) && pc.highlightClusterFriends
                 , expandLeftVisible = expandVisible Incoming
@@ -272,6 +282,34 @@ view vc pc capabilities searchHighlight address annotation =
                 , icon2Instance = iconInstance icons 1
                 , icon3Visible = iconVisible icons 2
                 , icon3Instance = iconInstance icons 2
+                , currencyIcon =
+                    let
+                        vs =
+                            100
+
+                        s =
+                            8.1
+
+                        viewboxsize =
+                            100
+
+                        vp =
+                            (viewboxsize - vs) / 2
+                    in
+                    case Dict.get (address.id |> Id.network |> String.toLower) CurrencyMeta.networks of
+                        Just currencyMeta ->
+                            svg
+                                [ width <| String.fromFloat s
+                                , height <| String.fromFloat s
+                                , [ vp, vp, vs, vs ]
+                                    |> List.map String.fromFloat
+                                    |> String.join " "
+                                    |> viewBox
+                                ]
+                                [ path [ d currencyMeta.icon ] [] ]
+
+                        Nothing ->
+                            text ""
                 }
             , iconsNodeOpenLeft =
                 { variant =

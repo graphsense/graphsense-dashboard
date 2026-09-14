@@ -599,3 +599,11 @@ csv-note-capped: "Transaktion zu groß – nur Flüsse mit einer sichtbaren Adre
 csv-note-visible-only: "Nur Flüsse mit einer sichtbaren Adresse wurden exportiert."
 unknown url: "Unbekannte URL: {0}"
 not supported on lite networks: auf Lite-Netzwerken nicht unterstützt
+Keyboard shortcuts: "Tastenkürzel"
+Add address or tx: "Adresse oder Tx hinzufügen"
+Select all: "Alles auswählen"
+Delete selection: "Auswahl löschen"
+Move the selection along the graph: "Auswahl im Graphen bewegen"
+Close search or dialog: "Suche oder Dialog schließen"
+Find on graph: "Im Graphen suchen"
+Duplicate graph in new tab: "Graph in neuem Tab duplizieren"

@@ -107,7 +107,7 @@ currency vc hasExactStats cs tokens =
         pipelineRows =
             if hasExactStats then
                 [ Locale.intWithoutValueDetailFormatting vc.locale cs.noTxs
-                    |> statsRow vc "transactions"
+                    |> statsRow vc "Transactions"
                 , Locale.intWithoutValueDetailFormatting vc.locale cs.noAddresses
                     |> statsRow vc "Addresses"
                 , Locale.intWithoutValueDetailFormatting vc.locale cs.noEntities

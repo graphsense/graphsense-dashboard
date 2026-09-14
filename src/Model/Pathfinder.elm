@@ -83,6 +83,8 @@ type alias Model =
     , networkCapabilities : NetworkCapabilities
     , pointerTool : PointerTool
     , modPressed : Bool
+    , modKeyPressCount : Int -- see RuntimeModKeyHeld
+    , showShortcutHints : Bool
     , isDirty : Bool
     , helpDropdownOpen : Bool
     , toolbarHovercard : Maybe ToolbarHovercardModel

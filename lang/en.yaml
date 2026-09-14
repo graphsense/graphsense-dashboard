@@ -582,3 +582,11 @@ csv-note-capped: "Transaction too large — only flows touching a visible addres
 csv-note-visible-only: "Only flows touching a visible address were exported."
 unknown url: "Unknown URL: {0}"
 not supported on lite networks: not supported on lite networks
+Keyboard shortcuts: "Keyboard shortcuts"
+Add address or tx: "Add address or tx"
+Select all: "Select all"
+Delete selection: "Delete selection"
+Move the selection along the graph: "Move the selection along the graph"
+Close search or dialog: "Close search or dialog"
+Find on graph: "Find on graph"
+Duplicate graph in new tab: "Duplicate graph in new tab"

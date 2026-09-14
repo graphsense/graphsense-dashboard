@@ -13,6 +13,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The ledger-statistics card hides the pipeline rows (transactions, addresses, entities) and the tagged-addresses percentage on a network whose backend disables `exact_stats` — those backends serve placeholder zeros; labels and tagged addresses still show their real TagStore counts
 - The backend's `is_possible_service` verdict drives the "possible service" warning where present; the local degree/transaction-count rule remains the fallback
 - Right after an address loads, the next transaction in both directions is fetched in the background, so clicking an expand handle inserts it instantly instead of waiting for the API
+- The graph sheds labels in steps as it is zoomed out, so a large graph reads as structure instead of noise: first edge values, timestamps, tx hashes and tag icons go, then address identifiers. Annotations, service labels and everything on a selected or hovered node stay at every zoom level, and all labels return when zooming in. Relationship mode already did this for its edge values; transaction mode now does the same
+- Ctrl+D (Cmd+D on macOS) duplicates the whole graph into a new tab, positions and notes included, through the same hand-over as "Open in new tab" on a multi-selection
+- "Open in new tab" on the right-click menu of a multi-selection opens the selected nodes as their own graph in a new tab, positions and notes included. The selection is handed over as a `.gs` payload, so it goes through the same import path as an opened file; a selected transaction whose addresses are not selected opens as a lone transaction
+- Holding Ctrl (Cmd on macOS) on the Pathfinder for a moment shows a small overlay listing the keyboard shortcuts, the way command-line tools show their key bindings; it disappears with the key. The toolbar tooltips now carry the shortcut too, e.g. "Save file (Ctrl+S)", so daily users can find them without reading the docs
+- Ctrl+K (Cmd+K on macOS) focuses the address search box on the Pathfinder, so more addresses can be added without reaching for the mouse; Ctrl+F remains the find-on-graph search
 
 ### Changed
 
@@ -25,6 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - A deep link to a token transfer or internal call (`…_T2`, `…_I0`) answered 400: the address normaliser lowercased the whole identifier, including the case-sensitive marker
 - Opening a value-carrying account transaction from a deep link or the search never showed its details panel
 - The token list under "Balance" clipped after about five rows, hiding tokens without a fiat price
+- "Align horizontally" left a selected node off the row whenever an unselected node sat in the same column just above the target row: the overlap pass that follows the alignment pushed the aligned node away instead of the bystander. Aligned nodes now stay on the row and the other node moves
+- Plugin entries on an address's right-click menu were still active on a multi-selection although they act on the one address that was clicked. They are now greyed out there, like core's own per-address entries
 
 ## [26.08.1] - 2026-08-28
 

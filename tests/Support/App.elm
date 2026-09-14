@@ -2,10 +2,12 @@ module Support.App exposing
     ( App
     , apiEffects
     , expectEffect
+    , expectNoEffects
     , html
     , init
     , initAt
     , internalMsgs
+    , mapModel
     , model
     , outMsgs
     , respond
@@ -79,6 +81,14 @@ type App
 model : App -> Model
 model (App app) =
     app.model_
+
+
+{-| Puts the model into a state no message sequence reaches conveniently — a
+graph with nodes at chosen coordinates, say. Effects and out-messages are kept.
+-}
+mapModel : (Model -> Model) -> App -> App
+mapModel f (App app) =
+    App { app | model_ = f app.model_ }
 
 
 
@@ -223,6 +233,15 @@ expectEffect description predicate (App app) =
                 ++ (app.effects_ |> List.map name |> String.join ", ")
                 ++ "]"
             )
+
+
+{-| The last step asked the shell for nothing at all.
+-}
+expectNoEffects : App -> Expectation
+expectNoEffects (App app) =
+    app.effects_
+        |> List.map name
+        |> Expect.equalLists []
 
 
 name : Effect -> String

@@ -19,7 +19,6 @@ module Update.Pathfinder.Network exposing
     , ingestAggEdges
     , ingestTxs
     , insertFetchedEdge
-    , resolveOverlaps
     , resolveOverlapsExcept
     , rupsertAggEdge
     , snapToGrid
@@ -140,15 +139,6 @@ snapToGrid =
         >> updateAllTxs coordsToInt
 
 
-{-| Resolve overlapping nodes by pushing them apart.
-Takes a network and iteratively moves nodes that are too close together.
-Uses nodeXOffset and nodeYOffset as minimum distances.
--}
-resolveOverlaps : OverlapDistance -> Network -> Network
-resolveOverlaps distance =
-    resolveOverlapsExcept distance Nothing
-
-
 {-| Configuration for how close nodes can be before they're considered overlapping.
 -}
 type OverlapDistance
@@ -156,11 +146,13 @@ type OverlapDistance
     | Spacious -- Uses nodeXOffset/nodeYOffset (larger, looser spacing)
 
 
-{-| Resolve overlapping nodes by pushing them apart, keeping a specific node fixed.
-When fixedId is provided, that node will not be moved - other overlapping nodes will move instead.
+{-| Resolve overlapping nodes by pushing them apart, keeping the given nodes fixed.
+A fixed node is never moved -- whatever overlaps it moves instead. Two fixed nodes
+that overlap each other are stacked (the later one in row order is pushed), since
+leaving them on top of each other is never what anyone wants.
 -}
-resolveOverlapsExcept : OverlapDistance -> Maybe Id -> Network -> Network
-resolveOverlapsExcept distance fixedId network =
+resolveOverlapsExcept : OverlapDistance -> Set Id -> Network -> Network
+resolveOverlapsExcept distance fixedIds network =
     let
         -- Get the overlap thresholds based on configuration
         ( overlapThresholdX, overlapThresholdY ) =
@@ -219,7 +211,7 @@ resolveOverlapsExcept distance fixedId network =
         -- Check if a node is the fixed node
         isFixed : { a | id : Id } -> Bool
         isFixed node =
-            fixedId == Just node.id
+            Set.member node.id fixedIds
 
         -- Apply a single pass of collision resolution
         resolvePass : List { id : Id, x : Float, y : Float, isAddress : Bool } -> List { id : Id, x : Float, y : Float, isAddress : Bool }
@@ -246,16 +238,13 @@ resolveOverlapsExcept distance fixedId network =
                                             in
                                             ( pushed, acc ++ [ node ] )
 
-                                        else if not (isFixed node) then
+                                        else
+                                            -- node is free, or both are fixed: stack node below ref
                                             let
                                                 pushed =
                                                     pushApart ref node
                                             in
                                             ( ref, acc ++ [ pushed ] )
-
-                                        else
-                                            -- Both are fixed (shouldn't happen with single fixedId), keep both
-                                            ( ref, acc ++ [ node ] )
 
                                     else
                                         ( ref, acc ++ [ node ] )

@@ -2,6 +2,7 @@ module View.Pathfinder.Tx exposing (edge, view)
 
 import Config.Pathfinder as Pathfinder
 import Config.View as View
+import Model.Pathfinder.DetailLevel exposing (DetailLevel)
 import Model.Pathfinder.SearchBox exposing (Highlight, dimmedOpacity)
 import Model.Pathfinder.Tx exposing (Tx, TxType(..))
 import Msg.Pathfinder exposing (Msg)
@@ -12,18 +13,18 @@ import View.Pathfinder.Tx.AccountTx as AccountTx
 import View.Pathfinder.Tx.Utxo as Utxo exposing (RenderLevel)
 
 
-view : View.Config -> Pathfinder.Config -> Highlight -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
-view vc gc searchHighlight tx annotation =
+view : View.Config -> Pathfinder.Config -> Highlight -> DetailLevel -> Tx -> Maybe Annotations.AnnotationItem -> Svg Msg
+view vc gc searchHighlight level tx annotation =
     let
         inner =
             case tx.type_ of
                 Utxo t ->
                     annotation
-                        |> Utxo.view vc gc tx t
+                        |> Utxo.view vc gc level tx t
 
                 Account t ->
                     annotation
-                        |> AccountTx.view vc gc tx t
+                        |> AccountTx.view vc gc level tx t
 
         attrs =
             dimmedOpacity searchHighlight

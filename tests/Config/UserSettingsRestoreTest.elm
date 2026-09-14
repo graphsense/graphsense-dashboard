@@ -46,7 +46,7 @@ allFlipped =
 
 restored : Config.UserSettings.UserSettings -> Config.View.Config
 restored settings =
-    Init.viewConfigFromSettings Env.viewConfig.locale Dict.empty settings
+    Init.viewConfigFromSettings False Env.viewConfig.locale Dict.empty settings
 
 
 suite : Test
