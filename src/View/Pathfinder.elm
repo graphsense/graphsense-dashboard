@@ -202,19 +202,19 @@ contextMenuView pluginStates vc model ( coords, menu ) =
                     -- Plugin entries act on the one address that was right-clicked,
                     -- so on a multi-selection they are greyed out like core's own
                     -- per-address entries below (annotate, copy id, open in tab).
-                    isMultiSelect =
+                    disableByMultiSelect =
                         case model.selection of
                             Pathfinder.MultiSelect _ ->
-                                True
+                                ContextMenuItem.setDisabled True
 
                             _ ->
-                                False
+                                identity
 
                     pluginsList =
                         Dict.get id model.network.addresses
                             |> Maybe.map
                                 (Plugin.addressContextMenu pluginStates vc
-                                    >> List.map (ContextMenuItem.setDisabled isMultiSelect >> restrictOnLiteNetwork >> ContextMenuItem.view vc)
+                                    >> List.map (restrictOnLiteNetwork >> disableByMultiSelect >> ContextMenuItem.view vc)
                                 )
                             |> Maybe.withDefault []
                 in
@@ -911,7 +911,7 @@ graphSvg vc gc model dim =
                 ]
                 dim
         , Network.relations vc gc detail model.hovered model.selection model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
-        , Svg.lazy7 Network.addresses vc gc model.networkCapabilities detail model.onGraphSearch model.annotations model.network.addresses
+        , Svg.lazy7 Network.addresses vc gc detail model.networkCapabilities model.onGraphSearch model.annotations model.network.addresses
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system

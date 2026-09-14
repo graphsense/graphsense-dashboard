@@ -25,9 +25,11 @@ import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View
 import RecordSetter as Rs
 import RemoteData
-import Svg.Styled as Svg exposing (Svg, g, text)
-import Svg.Styled.Attributes as Svg exposing (css, opacity, transform)
+import String.Format
+import Svg.Styled as Svg exposing (Svg, g, path, text)
+import Svg.Styled.Attributes as Svg exposing (css, d, opacity, transform)
 import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
+import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
@@ -36,6 +38,7 @@ import Util.Tooltip
 import Util.TooltipType as TooltipType
 import Util.View exposing (none, onClickWithStop, testId, testKey, truncateLongIdentifierWithLengths)
 import Util.View.Loadingspinner as Loadingspinner
+import View.CurrencyMeta as CurrencyMeta
 import View.Locale as Locale
 
 
@@ -229,8 +232,8 @@ view vc pc capabilities searchHighlight level address annotation =
                     []
                )
         )
-        (GraphComponents.addressNodeWithAttributes
-            (GraphComponents.addressNodeAttributes
+        (GraphComponents.addressNodeDevWithAttributes
+            (GraphComponents.addressNodeDevAttributes
                 |> Rs.s_root
                     ([ testId "gs-address-node"
                      , testKey (Id.toString address.id)
@@ -281,6 +284,26 @@ view vc pc capabilities searchHighlight level address annotation =
                 , icon2Instance = iconInstance icons 1
                 , icon3Visible = iconVisible icons 2
                 , icon3Instance = iconInstance icons 2
+                , currencyIcon =
+                    let
+                        s =
+                            8.1
+
+                        viewboxsize =
+                            100
+                    in
+                    case Dict.get (address.id |> Id.network |> String.toLower) CurrencyMeta.networks of
+                        Just currencyMeta ->
+                            g
+                                [ "scale({{ }})"
+                                    |> String.Format.value
+                                        (s / viewboxsize |> String.fromFloat)
+                                    |> transform
+                                ]
+                                [ path [ d currencyMeta.icon, css [ Css.property "fill" <| Colors.grey900 ] ] [] ]
+
+                        Nothing ->
+                            text ""
                 }
             , iconsNodeOpenLeft =
                 { variant =

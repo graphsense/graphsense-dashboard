@@ -32,8 +32,8 @@ import View.Pathfinder.Tx as Tx
 import View.Pathfinder.Tx.Utxo exposing (RenderLevel(..))
 
 
-addresses : View.Config -> Pathfinder.Config -> NetworkCapabilities -> DetailLevel -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
-addresses vc pc capabilities level searchBox annotations =
+addresses : View.Config -> Pathfinder.Config -> DetailLevel -> NetworkCapabilities -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
+addresses vc pc level capabilities searchBox annotations =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
