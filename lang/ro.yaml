@@ -637,6 +637,10 @@ multi-add-skipped-message: "{0} din {1} elemente lipite nu au putut fi adăugate
 multi-add-skipped-not-found: "Nicio potrivire: {2}."
 multi-add-skipped-failed: "Cererea a eșuat: {3}."
 multi-add-skipped-too-short: "Prea scurt pentru a fi o adresă sau un hash de tranzacție: {4}."
+no-results-found-on-networks: "Nu a fost găsit pe {0}."
+popup-not-found-unsupported-network: "se află pe o rețea pe care această instanță nu o acceptă (acceptate: {0})"
+identifier-not-found: "{0} nu a fost găsit. Este posibil să nu fie încă în baza de date sau să conțină o greșeală de tastare."
+identifier-not-found-on-networks: "{0} nu a fost găsit pe {1}. Este posibil să fie pe o rețea pe care această instanță nu o acceptă, să nu fie încă în baza de date sau să conțină o greșeală de tastare."
 export-dialog-only-visible-inoutputs: exportă doar intrările/ieșirile vizibile
 export-dialog-only-visible-inoutputs-help: Când este activat, CSV-ul conține doar fluxurile
   dintre intrările și ieșirile vizibile în graf. Dezactivează pentru a exporta întreaga matrice

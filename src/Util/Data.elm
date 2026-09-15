@@ -1,4 +1,4 @@
-module Util.Data exposing (absValues, addressCluster, isAccountLike, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, parseMultiIdentifierInput, splitMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addressCluster, isAccountLike, looksLikeTxHash, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, parseMultiIdentifierInput, splitMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -143,6 +143,19 @@ normalizeIdentifier net address =
             else
                 identity
            )
+
+
+{-| Whether an identifier has the shape of a transaction hash on any
+supported network: 64 hex digits, with or without a leading 0x. Everything
+else is taken for an address.
+-}
+looksLikeTxHash : String -> Bool
+looksLikeTxHash identifier =
+    let
+        hash =
+            removeLeading0x identifier
+    in
+    String.length hash == 64 && String.all Char.isHexDigit hash
 
 
 {-| The tokens of a multi-identifier paste that are long enough to be an

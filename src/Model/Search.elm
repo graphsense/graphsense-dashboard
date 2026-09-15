@@ -1,4 +1,4 @@
-module Model.Search exposing (Model, ResultLine(..), SearchType(..), addRecent, addToAutoComplete, filteredRecents, firstResult, getMulti, isMultiIdentifierInput, lastResult, minSearchInputLength, minSearchLengthWithResultExpected, persistRecentSearches, query, searchInputId, selectedValue, setQuery)
+module Model.Search exposing (Model, ResultLine(..), SearchType(..), addRecent, addToAutoComplete, filteredRecents, firstResult, getMulti, hasNoResults, isMultiIdentifierInput, lastResult, minSearchInputLength, minSearchLengthWithResultExpected, persistRecentSearches, query, searchInputId, selectedValue, setQuery)
 
 import Autocomplete exposing (Autocomplete)
 import RecordSetter as Rs
@@ -137,6 +137,19 @@ setQuery q model =
     { model
         | autocomplete = Autocomplete.setQuery q model.autocomplete
     }
+
+
+{-| The search for the current query has answered and nothing matched.
+False while it is still under way, so a hasty enter is not mistaken for a
+miss.
+-}
+hasNoResults : Model -> Bool
+hasNoResults { autocomplete } =
+    let
+        state =
+            Autocomplete.viewState autocomplete
+    in
+    List.isEmpty state.choices && state.status == Autocomplete.FetchedChoices
 
 
 selectedValue : Model -> Maybe ResultLine

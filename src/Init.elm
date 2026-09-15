@@ -122,4 +122,5 @@ viewConfigFromSettings isMac locale characterDimensions settings =
     , characterDimensions = characterDimensions
     , showBothValues = settings.showBothValues |> Maybe.withDefault False
     , isMac = isMac
+    , networks = []
     }

@@ -306,6 +306,17 @@ appLevelOutMsgs msg model =
         UserReleasedEscape ->
             [ CloseTopmostOverlay ]
 
+        SearchMsg Search.UserClicksResultLine ->
+            let
+                query =
+                    Search.query model.search
+            in
+            if Search.selectedValue model.search == Nothing && not (Search.isMultiIdentifierInput query) && Search.hasNoResults model.search then
+                [ IdentifierNotFound query ]
+
+            else
+                []
+
         _ ->
             []
 

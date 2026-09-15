@@ -196,6 +196,8 @@ type OutMsg
     | OpenAddTagDialog Id
     | OpenExportDialog (Maybe Time.Posix)
     | CloseExportDialog
+      -- enter on one identifier the search matched nowhere; the shell owns the toast
+    | IdentifierNotFound String
     | CloseTopmostOverlay
 
 

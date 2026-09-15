@@ -7,6 +7,7 @@ and theme switching. None of this was reachable from a test before
 -}
 
 import Api.Data
+import Autocomplete
 import Dict
 import Effect.Api
 import Effect.Pathfinder
@@ -16,11 +17,16 @@ import Html.Attributes as Attributes
 import Http
 import Json.Decode
 import Model exposing (Effect(..), Msg(..), Page(..))
+import Model.Notification as Notification
+import Model.Search
+import Msg.Pathfinder
+import Msg.Search
 import RemoteData
 import Support.MainApp as App exposing (App)
 import Test exposing (Test, describe, test)
 import Test.Html.Query as Query
 import Test.Html.Selector as Selector
+import Update.Dialog
 import Url exposing (Url)
 
 
@@ -303,6 +309,112 @@ suite =
                         |> page
                         |> Expect.equal Settings
             ]
+        , describe "enter on one identifier the search matched nowhere"
+            [ test "shows a transaction-not-found toast for a hash" <|
+                \_ ->
+                    App.initAt "/"
+                        |> App.mapModel (\m -> { m | search = m.search |> typedAndAnsweredWithNothing xrpHash })
+                        |> App.step (SearchMsg Msg.Search.UserClicksResultLine)
+                        |> latestNotification
+                        |> Expect.equal (Just { title = Just "transaction not found", message = "identifier-not-found", variables = [ xrpHash, "" ] })
+            , test "and an address-not-found toast for anything else" <|
+                \_ ->
+                    App.initAt "/"
+                        |> App.mapModel (\m -> { m | search = m.search |> typedAndAnsweredWithNothing xrpAddress })
+                        |> App.step (SearchMsg Msg.Search.UserClicksResultLine)
+                        |> latestNotification
+                        |> Expect.equal (Just { title = Just "address not found", message = "identifier-not-found", variables = [ xrpAddress, "" ] })
+            , test "names the searched networks once the statistics are in" <|
+                \_ ->
+                    withStats <|
+                        \stats ->
+                            App.initAt "/"
+                                |> App.step (BrowserGotStatistics stats)
+                                |> App.mapModel (\m -> { m | search = m.search |> typedAndAnsweredWithNothing xrpHash })
+                                |> App.step (SearchMsg Msg.Search.UserClicksResultLine)
+                                |> latestNotification
+                                |> Expect.equal (Just { title = Just "transaction not found", message = "identifier-not-found-on-networks", variables = [ xrpHash, "BTC" ] })
+            , test "opens no dialog, so the input can be corrected right away" <|
+                \_ ->
+                    App.initAt "/"
+                        |> App.mapModel (\m -> { m | search = m.search |> typedAndAnsweredWithNothing xrpHash })
+                        |> App.step (SearchMsg Msg.Search.UserClicksResultLine)
+                        |> App.model
+                        |> .dialog
+                        |> Expect.equal Nothing
+            , test "stays on the landing page instead of jumping to an empty Pathfinder" <|
+                \_ ->
+                    App.initAt "/"
+                        |> App.mapModel (\m -> { m | search = m.search |> typedAndAnsweredWithNothing xrpHash })
+                        |> App.step (SearchMsg Msg.Search.UserClicksResultLine)
+                        |> App.expectNoEffect "navigation" isNavigation
+            , test "does nothing while the search is still under way" <|
+                \_ ->
+                    App.initAt "/"
+                        |> App.mapModel
+                            (\m ->
+                                { m
+                                    | search =
+                                        m.search
+                                            |> Model.Search.setQuery xrpHash
+                                            |> (\s -> { s | autocomplete = Autocomplete.setStatus Autocomplete.Fetching s.autocomplete })
+                                }
+                            )
+                        |> App.step (SearchMsg Msg.Search.UserClicksResultLine)
+                        |> latestNotification
+                        |> Expect.equal Nothing
+            , test "the Pathfinder's own search box shows the same toast" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.mapModel
+                            (\m ->
+                                let
+                                    pathfinder =
+                                        m.pathfinder
+                                in
+                                { m | pathfinder = { pathfinder | search = pathfinder.search |> typedAndAnsweredWithNothing xrpHash } }
+                            )
+                        |> App.step (PathfinderMsg (Msg.Pathfinder.SearchMsg Msg.Search.UserClicksResultLine))
+                        |> latestNotification
+                        |> Expect.equal (Just { title = Just "transaction not found", message = "identifier-not-found", variables = [ xrpHash, "" ] })
+            ]
+        , describe "the not-found dialog of a deep link"
+            [ test "names the supported networks once the statistics are in" <|
+                \_ ->
+                    withStats <|
+                        \stats ->
+                            App.initAt "/"
+                                |> App.step (BrowserGotStatistics stats)
+                                |> App.mapModel (\m -> { m | dialog = Just (Update.Dialog.txNotFoundError xrpHash Nothing NoOp) })
+                                |> App.html
+                                |> Query.has [ Selector.text "Popup-not-found-unsupported-network" ]
+            , test "and not before" <|
+                \_ ->
+                    App.initAt "/"
+                        |> App.mapModel (\m -> { m | dialog = Just (Update.Dialog.txNotFoundError xrpHash Nothing NoOp) })
+                        |> App.html
+                        |> Query.hasNot [ Selector.text "Popup-not-found-unsupported-network" ]
+            ]
+        , describe "the search dropdown with no match"
+            [ test "names the networks it searched once the statistics are in" <|
+                \_ ->
+                    withStats <|
+                        \stats ->
+                            App.initAt "/"
+                                |> App.step (BrowserGotStatistics stats)
+                                |> App.mapModel (\m -> { m | search = m.search |> typedAndAnsweredWithNothing xrpHash })
+                                |> App.html
+                                |> Query.has [ Selector.text "No-results-found-on-networks" ]
+            , test "and just says so before" <|
+                \_ ->
+                    App.initAt "/"
+                        |> App.mapModel (\m -> { m | search = m.search |> typedAndAnsweredWithNothing xrpHash })
+                        |> App.html
+                        |> Expect.all
+                            [ Query.has [ Selector.text "No-results-found" ]
+                            , Query.hasNot [ Selector.text "No-results-found-on-networks" ]
+                            ]
+            ]
         , describe "a search request that fails for good"
             [ test "settles the term in the pending multi-identifier paste" <|
                 \_ ->
@@ -340,6 +452,62 @@ suite =
                             )
             ]
         ]
+
+
+{-| An XRP transaction, which no supported network knows -- the case a user
+reported as "the tool does not recognise the transaction".
+-}
+xrpHash : String
+xrpHash =
+    "D8FBA40D0E331BCE4EB2D9427635E76E12DC1D6DED26D77CDF8559BCDE07B715"
+
+
+xrpAddress : String
+xrpAddress =
+    "rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh"
+
+
+{-| A search box with `query` typed in and the search for it come back empty.
+-}
+typedAndAnsweredWithNothing : String -> Model.Search.Model -> Model.Search.Model
+typedAndAnsweredWithNothing query search =
+    search
+        |> Model.Search.setQuery query
+        |> (\s -> { s | visible = True, autocomplete = Autocomplete.setStatus Autocomplete.FetchedChoices s.autocomplete })
+
+
+{-| Title, message key and variables of the newest toast.
+-}
+latestNotification : App -> Maybe { title : Maybe String, message : String, variables : List String }
+latestNotification app =
+    App.model app
+        |> .notifications
+        |> Notification.peek
+        |> Maybe.map
+            (\n ->
+                case n of
+                    Notification.Error d ->
+                        { title = d.title, message = d.message, variables = d.variables }
+
+                    Notification.Info d ->
+                        { title = d.title, message = d.message, variables = d.variables }
+
+                    Notification.Success d ->
+                        { title = d.title, message = d.message, variables = d.variables }
+            )
+
+
+isNavigation : Effect -> Bool
+isNavigation eff =
+    case eff of
+        NavPushUrlEffect _ ->
+            True
+
+        NavLoadEffect _ ->
+            True
+
+        _ ->
+            False
 
 
 {-| A search-box request for `query` that failed with no retry left.

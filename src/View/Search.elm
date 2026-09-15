@@ -175,7 +175,20 @@ searchResult vc sc model =
             minSearchLengthWithResultExpected model.searchType
 
         noResults =
-            (viewState.choices |> List.isEmpty) && viewState.status == Autocomplete.FetchedChoices
+            hasNoResults model
+
+        -- name the networks that were searched, so a hash from a network
+        -- the backend does not serve is not mistaken for a typo
+        noResultsMessage =
+            if List.isEmpty vc.networks then
+                Locale.string vc.locale "No-results-found"
+
+            else
+                vc.networks
+                    |> List.map (.name >> String.toUpper)
+                    |> String.join ", "
+                    |> List.singleton
+                    |> Locale.interpolated vc.locale "No-results-found-on-networks"
 
         lengthOfMutliInput =
             Data.parseMultiIdentifierInput viewState.query
@@ -213,7 +226,7 @@ searchResult vc sc model =
                 config2
 
     else if (viewState.query |> removeLeading0x |> String.length) > 0 && model.visible && noResults then
-        msg (Locale.string vc.locale "No-results-found")
+        msg noResultsMessage
             |> Autocomplete.dropdownStyled
                 config1
                 vc

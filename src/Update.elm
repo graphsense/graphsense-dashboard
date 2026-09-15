@@ -193,6 +193,7 @@ update uc msg model =
             n
                 { model
                     | stats = RD.Success stats
+                    , config = model.config |> s_networks stats.currencies
                     , statusbar = Statusbar.updateLastBlocks stats model.statusbar
                     , search =
                         model.search
@@ -1051,17 +1052,25 @@ update uc msg model =
                                     |> pair m2
 
                             Nothing ->
-                                Pathfinder.multiSearch query model.pathfinder
-                                    |> mapFirst (flip s_pathfinder model)
-                                    |> mapSecond
-                                        (List.map PathfinderEffect
-                                            >> (::)
-                                                (Route.Pathfinder.Root
-                                                    |> Route.pathfinderRoute
-                                                    |> Route.toUrl
-                                                    |> NavPushUrlEffect
-                                                )
-                                        )
+                                if Search.isMultiIdentifierInput query then
+                                    Pathfinder.multiSearch query model.pathfinder
+                                        |> mapFirst (flip s_pathfinder model)
+                                        |> mapSecond
+                                            (List.map PathfinderEffect
+                                                >> (::)
+                                                    (Route.Pathfinder.Root
+                                                        |> Route.pathfinderRoute
+                                                        |> Route.toUrl
+                                                        |> NavPushUrlEffect
+                                                    )
+                                            )
+
+                                else if Search.hasNoResults model.search then
+                                    -- say why instead of silently doing nothing
+                                    notifyIdentifierNotFound query m2
+
+                                else
+                                    n m2
 
                 Search.UserClickedCloseCurrencyPicker ->
                     clearSearch { model | dialog = Nothing }
@@ -1675,6 +1684,9 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
                 _ ->
                     n model
 
+        Pathfinder.IdentifierNotFound query ->
+            notifyIdentifierNotFound query model
+
         Pathfinder.OpenAddTagDialog id ->
             n
                 { model
@@ -2240,6 +2252,46 @@ updateRequestLimit headers model =
             }
                 |> Authorized
     }
+
+
+{-| Tells the user that enter on `identifier` found nothing, and why that may
+be. A toast rather than a dialog: it must not stand in the way of correcting
+the input. Names the networks that were searched once the statistics are in,
+so a hash from a network this instance does not serve reads as such and not
+as a typo.
+-}
+notifyIdentifierNotFound : String -> Model key -> ( Model key, List Effect )
+notifyIdentifierNotFound identifier model =
+    let
+        title =
+            if Util.Data.looksLikeTxHash identifier then
+                "transaction not found"
+
+            else
+                "address not found"
+
+        networks =
+            model.config.networks
+                |> List.map (.name >> String.toUpper)
+                |> String.join ", "
+
+        message =
+            if String.isEmpty networks then
+                "identifier-not-found"
+
+            else
+                "identifier-not-found-on-networks"
+
+        ( notifications, notificationEffects ) =
+            Notification.errorDefault message
+                |> Notification.map (s_title (Just title))
+                |> Notification.map (s_variables [ identifier, networks ])
+                |> Notification.map (s_showClose True)
+                |> flip Notification.add model.notifications
+    in
+    ( { model | notifications = notifications }
+    , List.map NotificationEffect notificationEffects
+    )
 
 
 handleResponse : Config -> Result ( Http.Error, Headers, Effect.Api.Effect Msg ) ( Headers, Msg ) -> Model key -> ( Model key, List Effect )

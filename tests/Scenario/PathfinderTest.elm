@@ -27,7 +27,7 @@ import Model.Pathfinder.Address exposing (Txs(..))
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Selection exposing (Selection(..))
 import Model.Search as Search
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder exposing (Msg(..), OutMsg(..))
 import Msg.Search as Search
 import Route.Pathfinder as Route
 import Support.App as App exposing (App)
@@ -326,6 +326,29 @@ suite =
                 \_ ->
                     App.init |> App.html |> Query.has [ Selector.tag "svg" ]
             ]
+        , describe "enter on one identifier the search matched nowhere"
+            [ test "asks the shell for the not-found dialog" <|
+                \_ ->
+                    App.init
+                        |> App.mapModel (\m -> { m | search = searchModelWith unknownTerm |> answeredWithNothing })
+                        |> App.step (SearchMsg Search.UserClicksResultLine)
+                        |> App.outMsgs
+                        |> Expect.equalLists [ IdentifierNotFound unknownTerm ]
+            , test "not while the search is still under way" <|
+                \_ ->
+                    App.init
+                        |> App.mapModel (\m -> { m | search = searchModelWith unknownTerm |> stillSearching })
+                        |> App.step (SearchMsg Search.UserClicksResultLine)
+                        |> App.outMsgs
+                        |> Expect.equalLists []
+            , test "and not for a paste of several identifiers, which is added term by term" <|
+                \_ ->
+                    App.init
+                        |> App.mapModel (\m -> { m | search = searchModelWith (knownTerm ++ ", " ++ unknownTerm) |> answeredWithNothing })
+                        |> App.step (SearchMsg Search.UserClicksResultLine)
+                        |> App.outMsgs
+                        |> Expect.equalLists []
+            ]
         , describe "pasting several identifiers into the search box"
             [ test "is not searched as one string by the autocomplete" <|
                 \_ ->
@@ -347,7 +370,7 @@ suite =
                                 { m
                                     | search =
                                         searchModelWith (String.join ", " [ knownTerm, "abc123", unknownTerm ])
-                                            |> (\s -> { s | visible = True, autocomplete = Autocomplete.setStatus Autocomplete.FetchedChoices s.autocomplete })
+                                            |> answeredWithNothing
                                 }
                             )
                         |> App.html
@@ -505,6 +528,20 @@ withSearchFixture f =
 searchModelWith : String -> Search.Model
 searchModelWith query =
     App.init |> App.model |> .search |> Search.setQuery query
+
+
+{-| ... whose search has come back empty.
+-}
+answeredWithNothing : Search.Model -> Search.Model
+answeredWithNothing s =
+    { s | visible = True, autocomplete = Autocomplete.setStatus Autocomplete.FetchedChoices s.autocomplete }
+
+
+{-| ... whose search has not answered yet.
+-}
+stillSearching : Search.Model -> Search.Model
+stillSearching s =
+    { s | visible = True, autocomplete = Autocomplete.setStatus Autocomplete.Fetching s.autocomplete }
 
 
 {-| Pastes the terms, comma-separated, into the search box and hits enter.
