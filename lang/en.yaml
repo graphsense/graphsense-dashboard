@@ -582,7 +582,7 @@ csv-note-capped: "Transaction too large — only flows touching a visible addres
 csv-note-visible-only: "Only flows touching a visible address were exported."
 unknown url: "Unknown URL: {0}"
 not supported on lite networks: not supported on lite networks
-inactive in relationship mode on lite networks: "Not part of relationship mode: this lite network has no relationship data. Switch to transaction mode to trace from here."
+Relationship mode not supported on lite networks: Relationship mode not supported on lite networks
 Keyboard shortcuts: "Keyboard shortcuts"
 Add address or tx: "Add address or tx"
 Select all: "Select all"

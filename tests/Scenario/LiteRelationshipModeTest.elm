@@ -94,7 +94,7 @@ tabLabel =
 
 whyFaded : Selector
 whyFaded =
-    text "inactive in relationship mode on lite networks"
+    text "Relationship mode not supported on lite networks"
 
 
 suite : Test
@@ -130,14 +130,24 @@ suite =
                                 [ Query.has [ tabLabel "Outgoing relations" ]
                                 , Query.has [ tabLabel "Incoming relations" ]
                                 ]
-        , test "the tooltip of the faded node says why it is inactive" <|
+        , test "the tooltip of the faded node is only the hint, no figures" <|
             \_ ->
                 withAddressFixture <|
                     \address ->
                         graphWithOneAddress btcWithoutRelations address
                             |> inRelationshipMode
                             |> tooltipOfNode
-                            |> Query.has [ whyFaded ]
+                            |> Expect.all
+                                [ Query.has [ whyFaded ]
+                                , Query.hasNot [ text "Balance" ]
+                                ]
+        , test "the tooltip shows the figures in transaction mode" <|
+            \_ ->
+                withAddressFixture <|
+                    \address ->
+                        graphWithOneAddress btcWithoutRelations address
+                            |> tooltipOfNode
+                            |> Query.has [ text "Balance" ]
         , test "the tooltip carries no such note in transaction mode" <|
             \_ ->
                 withAddressFixture <|

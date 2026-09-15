@@ -393,77 +393,75 @@ address vc tracingMode capabilities tags adr =
         curr =
             View.toCurrency vc
     in
-    -- a faded node (View.Pathfinder.Address) would otherwise leave the user
-    -- guessing why it looks inactive: say so before the usual rows
-    (if NetworkCapabilities.inactiveInRelationshipMode tracingMode capabilities net then
+    -- a faded node (View.Pathfinder.Address) takes no part in this mode:
+    -- one hint why, none of the usual figures
+    if NetworkCapabilities.inactiveInRelationshipMode tracingMode capabilities net then
         [ div [ css baseRowStyle ]
-            [ Locale.string vc.locale "inactive in relationship mode on lite networks"
+            [ Locale.string vc.locale "Relationship mode not supported on lite networks"
                 |> text
             ]
         ]
 
-     else
-        []
-    )
-        ++ (tooltipRow
-                { tooltipRowLabel = { title = Locale.string vc.locale "Balance" }
-                , tooltipRowValue =
-                    Addr.getBalance adr
-                        |> Maybe.map
-                            (pair (assetFromBase net)
-                                >> List.singleton
-                                >> Locale.currency curr vc.locale
-                            )
-                        |> Maybe.withDefault ""
-                        |> val vc
-                }
-                :: -- a lite network serves totals capped or not at all: hide them
-                   -- here like in the side panel
-                   (if NetworkCapabilities.isLiteNetwork capabilities net then
-                        []
+    else
+        (tooltipRow
+            { tooltipRowLabel = { title = Locale.string vc.locale "Balance" }
+            , tooltipRowValue =
+                Addr.getBalance adr
+                    |> Maybe.map
+                        (pair (assetFromBase net)
+                            >> List.singleton
+                            >> Locale.currency curr vc.locale
+                        )
+                    |> Maybe.withDefault ""
+                    |> val vc
+            }
+            :: -- a lite network serves totals capped or not at all: hide them
+               -- here like in the side panel
+               (if NetworkCapabilities.isLiteNetwork capabilities net then
+                    []
 
-                    else
-                        [ tooltipRow
-                            { tooltipRowLabel = { title = Locale.string vc.locale "Total received" }
-                            , tooltipRowValue =
-                                Addr.getTotalReceived adr
-                                    |> Maybe.map
-                                        (pair (assetFromBase net)
-                                            >> List.singleton
-                                            >> Locale.currency curr vc.locale
-                                        )
-                                    |> Maybe.withDefault ""
-                                    |> val vc
-                            }
-                        , tooltipRow
-                            { tooltipRowLabel = { title = Locale.string vc.locale "Total sent" }
-                            , tooltipRowValue =
-                                Addr.getTotalSpent adr
-                                    |> Maybe.map
-                                        (pair (assetFromBase net)
-                                            >> List.singleton
-                                            >> Locale.currency curr vc.locale
-                                        )
-                                    |> Maybe.withDefault ""
-                                    |> val vc
-                            }
-                        ]
-                   )
-           )
-        ++ (case tags of
-                Just ts ->
+                else
                     [ tooltipRow
-                        { tooltipRowLabel = { title = Locale.string vc.locale "Tags" }
+                        { tooltipRowLabel = { title = Locale.string vc.locale "Total received" }
                         , tooltipRowValue =
-                            ts
-                                |> TagSummary.getLabelPreview 20
+                            Addr.getTotalReceived adr
+                                |> Maybe.map
+                                    (pair (assetFromBase net)
+                                        >> List.singleton
+                                        >> Locale.currency curr vc.locale
+                                    )
+                                |> Maybe.withDefault ""
+                                |> val vc
+                        }
+                    , tooltipRow
+                        { tooltipRowLabel = { title = Locale.string vc.locale "Total sent" }
+                        , tooltipRowValue =
+                            Addr.getTotalSpent adr
+                                |> Maybe.map
+                                    (pair (assetFromBase net)
+                                        >> List.singleton
+                                        >> Locale.currency curr vc.locale
+                                    )
+                                |> Maybe.withDefault ""
                                 |> val vc
                         }
                     ]
+               )
+        )
+            ++ (case tags of
+                    Just ts ->
+                        [ tooltipRow
+                            { tooltipRowLabel = { title = Locale.string vc.locale "Tags" }
+                            , tooltipRowValue =
+                                ts
+                                    |> TagSummary.getLabelPreview 20
+                                    |> val vc
+                            }
+                        ]
 
-                _ ->
-                    []
-           )
+                    _ ->
+                        []
+               )
 
 
 genericTx : View.Config -> { txId : String, timestamp : Int } -> List (Html msg)

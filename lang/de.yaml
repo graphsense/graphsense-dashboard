@@ -599,7 +599,7 @@ csv-note-capped: "Transaktion zu groß – nur Flüsse mit einer sichtbaren Adre
 csv-note-visible-only: "Nur Flüsse mit einer sichtbaren Adresse wurden exportiert."
 unknown url: "Unbekannte URL: {0}"
 not supported on lite networks: auf Lite-Netzwerken nicht unterstützt
-inactive in relationship mode on lite networks: "Nicht Teil des beziehungsbasierten Modus: dieses Lite-Netzwerk hat keine Beziehungsdaten. In den transaktionsbasierten Modus wechseln, um von hier aus zu verfolgen."
+Relationship mode not supported on lite networks: Beziehungsmodus auf Lite-Netzwerken nicht unterstützt
 Keyboard shortcuts: "Tastenkürzel"
 Add address or tx: "Adresse oder Tx hinzufügen"
 Select all: "Alles auswählen"
