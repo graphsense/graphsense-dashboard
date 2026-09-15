@@ -60,7 +60,7 @@ import Update.Pathfinder.ExportDialog as ExportDialog
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
-import Util exposing (n)
+import Util exposing (and, n)
 import Util.Data
 import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
@@ -478,6 +478,20 @@ update uc msg model =
                             uc
                             result
                         |> mapSecond ((++) (List.map NotificationEffect notificationEffects))
+                        |> (case result of
+                                Err ( _, _, Effect.Api.SearchEffect { query } _ ) ->
+                                    -- a term of a multi-identifier paste whose
+                                    -- request failed for good would otherwise
+                                    -- keep the paste pending forever
+                                    Search.BrowserGotMultiSearchError query
+                                        |> Pathfinder.SearchMsg
+                                        |> PathfinderMsg
+                                        |> update uc
+                                        |> and
+
+                                _ ->
+                                    identity
+                           )
 
         UserClosesDialog ->
             case model.dialog of

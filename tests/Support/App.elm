@@ -2,6 +2,7 @@ module Support.App exposing
     ( App
     , apiEffects
     , expectEffect
+    , expectNoEffect
     , expectNoEffects
     , html
     , init
@@ -11,6 +12,8 @@ module Support.App exposing
     , model
     , outMsgs
     , respond
+    , respondSearch
+    , searchEffects
     , step
     , steps
     )
@@ -51,11 +54,13 @@ picture, which is what you want when testing the core.
 
 import Effect.Api
 import Effect.Pathfinder exposing (Effect(..))
+import Effect.Search
 import Expect exposing (Expectation)
 import Html.Styled
 import Init.Pathfinder
 import Model.Pathfinder exposing (Model)
-import Msg.Pathfinder exposing (Msg, OutMsg)
+import Msg.Pathfinder exposing (Msg(..), OutMsg)
+import Msg.Search
 import Plugin.Model
 import Route.Pathfinder exposing (Route)
 import Support.Env as Env
@@ -180,6 +185,38 @@ apiEffects (App app) =
     List.concatMap fromEffect app.effects_
 
 
+{-| Answers the pending search-box requests, the way `respond` answers API
+requests. The `Msg.Search.Msg` the callback returns is wrapped the way the
+Pathfinder receives it.
+-}
+respondSearch : (Effect.Search.Effect -> Maybe Msg.Search.Msg) -> App -> App
+respondSearch toMsg app =
+    searchEffects app
+        |> List.filterMap toMsg
+        |> List.map SearchMsg
+        |> (\msgs -> steps msgs app)
+
+
+{-| Every search-box request the last step asked for.
+-}
+searchEffects : App -> List Effect.Search.Effect
+searchEffects (App app) =
+    List.concatMap searchFromEffect app.effects_
+
+
+searchFromEffect : Effect -> List Effect.Search.Effect
+searchFromEffect eff =
+    case eff of
+        SearchEffect searchEff ->
+            [ searchEff ]
+
+        BatchEffect batched ->
+            List.concatMap searchFromEffect batched
+
+        _ ->
+            []
+
+
 {-| Every message the last step asked the shell to feed straight back in, as
 `Effect.elm` does for `InternalEffect`. Pair with `steps` to continue a flow that
 loops through the update function without touching the network.
@@ -228,6 +265,23 @@ expectEffect description predicate (App app) =
         |> Expect.equal True
         |> Expect.onFail
             ("expected an effect matching \""
+                ++ description
+                ++ "\", got ["
+                ++ (app.effects_ |> List.map name |> String.join ", ")
+                ++ "]"
+            )
+
+
+{-| Asserts that no effect of the last step matches `predicate`; names the
+effects it did produce when one does. Unlike `expectNoEffects` it passes on an
+empty effect list, so it is the right check for "nothing was reported".
+-}
+expectNoEffect : String -> (Effect -> Bool) -> App -> Expectation
+expectNoEffect description predicate (App app) =
+    List.any predicate app.effects_
+        |> Expect.equal False
+        |> Expect.onFail
+            ("expected no effect matching \""
                 ++ description
                 ++ "\", got ["
                 ++ (app.effects_ |> List.map name |> String.join ", ")

@@ -1,4 +1,4 @@
-module Update.Search exposing (clear, filterByPrefix, triggerSearch, update)
+module Update.Search exposing (clear, filterByPrefix, maybeTriggerSearch, triggerSearch, update)
 
 import Api.Data
 import Autocomplete
@@ -219,6 +219,10 @@ update msg model =
             -- handled upstream
             n model
 
+        BrowserGotMultiSearchError _ ->
+            -- handled upstream
+            n model
+
         UserClicksResultLine ->
             let
                 picked =
@@ -317,6 +321,11 @@ limit =
     15
 
 
+{-| The search request the autocomplete sends for the current query, if any.
+None while a currency is being picked, and none for a paste of several
+identifiers: enter handles that paste term by term, and an empty answer for
+the whole string would only hide the dropdown's hint behind "no results".
+-}
 maybeTriggerSearch : Model -> List Effect
 maybeTriggerSearch model =
     let
@@ -337,7 +346,7 @@ maybeTriggerSearch model =
                 SearchActorsOnly ->
                     False
     in
-    if not isPickingCurrency && not (isLikelyPathSearchInput query) then
+    if not isPickingCurrency && not (isMultiIdentifierInput query) then
         SearchEffect
             { query = query
             , currency = Nothing

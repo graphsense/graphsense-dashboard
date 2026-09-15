@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Pasting several addresses or transaction hashes into the search box added what it could and said nothing about the rest. Once every pasted item has been looked up, a notification now says how many were skipped and lists them by reason: no match, request failed, or too short to be an identifier. It is an error when nothing at all could be added, and there is no notification when everything was. While such a paste sits in the search box, the dropdown keeps saying that several terms were detected instead of briefly flipping to "no results": the box no longer looks the whole paste up as one string
 - "Align horizontally" left a selected node off the row whenever an unselected node sat in the same column just above the target row: the overlap pass that follows the alignment pushed the aligned node away instead of the bystander. Aligned nodes now stay on the row and the other node moves
 - Plugin entries on an address's right-click menu were still active on a multi-selection although they act on the one address that was clicked. They are now greyed out there, like core's own per-address entries
 

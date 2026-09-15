@@ -4,6 +4,7 @@ module Support.MainApp exposing
     , html
     , initAt
     , initAtWithStats
+    , mapModel
     , model
     , step
     , steps
@@ -76,6 +77,14 @@ type App
 model : App -> Model ()
 model (App app) =
     app.model_
+
+
+{-| Puts the model into a state no message sequence reaches conveniently.
+Effects are kept.
+-}
+mapModel : (Model () -> Model ()) -> App -> App
+mapModel f (App app) =
+    App { app | model_ = f app.model_ }
 
 
 

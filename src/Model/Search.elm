@@ -1,7 +1,8 @@
-module Model.Search exposing (Model, ResultLine(..), SearchType(..), addRecent, addToAutoComplete, filteredRecents, firstResult, getMulti, isLikelyPathSearchInput, lastResult, minSearchInputLength, minSearchLengthWithResultExpected, persistRecentSearches, query, searchInputId, selectedValue, setQuery)
+module Model.Search exposing (Model, ResultLine(..), SearchType(..), addRecent, addToAutoComplete, filteredRecents, firstResult, getMulti, isMultiIdentifierInput, lastResult, minSearchInputLength, minSearchLengthWithResultExpected, persistRecentSearches, query, searchInputId, selectedValue, setQuery)
 
 import Autocomplete exposing (Autocomplete)
 import RecordSetter as Rs
+import Util.Data
 
 
 
@@ -115,15 +116,15 @@ getMulti =
         >> List.filter (String.isEmpty >> not)
 
 
-isLikelyPathSearchInput : String -> Bool
-isLikelyPathSearchInput q =
-    let
-        mul =
-            getMulti q
-    in
-    List.length mul
-        > 1
-        && List.all (\i -> String.length i > 20) mul
+{-| Whether the input is a paste of several identifiers, which enter adds to
+the graph one by one (`Update.Pathfinder.multiSearch`). The dropdown hint and
+the autocomplete's fetch decision share this test, so such a paste is never
+searched as one string -- an empty answer to that would replace the hint with
+"no results".
+-}
+isMultiIdentifierInput : String -> Bool
+isMultiIdentifierInput q =
+    List.length (Util.Data.parseMultiIdentifierInput q) > 1
 
 
 query : Model -> String

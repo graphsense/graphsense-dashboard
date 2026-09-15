@@ -9,6 +9,7 @@ and theme switching. None of this was reachable from a test before
 import Api.Data
 import Dict
 import Effect.Api
+import Effect.Pathfinder
 import Expect exposing (Expectation)
 import Fixtures.Api as Fixture
 import Html.Attributes as Attributes
@@ -302,4 +303,59 @@ suite =
                         |> page
                         |> Expect.equal Settings
             ]
+        , describe "a search request that fails for good"
+            [ test "settles the term in the pending multi-identifier paste" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.mapModel
+                            (\m ->
+                                let
+                                    pathfinder =
+                                        m.pathfinder
+                                in
+                                { m
+                                    | pathfinder =
+                                        { pathfinder
+                                            | multiAdd =
+                                                Just
+                                                    { pending = [ "1FakeAddressThatDoesNotExist000000" ]
+                                                    , total = 2
+                                                    , added = 1
+                                                    , notFound = []
+                                                    , failed = []
+                                                    , tooShort = []
+                                                    }
+                                        }
+                                }
+                            )
+                        |> App.step (failedSearch "1FakeAddressThatDoesNotExist000000")
+                        |> App.expectEffect "the paste's closing notification"
+                            (\eff ->
+                                case eff of
+                                    PathfinderEffect (Effect.Pathfinder.ShowNotificationEffect _) ->
+                                        True
+
+                                    _ ->
+                                        False
+                            )
+            ]
         ]
+
+
+{-| A search-box request for `query` that failed with no retry left.
+-}
+failedSearch : String -> Msg
+failedSearch query =
+    BrowserGotResponseWithHeaders Nothing
+        (Err
+            ( Http.NetworkError
+            , Dict.empty
+            , Effect.Api.SearchEffect
+                { query = query
+                , currency = Nothing
+                , limit = Just 1
+                , config = Effect.Api.defaultSearchConfig
+                }
+                (always NoOp)
+            )
+        )

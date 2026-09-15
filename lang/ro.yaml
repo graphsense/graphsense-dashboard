@@ -632,6 +632,11 @@ csv-export-capped-title: Export CSV limitat
 csv-export-capped-message: '{0} tranzacție(i) mari au fost reduse în exportul CSV pentru a
   menține dimensiunea fișierului gestionabilă; pentru acestea sunt incluse doar fluxurile
   cu o adresă în grafic.'
+multi-add-skipped-title: "Unele elemente lipite au fost omise"
+multi-add-skipped-message: "{0} din {1} elemente lipite nu au putut fi adăugate în graf."
+multi-add-skipped-not-found: "Nicio potrivire: {2}."
+multi-add-skipped-failed: "Cererea a eșuat: {3}."
+multi-add-skipped-too-short: "Prea scurt pentru a fi o adresă sau un hash de tranzacție: {4}."
 export-dialog-only-visible-inoutputs: exportă doar intrările/ieșirile vizibile
 export-dialog-only-visible-inoutputs-help: Când este activat, CSV-ul conține doar fluxurile
   dintre intrările și ieșirile vizibile în graf. Dezactivează pentru a exporta întreaga matrice

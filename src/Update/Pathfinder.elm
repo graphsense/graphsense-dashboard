@@ -1255,7 +1255,7 @@ updateByMsg uc msg model =
 
         SearchMsg m ->
             case m of
-                Search.BrowserGotMultiSearchResult _ result ->
+                Search.BrowserGotMultiSearchResult term result ->
                     let
                         -- Compute viewport center in graph coordinates for placing new nodes
                         viewportCenter =
@@ -1288,10 +1288,21 @@ updateByMsg uc msg model =
 
                         modelWithTxsAdded =
                             txsToAdd |> List.foldl addAccTxs ( model, [] )
+
+                        found =
+                            not (List.isEmpty addressesToAdd && List.isEmpty txsToAdd)
                     in
-                    addressesToAdd
-                        |> List.foldl addAccAddr modelWithTxsAdded
-                        |> and (setDirty True)
+                    if found then
+                        addressesToAdd
+                            |> List.foldl addAccAddr modelWithTxsAdded
+                            |> and (setDirty True)
+                            |> and (settleMultiAddTerm term MultiAddAdded)
+
+                    else
+                        settleMultiAddTerm term MultiAddNotFound model
+
+                Search.BrowserGotMultiSearchError term ->
+                    settleMultiAddTerm term MultiAddFailed model
 
                 Search.UserClicksResultLine ->
                     let
@@ -3175,20 +3186,42 @@ handleTooltipMsg tm model =
     )
 
 
+{-| Adds every identifier of a multi-identifier paste to the graph, one search
+request per term. The paste is recorded as `model.multiAdd` so that the terms
+nothing could be added for -- no match, failed request, or too short to be an
+identifier at all -- are reported once the last response is in; see
+`settleMultiAddTerm`.
+-}
 multiSearch : String -> Model -> ( Model, List Effect )
 multiSearch query model =
     let
-        multiInputList =
+        terms =
             Data.parseMultiIdentifierInput query
+                |> List.Extra.unique
+
+        tooShort =
+            Data.splitMultiIdentifierInput query
+                |> List.Extra.unique
+                |> List.filter (\token -> not (List.member token terms))
     in
-    if List.length multiInputList > 1 then
-        ( model
-        , multiInputList
+    if List.length terms > 1 then
+        ( { model
+            | multiAdd =
+                Just
+                    { pending = terms
+                    , total = List.length terms + List.length tooShort
+                    , added = 0
+                    , notFound = []
+                    , failed = []
+                    , tooShort = tooShort
+                    }
+          }
+        , terms
             |> List.map
-                (\inp ->
+                (\term ->
                     Pathfinder.SearchEffect
                         (Effect.Search.SearchEffect
-                            { query = inp
+                            { query = term
                             , currency = Nothing
                             , limit = Just 1
                             , config =
@@ -3197,7 +3230,7 @@ multiSearch query model =
                                     |> s_includeTxs (Just True)
                                     |> s_includeActors (Just False)
                                     |> s_includeLabels (Just False)
-                            , toMsg = Search.BrowserGotMultiSearchResult query
+                            , toMsg = Search.BrowserGotMultiSearchResult term
                             }
                         )
                 )
@@ -3205,6 +3238,112 @@ multiSearch query model =
 
     else
         n model
+
+
+type MultiAddOutcome
+    = MultiAddAdded
+    | MultiAddNotFound
+    | MultiAddFailed
+
+
+{-| Records what became of one term of a multi-identifier paste. Once no term
+is pending any more the paste is closed and, if anything was skipped, a single
+notification lists what and why. A term that belongs to no pending paste (a
+late answer to a paste that has since been replaced, or an ordinary search
+request that failed) changes nothing.
+-}
+settleMultiAddTerm : String -> MultiAddOutcome -> Model -> ( Model, List Effect )
+settleMultiAddTerm term outcome model =
+    case model.multiAdd of
+        Just batch ->
+            if List.member term batch.pending then
+                let
+                    settled =
+                        case outcome of
+                            MultiAddAdded ->
+                                { batch | added = batch.added + 1 }
+
+                            MultiAddNotFound ->
+                                { batch | notFound = batch.notFound ++ [ term ] }
+
+                            MultiAddFailed ->
+                                { batch | failed = batch.failed ++ [ term ] }
+
+                    remaining =
+                        { settled | pending = List.Extra.remove term batch.pending }
+                in
+                if List.isEmpty remaining.pending then
+                    ( { model | multiAdd = Nothing }
+                    , multiAddSkippedNotification remaining
+                    )
+
+                else
+                    n { model | multiAdd = Just remaining }
+
+            else
+                n model
+
+        Nothing ->
+            n model
+
+
+{-| The notification closing a multi-identifier paste that could not add every
+token: how many were skipped, and the tokens grouped by reason as details.
+Nothing at all when every token made it onto the graph; an error when none did.
+
+The view renders the message and every detail line with the same variables,
+so the reasons are keys taking `{2}`, `{3}` and `{4}` while the message takes
+`{0}` and `{1}`. Rendering happens in the view so the locale is the one the
+user sees, not the one the update ran under.
+
+-}
+multiAddSkippedNotification : MultiAdd -> List Effect
+multiAddSkippedNotification batch =
+    let
+        skipped =
+            batch.total - batch.added
+
+        reason key tokens =
+            if List.isEmpty tokens then
+                Nothing
+
+            else
+                Just key
+
+        details =
+            List.filterMap identity
+                [ reason "multi-add-skipped-not-found" batch.notFound
+                , reason "multi-add-skipped-failed" batch.failed
+                , reason "multi-add-skipped-too-short" batch.tooShort
+                ]
+
+        variables =
+            [ String.fromInt skipped
+            , String.fromInt batch.total
+            , String.join ", " batch.notFound
+            , String.join ", " batch.failed
+            , String.join ", " batch.tooShort
+            ]
+
+        notification =
+            if batch.added == 0 then
+                Notification.errorDefault
+
+            else
+                Notification.infoDefault
+    in
+    if skipped <= 0 then
+        []
+
+    else
+        [ "multi-add-skipped-message"
+            |> notification
+            |> Notification.map (s_title (Just "multi-add-skipped-title"))
+            |> Notification.map (s_variables variables)
+            |> Notification.map (s_moreInfo details)
+            |> Notification.map (s_showClose True)
+            |> ShowNotificationEffect
+        ]
 
 
 exportGraph : ImageExport -> Maybe BBox -> Model -> ( Model, List Effect )

@@ -202,6 +202,16 @@ searchResult vc sc model =
                 vc
                 config2
 
+    else if (lengthOfMutliInput > 1) && model.visible then
+        -- before the "no results" branch: a paste of several identifiers is
+        -- not searched as one string, but a stale empty result may still be
+        -- around and must not hide the hint
+        msg (Locale.interpolated vc.locale "Hint-multiple-search-terms" [ String.fromInt lengthOfMutliInput ])
+            |> Autocomplete.dropdownStyled
+                config1
+                vc
+                config2
+
     else if (viewState.query |> removeLeading0x |> String.length) > 0 && model.visible && noResults then
         msg (Locale.string vc.locale "No-results-found")
             |> Autocomplete.dropdownStyled
@@ -211,13 +221,6 @@ searchResult vc sc model =
                 , visible = True
                 , onClick = NoOp
                 }
-
-    else if (lengthOfMutliInput > 1) && model.visible then
-        msg (Locale.interpolated vc.locale "Hint-multiple-search-terms" [ String.fromInt lengthOfMutliInput ])
-            |> Autocomplete.dropdownStyled
-                config1
-                vc
-                config2
 
     else if model.visible then
         resultList vc sc model

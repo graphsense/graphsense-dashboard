@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), DraggingAggEdgeLabel, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, unit)
+module Model.Pathfinder exposing (Details(..), DraggingAggEdgeLabel, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, MultiAdd, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, unit)
 
 import Api.Data exposing (Actor, Cluster)
 import AssocList
@@ -77,6 +77,26 @@ type alias Model =
     , exportImage : Maybe ExportImage
     , txsFilters : AssocList.Dict TxsFilterId TransactionFilter.Settings
     , tooltip : Tooltip.Model TooltipType
+    , multiAdd : Maybe MultiAdd
+    }
+
+
+{-| Several identifiers pasted into the search box at once, tracked from the
+moment the searches go out until the last one has answered, so the outcome can
+be reported to the user in one notification instead of not at all.
+
+`pending` holds the terms still waiting for a search response. `total` counts
+every token the paste contained, including the ones in `tooShort`, which never
+reached the API.
+
+-}
+type alias MultiAdd =
+    { pending : List String
+    , total : Int
+    , added : Int
+    , notFound : List String
+    , failed : List String
+    , tooShort : List String
     }
 
 
