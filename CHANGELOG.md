@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Addresses on a blacklist or whitelist (the `black_list` and `white_list` concepts and their governmental `gov_` variants) show a black or white tag icon on the graph node and in the address details, instead of the usual yellow or grey one. Only the address's own tags count, not those inherited from its cluster or a shared pubkey. A blacklist wins when an address is on both. The legend lists the two new icons
 - BNB Smart Chain (`bnb`) and Arbitrum (`arb`) render like Ethereum: lowercased `0x` identifiers, 18-decimal units, names, icons and explorer links. Native amounts on Arbitrum are labelled ETH, the currency its fees are paid in
 - Base (`base`), Optimism (`opt`), Polygon (`polygon`), Avalanche (`avax`) and Gnosis (`gnosis`) join them, each with its own explorer links; native amounts are labelled ETH on Base and Optimism, POL, AVAX and XDAI on the others
 - Robinhood Chain (`robinhood`) joins the EVM networks with Robinscan explorer links; its native amounts are labelled ETH
@@ -29,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- A search with many hits, such as a label matched by many tags or a hash found on several networks, grew the dropdown past the bottom of the screen and the page scrolled instead. The result list now scrolls inside the dropdown: it stops at half the viewport in the header and in dialogs, takes nearly the whole viewport on the Pathfinder, and on the landing page, whose search box sits lower, what is left of the viewport under it
 - An identifier the search matched nowhere, such as an XRP transaction hash on an instance that does not serve XRP, only ever produced "No results found", and enter did nothing with it. The dropdown now says which networks were searched ("Not found on BTC, BCH, LTC, ZEC, ETH, TRX"), and enter shows an address- or transaction-not-found toast, chosen by the shape of the identifier, naming those networks and the likely reasons: not on a supported network, not in the database yet, or a typo. The not-found dialogs a deep link shows gain the supported-network reason too
 - Pasting several addresses or transaction hashes into the search box added what it could and said nothing about the rest. Once every pasted item has been looked up, a notification now says how many were skipped and lists them by reason: no match, request failed, or too short to be an identifier. It is an error when nothing at all could be added, and there is no notification when everything was. While such a paste sits in the search box, the dropdown keeps saying that several terms were detected instead of briefly flipping to "no results": the box no longer looks the whole paste up as one string
 - "Open in new tab" on a multi-selection and Ctrl+D showed a request error on a lite network: the new tab loaded the handed-over graph before it knew which features the backend serves, so it asked for pair edges the backend declines. The graph now waits for that answer, as a deep link does; opening the same graph from a file was never affected

@@ -313,6 +313,7 @@ surface =
 
     -- Util
     , ref Util.andWithCmd
+    , ref Util.removeLeading0x
 
     -- Util.Checkbox
     , ref Util.Checkbox.bigSize
@@ -358,6 +359,7 @@ surface =
     , ref Util.View.conditionalHide
     , ref Util.View.copyIconPathfinder
     , ref Util.View.copyIconPathfinderFixed
+    , ref Util.View.firstToUpper
     , ref Util.View.fixFillRule
     , ref Util.View.fullWidthCss
     , ref Util.View.inputFieldStyles

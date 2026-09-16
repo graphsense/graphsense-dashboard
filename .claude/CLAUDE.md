@@ -100,6 +100,19 @@ Key rules:
   - **WithInstances** — same interface as WithAttributes but allows replacing entire sections/sub-components (for advanced styling and dynamic content)
   - **root** field: On component properties, attributes and instances there is a root field which affects the component itself. Eg. to attach attributes to the component directly.
 
+#### Overriding a generated style
+
+Passing `css [...]` through a component's `WithAttributes` record puts a *second*
+`css` attribute on the node next to the generated one. elm-css does not merge them:
+each becomes its own class, and the stylesheet lists classes in `Dict` order of
+their declaration text, not in attribute order. Two rules of equal specificity
+therefore resolve by which declaration text happens to sort later, so an override
+of a property the generated styles also set (`overflow`, `width`, `display`, ...)
+works or silently loses depending on its own content. The search dropdown's
+`overflow-y: auto` lost to the generated `overflow: hidden` this way (capped, no
+scrollbar) while the identical override in a plugin won. Mark such an override
+`Css.important`; a property the generated styles do not set needs nothing.
+
 ### Record field update functions
 
 `make setem` runs node tool `setem` which generates all possible record setters from all Elm source files into a single module.

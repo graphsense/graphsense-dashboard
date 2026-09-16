@@ -34,6 +34,7 @@ import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Annotations as Annotations exposing (annotationToAttrAndLabel)
 import Util.Graph exposing (decodeCoords, translate)
+import Util.Pathfinder.ListTag as ListTag
 import Util.Tooltip
 import Util.TooltipType as TooltipType
 import Util.View exposing (none, onClickWithStop, testId, testKey, truncateLongIdentifierWithLengths)
@@ -146,6 +147,9 @@ view vc pc capabilities searchHighlight level address annotation =
         pluginTagIcons =
             Plugin.View.addressNodeTagIcon address.plugins vc address
 
+        listTagAttr =
+            address.listTag |> Maybe.map ListTag.tagIconAttr
+
         offset =
             2
                 + (if nodeLabel == Nothing then
@@ -176,11 +180,17 @@ view vc pc capabilities searchHighlight level address annotation =
         icons =
             ifTrue (detail == Full) <|
                 List.concat
-                    [ ifTrue address.hasTags [ Icons.iconsTagSwithoutPaddingTypeDirect {} ]
+                    [ ifTrue address.hasTags
+                        [ Icons.iconsTagSwithoutPaddingTypeDirectWithAttributes
+                            (Icons.iconsTagSwithoutPaddingTypeDirectAttributes
+                                |> Rs.s_tagIcon (listTagAttr |> Maybe.withDefault [])
+                            )
+                            {}
+                        ]
                     , ifTrue (not address.hasTags && address.hasClusterTagsOnly)
                         [ Icons.iconsTagSwithoutPaddingTypeIndirectWithAttributes
                             (Icons.iconsTagSwithoutPaddingTypeIndirectAttributes
-                                |> Rs.s_tagIcon Util.View.indirectTagFillAttr
+                                |> Rs.s_tagIcon (listTagAttr |> Maybe.withDefault Util.View.indirectTagFillAttr)
                             )
                             {}
                         ]
@@ -283,7 +293,7 @@ view vc pc capabilities searchHighlight level address annotation =
                 , currencyIcon =
                     let
                         s =
-                            8.1
+                            10.5
 
                         viewboxsize =
                             100

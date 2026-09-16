@@ -439,6 +439,10 @@ attribution-tag-on-address: Attribution an dieser Adresse.
 direct tag: Direktes Tag
 attribution-tag-inferred: Über Clusterassoziation abgeleitete Attribution.
 indirect tag: Indirektes Tag
+attribution-tag-black-list: Attribution aus einer maßgeblichen Sperrliste.
+blacklist: Sperrliste
+attribution-tag-white-list: Attribution aus einer maßgeblichen Positivliste.
+whitelist: Positivliste
 hint-first-thing-added: Die erste Adresse oder Transaktion, die dem Diagramm hinzugefügt
   wurde.
 hint-starting-point: Startpunkt

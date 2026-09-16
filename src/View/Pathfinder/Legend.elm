@@ -11,6 +11,7 @@ import RecordSetter as Rs
 import Theme.Html.Dialogs
 import Theme.Html.GraphComponents as GraphComponents
 import Theme.Html.Icons as Icons
+import Util.Pathfinder.ListTag as ListTag
 import Util.View exposing (pointer)
 import View.Locale as Locale
 
@@ -78,6 +79,28 @@ legendView vc closeMsg =
                         )
                         {}
                 , label = "Indirect tag"
+                }
+            , legendItem vc
+                IconItem
+                { description = "Attribution-tag-black-list"
+                , icon =
+                    Icons.iconsTagLTypeDirectWithAttributes
+                        (Icons.iconsTagLTypeDirectAttributes
+                            |> Rs.s_tagIcon (ListTag.tagIconAttr ListTag.Blacklist)
+                        )
+                        {}
+                , label = "Blacklist"
+                }
+            , legendItem vc
+                IconItem
+                { description = "Attribution-tag-white-list"
+                , icon =
+                    Icons.iconsTagLTypeDirectWithAttributes
+                        (Icons.iconsTagLTypeDirectAttributes
+                            |> Rs.s_tagIcon (ListTag.tagIconAttr ListTag.Whitelist)
+                        )
+                        {}
+                , label = "Whitelist"
                 }
             ]
                 ++ pluginLegendIconItems

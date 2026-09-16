@@ -407,6 +407,10 @@ attribution-tag-on-address: Etichetta confermata a questo indirizzo.
 direct tag: Tag diretto
 attribution-tag-inferred: Tag dedotto tramite associazione di cluster.
 indirect tag: Tag indiretto
+attribution-tag-black-list: Etichetta di attribuzione derivata da una lista nera ufficiale.
+blacklist: Lista nera
+attribution-tag-white-list: Etichetta di attribuzione derivata da una lista bianca ufficiale.
+whitelist: Lista bianca
 hint-first-thing-added: Il primo indirizzo o transazione aggiunto al grafico.
 hint-starting-point: Punto di partenza
 hint-thing-selected: L'indirizzo o la transazione attualmente selezionati.

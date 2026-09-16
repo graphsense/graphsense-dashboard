@@ -427,6 +427,10 @@ attribution-tag-on-address: Attribution tag on this address.
 direct tag: Direct Tag
 attribution-tag-inferred: Attribution tag inferred via clustering.
 indirect tag: Indirect Tag
+attribution-tag-black-list: Attribution tag derived from an authoritative blacklist.
+blacklist: Blacklist
+attribution-tag-white-list: Attribution tag derived from an authoritative whitelist.
+whitelist: Whitelist
 hint-first-thing-added: The first address or transaction added to the graph.
 hint-starting-point: Starting Point
 hint-thing-selected: The address or transaction currently selected.
