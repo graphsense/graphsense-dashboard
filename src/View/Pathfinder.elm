@@ -709,6 +709,12 @@ searchBoxView vc _ model =
                     vc
                     (View.Search.default
                         |> Rs.s_inputAttributes [ HA.autofocus True ]
+                        -- the box sits just under the header, so the
+                        -- dropdown gets nearly the whole viewport
+                        |> Rs.s_dropdownResult
+                            [ Css.property "max-height" "max(10rem, calc(100vh - 12rem))"
+                            , Css.overflowY Css.auto |> Css.important
+                            ]
                     )
                     model.search
                     |> Html.map SearchMsg

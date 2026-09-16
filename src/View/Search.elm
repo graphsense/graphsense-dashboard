@@ -43,6 +43,20 @@ type alias SearchConfigWithMoreCss msg =
     }
 
 
+{-| The result list scrolls once it would reach half the viewport; before
+that, a label with many hits or a hash on many networks grew the dropdown
+past the bottom of the screen and the page scrolled instead. Half suits a
+box in the top part of the page (header, dialogs); the Pathfinder, whose box
+sits just under the header, loosens it, and the landing page, whose box sits
+further down, tightens it.
+
+The `!important` is not optional: the list is a generated component that
+sets `overflow: hidden`, and an override through a second `css` attribute
+lands in a class elm-css orders by content, not by attribute order, so
+without it whether the list scrolls depends on how the two rules happen to
+sort (see CLAUDE.md, "Overriding a generated style").
+
+-}
 default : SearchConfigWithMoreCss msg
 default =
     { multiline = False
@@ -56,7 +70,10 @@ default =
     , resultLineIcon = []
     , resultTextEmphasized = []
     , dropdownFrame = []
-    , dropdownResult = []
+    , dropdownResult =
+        [ Css.maxHeight <| Css.vh 50
+        , Css.overflowY Css.auto |> Css.important
+        ]
     , inputAttributes = []
     }
 

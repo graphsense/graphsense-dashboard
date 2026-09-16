@@ -313,6 +313,7 @@ surface =
 
     -- Util
     , ref Util.andWithCmd
+    , ref Util.removeLeading0x
 
     -- Util.Checkbox
     , ref Util.Checkbox.bigSize
