@@ -359,6 +359,7 @@ surface =
     , ref Util.View.conditionalHide
     , ref Util.View.copyIconPathfinder
     , ref Util.View.copyIconPathfinderFixed
+    , ref Util.View.firstToUpper
     , ref Util.View.fixFillRule
     , ref Util.View.fullWidthCss
     , ref Util.View.inputFieldStyles
