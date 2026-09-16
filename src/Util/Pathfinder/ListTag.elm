@@ -1,11 +1,13 @@
-module Util.Pathfinder.GovList exposing (GovList(..), fromTagSummary, tagIconAttr)
+module Util.Pathfinder.ListTag exposing (ListTag(..), fromTagSummary, tagIconAttr)
 
-{-| Governmental black and white lists get their own tag icon colour: black for
-a blacklist, white for a whitelist. They are recognised by the `gov_black_list`
-and `gov_white_list` concepts of the tagpack taxonomy.
+{-| Black and white lists get their own tag icon colour: black for a blacklist,
+white for a whitelist. They are recognised by the `black_list` and `white_list`
+concepts of the tagpack taxonomy and their governmental variants
+`gov_black_list` and `gov_white_list`, which look the same.
 -}
 
 import Api.Data
+import Basics.Extra exposing (flip)
 import Css
 import Dict
 import Html.Styled exposing (Attribute)
@@ -14,19 +16,19 @@ import Theme.Colors as Colors
 import Util.View exposing (testId)
 
 
-type GovList
-    = GovBlackList
-    | GovWhiteList
+type ListTag
+    = Blacklist
+    | Whitelist
 
 
-govBlackListConcept : String
-govBlackListConcept =
-    "gov_black_list"
+blacklistConcepts : List String
+blacklistConcepts =
+    [ "black_list", "gov_black_list" ]
 
 
-govWhiteListConcept : String
-govWhiteListConcept =
-    "gov_white_list"
+whitelistConcepts : List String
+whitelistConcepts =
+    [ "white_list", "gov_white_list" ]
 
 
 {-| Only the address's own tags count. A summary fetched with the best cluster
@@ -38,7 +40,7 @@ came from.
 A blacklist wins over a whitelist: an address on both is shown as listed.
 
 -}
-fromTagSummary : Api.Data.TagSummary -> Maybe GovList
+fromTagSummary : Api.Data.TagSummary -> Maybe ListTag
 fromTagSummary tagdata =
     let
         directConcepts =
@@ -47,11 +49,11 @@ fromTagSummary tagdata =
                 |> List.filter (.inheritedFrom >> (==) Nothing)
                 |> List.concatMap .concepts
     in
-    if List.member govBlackListConcept directConcepts then
-        Just GovBlackList
+    if List.any (flip List.member directConcepts) blacklistConcepts then
+        Just Blacklist
 
-    else if List.member govWhiteListConcept directConcepts then
-        Just GovWhiteList
+    else if List.any (flip List.member directConcepts) whitelistConcepts then
+        Just Whitelist
 
     else
         Nothing
@@ -65,16 +67,16 @@ outline in the opposite colour keeps the white icon visible on a light
 background and the black one on a dark background.
 
 -}
-tagIconAttr : GovList -> List (Attribute msg)
+tagIconAttr : ListTag -> List (Attribute msg)
 tagIconAttr list =
     let
         ( fill, outline, name ) =
             case list of
-                GovBlackList ->
-                    ( Colors.black0_string, Colors.white_string, "gs-gov-blacklist-tag" )
+                Blacklist ->
+                    ( Colors.black0_string, Colors.white_string, "gs-blacklist-tag" )
 
-                GovWhiteList ->
-                    ( Colors.white_string, Colors.black0_string, "gs-gov-whitelist-tag" )
+                Whitelist ->
+                    ( Colors.white_string, Colors.black0_string, "gs-whitelist-tag" )
     in
     [ testId name
     , css

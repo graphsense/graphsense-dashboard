@@ -52,7 +52,7 @@ import Util.Css exposing (spread)
 import Util.Data as Data exposing (isAccountLike)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph exposing (decodeCoords)
-import Util.Pathfinder.GovList as GovList
+import Util.Pathfinder.ListTag as ListTag
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
@@ -1354,20 +1354,20 @@ the "learn more" button, so it is non-empty even for addresses with no tags.
 addressTagIcon : Address -> Html Pathfinder.Msg
 addressTagIcon address =
     let
-        govListAttr =
-            address.govList |> Maybe.map GovList.tagIconAttr
+        listTagAttr =
+            address.listTag |> Maybe.map ListTag.tagIconAttr
     in
     if address.hasTags then
         HIcons.iconsTagLTypeDirectWithAttributes
             (HIcons.iconsTagLTypeDirectAttributes
-                |> Rs.s_tagIcon (govListAttr |> Maybe.withDefault [])
+                |> Rs.s_tagIcon (listTagAttr |> Maybe.withDefault [])
             )
             {}
 
     else if address.hasClusterTagsOnly then
         HIcons.iconsTagLTypeIndirectWithAttributes
             (HIcons.iconsTagLTypeIndirectAttributes
-                |> Rs.s_tagIcon (govListAttr |> Maybe.withDefault Util.View.indirectTagFillAttr)
+                |> Rs.s_tagIcon (listTagAttr |> Maybe.withDefault Util.View.indirectTagFillAttr)
             )
             {}
 

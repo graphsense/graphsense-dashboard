@@ -433,9 +433,9 @@ attribution-tag-on-address: Etichetă de atribuire pe această adresă.
 direct tag: Etichetă directă
 attribution-tag-inferred: Etichetă de atribuire dedusă prin clusterizare.
 indirect tag: Etichetă indirectă
-attribution-tag-gov-black-list: Etichetă de atribuire derivată dintr-o listă neagră oficială.
+attribution-tag-black-list: Etichetă de atribuire derivată dintr-o listă neagră oficială.
 blacklist: Listă neagră
-attribution-tag-gov-white-list: Etichetă de atribuire derivată dintr-o listă albă oficială.
+attribution-tag-white-list: Etichetă de atribuire derivată dintr-o listă albă oficială.
 whitelist: Listă albă
 hint-first-thing-added: Prima adresă sau tranzacție adăugată în grafic.
 hint-starting-point: Punct de pornire

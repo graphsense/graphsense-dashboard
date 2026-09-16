@@ -1,6 +1,6 @@
-module Scenario.GovListTagTest exposing (suite)
+module Scenario.ListTagTest exposing (suite)
 
-{-| Addresses on a governmental black or white list get a black or white tag
+{-| Addresses on a black or white list, governmental or not, get a black or white tag
 icon instead of the usual one.
 -}
 
@@ -18,7 +18,7 @@ import Support.App as App exposing (App)
 import Test exposing (Test, describe, test)
 import Test.Html.Query as Query
 import Test.Html.Selector as Selector
-import Util.Pathfinder.GovList as GovList exposing (GovList(..))
+import Util.Pathfinder.ListTag as ListTag exposing (ListTag(..))
 
 
 addressId : Id
@@ -128,9 +128,9 @@ withAddress f =
             Expect.fail ("the address fixture did not decode: " ++ Json.Decode.errorToString error)
 
 
-nodeGovList : App -> Maybe (Maybe GovList)
-nodeGovList =
-    App.model >> .network >> .addresses >> Dict.get addressId >> Maybe.map .govList
+nodeListTag : App -> Maybe (Maybe ListTag)
+nodeListTag =
+    App.model >> .network >> .addresses >> Dict.get addressId >> Maybe.map .listTag
 
 
 nodeShows : List Label -> List String -> Expectation
@@ -150,7 +150,7 @@ nodeShows labels testIds =
                                         |> Query.count (Expect.equal expected)
                                 )
                                 (List.map (\n -> ( n, boolToInt (List.member n testIds) ))
-                                    [ "gs-gov-blacklist-tag", "gs-gov-whitelist-tag" ]
+                                    [ "gs-blacklist-tag", "gs-whitelist-tag" ]
                                 )
                             )
 
@@ -171,29 +171,38 @@ boolToInt b =
 
 suite : Test
 suite =
-    describe "governmental list tags"
-        [ describe "GovList.fromTagSummary"
+    describe "black and white list tags"
+        [ describe "ListTag.fromTagSummary"
             [ test "recognises a governmental blacklist" <|
                 \_ ->
-                    withSummary [ direct "sanction", direct "gov_black_list" ] (GovList.fromTagSummary >> Expect.equal (Just GovBlackList))
+                    withSummary [ direct "sanction", direct "gov_black_list" ] (ListTag.fromTagSummary >> Expect.equal (Just Blacklist))
             , test "recognises a governmental whitelist" <|
                 \_ ->
-                    withSummary [ direct "gov_white_list" ] (GovList.fromTagSummary >> Expect.equal (Just GovWhiteList))
+                    withSummary [ direct "gov_white_list" ] (ListTag.fromTagSummary >> Expect.equal (Just Whitelist))
             , test "a blacklist wins over a whitelist" <|
                 \_ ->
-                    withSummary [ direct "gov_white_list", direct "gov_black_list" ] (GovList.fromTagSummary >> Expect.equal (Just GovBlackList))
-            , test "non-governmental lists are ordinary tags" <|
+                    withSummary [ direct "gov_white_list", direct "gov_black_list" ] (ListTag.fromTagSummary >> Expect.equal (Just Blacklist))
+            , test "recognises a plain blacklist" <|
                 \_ ->
-                    withSummary [ direct "black_list", direct "white_list" ] (GovList.fromTagSummary >> Expect.equal Nothing)
+                    withSummary [ direct "black_list" ] (ListTag.fromTagSummary >> Expect.equal (Just Blacklist))
+            , test "recognises a plain whitelist" <|
+                \_ ->
+                    withSummary [ direct "white_list" ] (ListTag.fromTagSummary >> Expect.equal (Just Whitelist))
+            , test "a plain blacklist wins over a governmental whitelist" <|
+                \_ ->
+                    withSummary [ direct "gov_white_list", direct "black_list" ] (ListTag.fromTagSummary >> Expect.equal (Just Blacklist))
+            , test "other concepts are ordinary tags" <|
+                \_ ->
+                    withSummary [ direct "sanction", direct "white_usage" ] (ListTag.fromTagSummary >> Expect.equal Nothing)
             , test "ignores a listing inherited from the cluster" <|
                 \_ ->
-                    withSummary [ direct "organization", fromCluster "gov_black_list" ] (GovList.fromTagSummary >> Expect.equal Nothing)
+                    withSummary [ direct "organization", fromCluster "gov_black_list" ] (ListTag.fromTagSummary >> Expect.equal Nothing)
             , test "ignores a listing inherited from a shared pubkey" <|
                 \_ ->
-                    withSummary [ fromPubkey "gov_white_list" ] (GovList.fromTagSummary >> Expect.equal Nothing)
+                    withSummary [ fromPubkey "gov_white_list" ] (ListTag.fromTagSummary >> Expect.equal Nothing)
             , test "an inherited blacklist does not beat a direct whitelist" <|
                 \_ ->
-                    withSummary [ direct "gov_white_list", fromCluster "gov_black_list" ] (GovList.fromTagSummary >> Expect.equal (Just GovWhiteList))
+                    withSummary [ direct "gov_white_list", fromCluster "gov_black_list" ] (ListTag.fromTagSummary >> Expect.equal (Just Whitelist))
             ]
         , describe "the graph node"
             [ test "remembers the list from the tag summary" <|
@@ -202,13 +211,15 @@ suite =
                         \summary ->
                             withAddress
                                 (graphWithTaggedAddress summary
-                                    >> nodeGovList
-                                    >> Expect.equal (Just (Just GovBlackList))
+                                    >> nodeListTag
+                                    >> Expect.equal (Just (Just Blacklist))
                                 )
             , test "draws a blacklist tag" <|
-                \_ -> nodeShows [ direct "gov_black_list" ] [ "gs-gov-blacklist-tag" ]
+                \_ -> nodeShows [ direct "gov_black_list" ] [ "gs-blacklist-tag" ]
             , test "draws a whitelist tag" <|
-                \_ -> nodeShows [ direct "gov_white_list" ] [ "gs-gov-whitelist-tag" ]
+                \_ -> nodeShows [ direct "gov_white_list" ] [ "gs-whitelist-tag" ]
+            , test "draws a plain blacklist tag" <|
+                \_ -> nodeShows [ direct "black_list" ] [ "gs-blacklist-tag" ]
             , test "draws an ordinary tag otherwise" <|
                 \_ -> nodeShows [ direct "organization" ] []
             , test "draws an ordinary tag when only the cluster is listed" <|
