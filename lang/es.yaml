@@ -444,6 +444,10 @@ attribution-tag-on-address: Etiqueta de atribución en esta dirección.
 direct tag: Etiqueta directa
 attribution-tag-inferred: Etiqueta de atribución inferida mediante agrupación.
 indirect tag: Etiqueta indirecta
+attribution-tag-gov-black-list: Etiqueta de atribución derivada de una lista negra oficial.
+blacklist: Lista negra
+attribution-tag-gov-white-list: Etiqueta de atribución derivada de una lista blanca oficial.
+whitelist: Lista blanca
 hint-first-thing-added: La primera dirección o transacción añadida al gráfico.
 hint-starting-point: Punto de partida
 hint-thing-selected: La dirección o transacción seleccionada actualmente.

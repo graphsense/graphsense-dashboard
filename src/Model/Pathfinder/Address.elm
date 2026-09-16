@@ -34,6 +34,7 @@ import RemoteData exposing (WebData)
 import Set exposing (Set)
 import Time exposing (Posix)
 import Util.Data exposing (isAccountLike, timestampToPosix)
+import Util.Pathfinder.GovList exposing (GovList)
 
 
 type alias Address =
@@ -52,6 +53,7 @@ type alias Address =
     , exchange : Maybe String
     , hasTags : Bool
     , hasClusterTagsOnly : Bool
+    , govList : Maybe GovList
     , networks : Dict String (Set String)
     , actor : Maybe String
     , isStartingPoint : Bool

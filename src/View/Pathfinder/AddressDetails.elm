@@ -52,6 +52,7 @@ import Util.Css exposing (spread)
 import Util.Data as Data exposing (isAccountLike)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph exposing (decodeCoords)
+import Util.Pathfinder.GovList as GovList
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
@@ -229,23 +230,7 @@ utxo pluginStates vc model id viewState address =
         { root = sidePanelData
         , iconsTagL =
             { variant =
-                -- Drive the tag icon from the same flags as the graph node
-                -- (see View.Pathfinder.Address) so the details icon, the graph icon
-                -- and the tags list stay consistent. `categoriesList` is not a reliable
-                -- signal: it always contains the "learn more" button, so it is non-empty
-                -- even for addresses with no tags.
-                if address.hasTags then
-                    HIcons.iconsTagLTypeDirect {}
-
-                else if address.hasClusterTagsOnly then
-                    HIcons.iconsTagLTypeIndirectWithAttributes
-                        (HIcons.iconsTagLTypeIndirectAttributes
-                            |> Rs.s_tagIcon Util.View.indirectTagFillAttr
-                        )
-                        {}
-
-                else
-                    none
+                addressTagIcon address
             }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
@@ -1065,23 +1050,7 @@ account pluginStates vc model id viewState address =
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
         , iconsTagL =
             { variant =
-                -- Drive the tag icon from the same flags as the graph node
-                -- (see View.Pathfinder.Address) so the details icon, the graph icon
-                -- and the tags list stay consistent. `categoriesList` is not a reliable
-                -- signal: it always contains the "learn more" button, so it is non-empty
-                -- even for addresses with no tags.
-                if address.hasTags then
-                    HIcons.iconsTagLTypeDirect {}
-
-                else if address.hasClusterTagsOnly then
-                    HIcons.iconsTagLTypeIndirectWithAttributes
-                        (HIcons.iconsTagLTypeIndirectAttributes
-                            |> Rs.s_tagIcon Util.View.indirectTagFillAttr
-                        )
-                        {}
-
-                else
-                    none
+                addressTagIcon address
             }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
@@ -1375,6 +1344,35 @@ labelOfActor vc model id =
                         none
                     ]
             )
+
+
+{-| Drive the tag icon from the same flags as the graph node (see
+View.Pathfinder.Address) so the details icon, the graph icon and the tags list
+stay consistent. `categoriesList` is not a reliable signal: it always contains
+the "learn more" button, so it is non-empty even for addresses with no tags.
+-}
+addressTagIcon : Address -> Html Pathfinder.Msg
+addressTagIcon address =
+    let
+        govListAttr =
+            address.govList |> Maybe.map GovList.tagIconAttr
+    in
+    if address.hasTags then
+        HIcons.iconsTagLTypeDirectWithAttributes
+            (HIcons.iconsTagLTypeDirectAttributes
+                |> Rs.s_tagIcon (govListAttr |> Maybe.withDefault [])
+            )
+            {}
+
+    else if address.hasClusterTagsOnly then
+        HIcons.iconsTagLTypeIndirectWithAttributes
+            (HIcons.iconsTagLTypeIndirectAttributes
+                |> Rs.s_tagIcon (govListAttr |> Maybe.withDefault Util.View.indirectTagFillAttr)
+            )
+            {}
+
+    else
+        none
 
 
 sidePanelAddressCopyIcon : View.Config -> Id -> { identifier : String, copyIconInstance : Html Pathfinder.Msg, addTagIconInstance : Html Pathfinder.Msg, chevronInstance : Html Pathfinder.Msg }

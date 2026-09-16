@@ -115,6 +115,7 @@ import Util.Annotations as Annotations
 import Util.Csv
 import Util.Data as Data
 import Util.EventualMessages as EventualMessages
+import Util.Pathfinder.GovList as GovList
 import Util.Pathfinder.History as History
 import Util.Pathfinder.Shortcuts as Shortcuts
 import Util.Pathfinder.TagSummary as TagSummary
@@ -4306,6 +4307,7 @@ updateTagDataOnAddress addressId m =
                     (\t ->
                         { t
                             | hasClusterTagsOnly = clusterOnly && not (TagSummary.hasOnlyExchangeTags tagdata)
+                            , govList = GovList.fromTagSummary tagdata
                         }
                     )
                 |> Network.updateAddress addressId (s_actor actorlabel)
@@ -4331,22 +4333,22 @@ updateTagDataOnAddress addressId m =
                 HasExchangeTagOnly ->
                     m.network
                         |> Network.updateAddress addressId (s_hasTags False)
-                        |> Network.updateAddress addressId (\t -> { t | hasClusterTagsOnly = False })
+                        |> Network.updateAddress addressId (\t -> { t | hasClusterTagsOnly = False, govList = Nothing })
 
                 HasClusterTagsOnlyButNoDirect ->
                     m.network
                         |> Network.updateAddress addressId (s_hasTags False)
-                        |> Network.updateAddress addressId (\t -> { t | hasClusterTagsOnly = True })
+                        |> Network.updateAddress addressId (\t -> { t | hasClusterTagsOnly = True, govList = Nothing })
 
                 HasTags _ ->
                     m.network
                         |> Network.updateAddress addressId (s_hasTags False)
-                        |> Network.updateAddress addressId (\t -> { t | hasClusterTagsOnly = False })
+                        |> Network.updateAddress addressId (\t -> { t | hasClusterTagsOnly = False, govList = Nothing })
 
                 _ ->
                     m.network
                         |> Network.updateAddress addressId (s_hasTags False)
-                        |> Network.updateAddress addressId (\t -> { t | hasClusterTagsOnly = False })
+                        |> Network.updateAddress addressId (\t -> { t | hasClusterTagsOnly = False, govList = Nothing })
     in
     tag |> Maybe.map (\n -> { m | network = net n }) |> Maybe.withDefault m
 

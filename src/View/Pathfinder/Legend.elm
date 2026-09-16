@@ -11,6 +11,7 @@ import RecordSetter as Rs
 import Theme.Html.Dialogs
 import Theme.Html.GraphComponents as GraphComponents
 import Theme.Html.Icons as Icons
+import Util.Pathfinder.GovList as GovList
 import Util.View exposing (pointer)
 import View.Locale as Locale
 
@@ -78,6 +79,28 @@ legendView vc closeMsg =
                         )
                         {}
                 , label = "Indirect tag"
+                }
+            , legendItem vc
+                IconItem
+                { description = "Attribution-tag-gov-black-list"
+                , icon =
+                    Icons.iconsTagLTypeDirectWithAttributes
+                        (Icons.iconsTagLTypeDirectAttributes
+                            |> Rs.s_tagIcon (GovList.tagIconAttr GovList.GovBlackList)
+                        )
+                        {}
+                , label = "Blacklist"
+                }
+            , legendItem vc
+                IconItem
+                { description = "Attribution-tag-gov-white-list"
+                , icon =
+                    Icons.iconsTagLTypeDirectWithAttributes
+                        (Icons.iconsTagLTypeDirectAttributes
+                            |> Rs.s_tagIcon (GovList.tagIconAttr GovList.GovWhiteList)
+                        )
+                        {}
+                , label = "Whitelist"
                 }
             ]
                 ++ pluginLegendIconItems

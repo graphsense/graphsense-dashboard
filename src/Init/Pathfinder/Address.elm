@@ -28,6 +28,7 @@ init id { x, y } =
     , actor = Nothing
     , hasTags = False
     , hasClusterTagsOnly = False
+    , govList = Nothing
     , networks = Dict.singleton (Id.network id) (Set.singleton (Id.id id))
     , isStartingPoint = False
     , plugins = Plugin.initAddress

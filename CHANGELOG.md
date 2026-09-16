@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Addresses on an authoritative blacklist or whitelist (the `gov_black_list` and `gov_white_list` concepts) show a black or white tag icon on the graph node and in the address details, instead of the usual yellow or grey one. Only the address's own tags count, not those inherited from its cluster or a shared pubkey. A blacklist wins when an address is on both. The legend lists the two new icons
 - The graph sheds labels in steps as it is zoomed out, so a large graph reads as structure instead of noise: first edge values, timestamps, tx hashes and tag icons go, then address identifiers. Annotations, service labels and everything on a selected or hovered node stay at every zoom level, and all labels return when zooming in. Relationship mode already did this for its edge values; transaction mode now does the same
 - Ctrl+D (Cmd+D on macOS) duplicates the whole graph into a new tab, positions and notes included, through the same hand-over as "Open in new tab" on a multi-selection
 - "Open in new tab" on the right-click menu of a multi-selection opens the selected nodes as their own graph in a new tab, positions and notes included. The selection is handed over as a `.gs` payload, so it goes through the same import path as an opened file; a selected transaction whose addresses are not selected opens as a lone transaction
