@@ -26,6 +26,7 @@ type alias Config =
     , characterDimensions : Dict String { width : Float, height : Float }
     , showBothValues : Bool
     , isMac : Bool -- shortcut hints read Cmd instead of Ctrl
+    , networks : List Api.Data.CurrencyStats -- what the backend serves; empty until the statistics arrive
     }
 
 

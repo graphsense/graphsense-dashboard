@@ -12,7 +12,6 @@
     { "count": 2, "filePath": "src/Model/Node.elm" },
     { "count": 1, "filePath": "src/Model/Tx.elm" },
     { "count": 1, "filePath": "src/Msg/Locale.elm" },
-    { "count": 1, "filePath": "src/Msg/Search.elm" },
     { "count": 1, "filePath": "src/View/Pathfinder/Table/TagsTable.elm" }
   ]
 }

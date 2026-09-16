@@ -69,4 +69,5 @@ viewConfig =
     , characterDimensions = Dict.empty
     , showBothValues = False
     , isMac = False
+    , networks = []
     }

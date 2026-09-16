@@ -1,9 +1,11 @@
 module Support.MainApp exposing
     ( App
     , expectEffect
+    , expectNoEffect
     , html
     , initAt
     , initAtWithStats
+    , mapModel
     , model
     , step
     , steps
@@ -77,6 +79,14 @@ type App
 model : App -> Model ()
 model (App app) =
     app.model_
+
+
+{-| Puts the model into a state no message sequence reaches conveniently.
+Effects are kept.
+-}
+mapModel : (Model () -> Model ()) -> App -> App
+mapModel f (App app) =
+    App { app | model_ = f app.model_ }
 
 
 
@@ -209,6 +219,22 @@ expectEffect description predicate (App app) =
         |> Expect.equal True
         |> Expect.onFail
             ("expected an effect matching \""
+                ++ description
+                ++ "\", got ["
+                ++ (app.effects_ |> List.map name |> String.join ", ")
+                ++ "]"
+            )
+
+
+{-| Asserts that no effect of the last step matches `predicate`; passes on an
+empty effect list.
+-}
+expectNoEffect : String -> (Effect -> Bool) -> App -> Expectation
+expectNoEffect description predicate (App app) =
+    List.any predicate app.effects_
+        |> Expect.equal False
+        |> Expect.onFail
+            ("expected no effect matching \""
                 ++ description
                 ++ "\", got ["
                 ++ (app.effects_ |> List.map name |> String.join ", ")

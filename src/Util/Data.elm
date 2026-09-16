@@ -1,4 +1,4 @@
-module Util.Data exposing (absValues, addressCluster, isAccountLike, isEvmHexNetwork, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, normalizeTxIdentifier, parseMultiIdentifierInput, selfCluster, subValues, sumValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addressCluster, isAccountLike, isEvmHexNetwork, looksLikeTxHash, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, normalizeTxIdentifier, parseMultiIdentifierInput, selfCluster, splitMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -205,8 +205,35 @@ normalizeIdentifier net address =
            )
 
 
+{-| Whether an identifier has the shape of a transaction hash on any
+supported network: 64 hex digits, with or without a leading 0x. Everything
+else is taken for an address.
+-}
+looksLikeTxHash : String -> Bool
+looksLikeTxHash identifier =
+    let
+        hash =
+            removeLeading0x identifier
+    in
+    String.length hash == 64 && String.all Char.isHexDigit hash
+
+
+{-| The tokens of a multi-identifier paste that are long enough to be an
+address or a transaction hash. See `splitMultiIdentifierInput` for the ones
+that are dropped here.
+-}
 parseMultiIdentifierInput : String -> List String
 parseMultiIdentifierInput input =
+    splitMultiIdentifierInput input
+        |> List.filter (\s -> String.length s >= 15)
+
+
+{-| Every non-empty token of a multi-identifier paste, however short. Empty
+unless the input contains a separator at all, so a single identifier is not a
+paste of one.
+-}
+splitMultiIdentifierInput : String -> List String
+splitMultiIdentifierInput input =
     let
         spliters =
             [ ",", " ", "\n", "\t", ";" ]
@@ -231,4 +258,3 @@ parseMultiIdentifierInput input =
     inputList
         |> List.map (String.trim >> removeLeading0x)
         |> List.filter (not << String.isEmpty)
-        |> List.filter (\s -> String.length s >= 15)

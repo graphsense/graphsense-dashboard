@@ -68,6 +68,7 @@ init us =
       , exportImage = Nothing
       , txsFilters = AssocList.empty
       , tooltip = Tooltip.init
+      , multiAdd = Nothing
       }
     , Cmd.none
     )

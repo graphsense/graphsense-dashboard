@@ -265,14 +265,32 @@ notFoundDetails vc things details =
             |> text
             |> List.singleton
             |> Util.View.p []
-        , details
-            ++ [ "Popup-address-not-found-typos" ]
-            |> List.map (Locale.string vc.locale >> addDot >> text >> List.singleton >> li [ listItemStyle |> css ])
+        , (details |> List.map (Locale.string vc.locale))
+            ++ networkReasons vc
+            ++ [ Locale.string vc.locale "Popup-address-not-found-typos" ]
+            |> List.map (addDot >> text >> List.singleton >> li [ listItemStyle |> css ])
             |> ul []
             |> List.singleton
             |> Util.View.p []
         ]
     ]
+
+
+{-| The reason the statistics can back: the identifier may belong to a
+network the backend does not serve. Nothing until the statistics have arrived.
+-}
+networkReasons : Config -> List String
+networkReasons vc =
+    if List.isEmpty vc.networks then
+        []
+
+    else
+        [ vc.networks
+            |> List.map (.name >> String.toUpper)
+            |> String.join ", "
+            |> List.singleton
+            |> Locale.interpolated vc.locale "Popup-not-found-unsupported-network"
+        ]
 
 
 info : Config -> InfoConfig Msg -> Html Msg
