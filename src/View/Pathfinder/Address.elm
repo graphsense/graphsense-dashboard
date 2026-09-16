@@ -273,7 +273,7 @@ view vc pc searchHighlight level address annotation =
                 , currencyIcon =
                     let
                         s =
-                            8.1
+                            10.5
 
                         viewboxsize =
                             100
