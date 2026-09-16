@@ -8,6 +8,7 @@ import Config.View as View
 import Css
 import Css.Pathfinder as Css
 import Dict
+import FontAwesome
 import Hovercard
 import Html.Styled as Html exposing (Html, div, input)
 import Html.Styled.Attributes as HA
@@ -645,6 +646,28 @@ topRightPanel pluginStates vc model =
         ]
 
 
+{-| The Figma icon set has no keyboard, so this one comes from Font Awesome,
+boxed to the size of the neighbouring generated icons.
+-}
+keyboardIcon : Html msg
+keyboardIcon =
+    div
+        [ [ Css.width (Css.px HIcons.iconsInfoS_details.width)
+          , Css.height (Css.px HIcons.iconsInfoS_details.height)
+          , Css.displayFlex
+          , Css.alignItems Css.center
+          , Css.justifyContent Css.center
+          , Css.fontSize (Css.px 14)
+          , Css.property "color" "var(--c-sidebarNeutral)"
+          ]
+            |> css
+        ]
+        [ FontAwesome.keyboard
+            |> FontAwesome.icon
+            |> Html.fromUnstyled
+        ]
+
+
 graphActionsView : View.Config -> Pathfinder.Config -> Pathfinder.Model -> Html Msg
 graphActionsView vc _ model =
     let
@@ -670,6 +693,13 @@ graphActionsView vc _ model =
                               , text1 = "Legend"
                               , text2 = Nothing
                               , msg = UserClickedShowLegend
+                              }
+                                |> ContextMenuItem.init2
+                                |> ContextMenuItem.view vc
+                            , { icon = keyboardIcon
+                              , text1 = "Keyboard shortcuts"
+                              , text2 = Nothing
+                              , msg = UserClickedShowShortcuts
                               }
                                 |> ContextMenuItem.init2
                                 |> ContextMenuItem.view vc
