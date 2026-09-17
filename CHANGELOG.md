@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Base, Optimism, Polygon, Avalanche, Gnosis and Robinhood Chain get their own currency icons on address nodes and in the statistics, like the networks before them
 - The app asks the backend once at startup which features it serves per network (`GET /capabilities`) and hides what is missing: neighbor tables, automatic edge discovery, the cluster-addresses tab, bridge conversions and tag lookups stay off on a network whose backend has no relations, clusters, conversions or tags. A backend without the endpoint leaves everything enabled. A deep link that loads an address or transaction waits for that answer, so no request goes out before the app knows what the backend serves
 - Counts and totals the backend reports as lower bounds are shown with a trailing "+" (`500+`), taken from the response's `qualifiers` map; nothing is capped or guessed client-side. An address's transaction total adds exact incoming and outgoing counts; once either is a lower bound it shows the larger of the two with a "+" (`500+` in and `217` out reads `500+`)
-- The ledger-statistics card hides the pipeline rows (transactions, addresses, entities) and the tagged-addresses percentage on a network whose backend disables `exact_stats` — those backends serve placeholder zeros; labels and tagged addresses still show their real TagStore counts
+- The ledger-statistics card hides the pipeline rows (transactions, addresses, entities) on a network whose backend disables `exact_stats` — those backends serve placeholder zeros
 - The backend's `is_possible_service` verdict drives the "possible service" warning where present; the local degree/transaction-count rule remains the fallback
 - Right after an address loads, the next transaction in both directions is fetched in the background, so clicking an expand handle inserts it instantly instead of waiting for the API
 - The graph sheds labels in steps as it is zoomed out, so a large graph reads as structure instead of noise: first edge values, timestamps, tx hashes and tag icons go, then address identifiers. Annotations, service labels and everything on a selected or hovered node stay at every zoom level, and all labels return when zooming in. Relationship mode already did this for its edge values; transaction mode now does the same
@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- The ledger-statistics card no longer lists the label and tagged-address counts; the API keeps serving them
+- An address's cross-chain row in the details header shows two networks and a "+N" counter for the rest; the counter and the three-dots button open the full public-key table
 - Address nodes on a network without relations are drawn faded in relationship-based tracing mode. The tooltip on such a node is a single hint that relationship mode is not supported there, without the usual figures, and the side panel shows no table for it at all: the transactions table it used to show in place of the relations tables read as counterparties
 - The transaction CSV exports complete without actor columns on a network whose backend serves no tags, instead of failing on the bulk tag request
 

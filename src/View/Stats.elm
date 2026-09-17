@@ -102,8 +102,7 @@ currency : Config -> Bool -> Api.Data.CurrencyStats -> Maybe Api.Data.TokenConfi
 currency vc hasExactStats cs tokens =
     let
         -- A backend that disables "exact_stats" serves placeholder zeros for
-        -- the pipeline numbers: hide those rows (and the percentage, whose
-        -- denominator is one of them) instead of rendering the zeros.
+        -- the pipeline numbers: hide those rows instead of rendering the zeros.
         pipelineRows =
             if hasExactStats then
                 [ Locale.intWithoutValueDetailFormatting vc.locale cs.noTxs
@@ -116,13 +115,6 @@ currency vc hasExactStats cs tokens =
 
             else
                 []
-
-        taggedAddresses =
-            if hasExactStats then
-                taggedAddressesWithPercentage vc cs
-
-            else
-                Locale.intWithoutValueDetailFormatting vc.locale cs.noTaggedAddresses
     in
     Stats.network
         { dataRowList =
@@ -133,11 +125,6 @@ currency vc hasExactStats cs tokens =
                 |> statsRow vc "Latest block"
             ]
                 ++ pipelineRows
-                ++ [ Locale.intWithoutValueDetailFormatting vc.locale cs.noLabels
-                        |> statsRow vc "Labels"
-                   , taggedAddresses
-                        |> statsRow vc "Tagged addresses"
-                   ]
                 ++ supportedTokensRow vc tokens
         }
         { root =
@@ -186,12 +173,3 @@ statsRowBadge vc label values =
             { key = Locale.string vc.locale label
             }
         }
-
-
-taggedAddressesWithPercentage : Config -> Api.Data.CurrencyStats -> String
-taggedAddressesWithPercentage vc cs =
-    Locale.intWithoutValueDetailFormatting vc.locale cs.noTaggedAddresses
-        ++ " ("
-        ++ Locale.percentage vc.locale
-            (toFloat cs.noTaggedAddresses / toFloat cs.noAddresses)
-        ++ ")"
