@@ -81,7 +81,7 @@ isEvmHexNetwork network =
         currl =
             String.toLower network
     in
-    List.member currl [ "eth", "bnb", "arb", "base", "opt", "polygon", "avax", "gnosis", "robinhood" ]
+    List.member currl [ "eth", "bnb", "arb", "base", "opt", "pol", "avax", "gnosis", "robinhood" ]
 
 
 negateValues : Api.Data.Values -> Api.Data.Values
