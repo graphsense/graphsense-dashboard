@@ -21,6 +21,21 @@ import Route
 import Task
 
 
+{-| Headers every API request carries besides the authorization. With the lite
+networks switched off in the settings, `X-External-Backends: off` tells the
+API to answer from its core data only: the lite networks vanish from the
+statistics, the search, the capabilities and the cross-chain twins, and no
+request of this app reaches the lite data service at all.
+-}
+apiHeaders : Model key -> List ( String, String )
+apiHeaders model =
+    if model.config.liteNetworks then
+        []
+
+    else
+        [ ( "X-External-Backends", "off" ) ]
+
+
 perform : Model Nav.Key -> Maybe String -> String -> Effect -> Cmd Msg
 perform model statusbarToken apiKey effect =
     case effect of
@@ -50,6 +65,7 @@ perform model statusbarToken apiKey effect =
 
         ApiEffect eff ->
             Effect.Api.perform apiKey
+                (apiHeaders model)
                 (BrowserGotResponseWithHeaders statusbarToken)
                 BrowserCancelledRequest
                 eff
@@ -59,6 +75,7 @@ perform model statusbarToken apiKey effect =
                 Pathfinder.ApiEffect apiEff ->
                     Effect.Api.map PathfinderMsg apiEff
                         |> Effect.Api.perform apiKey
+                            (apiHeaders model)
                             (BrowserGotResponseWithHeaders statusbarToken)
                             BrowserCancelledRequest
 
@@ -78,6 +95,7 @@ perform model statusbarToken apiKey effect =
 
                 Pathfinder.SearchEffect e ->
                     handleSearchEffect apiKey
+                        (apiHeaders model)
                         (Pathfinder.SearchMsg >> PathfinderMsg)
                         e
 
@@ -96,7 +114,7 @@ perform model statusbarToken apiKey effect =
                         |> Cmd.map PathfinderMsg
 
         SearchEffect msgMap e ->
-            handleSearchEffect apiKey msgMap e
+            handleSearchEffect apiKey (apiHeaders model) msgMap e
 
         NotificationEffect e ->
             Model.Notification.perform e
@@ -121,8 +139,8 @@ perform model statusbarToken apiKey effect =
                 |> Task.perform (\_ -> BrowserGotDeserializedGS payload)
 
 
-handleSearchEffect : String -> (Search.Msg -> Msg) -> Search.Effect -> Cmd Msg
-handleSearchEffect apiKey tag effect =
+handleSearchEffect : String -> List ( String, String ) -> (Search.Msg -> Msg) -> Search.Effect -> Cmd Msg
+handleSearchEffect apiKey extraHeaders tag effect =
     case effect of
         Search.SearchEffect { query, currency, limit, config, toMsg } ->
             (Effect.Api.SearchEffect
@@ -133,6 +151,7 @@ handleSearchEffect apiKey tag effect =
                 }
                 (toMsg >> tag)
                 |> Effect.Api.perform apiKey
+                    extraHeaders
                     (BrowserGotResponseWithHeaders Nothing)
                     BrowserCancelledRequest
             )

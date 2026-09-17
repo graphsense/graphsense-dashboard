@@ -41,6 +41,7 @@ allFlipped =
         , preferredFiatCurrency = Just "eur"
         , showHash = Just True
         , showBothValues = Just True
+        , liteNetworks = Just False
     }
 
 
@@ -71,6 +72,13 @@ suite =
                     , config.showHash
                     ]
                     [ False, False, True, False, True, True ]
+        , test "the lite-networks switch comes back and defaults to on" <|
+            \_ ->
+                Expect.equalLists
+                    [ (restored allFlipped).liteNetworks
+                    , (restored (Config.UserSettings.default "en")).liteNetworks
+                    ]
+                    [ False, True ]
         , test "the preferred fiat currency comes back" <|
             \_ ->
                 (restored allFlipped).preferredFiatCurrency

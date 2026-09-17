@@ -70,4 +70,5 @@ viewConfig =
     , showBothValues = False
     , isMac = False
     , networks = []
+    , liteNetworks = True
     }

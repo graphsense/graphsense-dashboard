@@ -27,6 +27,7 @@ type alias Config =
     , showBothValues : Bool
     , isMac : Bool -- shortcut hints read Cmd instead of Ctrl
     , networks : List Api.Data.CurrencyStats -- what the backend serves; empty until the statistics arrive
+    , liteNetworks : Bool -- off: every request carries X-External-Backends: off, so the API serves the core networks only and nothing reaches the lite data service
     }
 
 

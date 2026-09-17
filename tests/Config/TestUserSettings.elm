@@ -37,7 +37,15 @@ stringRoundtrip settings =
 suite : Test
 suite =
     describe "UserSettings roundtrip"
-        [ test "empty recents survive roundtrip" <|
+        [ test "the lite-networks switch is read back from the per-key string localStorage holds" <|
+            -- main.js stores every field with localStorage.setItem(k, value) and
+            -- hands {...localStorage} back as flags, so a bool arrives as "false"
+            \_ ->
+                Json.Decode.decodeString UserSettings.decoder
+                    """{"selectedLanguage":"en","liteNetworks":"false"}"""
+                    |> Result.map .liteNetworks
+                    |> Expect.equal (Ok (Just False))
+        , test "empty recents survive roundtrip" <|
             \_ ->
                 withRecents []
                     |> roundtrip

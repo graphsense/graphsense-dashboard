@@ -25,6 +25,7 @@ type alias UserSettings =
     , tracingMode : Maybe TracingMode
     , showHash : Maybe Bool
     , showBothValues : Maybe Bool
+    , liteNetworks : Maybe Bool
     , avoidOverlapingNodes : Maybe Bool
     , recentSearches : List ResultLine
 
@@ -81,6 +82,7 @@ decoder =
         |> optional "tracingMode" (Decode.string |> Decode.map stringToTracingMode |> nullable) Nothing
         |> optional "showHash" (nullable bool |> fromString) Nothing
         |> optional "showBothValues" (nullable bool |> fromString) Nothing
+        |> optional "liteNetworks" (nullable bool |> fromString) Nothing
         |> optional "avoidOverlapingNodes" (nullable bool |> fromString) Nothing
         |> optional "recentSearches"
             (Decode.oneOf
@@ -128,6 +130,7 @@ encoder settings =
         , ( "tracingMode", settings.tracingMode |> Maybe.map tracingModeToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
         , ( "showHash", settings.showHash |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showBothValues", settings.showBothValues |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+        , ( "liteNetworks", settings.liteNetworks |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "avoidOverlapingNodes", settings.avoidOverlapingNodes |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "recentSearches"
           , (if persistRecentSearches then
@@ -255,6 +258,7 @@ default locale =
     , tracingMode = Nothing
     , showHash = Nothing
     , showBothValues = Nothing
+    , liteNetworks = Nothing
     , avoidOverlapingNodes = Nothing
     , recentSearches = []
 
