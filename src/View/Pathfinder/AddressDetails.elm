@@ -105,23 +105,7 @@ utxo pluginStates vc model id viewState address =
             not (List.isEmpty crosschainTargets)
 
         crosschainLedgersList =
-            (crosschainTargets
-                |> List.map
-                    (\( network, targetId ) ->
-                        div
-                            [ onClick (Pathfinder.UserClickedCrosschainAddress targetId)
-                            , css [ Css.cursor Css.pointer ]
-                            ]
-                            [ TagsComponents.categoryTag
-                                { root =
-                                    { tagLabel = network
-                                    , closeVisible = False
-                                    }
-                                }
-                            ]
-                    )
-            )
-                ++ [ crosschainMoreInfoButton vc id ]
+            crosschainLedgerChips vc id Pathfinder.UserClickedCrosschainAddress crosschainTargets
 
         pluginTagsVisible =
             List.length pluginTagsList > 0
@@ -929,23 +913,7 @@ account pluginStates vc model id viewState address =
             not (List.isEmpty crosschainTargets)
 
         crosschainLedgersList =
-            (crosschainTargets
-                |> List.map
-                    (\( network, targetId ) ->
-                        div
-                            [ onClick (Pathfinder.UserClickedAddress targetId)
-                            , css [ Css.cursor Css.pointer ]
-                            ]
-                            [ TagsComponents.categoryTag
-                                { root =
-                                    { tagLabel = network
-                                    , closeVisible = False
-                                    }
-                                }
-                            ]
-                    )
-            )
-                ++ [ crosschainMoreInfoButton vc id ]
+            crosschainLedgerChips vc id Pathfinder.UserClickedAddress crosschainTargets
 
         pluginList =
             Plugin.addressSidePanelHeader pluginStates vc address
@@ -1268,6 +1236,59 @@ crosschainMoreInfoButton vc id =
                         |> Tooltip.withOpenDelay 500
                     )
             )
+
+
+{-| How many cross-chain networks are shown as chips before the rest collapses
+into one "+N" chip (user decision 2026-09-17): an EVM address is the same
+address on every EVM network, so a lite address routinely lists 7 or 8 twins
+and the chips wrapped over three rows. The "+N" chip and the three-dots button
+both open the pubkey-related-addresses table with the full list; the counter
+is the same component the tag row uses for its overflow.
+-}
+crosschainChipLimit : Int
+crosschainChipLimit =
+    2
+
+
+crosschainLedgerChips : View.Config -> Id -> (Id -> Pathfinder.Msg) -> List ( String, Id ) -> List (Html Pathfinder.Msg)
+crosschainLedgerChips vc id onChipClick targets =
+    let
+        chip label msg =
+            div
+                [ onClick msg
+                , css [ Css.cursor Css.pointer ]
+                ]
+                [ TagsComponents.categoryTag
+                    { root =
+                        { tagLabel = label
+                        , closeVisible = False
+                        }
+                    }
+                ]
+
+        shown =
+            targets
+                |> List.take crosschainChipLimit
+                |> List.map (\( network, targetId ) -> chip network (onChipClick targetId))
+
+        hidden =
+            List.length targets - crosschainChipLimit
+
+        more =
+            if hidden > 0 then
+                [ div
+                    [ onClick (Pathfinder.AddressDetailsMsg id AddressDetails.UserClickedShowPubkeyRelatedAddresses)
+                    , css [ Css.cursor Css.pointer ]
+                    ]
+                    [ TagsComponents.moreItemsInfo
+                        { root = { number = String.fromInt hidden } }
+                    ]
+                ]
+
+            else
+                []
+    in
+    shown ++ more ++ [ crosschainMoreInfoButton vc id ]
 
 
 crosschainLedgerTargets : Id -> Address -> List ( String, Id )
