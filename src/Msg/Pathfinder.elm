@@ -65,6 +65,7 @@ type Msg
     | UserOpensTxAnnotationDialog Id
     | UserClickedRestart
     | UserClickedShowLegend
+    | UserClickedShowShortcuts
     | UserClickedToggleHelpDropdown
     | UserClickedRestartYes
     | UserClickedUndo
@@ -185,6 +186,7 @@ place that decides.
 -}
 type OutMsg
     = ShowLegendDialog
+    | ShowShortcutsDialog
     | ConfirmRestart
     | Restart
     | SaveUserSettings

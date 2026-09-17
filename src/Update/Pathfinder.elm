@@ -267,6 +267,9 @@ appLevelOutMsgs msg model =
         UserClickedShowLegend ->
             [ ShowLegendDialog ]
 
+        UserClickedShowShortcuts ->
+            [ ShowShortcutsDialog ]
+
         UserClickedRestart ->
             if model.isDirty then
                 [ ConfirmRestart ]
@@ -2832,6 +2835,9 @@ updateByMsg uc msg model =
             n { model | contextMenu = Nothing, helpDropdownOpen = False }
 
         UserClickedShowLegend ->
+            n model
+
+        UserClickedShowShortcuts ->
             n model
 
         UserClickedToggleHelpDropdown ->

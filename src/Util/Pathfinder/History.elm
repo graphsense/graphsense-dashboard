@@ -97,6 +97,9 @@ shallPushHistory msg _ =
         UserClickedShowLegend ->
             False
 
+        UserClickedShowShortcuts ->
+            False
+
         UserClickedToggleHelpDropdown ->
             False
 

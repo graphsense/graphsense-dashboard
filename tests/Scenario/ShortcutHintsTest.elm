@@ -115,6 +115,19 @@ suite =
                     |> App.model
                     |> .modKeyPressCount
                     |> Expect.equal 1
+        , describe "help menu"
+            [ test "offers the keyboard shortcuts next to the legend" <|
+                \_ ->
+                    App.init
+                        |> App.step UserClickedToggleHelpDropdown
+                        |> App.html
+                        |> Query.has [ Selector.text "Legend", Selector.text "Keyboard shortcuts" ]
+            , test "does not list them while closed" <|
+                \_ ->
+                    App.init
+                        |> App.html
+                        |> Query.hasNot [ Selector.text "Keyboard shortcuts" ]
+            ]
         , describe "toolbar tooltips"
             [ test "carry the chord" <|
                 \_ ->
