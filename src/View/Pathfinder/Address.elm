@@ -179,19 +179,23 @@ view vc pc searchHighlight level address annotation =
         icons =
             ifTrue (detail == Full) <|
                 List.concat
-                    [ ifTrue address.hasTags
-                        [ Icons.iconsTagSwithoutPaddingTypeDirectWithAttributes
-                            (Icons.iconsTagSwithoutPaddingTypeDirectAttributes
-                                |> Rs.s_tagIcon (listTagAttr |> Maybe.withDefault [])
-                            )
-                            {}
-                        ]
-                    , ifTrue (not address.hasTags && address.hasClusterTagsOnly)
-                        [ Icons.iconsTagSwithoutPaddingTypeIndirectWithAttributes
-                            (Icons.iconsTagSwithoutPaddingTypeIndirectAttributes
-                                |> Rs.s_tagIcon (listTagAttr |> Maybe.withDefault Util.View.indirectTagFillAttr)
-                            )
-                            {}
+                    [ ifTrue (address.hasTags || address.hasClusterTagsOnly)
+                        [ Icons.iconsTagSwithoutPaddingDev
+                            { root =
+                                { type_ =
+                                    if address.listTag == Just ListTag.Blacklist then
+                                        Icons.IconsTagSwithoutPaddingDevTypeBlack2
+
+                                    else if address.listTag == Just ListTag.Whitelist then
+                                        Icons.IconsTagSwithoutPaddingDevTypeWhite2
+
+                                    else if address.hasTags then
+                                        Icons.IconsTagSwithoutPaddingDevTypeDirect
+
+                                    else
+                                        Icons.IconsTagSwithoutPaddingDevTypeIndirect
+                                }
+                            }
                         ]
                     , ifTrue (not <| List.isEmpty pluginTagIcons) pluginTagIcons
                     , ifTrue (Dict.size address.networks > 1) [ Icons.iconsCrosschainSwithoutPadding {} ]
