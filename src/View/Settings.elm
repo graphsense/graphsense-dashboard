@@ -208,19 +208,20 @@ liteNetworksSetting vc =
     div
         [ css
             [ Css.displayFlex
-            , Css.flexDirection Css.row
-            , Css.justifyContent Css.spaceBetween
-            , Css.alignItems Css.center
-            , Css.property "gap" "1rem"
+            , Css.flexDirection Css.column
+            , Css.alignItems Css.flexStart
+            , Css.property "gap" "0.75rem"
+            , Css.width (Css.em 36)
+            , Css.maxWidth (Css.pct 100)
             ]
         ]
-        [ span [] [ text (Locale.string vc.locale "lite-networks-setting-hint") ]
-        , Vc.toggleWithText
+        [ Vc.toggleWithText
             { selectedA = vc.liteNetworks
             , titleA = Locale.string vc.locale "on"
             , titleB = Locale.string vc.locale "off"
             , msg = SettingsMsg UserToggledLiteNetworks
             }
+        , span [ css [ Css.width (Css.pct 100), Css.lineHeight (Css.num 1.4) ] ] [ text (Locale.string vc.locale "lite-networks-setting-hint") ]
         ]
 
 
