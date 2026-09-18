@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [26.09.0] - Unreleased
 
 ### Added
+- With the lite networks switched off, the addresses and transactions of those networks already on the graph are drawn faded; the address tooltip says why.
 
 - A "Lite networks" switch on the settings page. Off means the app asks the API for its core networks only: every request carries `X-External-Backends: off`, the lite networks leave the statistics, the search, the network switch and the cross-chain rows, and no request reaches the lite data service. For the case that the service is congested or unavailable. On by default, remembered like the other settings
 - Addresses on a blacklist or whitelist (the `black_list` and `white_list` concepts and their governmental `gov_` variants) show a black or white tag icon on the graph node and in the address details, instead of the usual yellow or grey one. Only the address's own tags count, not those inherited from its cluster or a shared pubkey. A blacklist wins when an address is on both. The legend lists the two new icons

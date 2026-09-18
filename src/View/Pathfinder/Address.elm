@@ -229,9 +229,14 @@ view vc pc capabilities searchHighlight level address annotation =
          ]
             ++ dimmedOpacity searchHighlight
             ++ -- grey out the nodes of a network that takes no part in
-               -- relationship mode so only the active ones read as such;
-               -- the tooltip on such a node says why (Util.Tooltip.address)
-               (if NetworkCapabilities.inactiveInRelationshipMode pc.tracingMode capabilities (Id.network address.id) then
+               -- relationship mode so only the active ones read as such, and
+               -- the nodes of a network the backend no longer serves (lite
+               -- networks switched off in the settings); the tooltip on such
+               -- a node says why (Util.Tooltip.address)
+               (if
+                    NetworkCapabilities.inactiveInRelationshipMode pc.tracingMode capabilities (Id.network address.id)
+                        || not (View.networkServed vc (Id.network address.id))
+                then
                     [ opacity "0.3", css [ Css.property "filter" "grayscale(1)" ] ]
 
                 else

@@ -613,6 +613,7 @@ csv-note-visible-only: "Nur Flüsse mit einer sichtbaren Adresse wurden exportie
 unknown url: "Unbekannte URL: {0}"
 not supported on lite networks: auf Lite-Netzwerken nicht unterstützt
 Relationship mode not supported on lite networks: Beziehungsmodus auf Lite-Netzwerken nicht unterstützt
+Network switched off in the settings (lite networks): Netzwerk in den Einstellungen ausgeschaltet (Lite-Netzwerke)
 Keyboard shortcuts: "Tastenkürzel"
 Add address or tx: "Adresse oder Tx hinzufügen"
 Select all: "Alles auswählen"

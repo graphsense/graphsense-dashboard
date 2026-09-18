@@ -596,6 +596,7 @@ csv-note-visible-only: "Only flows touching a visible address were exported."
 unknown url: "Unknown URL: {0}"
 not supported on lite networks: not supported on lite networks
 Relationship mode not supported on lite networks: Relationship mode not supported on lite networks
+Network switched off in the settings (lite networks): Network switched off in the settings (lite networks)
 Keyboard shortcuts: "Keyboard shortcuts"
 Add address or tx: "Add address or tx"
 Select all: "Select all"

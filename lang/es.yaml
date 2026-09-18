@@ -266,6 +266,7 @@ server error: error del servidor
 not found: no encontrado
 not supported on lite networks: no compatible con redes lite
 Relationship mode not supported on lite networks: Modo de relaciones no compatible con redes lite
+Network switched off in the settings (lite networks): Red desactivada en la configuración (redes lite)
 data error: error de datos
 service not reachable: servicio no accesible.
 unexpected data format: formato de datos inesperado.
