@@ -48,6 +48,7 @@ updateConfig =
     , size = Just viewport
     , allConcepts = []
     , abuseConcepts = []
+    , networks = []
     }
 
 

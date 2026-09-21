@@ -192,6 +192,7 @@ step msg (App app) =
             { locale = app.model_.config.locale
             , size = app.model_.config.size
             , abuseConcepts = app.model_.config.abuseConcepts
+            , networks = List.map .name app.model_.config.networks
             , allConcepts = app.model_.config.allConcepts
             }
 

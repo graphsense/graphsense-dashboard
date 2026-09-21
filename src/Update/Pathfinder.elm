@@ -1408,7 +1408,7 @@ updateByMsg uc msg model =
                         |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedTx txId ->
-                    userClickedTx txId model
+                    userClickedTx uc txId model
                         |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedAllTxCheckboxInTable isA2b ->
@@ -1519,7 +1519,7 @@ updateByMsg uc msg model =
                     addOrRemoveTx (Just addressId) (Tx.getTxIdForAddressTx tx) model
 
                 AddressDetails.UserClickedTx id ->
-                    userClickedTx id model
+                    userClickedTx uc id model
 
                 AddressDetails.TooltipMsg tm ->
                     handleTooltipMsg tm model
@@ -2193,6 +2193,12 @@ updateByMsg uc msg model =
                 toggleMultiSelect model (MSelectedAddress id)
                     |> n
 
+            else if not (Update.networkServed uc (Id.network id)) then
+                -- a faded node of a switched-off network: its URL would not
+                -- parse (the router only knows served networks) and its details
+                -- would 403, so select it in place and leave it at that
+                selectAddress id model
+
             else
                 ( model
                 , Route.addressRoute
@@ -2252,7 +2258,7 @@ updateByMsg uc msg model =
                     n model
 
         UserClickedTx id ->
-            userClickedTx id model
+            userClickedTx uc id model
 
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
@@ -4195,14 +4201,31 @@ userClickedAggEdgeCheckboxInTable dir anchorId data model =
             loadAddressWithPosition True (NextTo ( dir, anchorId )) id model
 
 
-userClickedTx : Id -> Model -> ( Model, List Effect )
-userClickedTx id model =
+userClickedTx : Update.Config -> Id -> Model -> ( Model, List Effect )
+userClickedTx uc id model =
     if model.modPressed || model.pointerTool == Select then
         let
             modelS =
                 toggleMultiSelect model (MSelectedTx id)
         in
         n { modelS | details = Nothing }
+
+    else if not (Update.networkServed uc (Id.network id)) then
+        -- switched-off network (see UserClickedAddress): select in place, and
+        -- skip the tag lookup selectTx would fire — that request would 403 too
+        case Dict.get id model.network.txs of
+            Just _ ->
+                let
+                    ( m1, eff ) =
+                        unselect model
+                in
+                Network.updateTx id (s_selected True) m1.network
+                    |> flip s_network m1
+                    |> s_selection (SelectedTx id)
+                    |> pairTo eff
+
+            Nothing ->
+                n model
 
     else
         ( model

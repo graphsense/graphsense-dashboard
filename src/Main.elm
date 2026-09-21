@@ -35,6 +35,7 @@ main =
             , size = Nothing
             , abuseConcepts = []
             , allConcepts = []
+            , networks = []
             }
     in
     Browser.application
@@ -55,6 +56,7 @@ main =
                         , size = model.config.size
                         , abuseConcepts = model.config.abuseConcepts
                         , allConcepts = model.config.allConcepts
+                        , networks = List.map .name model.config.networks
                     }
                     msg
                     model
