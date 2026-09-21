@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- An account transaction and the internal or token transfers it triggers are separate edges on the graph. Hovering any of them now highlights all of them, so the transfers can be traced back to the transaction they belong to. Each is still selected on its own
 - Addresses on a blacklist or whitelist (the `black_list` and `white_list` concepts and their governmental `gov_` variants) show a black or white tag icon on the graph node and in the address details, instead of the usual yellow or grey one. Only the address's own tags count, not those inherited from its cluster or a shared pubkey. A blacklist wins when an address is on both. The legend lists the two new icons
 - The graph sheds labels in steps as it is zoomed out, so a large graph reads as structure instead of noise: first edge values, timestamps, tx hashes and tag icons go, then address identifiers. Annotations, service labels and everything on a selected or hovered node stay at every zoom level, and all labels return when zooming in. Relationship mode already did this for its edge values; transaction mode now does the same
 - Ctrl+D (Cmd+D on macOS) duplicates the whole graph into a new tab, positions and notes included, through the same hand-over as "Open in new tab" on a multi-selection

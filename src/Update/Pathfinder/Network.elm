@@ -21,6 +21,7 @@ module Update.Pathfinder.Network exposing
     , insertFetchedEdge
     , resolveOverlapsExcept
     , rupsertAggEdge
+    , setTxHovered
     , snapToGrid
     , trySetHoverConversionLoop
     , updateAddress
@@ -49,7 +50,7 @@ import Model.Pathfinder.Address exposing (Address, txsToSet)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Deserialize exposing (DeserializedAggEdge, DeserializedThing)
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import RecordSetter exposing (..)
@@ -916,6 +917,43 @@ updateTx id update model =
                 }
             )
         |> Maybe.withDefault model
+
+
+{-| Set the hover state of a tx together with its siblings: the other txs on
+the graph that belong to the same base transaction. An account tx and the
+internal/token transfers it triggers (`<hash>`, `<hash>_I660`, `<hash>_T3`)
+are separate edges, but hovering one of them highlights all of them. Only the
+hover is shared; each one stays independently selectable.
+-}
+setTxHovered : Id -> Bool -> Network -> Network
+setTxHovered id isHovered network =
+    case Dict.get id network.txs of
+        Nothing ->
+            network
+
+        Just tx ->
+            let
+                baseHash =
+                    Tx.getRawBaseTxHashForTx tx
+
+                isSibling sid sibling =
+                    Id.network sid
+                        == Id.network id
+                        && Tx.getRawBaseTxHashForTx sibling
+                        == baseHash
+            in
+            { network
+                | txs =
+                    Dict.map
+                        (\sid t ->
+                            if sid == id || isSibling sid t then
+                                { t | hovered = isHovered }
+
+                            else
+                                t
+                        )
+                        network.txs
+            }
 
 
 updateAllTxs : (Tx -> Tx) -> Network -> Network

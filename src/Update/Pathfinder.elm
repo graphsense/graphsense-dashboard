@@ -5131,7 +5131,7 @@ unhover model =
                     unhoverAddress a model.network
 
                 HoveredTx a ->
-                    Network.updateTx a (s_hovered False) model.network
+                    Network.setTxHovered a False model.network
                         |> Network.trySetHoverConversionLoop a False
 
                 HoveredAggEdge a ->
@@ -6621,7 +6621,7 @@ handleTxHover id model =
                 in
                 { unhovered
                     | network =
-                        Network.updateTx id (s_hovered True) unhovered.network
+                        Network.setTxHovered id True unhovered.network
                             |> Network.trySetHoverConversionLoop id True
                     , hovered = HoveredTx id
                 }
