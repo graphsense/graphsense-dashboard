@@ -41,6 +41,9 @@ type FindPosition
     | NextTo ( Direction, Id )
     | Fixed Float Float
     | AtViewportCenter Float Float
+      -- stacked in the same column below the given address, e.g. for adding
+      -- addresses of its cluster
+    | Below Id
 
 
 getBoundingBox : Network -> Coords.BBox

@@ -1497,7 +1497,8 @@ updateByMsg uc msg model =
                             (AddressDetails.update uc subm)
 
                 AddressDetails.UserClickedAddressCheckboxInTable id ->
-                    userClickedAddressCheckboxInTable id model
+                    -- related (cluster/pubkey) addresses go below the selected one
+                    userClickedAddressCheckboxInTable (Below addressId) id model
 
                 AddressDetails.UserClickedAggEdgeCheckboxInTable dir anchorId data ->
                     userClickedAggEdgeCheckboxInTable dir anchorId data model
@@ -2209,7 +2210,7 @@ updateByMsg uc msg model =
             loadAddress False id model
 
         UserClickedAddressCheckboxInTable id ->
-            userClickedAddressCheckboxInTable id model
+            userClickedAddressCheckboxInTable Auto id model
 
         UserClickedAllAddressCheckboxInTable dir ->
             case model.details of
@@ -4087,13 +4088,13 @@ updateAddressRelatedData id x model =
     }
 
 
-userClickedAddressCheckboxInTable : Id -> Model -> ( Model, List Effect )
-userClickedAddressCheckboxInTable id model =
+userClickedAddressCheckboxInTable : FindPosition -> Id -> Model -> ( Model, List Effect )
+userClickedAddressCheckboxInTable position id model =
     if Dict.member id model.network.addresses then
         removeAddress id model
 
     else
-        loadAddress True id model
+        loadAddressWithPosition True position id model
 
 
 userClickedAggEdgeCheckboxInTable : Direction -> Id -> Api.Data.NeighborAddress -> Model -> ( Model, List Effect )

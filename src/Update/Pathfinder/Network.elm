@@ -418,9 +418,22 @@ addAddressWithPosition pc position id model =
                             findAddressCoords id model
                                 |> Maybe.Extra.orElseLazy
                                     (\_ -> Just { x = x, y = y })
+
+                        Below id_ ->
+                            Dict.get id_ model.addresses
+                                |> Maybe.map (findAddressCoordsBelowAddress model)
+                                |> Maybe.Extra.orElseLazy
+                                    (\_ -> findAddressCoords id model)
                     )
                         |> Maybe.withDefault (findFreeCoords model)
-                        |> avoidOverlappingEdges things
+                        |> (case position of
+                                Below _ ->
+                                    -- keep the new address in the anchor's column
+                                    identity
+
+                                _ ->
+                                    avoidOverlappingEdges things
+                           )
 
                 newAddress =
                     Address.init id coords
@@ -460,6 +473,34 @@ findAddressCoordsNextToAddress : Direction -> Address -> Coords
 findAddressCoordsNextToAddress direction address =
     { x = address.x + Direction.signOffsetByDirection direction (nodeXOffset * 2)
     , y = A.getTo address.y
+    }
+
+
+{-| First free slot below the given address in its column: skips the
+addresses already stacked directly beneath it, so repeated inserts line up
+one below the other instead of piling onto the same spot.
+-}
+findAddressCoordsBelowAddress : Network -> Address -> Coords
+findAddressCoordsBelowAddress model address =
+    let
+        column =
+            model.addresses
+                |> Dict.values
+                |> List.filter (\a -> a.x > address.x - 1 && a.x < address.x + 1)
+                |> List.map (.y >> A.getTo)
+
+        occupied y =
+            List.any (\ay -> abs (ay - y) < nodeYOffset / 2) column
+
+        firstFree y =
+            if occupied y then
+                firstFree (y + nodeYOffset)
+
+            else
+                y
+    in
+    { x = address.x
+    , y = firstFree (A.getTo address.y + nodeYOffset)
     }
 
 
@@ -1011,6 +1052,9 @@ addTxWithPosition pc position tx network =
                                     Auto ->
                                         avoidOverlappingEdges things <| findAccountTxCoords network t
 
+                                    Below _ ->
+                                        avoidOverlappingEdges things <| findAccountTxCoords network t
+
                                     NextTo ( direction, id_ ) ->
                                         avoidOverlappingEdges things <|
                                             (Dict.get id_ network.addresses
@@ -1078,6 +1122,9 @@ addTxWithPosition pc position tx network =
                             coords =
                                 case position of
                                     Auto ->
+                                        avoidOverlappingEdges things <| findUtxoTxCoords network t
+
+                                    Below _ ->
                                         avoidOverlappingEdges things <| findUtxoTxCoords network t
 
                                     NextTo ( direction, id_ ) ->
