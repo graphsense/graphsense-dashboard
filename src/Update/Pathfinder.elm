@@ -465,10 +465,19 @@ syncUrl model =
 syncSidePanel : Update.Config -> Model -> ( Model, List Effect )
 syncSidePanel uc model =
     let
+        -- A node of a network the statistics no longer list (lite-networks
+        -- setting off, or the account lacks the currency role) gets NO details
+        -- panel: building one refetches the address, which 403s, and `syncUrl`
+        -- would then push a route the router cannot resolve ("Unknown URL").
+        -- The node stays selectable, so it can still be moved or deleted.
         makeAddressDetails aid =
-            Dict.get aid model.network.addresses
-                |> Maybe.map (AddressDetails.init (supports NetworkCapabilities.Relations (Id.network aid) model) (AssocList.get (TxsFilterAddress aid) model.txsFilters))
-                |> Maybe.map (AddressDetails aid)
+            if not (Update.networkServed uc (Id.network aid)) then
+                Nothing
+
+            else
+                Dict.get aid model.network.addresses
+                    |> Maybe.map (AddressDetails.init (supports NetworkCapabilities.Relations (Id.network aid) model) (AssocList.get (TxsFilterAddress aid) model.txsFilters))
+                    |> Maybe.map (AddressDetails aid)
 
         makeTxDetails tid =
             let
@@ -479,8 +488,12 @@ syncSidePanel uc model =
                 txsFilter =
                     AssocList.get (TxsFilterTx tid) model.txsFilters
             in
-            Dict.get tid model.network.txs
-                |> Maybe.map (TxDetails.init txsFilter assets >> TxDetails tid)
+            if not (Update.networkServed uc (Id.network tid)) then
+                Nothing
+
+            else
+                Dict.get tid model.network.txs
+                    |> Maybe.map (TxDetails.init txsFilter assets >> TxDetails tid)
 
         makeRelationDetails rid =
             Dict.get rid model.network.aggEdges
