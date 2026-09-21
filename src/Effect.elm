@@ -22,10 +22,11 @@ import Task
 
 
 {-| Headers every API request carries besides the authorization. With the lite
-networks switched off in the settings, `X-External-Backends: off` tells the
-API to answer from its core data only: the lite networks vanish from the
-statistics, the search, the capabilities and the cross-chain twins, and no
-request of this app reaches the lite data service at all.
+networks switched off in the settings, `X-Ikn-Currency-Opt-Out: all-light`
+tells the gateway to drop the user's lite-currency roles for that request, so
+the API answers from its core data only: the lite networks vanish from the
+statistics, the search, the capabilities and the cross-chain twins, a direct
+lite request gets a 403, and nothing reaches the lite data service at all.
 -}
 apiHeaders : Model key -> List ( String, String )
 apiHeaders model =
@@ -33,7 +34,7 @@ apiHeaders model =
         []
 
     else
-        [ ( "X-External-Backends", "off" ) ]
+        [ ( "X-Ikn-Currency-Opt-Out", "all-light" ) ]
 
 
 perform : Model Nav.Key -> Maybe String -> String -> Effect -> Cmd Msg

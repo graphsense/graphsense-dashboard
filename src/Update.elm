@@ -358,6 +358,10 @@ update uc msg model =
                                             ( Http.BadStatus 400, _, _ ) ->
                                                 notFound token
 
+                                            -- a currency the account (or the lite-networks switch) has opted out of
+                                            ( Http.BadStatus 403, _, _ ) ->
+                                                notFound token
+
                                             _ ->
                                                 model.dialog
                                     )
