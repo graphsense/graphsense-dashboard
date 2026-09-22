@@ -54,6 +54,7 @@ import Model exposing (Auth(..), Effect(..), Model, Msg, Page(..))
 import Model.Locale
 import Plugin.Model
 import RemoteData
+import Set
 import Support.Env as Env
 import Test.Html.Query as Query
 import Tuple exposing (first)
@@ -139,6 +140,7 @@ initialModel url =
     , statusbar = Init.Statusbar.init
     , dialog = Nothing
     , supportedTokens = Dict.empty
+    , tokenListsLoaded = Set.empty
     , plugins = Plugin.Model.emptyModelState
     , notifications = Init.Notification.init
     , localeSelectBox = TSelectBox.init <| List.map first Model.Locale.locales

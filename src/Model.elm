@@ -28,6 +28,7 @@ import Msg.Search
 import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
 import RemoteData exposing (WebData)
+import Set exposing (Set)
 import Time
 import Url exposing (Url)
 import Util.Http exposing (Headers)
@@ -62,6 +63,11 @@ type alias Model navigationKey =
     , statusbar : Model.Statusbar.Model
     , dialog : Maybe (Model.Dialog.Model Msg)
     , supportedTokens : Dict String Api.Data.TokenConfigs
+
+    -- the networks whose `/supported_tokens` answer arrived. Distinct from the
+    -- keys of `supportedTokens`, which a curated swap asset also creates
+    -- (`RegisterConversionAsset`) -- such an entry must not pass for the list.
+    , tokenListsLoaded : Set String
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
     , notifications : Model.Notification.Model
     , localeSelectBox : SelectBox.Model String

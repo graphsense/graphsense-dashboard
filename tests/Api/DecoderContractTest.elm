@@ -128,7 +128,7 @@ suite =
                             (Ok
                                 { toAssetSymbol = Just "KAISER"
                                 , toAssetDecimals = Just 9
-                                , fromAmountFiatValues = Just [ { code = "usd", value = 6.0 } ]
+                                , fromAmountFiatValues = Just [ { code = "usd", value = 60.0 } ]
                                 , toAmountFiatValues = Nothing
                                 }
                             )
@@ -252,22 +252,32 @@ txlessAddress =
     """{"currency":"eth","address":"0xab","entity":1,"cluster":1,"status":"clean","balance":{"value":0,"fiat_values":[]},"total_received":{"value":0,"fiat_values":[]},"total_spent":{"value":0,"fiat_values":[]},"in_degree":0,"out_degree":0,"no_incoming_txs":0,"no_outgoing_txs":0}"""
 
 
-{-| A dex\_swap as the live baseline serves it (checked 2026-09-22 against
-be8b3e387e9f): exactly the thirteen keys the spec declares, native in, an
-uncurated-to-the-baseline token out.
+{-| A dex\_swap as the live baseline serves it, byte for byte: the single row
+of harness fixture be8b3e387e9f, recorded 2026-09-22 (the adapter's
+`harness/baseline_snapshots/eth/be8b3e387e9f.json`, which is gitignored there).
+
+Exactly the thirteen keys the spec declares, hex amounts, native in and a token
+out the baseline does not count as a supported asset.
+
 -}
 baselineDexSwap : String
 baselineDexSwap =
-    """{"conversion_type":"dex_swap","from_address":"0x1f9090aae28b8a3dceadf281b0f12828e676c326","from_amount":"1000000000000000000","from_asset":"native","from_asset_transfer":"0","from_is_supported_asset":true,"from_network":"eth","to_address":"0x1f9090aae28b8a3dceadf281b0f12828e676c326","to_amount":"123456789","to_asset":"0x87b7c4bba0b2a9d4dbfa0b1b3b3b0a1b2c3d2c74","to_asset_transfer":"1","to_is_supported_asset":false,"to_network":"eth"}"""
+    """{"conversion_type":"dex_swap","from_address":"0x4c2d696441a11760429cd9845bd84987b9313242","to_address":"0x4c2d696441a11760429cd9845bd84987b9313242","from_asset":"native","to_asset":"0x87b723960c170561e6b7cb74188b5f159e272c74","from_amount":"0x470de4df820000","to_amount":"0x22db8e23bcaee","from_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_I603","to_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_T250","from_network":"eth","to_network":"eth","from_is_supported_asset":true,"to_is_supported_asset":false}"""
 
 
-{-| The same swap from the adapter once it serves curated display metadata:
-the thirteen keys plus a symbol and decimals per token leg, and fiat only for
-the leg it could price.
+{-| The same row as the adapter serves it once it adds curated display
+metadata: the thirteen keys plus the token leg's symbol and decimals from its
+curated list, and fiat for the leg it could price — the native one here, since
+the baseline-parity pin KAISER has no quote.
+
+The three optional keys are added by hand: the snapshot above predates the
+enrichment. Symbol and decimals are the curated list's own
+(`instance/swap_assets.yaml`); the fiat figure is illustrative.
+
 -}
 enrichedDexSwap : String
 enrichedDexSwap =
-    """{"conversion_type":"dex_swap","from_address":"0x1f9090aae28b8a3dceadf281b0f12828e676c326","from_amount":"1000000000000000000","from_asset":"native","from_asset_transfer":"0","from_is_supported_asset":true,"from_network":"eth","to_address":"0x1f9090aae28b8a3dceadf281b0f12828e676c326","to_amount":"123456789","to_asset":"0x87b7c4bba0b2a9d4dbfa0b1b3b3b0a1b2c3d2c74","to_asset_transfer":"1","to_is_supported_asset":false,"to_network":"eth","from_asset_symbol":"USDC","from_asset_decimals":6,"to_asset_symbol":"KAISER","to_asset_decimals":9,"from_amount_fiat_values":[{"code":"usd","value":6.0}]}"""
+    """{"conversion_type":"dex_swap","from_address":"0x4c2d696441a11760429cd9845bd84987b9313242","to_address":"0x4c2d696441a11760429cd9845bd84987b9313242","from_asset":"native","to_asset":"0x87b723960c170561e6b7cb74188b5f159e272c74","from_amount":"0x470de4df820000","to_amount":"0x22db8e23bcaee","from_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_I603","to_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_T250","from_network":"eth","to_network":"eth","from_is_supported_asset":true,"to_is_supported_asset":false,"to_asset_symbol":"KAISER","to_asset_decimals":9,"from_amount_fiat_values":[{"code":"usd","value":60.0}]}"""
 
 
 {-| The same body from a serializer that keeps nulls instead of dropping them.

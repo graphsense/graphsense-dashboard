@@ -311,6 +311,18 @@ suite =
                         |> answerTxRequest outputLegTx
                         |> swapEdges
                         |> Expect.equal [ ( inputLegId, outputLegId ) ]
+            , test "a leg served under an identifier the swap does not name stops the walk" <|
+                -- the input leg is asked for by the identifier the swap names;
+                -- were the backend to answer under a normalised one, pairing it
+                -- would fail and the handler would ask for the very same leg
+                -- again, forever
+                \_ ->
+                    App.init
+                        |> withTx rootTx
+                        |> gotSwapFor rootId
+                        |> answerTxRequest (accountTx (hash ++ "_T42") swapper settlement)
+                        |> (\app -> ( requestedTxs app, Dict.size (App.model app).network.txs ))
+                        |> Expect.equal ( [], 1 )
             , test "a leg already on the graph is reused rather than added twice" <|
                 \_ ->
                     App.init

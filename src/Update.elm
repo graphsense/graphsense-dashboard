@@ -49,6 +49,7 @@ import RemoteData as RD
 import Result.Extra
 import Route
 import Route.Pathfinder
+import Set
 import Task
 import Time
 import Tuple exposing (..)
@@ -65,6 +66,7 @@ import Util exposing (and, n)
 import Util.Data
 import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
+import Util.TokenConfigs as TokenConfigs
 import View.Locale as Locale
 import View.Pathfinder.Legend exposing (legendView)
 
@@ -184,7 +186,7 @@ update uc msg model =
                 tokenCurrencyEffects =
                     stats.currencies
                         |> List.map .name
-                        |> List.filter (\currency -> not (Dict.member currency model.supportedTokens))
+                        |> List.filter (\currency -> not (Set.member currency model.tokenListsLoaded))
                         |> List.map
                             (\currency ->
                                 Effect.Api.ListSupportedTokensEffect currency (BrowserGotSupportedTokens currency)
@@ -230,11 +232,20 @@ update uc msg model =
 
         BrowserGotSupportedTokens currency configs ->
             let
+                -- the list is the network's own answer, but it may arrive after
+                -- a dex swap registered a curated asset it does not carry; keep
+                -- those rather than replacing the entry outright
+                merged =
+                    Dict.get currency model.supportedTokens
+                        |> Maybe.withDefault { tokenConfigs = [] }
+                        |> TokenConfigs.merge configs
+
                 locale =
-                    Locale.setSupportedTokens configs currency model.config.locale
+                    Locale.setSupportedTokens merged currency model.config.locale
             in
             { model
-                | supportedTokens = Dict.insert currency configs model.supportedTokens
+                | supportedTokens = Dict.insert currency merged model.supportedTokens
+                , tokenListsLoaded = Set.insert currency model.tokenListsLoaded
                 , config =
                     model.config
                         |> s_locale locale
@@ -1788,17 +1799,15 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
             let
                 existing =
                     Dict.get network model.supportedTokens
-                        |> Maybe.map .tokenConfigs
-                        |> Maybe.withDefault []
+                        |> Maybe.withDefault { tokenConfigs = [] }
+
+                merged =
+                    TokenConfigs.register config existing
             in
-            if List.any (\tc -> Maybe.map String.toLower tc.contractAddress == Maybe.map String.toLower config.contractAddress) existing then
+            if merged == existing then
                 n model
 
             else
-                let
-                    merged =
-                        { tokenConfigs = config :: existing }
-                in
                 n
                     { model
                         | supportedTokens = Dict.insert network merged model.supportedTokens

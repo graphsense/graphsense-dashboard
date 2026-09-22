@@ -2442,8 +2442,8 @@ updateByMsg uc msg model =
                 modelWithFlag =
                     { model | network = networkWithFlag }
 
-                isLeg network transfer =
-                    Id.network txid == network && (Id.id txid |> removeLeading0x) == (transfer |> removeLeading0x)
+                isLeg =
+                    isLegTransfer txid
 
                 fetch id continuation =
                     continuation
@@ -2489,6 +2489,13 @@ updateByMsg uc msg model =
                 pos =
                     anchor |> Tx.toFinalCoords
 
+                -- we asked for this tx by the identifier the swap names, so it
+                -- should be one of its legs. Were a backend to answer under a
+                -- different one, continuing would pair nothing and ask for the
+                -- very same leg again, forever -- so drop it instead.
+                isLeg =
+                    isLegTransfer (Tx.getTxId tx)
+
                 ( ( legTx, nn ), newTx ) =
                     case Dict.get (Tx.getTxId tx) model.network.txs of
                         Just oldTx ->
@@ -2497,16 +2504,20 @@ updateByMsg uc msg model =
                         Nothing ->
                             ( Network.addTxWithPosition model.config (Fixed pos.x (pos.y + 2)) tx model.network, True )
             in
-            model
-                |> s_network nn
-                |> updateByMsg uc (BrowserGotConversions legTx [ conversion ])
-                |> and
-                    (if newTx then
-                        autoLoadAddresses False legTx
+            if not (isLeg conversion.fromNetwork conversion.fromAssetTransfer || isLeg conversion.toNetwork conversion.toAssetTransfer) then
+                n model
 
-                     else
-                        n
-                    )
+            else
+                model
+                    |> s_network nn
+                    |> updateByMsg uc (BrowserGotConversions legTx [ conversion ])
+                    |> and
+                        (if newTx then
+                            autoLoadAddresses False legTx
+
+                         else
+                            n
+                        )
 
         BrowserGotTx ({ requestedTxHash } as loadTxConfig) tx ->
             let
@@ -6388,6 +6399,15 @@ autoLoadConversionsOf identifier tx model =
             |> ApiEffect
             |> List.singleton
         )
+
+
+{-| Is the sub-transaction `txid` the leg a swap names as `transfer` on
+`network`? The conversions endpoint prefixes leg identifiers with `0x`, the txs
+endpoint does not, so the comparison drops it on both sides.
+-}
+isLegTransfer : Id -> String -> String -> Bool
+isLegTransfer txid network transfer =
+    Id.network txid == network && (Id.id txid |> removeLeading0x) == (transfer |> removeLeading0x)
 
 
 autoLoadAddresses : Bool -> Tx -> Model -> ( Model, List Effect )
