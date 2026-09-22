@@ -3,6 +3,7 @@ module View.Pathfinder.ConversionEdge exposing (view)
 import Api.Data
 import Config.View as View
 import Css
+import Dict
 import Html.Styled.Events exposing (onMouseLeave)
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
@@ -83,10 +84,41 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
                 Api.Data.ExternalConversionConversionTypeBridgeTx ->
                     Locale.string vc.locale "Bridge TX"
 
+        -- labels from the RAW conversion, not the loaded nodes (for a same-tx
+        -- swap one node is the native root): native -> network coin; token ->
+        -- the registry ticker matched by contract address, else the curated
+        -- symbol the conversion carries
+        assetCode network asset symbol =
+            if asset == "native" then
+                String.toUpper network
+
+            else
+                Dict.get network vc.locale.supportedTokens
+                    |> Maybe.map .tokenConfigs
+                    |> Maybe.withDefault []
+                    |> List.filter
+                        (\tc ->
+                            (tc.contractAddress |> Maybe.map String.toLower)
+                                == Just (String.toLower asset)
+                        )
+                    |> List.head
+                    |> Maybe.map .ticker
+                    |> (\code ->
+                            case code of
+                                Just c ->
+                                    c
+
+                                Nothing ->
+                                    Maybe.withDefault asset symbol
+                       )
+                    |> String.toUpper
+
         labelTextLine2 =
             case cr.conversionType of
                 Api.Data.ExternalConversionConversionTypeDexSwap ->
-                    conversion.fromAsset ++ " / " ++ conversion.toAsset
+                    assetCode cr.fromNetwork cr.fromAsset cr.fromAssetSymbol
+                        ++ " / "
+                        ++ assetCode cr.toNetwork cr.toAsset cr.toAssetSymbol
 
                 Api.Data.ExternalConversionConversionTypeBridgeTx ->
                     (cr.fromNetwork |> String.toUpper) ++ "-" ++ (conversion.fromAsset |> String.toUpper) ++ " / " ++ (cr.toNetwork |> String.toUpper) ++ "-" ++ (conversion.toAsset |> String.toUpper)

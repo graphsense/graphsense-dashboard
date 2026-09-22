@@ -308,6 +308,9 @@ appLevelOutMsgs msg model =
         UserReleasedEscape ->
             [ CloseTopmostOverlay ]
 
+        BrowserGotConversions _ conversions ->
+            conversions |> List.concatMap conversionAssetRegistrations
+
         SearchMsg Search.UserClicksResultLine ->
             let
                 query =
@@ -321,6 +324,35 @@ appLevelOutMsgs msg model =
 
         _ ->
             []
+
+
+{-| A served dex swap's legs are curated on the backend, so their symbol and
+decimals are trusted display metadata; register them keyed by contract address
+so the value formatter labels and scales the leg.
+-}
+conversionAssetRegistrations : Api.Data.ExternalConversion -> List OutMsg
+conversionAssetRegistrations c =
+    let
+        reg network asset symbol decimals =
+            if asset == "native" then
+                []
+
+            else
+                case ( symbol, decimals ) of
+                    ( Just s, Just d ) ->
+                        [ RegisterConversionAsset network
+                            { contractAddress = Just asset
+                            , decimals = d
+                            , pegCurrency = Just "market"
+                            , ticker = s
+                            }
+                        ]
+
+                    _ ->
+                        []
+    in
+    reg c.fromNetwork c.fromAsset c.fromAssetSymbol c.fromAssetDecimals
+        ++ reg c.toNetwork c.toAsset c.toAssetSymbol c.toAssetDecimals
 
 
 refreshSearchMatches : Model -> ( Model, List Effect )

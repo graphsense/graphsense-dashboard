@@ -9,6 +9,7 @@ import Css.Table
 import Html.Styled exposing (Html, div)
 import Model.Currency exposing (asset)
 import Model.Pathfinder.ConversionDetails exposing (ConversionDetailsModel)
+import Model.Pathfinder.ConversionEdge as ConversionEdge
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder
@@ -132,13 +133,11 @@ view vc _ isTxOnGraph viewState =
         , titleOfSender = { infoLabel = Locale.string vc.locale "sender" }
         , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
         , valueOfInputValue =
-            viewState.raw.rawInputTransaction
-                |> Tx.getInputValueForAddressFromRawTx cr.fromAddress
+            ConversionEdge.inputValues viewState.raw
                 |> valuesToCell vc (asset cr.fromNetwork (viewState.raw.rawInputTransaction |> Tx.getAssetFromRawTx))
         , valueOfOutputValue =
-            viewState.raw.rawOutputTransaction
-                |> Tx.getOutputValueForAddressFromRawTx cr.toAddress
-                |> valuesToCell vc (asset cr.fromNetwork (viewState.raw.rawOutputTransaction |> Tx.getAssetFromRawTx))
+            ConversionEdge.outputValues viewState.raw
+                |> valuesToCell vc (asset cr.toNetwork (viewState.raw.rawOutputTransaction |> Tx.getAssetFromRawTx))
         , valueOfReceiver = { copyIconInstance = copyIconPathfinderAbove vc cr.toAddress, firstRowText = cr.toAddress |> truncateLongIdentifierWithLengths 8 4 }
         , valueOfSender = { copyIconInstance = copyIconPathfinderAbove vc cr.fromAddress, firstRowText = cr.fromAddress |> truncateLongIdentifierWithLengths 8 4 }
         , valueOfTimestamp = viewState.raw.rawOutputTransaction |> getTimestamp |> timeToCell vc

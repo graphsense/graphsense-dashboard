@@ -1783,6 +1783,29 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
 
         Pathfinder.CloseTopmostOverlay ->
             n (model |> s_dialog Nothing |> s_notifications (model.notifications |> Notification.pop))
+
+        Pathfinder.RegisterConversionAsset network config ->
+            let
+                existing =
+                    Dict.get network model.supportedTokens
+                        |> Maybe.map .tokenConfigs
+                        |> Maybe.withDefault []
+            in
+            if List.any (\tc -> Maybe.map String.toLower tc.contractAddress == Maybe.map String.toLower config.contractAddress) existing then
+                n model
+
+            else
+                let
+                    merged =
+                        { tokenConfigs = config :: existing }
+                in
+                n
+                    { model
+                        | supportedTokens = Dict.insert network merged model.supportedTokens
+                        , config =
+                            model.config
+                                |> s_locale (Locale.setSupportedTokens merged network model.config.locale)
+                    }
     )
         |> Tuple.mapSecond ((++) effects)
 

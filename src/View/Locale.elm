@@ -7,6 +7,7 @@ module View.Locale exposing
     , durationToStringWithPrecision
     , fiat
     , fiatWithoutCode
+    , hasFiat
     , httpErrorToString
     , int
     , intWithoutValueDetailFormatting
@@ -71,7 +72,7 @@ fixpointFactor configs =
                     (.tokenConfigs
                         >> List.map
                             (\{ decimals, ticker } ->
-                                ( ticker, ( 10 ^ toFloat decimals, "wei" ) )
+                                ( String.toLower ticker, ( 10 ^ toFloat decimals, "wei" ) )
                             )
                     )
                 |> Maybe.withDefault []
@@ -361,8 +362,22 @@ currencyWithOptions options model values =
                     |> Maybe.withDefault "0"
 
         Fiat code ->
-            sumFiats code values
-                |> fiat model code
+            if hasFiat values then
+                sumFiats code values
+                    |> fiat model code
+
+            else
+                -- a leg the backend could not price carries no quote: the
+                -- coin amount, never a fabricated "0.00 USD"
+                currencyWithOptions { options | currency = Coin } model values
+
+
+{-| Whether any of the values carries a fiat quote at all. A zero quote
+counts (a priced asset can be worth nothing); an unpriced asset has none.
+-}
+hasFiat : List ( AssetIdentifier, Api.Data.Values ) -> Bool
+hasFiat =
+    List.any (\( _, v ) -> not (List.isEmpty v.fiatValues))
 
 
 currency : Currency -> Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
@@ -406,9 +421,48 @@ coinWithoutCode =
     coinWithOptions False
 
 
+{-| A contract-keyed asset reads by the symbol registered for that contract
+(`RegisterConversionAsset`).
+-}
+resolveAsset : Model -> AssetIdentifier -> AssetIdentifier
+resolveAsset model asset =
+    registeredConfig model asset
+        |> Maybe.map (\tc -> { asset | asset = tc.ticker })
+        |> Maybe.withDefault asset
+
+
+{-| The token config registered for a contract-keyed asset, matched by address
+because the address is the identity — a ticker is a label, two contracts may
+share one.
+-}
+registeredConfig : Model -> AssetIdentifier -> Maybe Api.Data.TokenConfig
+registeredConfig model asset =
+    if isContractAddress asset.asset then
+        Dict.get asset.network model.supportedTokens
+            |> Maybe.map .tokenConfigs
+            |> Maybe.withDefault []
+            |> find
+                (\tc ->
+                    Maybe.map String.toLower tc.contractAddress
+                        == Just (String.toLower asset.asset)
+                )
+
+    else
+        Nothing
+
+
+isContractAddress : String -> Bool
+isContractAddress s =
+    String.length s == 42 && String.startsWith "0x" s
+
+
 coinWithOptions : Bool -> Model -> AssetIdentifier -> Int -> String
-coinWithOptions showCode model asset v =
-    normalizeCoinValue model asset v
+coinWithOptions showCode model rawAsset v =
+    let
+        asset =
+            resolveAsset model rawAsset
+    in
+    normalizeCoinValue model rawAsset v
         |> Maybe.map
             (\value ->
                 let
@@ -446,14 +500,21 @@ coinWithOptions showCode model asset v =
                             " " ++ String.toUpper asset.asset
                        )
             )
-        |> Maybe.withDefault ("unknown currency " ++ asset.asset)
+        |> Maybe.withDefault ("unknown currency " ++ rawAsset.asset)
 
 
 normalizeCoinValue : Model -> AssetIdentifier -> Int -> Maybe Float
-normalizeCoinValue model asset v =
-    fixpointFactor (Dict.get asset.network model.supportedTokens)
-        |> Dict.get (String.toLower asset.asset)
-        |> Maybe.map first
+normalizeCoinValue model rawAsset v =
+    -- a contract-keyed asset scales by the decimals registered for THAT contract
+    (case registeredConfig model rawAsset of
+        Just tc ->
+            Just (10 ^ toFloat tc.decimals)
+
+        Nothing ->
+            fixpointFactor (Dict.get rawAsset.network model.supportedTokens)
+                |> Dict.get (String.toLower rawAsset.asset)
+                |> Maybe.map first
+    )
         |> Maybe.map
             (\f ->
                 if v == 0 then

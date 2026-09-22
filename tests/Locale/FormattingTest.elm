@@ -71,7 +71,42 @@ supportedTokens =
                 ]
             }
           )
+
+        -- display metadata a served swap leg carried, registered the way
+        -- Update.RegisterConversionAsset does: two registrations spell the same
+        -- ticker with different decimals — the contract address, not the
+        -- ticker, is the key
+        , ( "bnb"
+          , { tokenConfigs =
+                [ { contractAddress = Just usdtLikeContract
+                  , decimals = 9
+                  , pegCurrency = Just "market"
+                  , ticker = "USDT"
+                  }
+                , { contractAddress = Just akeContract
+                  , decimals = 18
+                  , pegCurrency = Just "market"
+                  , ticker = "AKE"
+                  }
+                , { contractAddress = Just "0x55d398326f99059ff775485246999027b3197955"
+                  , decimals = 18
+                  , pegCurrency = Just "usd"
+                  , ticker = "usdt"
+                  }
+                ]
+            }
+          )
         ]
+
+
+usdtLikeContract : String
+usdtLikeContract =
+    "0x1111111111111111111111111111111111111111"
+
+
+akeContract : String
+akeContract =
+    "0x2c3a8ee94ddd97244a93bc48298f97d2c412f7db"
 
 
 asset : String -> String -> Model.Currency.AssetIdentifier
@@ -123,6 +158,27 @@ suite =
                 \_ ->
                     Locale.coin en (asset "eth" "nosuchtoken") 2500000
                         |> Expect.equal "unknown currency nosuchtoken"
+            , test "a transfer keyed by contract address reads by its registered symbol" <|
+                \_ ->
+                    -- a swap leg keyed by contract address: the conversion
+                    -- carried the curated symbol and decimals
+                    -- (computed: an integer literal this large would overflow
+                    -- the compiler's 64-bit parse; the app gets it as a JSON double)
+                    Locale.coin (magnitude en) (asset "bnb" akeContract) (34154 * 10 ^ 18)
+                        |> Expect.equal "34.15k AKE"
+            , test "the contract address is matched case-insensitively" <|
+                \_ ->
+                    Locale.coin (magnitude en) (asset "bnb" (String.toUpper akeContract |> String.replace "0X" "0x")) (10 ^ 18)
+                        |> Expect.equal "1.00 AKE"
+            , test "a contract-keyed asset is scaled by the decimals registered for that address" <|
+                \_ ->
+                    -- 9 decimals, not the 18 of the curated usdt whose ticker it spells
+                    Locale.coin en (asset "bnb" usdtLikeContract) 5000000000
+                        |> Expect.equal "5.00 USDT"
+            , test "a ticker-keyed asset still scales by the registry's decimals" <|
+                \_ ->
+                    Locale.coin en (asset "bnb" "usdt") (5 * 10 ^ 18)
+                        |> Expect.equal "5.00 USDT"
             , test "coinWithoutCode drops the ticker" <|
                 \_ ->
                     Locale.coinWithoutCode en (asset "btc" "btc") 100000000
@@ -131,6 +187,24 @@ suite =
                 \_ ->
                     Locale.coin de (asset "btc" "btc") 123456700000000
                         |> Expect.equal "1.234.567,00 BTC"
+            ]
+        , describe "fiat display"
+            [ test "an asset without a fiat quote falls back to its coin amount" <|
+                \_ ->
+                    -- a leg the backend could not price carries no quote: the
+                    -- coin amount, never a fabricated "0.00 USD"
+                    Locale.currency (Fiat "usd") en [ ( asset "bnb" akeContract, values (10 ^ 18) [] ) ]
+                        |> Expect.equal "1.00 AKE"
+            , test "a priced asset shows its fiat value" <|
+                \_ ->
+                    Locale.currency (Fiat "usd") en [ ( asset "eth" "usdt", values 2500000 [ ( "usd", 2.5 ) ] ) ]
+                        |> Expect.equal "2.50 USD"
+            , test "hasFiat tells the two apart" <|
+                \_ ->
+                    ( Locale.hasFiat [ ( asset "bnb" akeContract, values 1 [] ) ]
+                    , Locale.hasFiat [ ( asset "eth" "usdt", values 1 [ ( "usd", 0 ) ] ) ]
+                    )
+                        |> Expect.equal ( False, True )
             ]
         , describe "value detail"
             [ test "exact spells the number out" <|

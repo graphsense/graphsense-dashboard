@@ -17,7 +17,7 @@ import Effect.Api
 import Expect
 import Init.Pathfinder.Id as Id
 import Model.Pathfinder.Network exposing (FindPosition(..))
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder exposing (Msg(..), OutMsg(..))
 import Support.App as App exposing (App)
 import Test exposing (Test, describe, test)
 import Util exposing (removeLeading0x)
@@ -123,6 +123,19 @@ swap =
     }
 
 
+{-| The same swap as the adapter serves it enriched: the native input leg
+carries no display metadata, the token output leg carries its curated symbol
+and decimals.
+-}
+curatedSwap : Api.Data.ExternalConversion
+curatedSwap =
+    { swap
+        | fromAsset = "native"
+        , toAssetSymbol = Just "USD1"
+        , toAssetDecimals = Just 18
+    }
+
+
 
 -- DRIVING
 
@@ -152,13 +165,20 @@ withTx tx =
         )
 
 
+{-| The API answered `/txs/{identifier}/conversions` with these conversions.
+-}
+gotConversionsFor : String -> List Api.Data.ExternalConversion -> App -> App
+gotConversionsFor identifier conversions app =
+    Dict.get (Id.init "bnb" identifier) (App.model app).network.txs
+        |> Maybe.map (\tx -> App.step (BrowserGotConversions tx conversions) app)
+        |> Maybe.withDefault app
+
+
 {-| The API answered `/txs/{identifier}/conversions` with the swap.
 -}
 gotSwapFor : String -> App -> App
-gotSwapFor identifier app =
-    Dict.get (Id.init "bnb" identifier) (App.model app).network.txs
-        |> Maybe.map (\tx -> App.step (BrowserGotConversions tx [ swap ]) app)
-        |> Maybe.withDefault app
+gotSwapFor identifier =
+    gotConversionsFor identifier [ swap ]
 
 
 answerTxRequest : Api.Data.Tx -> App -> App
@@ -301,5 +321,28 @@ suite =
                         |> answerTxRequest outputLegTx
                         |> (\app -> ( swapEdges app, Dict.size (App.model app).network.txs ))
                         |> Expect.equal ( [ ( inputLegId, outputLegId ) ], 3 )
+            ]
+        , describe "a swap leg's curated symbol and decimals are registered"
+            [ test "the token leg registers what the conversion carries" <|
+                \_ ->
+                    App.init
+                        |> withTx inputLegTx
+                        |> gotConversionsFor inputLegId [ curatedSwap ]
+                        |> App.outMsgs
+                        |> Expect.equal
+                            [ RegisterConversionAsset "bnb"
+                                { contractAddress = Just "0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d"
+                                , decimals = 18
+                                , pegCurrency = Just "market"
+                                , ticker = "USD1"
+                                }
+                            ]
+            , test "a leg without symbol and decimals registers nothing" <|
+                \_ ->
+                    App.init
+                        |> withTx inputLegTx
+                        |> gotSwapFor inputLegId
+                        |> App.outMsgs
+                        |> Expect.equal []
             ]
         ]

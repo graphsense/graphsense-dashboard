@@ -203,6 +203,10 @@ type OutMsg
       -- enter on one identifier the search matched nowhere; the shell owns the toast
     | IdentifierNotFound String
     | CloseTopmostOverlay
+      -- display metadata a served swap leg carries — curated on the backend,
+      -- keyed by contract address — so the value formatter can label and
+      -- scale the leg
+    | RegisterConversionAsset String Api.Data.TokenConfig
 
 
 type OverlayWindows
