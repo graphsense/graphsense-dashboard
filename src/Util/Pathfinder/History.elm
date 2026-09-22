@@ -308,6 +308,9 @@ shallPushHistory msg _ =
         BrowserGotConversionLoop _ _ _ ->
             False
 
+        BrowserGotConversionInputLeg _ _ _ ->
+            False
+
         BrowserGotConversions _ _ ->
             False
 

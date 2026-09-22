@@ -533,6 +533,15 @@ type alias ExternalConversion =
     , toAssetTransfer : String
     , toIsSupportedAsset : Bool
     , toNetwork : String
+    -- hand-patched (DASHBOARD_CHANGES D-19/D-26): a dex_swap token leg carries
+    -- its curated symbol and decimals and, when the backend could price it,
+    -- fiat per leg; regenerate with `make openapi` only after the spec catches up
+    , fromAssetSymbol : Maybe String
+    , toAssetSymbol : Maybe String
+    , fromAssetDecimals : Maybe Int
+    , toAssetDecimals : Maybe Int
+    , fromAmountFiatValues : Maybe (List Rate)
+    , toAmountFiatValues : Maybe (List Rate)
     }
 
 
@@ -1670,6 +1679,12 @@ encodeExternalConversionPairs model =
             , encode "to_asset_transfer" Json.Encode.string model.toAssetTransfer
             , encode "to_is_supported_asset" Json.Encode.bool model.toIsSupportedAsset
             , encode "to_network" Json.Encode.string model.toNetwork
+            , maybeEncode "from_asset_symbol" Json.Encode.string model.fromAssetSymbol
+            , maybeEncode "to_asset_symbol" Json.Encode.string model.toAssetSymbol
+            , maybeEncode "from_asset_decimals" Json.Encode.int model.fromAssetDecimals
+            , maybeEncode "to_asset_decimals" Json.Encode.int model.toAssetDecimals
+            , maybeEncode "from_amount_fiat_values" (Json.Encode.list encodeRate) model.fromAmountFiatValues
+            , maybeEncode "to_amount_fiat_values" (Json.Encode.list encodeRate) model.toAmountFiatValues
             ]
     in
     pairs
@@ -2962,8 +2977,14 @@ externalConversionDecoder =
         |> decode "to_amount" Json.Decode.string 
         |> decode "to_asset" Json.Decode.string 
         |> decode "to_asset_transfer" Json.Decode.string 
-        |> decode "to_is_supported_asset" Json.Decode.bool 
-        |> decode "to_network" Json.Decode.string 
+        |> decode "to_is_supported_asset" Json.Decode.bool
+        |> decode "to_network" Json.Decode.string
+        |> maybeDecode "from_asset_symbol" Json.Decode.string Nothing
+        |> maybeDecode "to_asset_symbol" Json.Decode.string Nothing
+        |> maybeDecode "from_asset_decimals" Json.Decode.int Nothing
+        |> maybeDecode "to_asset_decimals" Json.Decode.int Nothing
+        |> maybeDecode "from_amount_fiat_values" (Json.Decode.list rateDecoder) Nothing
+        |> maybeDecode "to_amount_fiat_values" (Json.Decode.list rateDecoder) Nothing
 
 
 externalConversionConversionTypeDecoder : Json.Decode.Decoder ExternalConversionConversionType

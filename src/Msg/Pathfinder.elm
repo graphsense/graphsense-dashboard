@@ -108,6 +108,7 @@ type Msg
     | BrowserGotActor String Api.Data.Actor
     | BrowserGotTx AddingTxConfig Api.Data.Tx
     | BrowserGotConversionLoop Tx Api.Data.ExternalConversion Api.Data.Tx
+    | BrowserGotConversionInputLeg Tx Api.Data.ExternalConversion Api.Data.Tx
     | BrowserGotConversions Tx (List Api.Data.ExternalConversion)
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
     | UserClickedTx Id

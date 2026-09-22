@@ -103,6 +103,51 @@ suite =
                         |> Result.toMaybe
                         |> Expect.equal Nothing
             ]
+        , describe "a dex swap leg's curated display metadata and fiat"
+            -- A swap leg may move a token the dashboard's own token list does
+            -- not carry. The adapter only serves a dex_swap when both legs are
+            -- on its curated list, so it can name the token for us: the
+            -- optional per-leg symbol/decimals are trusted display metadata,
+            -- and per-leg fiat arrives only when the backend could price that
+            -- leg. All six are absent from the spec and from any baseline
+            -- body, so these pin the hand patch in openapi/src/Api/Data.elm.
+            [ test "decodes symbol, decimals and fiat when the adapter sends them" <|
+                \_ ->
+                    enrichedDexSwap
+                        |> Json.Decode.decodeString Api.Data.externalConversionDecoder
+                        |> Result.map
+                            (\c ->
+                                -- Elm has no four-tuple
+                                { toAssetSymbol = c.toAssetSymbol
+                                , toAssetDecimals = c.toAssetDecimals
+                                , fromAmountFiatValues = c.fromAmountFiatValues
+                                , toAmountFiatValues = c.toAmountFiatValues
+                                }
+                            )
+                        |> Expect.equal
+                            (Ok
+                                { toAssetSymbol = Just "KAISER"
+                                , toAssetDecimals = Just 9
+                                , fromAmountFiatValues = Just [ { code = "usd", value = 6.0 } ]
+                                , toAmountFiatValues = Nothing
+                                }
+                            )
+            , test "a baseline body without them still decodes" <|
+                \_ ->
+                    baselineDexSwap
+                        |> Json.Decode.decodeString Api.Data.externalConversionDecoder
+                        |> Result.map
+                            (\c ->
+                                [ c.fromAssetSymbol /= Nothing
+                                , c.toAssetSymbol /= Nothing
+                                , c.fromAssetDecimals /= Nothing
+                                , c.toAssetDecimals /= Nothing
+                                , c.fromAmountFiatValues /= Nothing
+                                , c.toAmountFiatValues /= Nothing
+                                ]
+                            )
+                        |> Expect.equal (Ok [ False, False, False, False, False, False ])
+            ]
         , describe "the client is stricter than the spec about nulls"
             -- The spec types both of these `anyOf: [string, null]`, the client
             -- as a plain String. A live instance does send them (checked
@@ -205,6 +250,24 @@ nullable tx summaries are absent rather than null.
 txlessAddress : String
 txlessAddress =
     """{"currency":"eth","address":"0xab","entity":1,"cluster":1,"status":"clean","balance":{"value":0,"fiat_values":[]},"total_received":{"value":0,"fiat_values":[]},"total_spent":{"value":0,"fiat_values":[]},"in_degree":0,"out_degree":0,"no_incoming_txs":0,"no_outgoing_txs":0}"""
+
+
+{-| A dex\_swap as the live baseline serves it (checked 2026-09-22 against
+be8b3e387e9f): exactly the thirteen keys the spec declares, native in, an
+uncurated-to-the-baseline token out.
+-}
+baselineDexSwap : String
+baselineDexSwap =
+    """{"conversion_type":"dex_swap","from_address":"0x1f9090aae28b8a3dceadf281b0f12828e676c326","from_amount":"1000000000000000000","from_asset":"native","from_asset_transfer":"0","from_is_supported_asset":true,"from_network":"eth","to_address":"0x1f9090aae28b8a3dceadf281b0f12828e676c326","to_amount":"123456789","to_asset":"0x87b7c4bba0b2a9d4dbfa0b1b3b3b0a1b2c3d2c74","to_asset_transfer":"1","to_is_supported_asset":false,"to_network":"eth"}"""
+
+
+{-| The same swap from the adapter once it serves curated display metadata:
+the thirteen keys plus a symbol and decimals per token leg, and fiat only for
+the leg it could price.
+-}
+enrichedDexSwap : String
+enrichedDexSwap =
+    """{"conversion_type":"dex_swap","from_address":"0x1f9090aae28b8a3dceadf281b0f12828e676c326","from_amount":"1000000000000000000","from_asset":"native","from_asset_transfer":"0","from_is_supported_asset":true,"from_network":"eth","to_address":"0x1f9090aae28b8a3dceadf281b0f12828e676c326","to_amount":"123456789","to_asset":"0x87b7c4bba0b2a9d4dbfa0b1b3b3b0a1b2c3d2c74","to_asset_transfer":"1","to_is_supported_asset":false,"to_network":"eth","from_asset_symbol":"USDC","from_asset_decimals":6,"to_asset_symbol":"KAISER","to_asset_decimals":9,"from_amount_fiat_values":[{"code":"usd","value":6.0}]}"""
 
 
 {-| The same body from a serializer that keeps nulls instead of dropping them.
