@@ -21,6 +21,7 @@ module Update.Pathfinder.Network exposing
     , insertFetchedEdge
     , resolveOverlapsExcept
     , rupsertAggEdge
+    , setTxHovered
     , snapToGrid
     , trySetHoverConversionLoop
     , updateAddress
@@ -49,7 +50,7 @@ import Model.Pathfinder.Address exposing (Address, txsToSet)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Deserialize exposing (DeserializedAggEdge, DeserializedThing)
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import RecordSetter exposing (..)
@@ -418,9 +419,22 @@ addAddressWithPosition pc position id model =
                             findAddressCoords id model
                                 |> Maybe.Extra.orElseLazy
                                     (\_ -> Just { x = x, y = y })
+
+                        Below id_ ->
+                            Dict.get id_ model.addresses
+                                |> Maybe.map (findAddressCoordsBelowAddress model)
+                                |> Maybe.Extra.orElseLazy
+                                    (\_ -> findAddressCoords id model)
                     )
                         |> Maybe.withDefault (findFreeCoords model)
-                        |> avoidOverlappingEdges things
+                        |> (case position of
+                                Below _ ->
+                                    -- keep the new address in the anchor's column
+                                    identity
+
+                                _ ->
+                                    avoidOverlappingEdges things
+                           )
 
                 newAddress =
                     Address.init id coords
@@ -460,6 +474,34 @@ findAddressCoordsNextToAddress : Direction -> Address -> Coords
 findAddressCoordsNextToAddress direction address =
     { x = address.x + Direction.signOffsetByDirection direction (nodeXOffset * 2)
     , y = A.getTo address.y
+    }
+
+
+{-| First free slot below the given address in its column: skips the
+addresses already stacked directly beneath it, so repeated inserts line up
+one below the other instead of piling onto the same spot.
+-}
+findAddressCoordsBelowAddress : Network -> Address -> Coords
+findAddressCoordsBelowAddress model address =
+    let
+        column =
+            model.addresses
+                |> Dict.values
+                |> List.filter (\a -> a.x > address.x - 1 && a.x < address.x + 1)
+                |> List.map (.y >> A.getTo)
+
+        occupied y =
+            List.any (\ay -> abs (ay - y) < nodeYOffset / 2) column
+
+        firstFree y =
+            if occupied y then
+                firstFree (y + nodeYOffset)
+
+            else
+                y
+    in
+    { x = address.x
+    , y = firstFree (A.getTo address.y + nodeYOffset)
     }
 
 
@@ -879,6 +921,43 @@ updateTx id update model =
         |> Maybe.withDefault model
 
 
+{-| Set the hover state of a tx together with its siblings: the other txs on
+the graph that belong to the same base transaction. An account tx and the
+internal/token transfers it triggers (`<hash>`, `<hash>_I660`, `<hash>_T3`)
+are separate edges, but hovering one of them highlights all of them. Only the
+hover is shared; each one stays independently selectable.
+-}
+setTxHovered : Id -> Bool -> Network -> Network
+setTxHovered id isHovered network =
+    case Dict.get id network.txs of
+        Nothing ->
+            network
+
+        Just tx ->
+            let
+                baseHash =
+                    Tx.getRawBaseTxHashForTx tx
+
+                isSibling sid sibling =
+                    Id.network sid
+                        == Id.network id
+                        && Tx.getRawBaseTxHashForTx sibling
+                        == baseHash
+            in
+            { network
+                | txs =
+                    Dict.map
+                        (\sid t ->
+                            if sid == id || isSibling sid t then
+                                { t | hovered = isHovered }
+
+                            else
+                                t
+                        )
+                        network.txs
+            }
+
+
 updateAllTxs : (Tx -> Tx) -> Network -> Network
 updateAllTxs upd model =
     model.txs |> Dict.foldl (\id _ -> updateTx id upd) model
@@ -1013,6 +1092,9 @@ addTxWithPosition pc position tx network =
                                     Auto ->
                                         avoidOverlappingEdges things <| findAccountTxCoords network t
 
+                                    Below _ ->
+                                        avoidOverlappingEdges things <| findAccountTxCoords network t
+
                                     NextTo ( direction, id_ ) ->
                                         avoidOverlappingEdges things <|
                                             (Dict.get id_ network.addresses
@@ -1080,6 +1162,9 @@ addTxWithPosition pc position tx network =
                             coords =
                                 case position of
                                     Auto ->
+                                        avoidOverlappingEdges things <| findUtxoTxCoords network t
+
+                                    Below _ ->
                                         avoidOverlappingEdges things <| findUtxoTxCoords network t
 
                                     NextTo ( direction, id_ ) ->

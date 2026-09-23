@@ -23,6 +23,7 @@ import Msg.Pathfinder.TxDetails as TxDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Route.Pathfinder exposing (Route)
+import Set exposing (Set)
 import Time
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
@@ -65,6 +66,7 @@ type Msg
     | UserOpensTxAnnotationDialog Id
     | UserClickedRestart
     | UserClickedShowLegend
+    | UserClickedShowShortcuts
     | UserClickedToggleHelpDropdown
     | UserClickedRestartYes
     | UserClickedUndo
@@ -107,8 +109,8 @@ type Msg
     | NoOp
     | BrowserGotActor String Api.Data.Actor
     | BrowserGotTx AddingTxConfig Api.Data.Tx
-    | BrowserGotConversionLoop Tx Api.Data.ExternalConversion Api.Data.Tx
-    | BrowserGotConversions Tx (List Api.Data.ExternalConversion)
+    | BrowserGotConversionLoop (Set Id) Tx Api.Data.ExternalConversion Api.Data.Tx
+    | BrowserGotConversions (Set Id) Tx (List Api.Data.ExternalConversion)
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
     | UserClickedTx Id
     | UserClickedAddressCheckboxInTable Id
@@ -160,7 +162,7 @@ type Msg
     | UserMovesMouseOverConversionEdge ( Id, Id ) ConversionEdge
     | UserMovesMouseOutConversionEdge ( Id, Id ) ConversionEdge
     | EventualMessagesHeartBeat
-    | InternalConversionLoopAddressesLoaded Api.Data.ExternalConversion
+    | InternalConversionLoopAddressesLoaded (Set Id) Api.Data.ExternalConversion
     | BrowserGotTxFlow AddingTxConfig Api.Data.Tx Api.Data.Txs
     | InternalExportGraphTxsCompleted
     | InternalChangedTxFilter TxsFilterId TransactionFilter.Settings
@@ -188,6 +190,7 @@ place that decides.
 -}
 type OutMsg
     = ShowLegendDialog
+    | ShowShortcutsDialog
     | ConfirmRestart
     | Restart
     | SaveUserSettings

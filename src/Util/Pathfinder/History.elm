@@ -10,7 +10,7 @@ import Plugin.Update as Plugin
 shallPushHistory : Msg -> Model -> Bool
 shallPushHistory msg _ =
     case msg of
-        InternalConversionLoopAddressesLoaded _ ->
+        InternalConversionLoopAddressesLoaded _ _ ->
             False
 
         InternalExpandSpecificTxAndAddress _ _ _ _ ->
@@ -95,6 +95,9 @@ shallPushHistory msg _ =
             False
 
         UserClickedShowLegend ->
+            False
+
+        UserClickedShowShortcuts ->
             False
 
         UserClickedToggleHelpDropdown ->
@@ -305,10 +308,10 @@ shallPushHistory msg _ =
         BrowserGotTxFlow _ _ _ ->
             False
 
-        BrowserGotConversionLoop _ _ _ ->
+        BrowserGotConversionLoop _ _ _ _ ->
             False
 
-        BrowserGotConversions _ _ ->
+        BrowserGotConversions _ _ _ ->
             False
 
         ChangedDisplaySettingsMsg _ ->

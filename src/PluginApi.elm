@@ -270,6 +270,9 @@ surface =
     , ref Model.Locale.getFiatValue
 
     -- Model.Notification
+    , ref Model.Notification.Error
+    , ref Model.Notification.Info
+    , ref Model.Notification.Success
     , ref Model.Notification.errorDefault
     , ref Model.Notification.fromHttpErrorWithMoreInfo
     , ref Model.Notification.infoDefault

@@ -120,6 +120,18 @@ async function handleRefreshMode() {
                 console.error('Error parsing whitelist.json:', e.message);
                 process.exit(1);
             }
+        } else {
+            whitelist = {frames: [], components: []};
+        }
+
+        // If CLI arguments are provided, intersect with whitelist.json
+        if (figmaWhitelistFrames.length > 0) {
+            const whitelistFramesSet = new Set(whitelist.frames);
+            whitelist.frames = figmaWhitelistFrames.filter(f => whitelistFramesSet.has(f));
+        }
+        if (figmaWhitelistComponents.length > 0) {
+            const whitelistComponentsSet = new Set(whitelist.components);
+            whitelist.components = figmaWhitelistComponents.filter(c => whitelistComponentsSet.has(c));
         }
 
         flags = {
@@ -175,10 +187,32 @@ async function handleGenerateMode() {
         const colormaps = JSON.parse(readFileSync(colormapsPath, 'utf8'));
         const pluginFigmaContent = JSON.parse(readFileSync(pluginFigmaPath, 'utf8'));
         
+        // Load whitelist.json if it exists
+        let whitelist = {frames: [], components: []};
+        const whitelistPath = join(__dirname, '..', 'plugins', pluginName, 'theme', 'whitelist.json');
+        if (existsSync(whitelistPath)) {
+            try {
+                whitelist = JSON.parse(readFileSync(whitelistPath, 'utf8'));
+            } catch (e) {
+                console.error('Error parsing whitelist.json:', e.message);
+                process.exit(1);
+            }
+        }
+        
+        // If CLI arguments are provided, intersect with whitelist.json
+        if (figmaWhitelistFrames.length > 0) {
+            const whitelistFramesSet = new Set(whitelist.frames);
+            whitelist.frames = figmaWhitelistFrames.filter(f => whitelistFramesSet.has(f));
+        }
+        if (figmaWhitelistComponents.length > 0) {
+            const whitelistComponentsSet = new Set(whitelist.components);
+            whitelist.components = figmaWhitelistComponents.filter(c => whitelistComponentsSet.has(c));
+        }
+        
         flags = {
             colormaps: colormaps,
             theme: pluginFigmaContent,
-            whitelist: {frames:[], components:[]}
+            whitelist: whitelist
         };
         outputDir = join(__dirname, '..', 'generated', 'theme');
     }
@@ -200,7 +234,8 @@ async function runCodegenIteratively(flags, outputDir) {
   }
   for (const node in nodes) {
     const name = nodes[node].document.name
-    if(flags.whitelist.frames.length && flags.whitelist.frames.indexOf(name) === -1) {
+    // Same semantics as Generate.Util.matchWhitelist: case-insensitive regex search
+    if(flags.whitelist.frames.length && !flags.whitelist.frames.some(r => new RegExp(r, 'i').test(name))) {
       continue
     }
     flags.theme.figma.nodes = {...colorNodes}

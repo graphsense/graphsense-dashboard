@@ -690,6 +690,13 @@ graphActionsView vc _ model =
                               }
                                 |> ContextMenuItem.init2
                                 |> ContextMenuItem.view vc
+                            , { icon = HIcons.iconsShortcut {}
+                              , text1 = "Keyboard shortcuts"
+                              , text2 = Nothing
+                              , msg = UserClickedShowShortcuts
+                              }
+                                |> ContextMenuItem.init2
+                                |> ContextMenuItem.view vc
                             , { link = "https://www.iknaio.com/learning#pathfinder20"
                               , icon = HIcons.iconsVideoSWithAttributes (HIcons.iconsVideoSAttributes |> Rs.s_root [ fixFillRule ]) {}
                               , text1 = "Watch tutorials"

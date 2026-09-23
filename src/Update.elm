@@ -67,6 +67,7 @@ import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
 import View.Locale as Locale
 import View.Pathfinder.Legend exposing (legendView)
+import View.Pathfinder.ShortcutsDialog as ShortcutsDialog
 
 
 setConcepts : List Api.Data.Concept -> Model t -> Model t
@@ -1454,6 +1455,18 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
                              , defaultMsg = closemsg
                              }
                                 |> Dialog.Custom
+                            )
+                }
+
+        Pathfinder.ShowShortcutsDialog ->
+            n
+                { model
+                    | dialog =
+                        Just
+                            ({ html = ShortcutsDialog.view UserClosesDialog
+                             , defaultMsg = UserClosesDialog
+                             }
+                                |> Dialog.CustomWithVc
                             )
                 }
 
