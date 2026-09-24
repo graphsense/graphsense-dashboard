@@ -2393,19 +2393,25 @@ updateByMsg uc msg model =
                     model.eventualMessages
                         |> EventualMessages.addMessage eventualMsg (InternalConversionLoopAddressesLoaded conversion)
             in
-            (model
-                |> s_network nnn
-                |> s_eventualMessages eventualMessagesNew
-            )
-                |> checkSelection uc
-                |> and
-                    (if newTx then
-                        autoLoadAddresses False ntx
+            if Tx.getTxId tx == txA.id then
+                -- the OTHER leg was asked for, but the leg already in hand came
+                -- back: pairing it would draw a swap edge from a tx to itself
+                n model
 
-                     else
-                        n
-                    )
-                |> Tuple.mapSecond ((++) (mcmd |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault []))
+            else
+                (model
+                    |> s_network nnn
+                    |> s_eventualMessages eventualMessagesNew
+                )
+                    |> checkSelection uc
+                    |> and
+                        (if newTx then
+                            autoLoadAddresses False ntx
+
+                         else
+                            n
+                        )
+                    |> Tuple.mapSecond ((++) (mcmd |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault []))
 
         BrowserGotConversions tx conversions ->
             -- Which leg is `tx`? For a sub-tx id the API only returns conversions
@@ -2447,11 +2453,9 @@ updateByMsg uc msg model =
 
                 fetch id continuation =
                     continuation
-                        |> Api.GetTxEffect
+                        |> Api.GetConversionLegEffect
                             { currency = Id.network id
                             , txHash = Id.id id
-                            , includeIo = True
-                            , tokenTxId = Nothing
                             }
                         |> ApiEffect
             in
@@ -2489,12 +2493,15 @@ updateByMsg uc msg model =
                 pos =
                     anchor |> Tx.toFinalCoords
 
-                -- we asked for this tx by the identifier the swap names, so it
-                -- should be one of its legs. Were a backend to answer under a
-                -- different one, continuing would pair nothing and ask for the
-                -- very same leg again, forever -- so drop it instead.
-                isLeg =
-                    isLegTransfer (Tx.getTxId tx)
+                -- we asked for this tx by the identifier the swap names for its
+                -- INPUT leg, so only that leg may continue the walk. Were a
+                -- backend to answer under a different identifier, continuing would
+                -- pair nothing and ask for the very same leg again, forever; were
+                -- it to answer with the OUTPUT leg, the walk would ask for the
+                -- input leg once more and could pair the output leg with itself
+                -- -- so drop either instead.
+                isInputLeg =
+                    isLegTransfer (Tx.getTxId tx) conversion.fromNetwork conversion.fromAssetTransfer
 
                 ( ( legTx, nn ), newTx ) =
                     case Dict.get (Tx.getTxId tx) model.network.txs of
@@ -2504,7 +2511,7 @@ updateByMsg uc msg model =
                         Nothing ->
                             ( Network.addTxWithPosition model.config (Fixed pos.x (pos.y + 2)) tx model.network, True )
             in
-            if not (isLeg conversion.fromNetwork conversion.fromAssetTransfer || isLeg conversion.toNetwork conversion.toAssetTransfer) then
+            if not isInputLeg then
                 n model
 
             else

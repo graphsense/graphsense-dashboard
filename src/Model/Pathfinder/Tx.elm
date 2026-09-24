@@ -415,40 +415,56 @@ getInputs tx =
             [ from ]
 
 
-getInputValueForAddressFromRawTx : String -> Api.Data.Tx -> Api.Data.Values
+{-| What the raw tx moves out of `address`, or `Nothing` when `address` is not
+among its inputs (callers decide what a missing leg is worth).
+-}
+getInputValueForAddressFromRawTx : String -> Api.Data.Tx -> Maybe Api.Data.Values
 getInputValueForAddressFromRawTx address tx =
     case tx of
         Api.Data.TxTxAccount { fromAddress, value } ->
-            if String.toLower fromAddress == String.toLower address then
-                value
-
-            else
-                Data.valuesZero
+            valueIfSameAddress address fromAddress value
 
         Api.Data.TxTxUtxo { inputs } ->
-            inputs
-                |> Maybe.withDefault []
-                |> List.filter (.address >> List.map String.toLower >> Set.fromList >> Set.member (String.toLower address))
-                |> List.map .value
-                |> Data.sumValues
+            sumIoValuesForAddress address inputs
 
 
-getOutputValueForAddressFromRawTx : String -> Api.Data.Tx -> Api.Data.Values
+{-| What the raw tx moves into `address`, or `Nothing` when `address` is not
+among its outputs.
+-}
+getOutputValueForAddressFromRawTx : String -> Api.Data.Tx -> Maybe Api.Data.Values
 getOutputValueForAddressFromRawTx address tx =
     case tx of
         Api.Data.TxTxAccount { toAddress, value } ->
-            if String.toLower toAddress == String.toLower address then
-                value
-
-            else
-                Data.valuesZero
+            valueIfSameAddress address toAddress value
 
         Api.Data.TxTxUtxo { outputs } ->
-            outputs
-                |> Maybe.withDefault []
-                |> List.filter (.address >> List.map String.toLower >> Set.fromList >> Set.member (String.toLower address))
+            sumIoValuesForAddress address outputs
+
+
+valueIfSameAddress : String -> String -> Api.Data.Values -> Maybe Api.Data.Values
+valueIfSameAddress address candidate value =
+    if String.toLower candidate == String.toLower address then
+        Just value
+
+    else
+        Nothing
+
+
+sumIoValuesForAddress : String -> Maybe (List Api.Data.TxValue) -> Maybe Api.Data.Values
+sumIoValuesForAddress address ios =
+    case
+        ios
+            |> Maybe.withDefault []
+            |> List.filter (.address >> List.map String.toLower >> Set.fromList >> Set.member (String.toLower address))
+    of
+        [] ->
+            Nothing
+
+        matching ->
+            matching
                 |> List.map .value
                 |> Data.sumValues
+                |> Just
 
 
 isZeroValueTx : Api.Data.Tx -> Bool

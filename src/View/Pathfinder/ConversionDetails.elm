@@ -1,4 +1,4 @@
-module View.Pathfinder.ConversionDetails exposing (view)
+module View.Pathfinder.ConversionDetails exposing (outputAsset, view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -7,9 +7,9 @@ import Css
 import Css.Pathfinder exposing (sidePanelCss)
 import Css.Table
 import Html.Styled exposing (Html, div)
-import Model.Currency exposing (asset)
+import Model.Currency exposing (AssetIdentifier, asset)
 import Model.Pathfinder.ConversionDetails exposing (ConversionDetailsModel)
-import Model.Pathfinder.ConversionEdge as ConversionEdge
+import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder
@@ -78,6 +78,21 @@ txTab vc isTxOnGraph viewState =
         |> subTxsTab
 
 
+{-| The asset the input leg moves, on the network the conversion starts on.
+-}
+inputAsset : ConversionEdge -> AssetIdentifier
+inputAsset c =
+    asset c.raw.fromNetwork (c.rawInputTransaction |> Tx.getAssetFromRawTx)
+
+
+{-| The asset the output leg moves, on the network the conversion ends on: for
+a bridge that is the destination network, not the one the input leg is on.
+-}
+outputAsset : ConversionEdge -> AssetIdentifier
+outputAsset c =
+    asset c.raw.toNetwork (c.rawOutputTransaction |> Tx.getAssetFromRawTx)
+
+
 view : View.Config -> ( Id, Id ) -> (Id -> Bool) -> ConversionDetailsModel -> Html Pathfinder.Msg
 view vc _ isTxOnGraph viewState =
     let
@@ -134,10 +149,10 @@ view vc _ isTxOnGraph viewState =
         , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
         , valueOfInputValue =
             ConversionEdge.inputValues viewState.raw
-                |> valuesToCell vc (asset cr.fromNetwork (viewState.raw.rawInputTransaction |> Tx.getAssetFromRawTx))
+                |> valuesToCell vc (inputAsset viewState.raw)
         , valueOfOutputValue =
             ConversionEdge.outputValues viewState.raw
-                |> valuesToCell vc (asset cr.toNetwork (viewState.raw.rawOutputTransaction |> Tx.getAssetFromRawTx))
+                |> valuesToCell vc (outputAsset viewState.raw)
         , valueOfReceiver = { copyIconInstance = copyIconPathfinderAbove vc cr.toAddress, firstRowText = cr.toAddress |> truncateLongIdentifierWithLengths 8 4 }
         , valueOfSender = { copyIconInstance = copyIconPathfinderAbove vc cr.fromAddress, firstRowText = cr.fromAddress |> truncateLongIdentifierWithLengths 8 4 }
         , valueOfTimestamp = viewState.raw.rawOutputTransaction |> getTimestamp |> timeToCell vc

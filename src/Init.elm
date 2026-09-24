@@ -15,7 +15,6 @@ import Model exposing (..)
 import Model.Locale as Locale
 import Plugin.Update as Plugin
 import RemoteData exposing (RemoteData(..))
-import Set
 import Tuple exposing (first)
 import Update exposing (updateByPluginOutMsg)
 import Url exposing (Url)
@@ -62,7 +61,7 @@ init uc flags url key =
       , error = ""
       , statusbar = Statusbar.init
       , supportedTokens = Dict.empty
-      , tokenListsLoaded = Set.empty
+      , tokenLists = Dict.empty
       , dialog = Nothing
       , plugins = pluginStates
       , dirty = False

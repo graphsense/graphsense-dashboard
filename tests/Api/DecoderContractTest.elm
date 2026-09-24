@@ -147,6 +147,36 @@ suite =
                                 ]
                             )
                         |> Expect.equal (Ok [ False, False, False, False, False, False ])
+            , test "decodes the from leg's symbol and decimals when it is a token" <|
+                -- the from-leg registration (Update.Pathfinder) fires only on
+                -- a decoded symbol and decimals: a typo in either key would
+                -- silently turn them into Nothing
+                \_ ->
+                    tokenInputDexSwap
+                        |> Json.Decode.decodeString Api.Data.externalConversionDecoder
+                        |> Result.map legMetadata
+                        |> Expect.equal
+                            (Ok
+                                { fromAssetSymbol = Just "USDT"
+                                , fromAssetDecimals = Just 6
+                                , toAssetSymbol = Nothing
+                                , toAssetDecimals = Nothing
+                                }
+                            )
+            , test "a null from-leg symbol decodes to Nothing" <|
+                \_ ->
+                    tokenInputDexSwap
+                        |> String.replace "\"from_asset_symbol\":\"USDT\"" "\"from_asset_symbol\":null"
+                        |> Json.Decode.decodeString Api.Data.externalConversionDecoder
+                        |> Result.map legMetadata
+                        |> Expect.equal
+                            (Ok
+                                { fromAssetSymbol = Nothing
+                                , fromAssetDecimals = Just 6
+                                , toAssetSymbol = Nothing
+                                , toAssetDecimals = Nothing
+                                }
+                            )
             ]
         , describe "the client is stricter than the spec about nulls"
             -- The spec types both of these `anyOf: [string, null]`, the client
@@ -278,6 +308,27 @@ enrichment. Symbol and decimals are the curated list's own
 enrichedDexSwap : String
 enrichedDexSwap =
     """{"conversion_type":"dex_swap","from_address":"0x4c2d696441a11760429cd9845bd84987b9313242","to_address":"0x4c2d696441a11760429cd9845bd84987b9313242","from_asset":"native","to_asset":"0x87b723960c170561e6b7cb74188b5f159e272c74","from_amount":"0x470de4df820000","to_amount":"0x22db8e23bcaee","from_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_I603","to_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_T250","from_network":"eth","to_network":"eth","from_is_supported_asset":true,"to_is_supported_asset":false,"to_asset_symbol":"KAISER","to_asset_decimals":9,"from_amount_fiat_values":[{"code":"usd","value":60.0}]}"""
+
+
+{-| The enriched row turned around: a token goes in and the native coin comes
+out, so the curated symbol and decimals sit on the from leg. USDT's are the
+curated list's own; the to leg, native, carries none. The leg transfers are
+swapped to match (the token leg is a `_T` transfer, the native one a trace).
+-}
+tokenInputDexSwap : String
+tokenInputDexSwap =
+    """{"conversion_type":"dex_swap","from_address":"0x4c2d696441a11760429cd9845bd84987b9313242","to_address":"0x4c2d696441a11760429cd9845bd84987b9313242","from_asset":"0xdac17f958d2ee523a2206206994597c13d831ec7","to_asset":"native","from_amount":"0x470de4df820000","to_amount":"0x22db8e23bcaee","from_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_T250","to_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_I603","from_network":"eth","to_network":"eth","from_is_supported_asset":true,"to_is_supported_asset":true,"from_asset_symbol":"USDT","from_asset_decimals":6,"from_amount_fiat_values":[{"code":"usd","value":60.0}]}"""
+
+
+legMetadata :
+    Api.Data.ExternalConversion
+    -> { fromAssetSymbol : Maybe String, fromAssetDecimals : Maybe Int, toAssetSymbol : Maybe String, toAssetDecimals : Maybe Int }
+legMetadata c =
+    { fromAssetSymbol = c.fromAssetSymbol
+    , fromAssetDecimals = c.fromAssetDecimals
+    , toAssetSymbol = c.toAssetSymbol
+    , toAssetDecimals = c.toAssetDecimals
+    }
 
 
 {-| The same body from a serializer that keeps nulls instead of dropping them.

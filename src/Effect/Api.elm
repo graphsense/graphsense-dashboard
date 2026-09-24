@@ -333,6 +333,13 @@ type Effect msg
         }
         (Api.Data.RelatedAddresses -> msg)
     | GetConversionEffect { currency : String, txHash : String } (List Api.Data.ExternalConversion -> msg)
+      {- A swap/bridge leg named by a conversion, fetched like `GetTxEffect`
+         with io. Its own constructor so the shell can tell a leg the API
+         cannot reconstruct (a 404 on a synthesized leg, D-27) from a tx the
+         user asked for: the first ends the walk quietly, the second is a
+         "transaction not found" error.
+      -}
+    | GetConversionLegEffect { currency : String, txHash : String } (Api.Data.Tx -> msg)
     | ListTxFlowsEffect
         { currency : String
         , txHash : String
@@ -572,6 +579,11 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> GetConversionEffect eff
+
+        GetConversionLegEffect eff m ->
+            m
+                >> mapMsg
+                |> GetConversionLegEffect eff
 
         CancelEffect s ->
             CancelEffect s
@@ -1025,6 +1037,10 @@ perform apiKey wrapMsg cancelMsg effect =
             Api.Request.Txs.getTxConversions currency txHash
                 |> send apiKey wrapMsg effect toMsg
 
+        GetConversionLegEffect { currency, txHash } toMsg ->
+            Api.Request.Txs.getTx currency txHash (Just True) Nothing (Just True) Nothing (Just [ Api.Request.Txs.IncludeHeuristicAll ])
+                |> send apiKey wrapMsg effect toMsg
+
         ListTxFlowsEffect { currency, txHash, includeZeroValueSubTxs, token_currency, pagesize, nextpage } toMsg ->
             Api.Request.Txs.listTxFlows currency txHash (Just (not includeZeroValueSubTxs)) Nothing token_currency nextpage pagesize
                 |> send apiKey wrapMsg effect toMsg
@@ -1396,6 +1412,9 @@ retryToken effect =
 
         GetConversionEffect { currency, txHash } _ ->
             hash (join [ "GetConversionEffect", currency, txHash ])
+
+        GetConversionLegEffect { currency, txHash } _ ->
+            hash (join [ "GetConversionLegEffect", currency, txHash ])
 
         ListTxFlowsEffect { currency, txHash, includeZeroValueSubTxs, token_currency, pagesize, nextpage } _ ->
             hash

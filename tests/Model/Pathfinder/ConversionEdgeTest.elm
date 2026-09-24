@@ -77,6 +77,28 @@ edge raw =
         (accountTx "aaa_T2" settlement swapper)
 
 
+{-| The same edge, but its leg transactions move value between two other
+addresses: the conversion's `fromAddress`/`toAddress` is on neither.
+-}
+mismatchedEdge : Api.Data.ExternalConversion -> ConversionEdge
+mismatchedEdge raw =
+    ConversionEdge.init raw
+        ( Id.init "bnb" "aaa_T1", Id.init "bnb" "aaa_T2" )
+        ( Id.init "bnb" swapper, Id.init "bnb" swapper )
+        (accountTx "aaa_T1" stranger settlement)
+        (accountTx "aaa_T2" settlement stranger)
+
+
+stranger : String
+stranger =
+    "0x00000000000000000000000000000000000000ff"
+
+
+usd6 : Maybe (List Api.Data.Rate)
+usd6 =
+    Just [ { code = "usd", value = 6 } ]
+
+
 suite : Test
 suite =
     describe "Model.Pathfinder.ConversionEdge leg values"
@@ -100,4 +122,19 @@ suite =
                         ( { fiatValues = [ { code = "usd", value = 6 } ], value = 1 }
                         , { fiatValues = [], value = 1 }
                         )
+        , test "an address-mismatched leg carries no fiat beside its zero amount" <|
+            -- the leg tx does not move the conversion address's funds, so its
+            -- amount falls back to zero; a quote next to that zero would claim
+            -- a value the panel cannot show
+            \_ ->
+                mismatchedEdge { conversion | fromAmountFiatValues = usd6 }
+                    |> ConversionEdge.inputValues
+                    |> .fiatValues
+                    |> Expect.equal []
+        , test "an address-mismatched output leg carries no fiat either" <|
+            \_ ->
+                mismatchedEdge { conversion | toAmountFiatValues = usd6 }
+                    |> ConversionEdge.outputValues
+                    |> .fiatValues
+                    |> Expect.equal []
         ]

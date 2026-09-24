@@ -10,14 +10,19 @@ waits for the capabilities, not for the token list. These pin that neither
 write loses: a registered asset survives the list arriving, and a network that
 only ever got a registration still asks for its list.
 
+The merged entry is the formatter's. The Stats page's "Supported tokens" pills
+show only the network's list as it arrived, so a curated leg the list lacks is
+labelled in the graph but never advertised as a supported token.
+
 -}
 
 import Api.Data
 import Dict exposing (Dict)
 import Effect.Api
 import Expect
+import Http
 import Init.Pathfinder.Id as Id
-import Model exposing (Effect(..), Msg(..))
+import Model exposing (Effect(..), Msg(..), listedTokens)
 import Model.Pathfinder.Network exposing (FindPosition(..))
 import Msg.Pathfinder as Pathfinder
 import Support.MainApp as App exposing (App)
@@ -137,18 +142,26 @@ tokenListWithUsd1 =
 
 stats : Api.Data.Stats
 stats =
+    statsFor [ "bnb" ]
+
+
+statsFor : List String -> Api.Data.Stats
+statsFor networks =
     { currencies =
-        [ { name = "bnb"
-          , noAddressRelations = 1
-          , noAddresses = 1
-          , noBlocks = 1
-          , noEntities = 1
-          , noLabels = 1
-          , noTaggedAddresses = 1
-          , noTxs = 1
-          , timestamp = 1788254088
-          }
-        ]
+        networks
+            |> List.map
+                (\network ->
+                    { name = network
+                    , noAddressRelations = 1
+                    , noAddresses = 1
+                    , noBlocks = 1
+                    , noEntities = 1
+                    , noLabels = 1
+                    , noTaggedAddresses = 1
+                    , noTxs = 1
+                    , timestamp = 1788254088
+                    }
+                )
     , requestTimestamp = "2026-09-22T00:00:00"
     , version = "1.0.0"
     }
@@ -200,14 +213,43 @@ gotStatistics =
     App.step (BrowserGotStatistics stats)
 
 
+{-| The API answered bnb's `/supported_tokens` with a server error.
+-}
+tokenListFailed : App -> App
+tokenListFailed =
+    App.step
+        (BrowserGotResponseWithHeaders Nothing
+            (Err
+                ( Http.BadStatus 500
+                , Dict.empty
+                , Effect.Api.ListSupportedTokensEffect "bnb" (BrowserGotSupportedTokens "bnb")
+                )
+            )
+        )
+
+
 asksForTokenList : Effect -> Bool
-asksForTokenList eff =
+asksForTokenList =
+    asksForTokenListOf "bnb"
+
+
+asksForTokenListOf : String -> Effect -> Bool
+asksForTokenListOf network eff =
     case eff of
         ApiEffect (Effect.Api.ListSupportedTokensEffect currency _) ->
-            currency == "bnb"
+            currency == network
 
         _ ->
             False
+
+
+{-| How many token-list requests the last step made, per network.
+-}
+tokenListRequests : App -> ( Int, Int )
+tokenListRequests app =
+    ( App.effects app |> List.filter (asksForTokenListOf "bnb") |> List.length
+    , App.effects app |> List.filter (asksForTokenListOf "eth") |> List.length
+    )
 
 
 {-| What the model knows about bnb's tokens, as ( contract address, ticker ).
@@ -216,6 +258,15 @@ knownTokens : App -> List ( String, String )
 knownTokens app =
     App.model app
         |> .supportedTokens
+        |> tokensOf
+
+
+{-| The same, from what the Stats page is handed: the network's own list.
+-}
+listed : App -> List ( String, String )
+listed app =
+    App.model app
+        |> listedTokens
         |> tokensOf
 
 
@@ -295,6 +346,27 @@ suite =
                         |> knownTokens
                         |> Expect.equal [ usdt, ( usd1Contract, "WORLD LIBERTY USD" ) ]
             ]
+        , describe "the Stats page"
+            [ test "lists only what the network's token list carries" <|
+                \_ ->
+                    App.initAt "/"
+                        |> gotTokenList tokenList
+                        |> register
+                        |> (\app -> ( listed app, knownTokens app, formatterTokens app ))
+                        |> Expect.equal
+                            ( [ usdt ]
+                            , [ usdt, ( usd1Contract, "USD1" ) ]
+                            , [ usdt, ( usd1Contract, "USD1" ) ]
+                            )
+            , test "a registration alone creates no Stats pills" <|
+                \_ ->
+                    App.initAt "/"
+                        |> register
+                        |> App.model
+                        |> listedTokens
+                        |> Dict.member "bnb"
+                        |> Expect.equal False
+            ]
         , describe "when the statistics arrive after a registration"
             [ test "the network's token list is still asked for" <|
                 \_ ->
@@ -308,5 +380,16 @@ suite =
                         |> gotTokenList tokenList
                         |> gotStatistics
                         |> App.expectNoEffect "ListSupportedTokensEffect bnb" asksForTokenList
+            ]
+        , describe "when a token list request fails"
+            [ test "a failed token list is requested again on the next statistics answer" <|
+                \_ ->
+                    App.initAt "/"
+                        |> App.step (BrowserGotStatistics (statsFor [ "bnb", "eth" ]))
+                        |> App.step (BrowserGotSupportedTokens "eth" tokenList)
+                        |> tokenListFailed
+                        |> App.step (BrowserGotStatistics (statsFor [ "bnb", "eth" ]))
+                        |> tokenListRequests
+                        |> Expect.equal ( 1, 0 )
             ]
         ]

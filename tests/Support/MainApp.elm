@@ -1,5 +1,6 @@
 module Support.MainApp exposing
     ( App
+    , effects
     , expectEffect
     , expectNoEffect
     , html
@@ -54,7 +55,6 @@ import Model exposing (Auth(..), Effect(..), Model, Msg, Page(..))
 import Model.Locale
 import Plugin.Model
 import RemoteData
-import Set
 import Support.Env as Env
 import Test.Html.Query as Query
 import Tuple exposing (first)
@@ -140,7 +140,7 @@ initialModel url =
     , statusbar = Init.Statusbar.init
     , dialog = Nothing
     , supportedTokens = Dict.empty
-    , tokenListsLoaded = Set.empty
+    , tokenLists = Dict.empty
     , plugins = Plugin.Model.emptyModelState
     , notifications = Init.Notification.init
     , localeSelectBox = TSelectBox.init <| List.map first Model.Locale.locales
@@ -210,6 +210,13 @@ steps msgs app =
 
 
 -- ASSERTIONS
+
+
+{-| The effects the most recent step produced, for assertions that count them.
+-}
+effects : App -> List Effect
+effects (App app) =
+    app.effects_
 
 
 {-| Asserts that the last step produced at least one effect matching

@@ -390,6 +390,14 @@ messageFromApiEffect model effect =
                 )
                     |> Just
 
+            Api.GetConversionLegEffect e _ ->
+                ( loadingTransactionKey
+                , [ e.txHash
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
+
             Api.GetTxUtxoAddressesEffect e _ ->
                 ( "{1}: loading " ++ isOutputToString e.isOutgoing ++ " addresses of transaction {0}"
                 , [ e.txHash

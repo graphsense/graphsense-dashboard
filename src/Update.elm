@@ -49,7 +49,6 @@ import RemoteData as RD
 import Result.Extra
 import Route
 import Route.Pathfinder
-import Set
 import Task
 import Time
 import Tuple exposing (..)
@@ -186,7 +185,7 @@ update uc msg model =
                 tokenCurrencyEffects =
                     stats.currencies
                         |> List.map .name
-                        |> List.filter (\currency -> not (Set.member currency model.tokenListsLoaded))
+                        |> List.filter (\currency -> not (Dict.member currency model.tokenLists))
                         |> List.map
                             (\currency ->
                                 Effect.Api.ListSupportedTokensEffect currency (BrowserGotSupportedTokens currency)
@@ -230,6 +229,11 @@ update uc msg model =
             setAbuseConcepts concepts model
                 |> n
 
+        -- Only a successful answer lands in `tokenLists`. A failed
+        -- `/supported_tokens` stores nothing, so the next `/stats` answer asks
+        -- for that network's list again (see BrowserGotStatistics). This retry
+        -- is intended: it is bounded by `/stats` arrivals, not a loop, and has
+        -- no cap of its own.
         BrowserGotSupportedTokens currency configs ->
             let
                 -- the list is the network's own answer, but it may arrive after
@@ -245,7 +249,7 @@ update uc msg model =
             in
             { model
                 | supportedTokens = Dict.insert currency merged model.supportedTokens
-                , tokenListsLoaded = Set.insert currency model.tokenListsLoaded
+                , tokenLists = Dict.insert currency configs model.tokenLists
                 , config =
                     model.config
                         |> s_locale locale
@@ -344,9 +348,22 @@ update uc msg model =
                                     Nothing
                             )
 
+                -- a swap/bridge leg the API cannot reconstruct (D-27): the
+                -- walk just ends, it is no "transaction not found" error
+                isUnreconstructableLeg =
+                    case result of
+                        Err ( Http.BadStatus 404, _, Effect.Api.GetConversionLegEffect _ _ ) ->
+                            True
+
+                        _ ->
+                            False
+
                 newDialog =
                     case result of
                         Err ( Http.BadStatus 401, _, Effect.Api.GetMeEffect _ ) ->
+                            model.dialog
+
+                        Err ( Http.BadStatus 404, _, Effect.Api.GetConversionLegEffect _ _ ) ->
                             model.dialog
 
                         Err ( Http.BadStatus 401, _, _ ) ->
@@ -404,7 +421,7 @@ update uc msg model =
                             True
 
                         _ ->
-                            False
+                            isUnreconstructableLeg
 
                 ( notifications, notificationEffects ) =
                     case ( isErrorDialogShown, isNonCriticalApiError, result ) of
@@ -499,7 +516,11 @@ update uc msg model =
                                                 Nothing
 
                                             Err ( err, _, _ ) ->
-                                                Just err
+                                                if isUnreconstructableLeg then
+                                                    Nothing
+
+                                                else
+                                                    Just err
 
                                             Ok _ ->
                                                 Nothing
