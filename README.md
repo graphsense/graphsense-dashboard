@@ -318,6 +318,9 @@ Notes:
   overrides the upstream host.
 * The containers are named `nginx-proxy-iknaio-prod-api` and `nginx-proxy-iknaio-test-api`;
   remove one with `docker rm -f <name>`.
+* The proxy listens on `127.0.0.1` only, so other machines can't reach it. Other users
+  on the same machine can, and their requests carry your key, so on a shared host stop
+  the proxy when you're done.
 * CORS in the script is configured for `http://localhost:3000`, which is what `make serve`
   uses. Change the origin in the script if you serve from elsewhere.
 * The proxy's port 8080 collides with `DASHBOARD_PORT` from the template. Change one of

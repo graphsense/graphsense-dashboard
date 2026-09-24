@@ -46,7 +46,7 @@ fi
 
 echo "Proxying https://$upstream on http://localhost:$port (container $container)"
 
-docker run --rm -d --name "$container" -p "$port:80" nginx /bin/bash -c '
+docker run --rm -d --name "$container" -p "127.0.0.1:$port:80" nginx /bin/bash -c '
 cat << "EOF" > /etc/nginx/conf.d/default.conf
 
 map $http_origin $cors_origin {
