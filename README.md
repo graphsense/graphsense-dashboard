@@ -312,8 +312,12 @@ an Nginx container on `http://localhost:8080` that injects your API key as an
 
 Notes:
 
-* The container is named `nginx-proxy-iknaio-prod-api`; remove it with
-  `docker rm -f nginx-proxy-iknaio-prod-api`.
+* `--test` proxies `api.test.iknaio.com` on port 8081 instead, taking the key from
+  `GS_TEST_API_KEY` (falling back to `GS_API_KEY`), so prod and test proxies can run side
+  by side. `--port PORT` overrides the local port in either mode, and `GS_UPSTREAM`
+  overrides the upstream host.
+* The containers are named `nginx-proxy-iknaio-prod-api` and `nginx-proxy-iknaio-test-api`;
+  remove one with `docker rm -f <name>`.
 * CORS in the script is configured for `http://localhost:3000`, which is what `make serve`
   uses. Change the origin in the script if you serve from elsewhere.
 * The proxy's port 8080 collides with `DASHBOARD_PORT` from the template. Change one of

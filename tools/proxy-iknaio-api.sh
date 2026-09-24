@@ -1,13 +1,52 @@
 #!/bin/bash
 set -euo pipefail
 
-if [[ -z "${GS_API_KEY:-}" ]]; then
-    echo "Error: GS_API_KEY is not set. Add to your .bashrc:" >&2
-    echo '  export GS_API_KEY="your_key_here"' >&2
+usage() {
+    cat <<USAGE
+Usage: $0 [--test] [--port PORT]
+
+  --test       proxy api.test.iknaio.com instead of api.iknaio.com, on port 8081
+               by default; uses GS_TEST_API_KEY if set, else GS_API_KEY
+  --port PORT  local port to listen on (default: 8080, or 8081 with --test)
+
+GS_UPSTREAM overrides the upstream host in either mode.
+USAGE
+}
+
+test_mode=false
+port=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --test) test_mode=true; shift ;;
+        --port) port="${2:?--port needs a value}"; shift 2 ;;
+        -h|--help) usage; exit 0 ;;
+        *) echo "Error: unknown argument: $1" >&2; usage >&2; exit 1 ;;
+    esac
+done
+
+if $test_mode; then
+    upstream="${GS_UPSTREAM:-api.test.iknaio.com}"
+    port="${port:-8081}"
+    api_key="${GS_TEST_API_KEY:-${GS_API_KEY:-}}"
+    key_var=GS_TEST_API_KEY
+    container=nginx-proxy-iknaio-test-api
+else
+    upstream="${GS_UPSTREAM:-api.iknaio.com}"
+    port="${port:-8080}"
+    api_key="${GS_API_KEY:-}"
+    key_var=GS_API_KEY
+    container=nginx-proxy-iknaio-prod-api
+fi
+
+if [[ -z "$api_key" ]]; then
+    echo "Error: $key_var is not set. Add to your .bashrc:" >&2
+    echo "  export $key_var=\"your_key_here\"" >&2
     exit 1
 fi
 
-docker run --rm -d --name nginx-proxy-iknaio-prod-api -p 8080:80 nginx /bin/bash -c '
+echo "Proxying https://$upstream on http://localhost:$port (container $container)"
+
+docker run --rm -d --name "$container" -p "$port:80" nginx /bin/bash -c '
 cat << "EOF" > /etc/nginx/conf.d/default.conf
 
 map $http_origin $cors_origin {
@@ -31,10 +70,10 @@ server {
             return 204;
         }
 
-        proxy_pass https://'${GS_UPSTREAM:-api.iknaio.com}';
+        proxy_pass https://'"$upstream"';
         proxy_ssl_server_name on;
-        proxy_set_header Host '${GS_UPSTREAM:-api.iknaio.com}';
-        proxy_set_header Authorization "'"$GS_API_KEY"'";
+        proxy_set_header Host '"$upstream"';
+        proxy_set_header Authorization "'"$api_key"'";
 
         # Strip any CORS headers the upstream already sends to avoid duplicates
         proxy_hide_header Access-Control-Allow-Origin;
