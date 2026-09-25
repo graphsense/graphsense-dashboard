@@ -6337,10 +6337,17 @@ those are the ones a loaded file has put somewhere.
 autoLoadConversions : Set Id -> Tx -> Model -> ( Model, List Effect )
 autoLoadConversions keepPositionOf tx model =
     let
+        -- The TRANSACTION's hash, not the sub-transfer identifier this node
+        -- happens to carry. "Which conversions does this tx have" and "is this
+        -- sub-transfer a leg of one" are different questions, and only the
+        -- second one is scoped by `_I<n>`/`_T<n>`: asking with `<hash>_I0` --
+        -- the native transfer of an account tx -- means asking whether the
+        -- messaging FEE of a Stargate send is a bridge leg, which it is not.
+        -- The legs are then matched by `fromAssetTransfer`/`toAssetTransfer`.
         ( currency, txHash ) =
             case tx.type_ of
                 Tx.Account atx ->
-                    ( atx.raw.network, atx.raw.identifier )
+                    ( atx.raw.network, atx.raw.txHash )
 
                 Tx.Utxo utxoTx ->
                     ( utxoTx.raw.currency, utxoTx.raw.txHash )
