@@ -146,9 +146,6 @@ view vc pc searchHighlight level address annotation =
         pluginTagIcons =
             Plugin.View.addressNodeTagIcon address.plugins vc address
 
-        listTagAttr =
-            address.listTag |> Maybe.map ListTag.tagIconAttr
-
         offset =
             2
                 + (if nodeLabel == Nothing then
@@ -180,14 +177,27 @@ view vc pc searchHighlight level address annotation =
             ifTrue (detail == Full) <|
                 List.concat
                     [ ifTrue (address.hasTags || address.hasClusterTagsOnly)
-                        [ Icons.iconsTagSwithoutPaddingDev
+                        [ Icons.iconsTagSwithoutPaddingDevWithAttributes
+                            { bar = []
+                            , root = []
+                            , tagIcon =
+                                case address.listTag of
+                                    Just ListTag.Blacklist ->
+                                        [ Util.View.testId "gs-blacklist-tag" ]
+
+                                    Just ListTag.Whitelist ->
+                                        [ Util.View.testId "gs-whitelist-tag" ]
+
+                                    _ ->
+                                        []
+                            }
                             { root =
                                 { type_ =
                                     if address.listTag == Just ListTag.Blacklist then
-                                        Icons.IconsTagSwithoutPaddingDevTypeBlack2
+                                        Icons.IconsTagSwithoutPaddingDevTypeBlackBar
 
                                     else if address.listTag == Just ListTag.Whitelist then
-                                        Icons.IconsTagSwithoutPaddingDevTypeWhite2
+                                        Icons.IconsTagSwithoutPaddingDevTypeWhiteBar
 
                                     else if address.hasTags then
                                         Icons.IconsTagSwithoutPaddingDevTypeDirect

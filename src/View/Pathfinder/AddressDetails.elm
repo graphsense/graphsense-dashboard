@@ -1353,23 +1353,25 @@ the "learn more" button, so it is non-empty even for addresses with no tags.
 -}
 addressTagIcon : Address -> Html Pathfinder.Msg
 addressTagIcon address =
-    let
-        listTagAttr =
-            address.listTag |> Maybe.map ListTag.tagIconAttr
-    in
-    if address.hasTags then
-        HIcons.iconsTagLTypeDirectWithAttributes
-            (HIcons.iconsTagLTypeDirectAttributes
-                |> Rs.s_tagIcon (listTagAttr |> Maybe.withDefault [])
-            )
-            {}
+    if address.listTag == Just ListTag.Blacklist then
+        HIcons.iconsTagLWithAttributes
+            { bar = [], root = [], tagIcon = [ Util.View.testId "gs-blacklist-tag" ] }
+            { root = { type_ = HIcons.IconsTagLTypeBlackBar } }
+
+    else if address.listTag == Just ListTag.Whitelist then
+        HIcons.iconsTagLWithAttributes
+            { bar = [], root = [], tagIcon = [ Util.View.testId "gs-whitelist-tag" ] }
+            { root = { type_ = HIcons.IconsTagLTypeWhiteBar } }
+
+    else if address.hasTags then
+        HIcons.iconsTagLWithAttributes
+            { bar = [], root = [], tagIcon = [] }
+            { root = { type_ = HIcons.IconsTagLTypeDirect } }
 
     else if address.hasClusterTagsOnly then
-        HIcons.iconsTagLTypeIndirectWithAttributes
-            (HIcons.iconsTagLTypeIndirectAttributes
-                |> Rs.s_tagIcon (listTagAttr |> Maybe.withDefault Util.View.indirectTagFillAttr)
-            )
-            {}
+        HIcons.iconsTagLWithAttributes
+            { bar = [], root = [], tagIcon = [] }
+            { root = { type_ = HIcons.IconsTagLTypeIndirect } }
 
     else
         none
