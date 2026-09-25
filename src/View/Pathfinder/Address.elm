@@ -147,9 +147,6 @@ view vc pc capabilities searchHighlight level address annotation =
         pluginTagIcons =
             Plugin.View.addressNodeTagIcon address.plugins vc address
 
-        listTagAttr =
-            address.listTag |> Maybe.map ListTag.tagIconAttr
-
         offset =
             2
                 + (if nodeLabel == Nothing then
@@ -180,19 +177,36 @@ view vc pc capabilities searchHighlight level address annotation =
         icons =
             ifTrue (detail == Full) <|
                 List.concat
-                    [ ifTrue address.hasTags
-                        [ Icons.iconsTagSwithoutPaddingTypeDirectWithAttributes
-                            (Icons.iconsTagSwithoutPaddingTypeDirectAttributes
-                                |> Rs.s_tagIcon (listTagAttr |> Maybe.withDefault [])
-                            )
-                            {}
-                        ]
-                    , ifTrue (not address.hasTags && address.hasClusterTagsOnly)
-                        [ Icons.iconsTagSwithoutPaddingTypeIndirectWithAttributes
-                            (Icons.iconsTagSwithoutPaddingTypeIndirectAttributes
-                                |> Rs.s_tagIcon (listTagAttr |> Maybe.withDefault Util.View.indirectTagFillAttr)
-                            )
-                            {}
+                    [ ifTrue (address.hasTags || address.hasClusterTagsOnly)
+                        [ Icons.iconsTagSwithoutPaddingDevWithAttributes
+                            { bar = []
+                            , root = []
+                            , tagIcon =
+                                case address.listTag of
+                                    Just ListTag.Blacklist ->
+                                        [ Util.View.testId "gs-blacklist-tag" ]
+
+                                    Just ListTag.Whitelist ->
+                                        [ Util.View.testId "gs-whitelist-tag" ]
+
+                                    _ ->
+                                        []
+                            }
+                            { root =
+                                { type_ =
+                                    if address.listTag == Just ListTag.Blacklist then
+                                        Icons.IconsTagSwithoutPaddingDevTypeBlackBar
+
+                                    else if address.listTag == Just ListTag.Whitelist then
+                                        Icons.IconsTagSwithoutPaddingDevTypeWhiteBar
+
+                                    else if address.hasTags then
+                                        Icons.IconsTagSwithoutPaddingDevTypeDirect
+
+                                    else
+                                        Icons.IconsTagSwithoutPaddingDevTypeIndirect
+                                }
+                            }
                         ]
                     , ifTrue (not <| List.isEmpty pluginTagIcons) pluginTagIcons
                     , ifTrue (Dict.size address.networks > 1) [ Icons.iconsCrosschainSwithoutPadding {} ]

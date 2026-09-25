@@ -11,7 +11,6 @@ import RecordSetter as Rs
 import Theme.Html.Dialogs
 import Theme.Html.GraphComponents as GraphComponents
 import Theme.Html.Icons as Icons
-import Util.Pathfinder.ListTag as ListTag
 import Util.View exposing (pointer)
 import View.Locale as Locale
 
@@ -73,33 +72,27 @@ legendView vc closeMsg =
                 IconItem
                 { description = "Attribution-tag-inferred"
                 , icon =
-                    Icons.iconsTagLTypeIndirectWithAttributes
-                        (Icons.iconsTagLTypeIndirectAttributes
-                            |> Rs.s_tagIcon Util.View.indirectTagFillAttr
-                        )
-                        {}
+                    Icons.iconsTagLWithAttributes
+                        { bar = [], root = [], tagIcon = [] }
+                        { root = { type_ = Icons.IconsTagLTypeIndirect } }
                 , label = "Indirect tag"
                 }
             , legendItem vc
                 IconItem
                 { description = "Attribution-tag-black-list"
                 , icon =
-                    Icons.iconsTagLTypeDirectWithAttributes
-                        (Icons.iconsTagLTypeDirectAttributes
-                            |> Rs.s_tagIcon (ListTag.tagIconAttr ListTag.Blacklist)
-                        )
-                        {}
+                    Icons.iconsTagLWithAttributes
+                        { bar = [], root = [], tagIcon = [ Util.View.testId "gs-blacklist-tag" ] }
+                        { root = { type_ = Icons.IconsTagLTypeBlackBar } }
                 , label = "Blacklist"
                 }
             , legendItem vc
                 IconItem
                 { description = "Attribution-tag-white-list"
                 , icon =
-                    Icons.iconsTagLTypeDirectWithAttributes
-                        (Icons.iconsTagLTypeDirectAttributes
-                            |> Rs.s_tagIcon (ListTag.tagIconAttr ListTag.Whitelist)
-                        )
-                        {}
+                    Icons.iconsTagLWithAttributes
+                        { bar = [], root = [], tagIcon = [ Util.View.testId "gs-whitelist-tag" ] }
+                        { root = { type_ = Icons.IconsTagLTypeWhiteBar } }
                 , label = "Whitelist"
                 }
             ]
