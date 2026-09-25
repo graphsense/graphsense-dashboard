@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (continueImageExport, deserialize, endExportRendering, fetchTagSummaryForId, finishImageExport, fromDeserialized, isLegacyPf1GsFile, multiSearch, resultLineToRoute, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (continueImageExport, deserialize, endExportRendering, fetchTagSummaryForId, finishImageExport, fromDeserialized, isLegacyPf1GsFile, isOutputLegOf, multiSearch, resultLineToRoute, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -2355,13 +2355,28 @@ updateByMsg uc msg model =
                         Nothing ->
                             ( Network.addTxWithPosition model.config (Fixed posA.x (posA.y + 2)) tx model.network, True )
 
-                -- order txs such from and to, according to the which is the output leg (to) and which is the input leg (from)
+                -- Order the two txs into (from leg, to leg).
+                --
+                -- Decided by matching txA against the OUTPUT leg, the same test
+                -- BrowserGotConversions already uses to pick which leg to fetch:
+                -- network first, then the sub-tx id. Matching the INPUT leg
+                -- instead is not equivalent, because txA is often the tx the
+                -- user opened by its BARE HASH while fromAssetTransfer names a
+                -- sub-transfer of it -- `<hash>` never equals `<hash>_T60`. That
+                -- fell through to the else branch and declared the source tx to
+                -- be the output leg, which put a bnb tx on the ethereum side and
+                -- rendered the edge as "BNB-USDT / ETH-BNB" (ConversionEdge.init
+                -- reads its labels off the loaded txs, not off the conversion).
+                --
+                -- It stayed hidden while THORChain was the only bridge: its
+                -- native deposits name `_I<root trace>`, which IS the base tx
+                -- id, so the old comparison happened to hold.
                 ( inputTx, outputTx ) =
-                    if (txA.id |> Id.id |> removeLeading0x) == (conversion.fromAssetTransfer |> removeLeading0x) then
-                        ( txA, ntx )
+                    if isOutputLegOf conversion txA.id then
+                        ( ntx, txA )
 
                     else
-                        ( ntx, txA )
+                        ( txA, ntx )
 
                 nnn =
                     nn
@@ -2436,7 +2451,7 @@ updateByMsg uc msg model =
                     (\conversion ( aggm, effects ) ->
                         let
                             secondTransferId =
-                                if Id.network txid == conversion.toNetwork && (Id.id txid |> removeLeading0x) == (conversion.toAssetTransfer |> removeLeading0x) then
+                                if isOutputLegOf conversion txid then
                                     Id.init conversion.fromNetwork conversion.fromAssetTransfer
 
                                 else
@@ -6978,3 +6993,27 @@ handleTxHover id model =
 
             _ ->
                 hovered () |> n
+
+
+{-| Is `txId` the conversion's OUTPUT (to) leg?
+
+Both the leg fetch and the leg ordering ask this, and they must agree or the
+edge is built back to front. Network first, then the sub-tx id: a cross-chain
+conversion is settled on a different network, so the network alone already
+rules most candidates out, and the id then separates the two legs of a
+same-network conversion (a dex swap has both legs inside one tx).
+
+Deliberately phrased as "is it the OUTPUT leg", not "is it the input leg".
+`fromAssetTransfer` names a SUB-transfer (`<hash>_T60`, `<hash>_I390`), while
+the tx a user opened by its bare hash has the plain `<hash>` as its id, so a
+positive test against the input leg misses and whatever the else branch assumes
+becomes the answer. Assuming "input leg" there is right far more often: it is
+the tx the graph already held, and the output leg is the one being fetched.
+
+-}
+isOutputLegOf : Api.Data.ExternalConversion -> Id -> Bool
+isOutputLegOf conversion txId =
+    Id.network txId
+        == conversion.toNetwork
+        && (Id.id txId |> removeLeading0x)
+        == (conversion.toAssetTransfer |> removeLeading0x)
