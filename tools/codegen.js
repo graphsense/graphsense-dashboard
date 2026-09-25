@@ -234,7 +234,8 @@ async function runCodegenIteratively(flags, outputDir) {
   }
   for (const node in nodes) {
     const name = nodes[node].document.name
-    if(flags.whitelist.frames.length && flags.whitelist.frames.indexOf(name) === -1) {
+    // Same semantics as Generate.Util.matchWhitelist: case-insensitive regex search
+    if(flags.whitelist.frames.length && !flags.whitelist.frames.some(r => new RegExp(r, 'i').test(name))) {
       continue
     }
     flags.theme.figma.nodes = {...colorNodes}

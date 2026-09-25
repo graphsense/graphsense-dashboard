@@ -148,6 +148,33 @@ suite =
                     |> Network.addAddressWithPosition config (NextTo ( Outgoing, Id.tx4 )) Id.address8
                     |> Tuple.second
                     |> equalCoords Data.one2TwoTxs2ThreeAddressesWithOverlapping
+        , Test.test "addresses added Below an address stack under it in its column" <|
+            \_ ->
+                -- Regression test: cluster addresses added from the address
+                -- details table used the Auto position (x = 0, below the
+                -- topmost node) instead of going below the selected address.
+                let
+                    network =
+                        Init.init
+                            |> Network.addAddressWithPosition config (Fixed 0 0) Id.address4
+                            |> Tuple.second
+                            |> Network.addAddressWithPosition config (Fixed 10 20) Id.address1
+                            |> Tuple.second
+                            |> Network.addAddressWithPosition config (Below Id.address1) Id.address2
+                            |> Tuple.second
+                            |> Network.addAddressWithPosition config (Below Id.address1) Id.address3
+                            |> Tuple.second
+
+                    coords id =
+                        Dict.get id network.addresses
+                            |> Maybe.map (\a -> ( a.x, Animation.getTo a.y ))
+                in
+                Expect.equalLists
+                    [ Just ( 10, 20 )
+                    , Just ( 10, 20 + Pathfinder.nodeYOffset )
+                    , Just ( 10, 20 + 2 * Pathfinder.nodeYOffset )
+                    ]
+                    [ coords Id.address1, coords Id.address2, coords Id.address3 ]
         , Test.test "account self-loop tx + address added after: both incoming and outgoing Txs populated" <|
             \_ ->
                 -- Regression test: when a self-loop account tx (sender == recipient)
