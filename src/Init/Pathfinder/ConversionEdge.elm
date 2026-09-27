@@ -21,4 +21,5 @@ init apiConversion id addressIds inTx outTx =
     , raw = apiConversion
     , selected = False
     , hovered = False
+    , nodeOffset = Nothing
     }

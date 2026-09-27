@@ -72,6 +72,10 @@ type alias Model =
     , annotations : AnnotationModel
     , dragging : Dragging Id
     , draggingAggEdgeLabel : Maybe DraggingAggEdgeLabel
+
+    -- a swap icon being dragged: same shape, `key` is the conversion edge id
+    -- and `baseOffset` its nodeOffset when the drag started
+    , draggingConversionNode : Maybe DraggingAggEdgeLabel
     , selection : Selection
     , hovered : Hovered
     , search : Search.Model

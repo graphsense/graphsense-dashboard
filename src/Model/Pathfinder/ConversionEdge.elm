@@ -22,6 +22,10 @@ type alias ConversionEdge =
     , raw : Api.Data.ExternalConversion
     , selected : Bool
     , hovered : Bool
+
+    -- where the user dragged the swap icon, relative to where the layout puts
+    -- it (graph units, same space as the rendered curve); Nothing = unmoved
+    , nodeOffset : Maybe { x : Float, y : Float }
     }
 
 

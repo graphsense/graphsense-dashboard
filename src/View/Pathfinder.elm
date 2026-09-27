@@ -870,7 +870,7 @@ graphSvg vc gc model dim =
             |> Svg.preventDefaultOn "contextmenu"
          , Util.View.noTextSelection
          ]
-            ++ (if model.dragging /= NoDragging || model.draggingAggEdgeLabel /= Nothing then
+            ++ (if model.dragging /= NoDragging || model.draggingAggEdgeLabel /= Nothing || model.draggingConversionNode /= Nothing then
                     Svg.preventDefaultOn "mousemove"
                         (Util.Graph.decodeCoords Coords
                             |> Json.Decode.map (\c -> ( UserMovesMouseOnGraph c, True ))

@@ -1841,7 +1841,7 @@ updateByMsg uc msg model =
             -- node/graph drag flow.
             let
                 model_ =
-                    { model | draggingAggEdgeLabel = Nothing }
+                    { model | draggingAggEdgeLabel = Nothing, draggingConversionNode = Nothing }
             in
             case model_.dragging of
                 NoDragging ->
@@ -2031,8 +2031,30 @@ updateByMsg uc msg model =
             )
 
         UserMovesMouseOnGraph coords ->
-            case model.draggingAggEdgeLabel of
-                Just labelDrag ->
+            case ( model.draggingConversionNode, model.draggingAggEdgeLabel ) of
+                ( Just nodeDrag, _ ) ->
+                    let
+                        vector =
+                            Transform.vector nodeDrag.start coords model.transform
+                    in
+                    ( { model
+                        | network =
+                            Network.updateConversionEdge nodeDrag.key
+                                (\edge ->
+                                    { edge
+                                        | nodeOffset =
+                                            Just
+                                                { x = nodeDrag.baseOffset.x + vector.x
+                                                , y = nodeDrag.baseOffset.y + vector.y
+                                                }
+                                    }
+                                )
+                                model.network
+                      }
+                    , []
+                    )
+
+                ( Nothing, Just labelDrag ) ->
                     let
                         vector =
                             Transform.vector labelDrag.start coords model.transform
@@ -2051,7 +2073,7 @@ updateByMsg uc msg model =
                     , []
                     )
 
-                Nothing ->
+                ( Nothing, Nothing ) ->
                     case model.dragging of
                         NoDragging ->
                             ( model, [] )
@@ -2908,6 +2930,24 @@ updateByMsg uc msg model =
 
         UserSelectsAnnotationColor ids clr ->
             n { model | annotations = List.foldl (\id ann -> Annotations.setColor id clr ann) model.annotations ids }
+
+        UserPushesLeftMouseButtonOnConversionNode key currentOffset coords ->
+            -- Start dragging a swap icon; the curve re-routes through it (see
+            -- View.Pathfinder.ConversionEdge.layout)
+            case ( model.dragging, model.transform.state ) of
+                ( NoDragging, Transform.Settled _ ) ->
+                    n
+                        { model
+                            | draggingConversionNode =
+                                Just
+                                    { key = key
+                                    , start = coords
+                                    , baseOffset = currentOffset
+                                    }
+                        }
+
+                _ ->
+                    n model
 
         UserPushesLeftMouseButtonOnAggEdgeLabel key currentOffset coords ->
             -- Start dragging the mid-edge value label. The baseline is the

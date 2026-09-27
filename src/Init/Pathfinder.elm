@@ -41,6 +41,7 @@ init us =
       , onGraphSearch = SearchBox.empty
       , dragging = NoDragging
       , draggingAggEdgeLabel = Nothing
+      , draggingConversionNode = Nothing
       , transform = Transform.init
       , history = History.init
       , details = Nothing

@@ -1,4 +1,4 @@
-module View.Pathfinder.ConversionEdge exposing (view)
+module View.Pathfinder.ConversionEdge exposing (Curve(..), Layout, layout, view)
 
 import Api.Data
 import Config.View as View
@@ -18,6 +18,7 @@ import Svg.Styled.Events exposing (onMouseOver)
 import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.GraphComponentsAggregatedTracing as Theme
+import Util.Graph exposing (mousedown)
 import Util.TextDimensions
 import Util.View exposing (onClickWithStop, pointer)
 import View.Locale as Locale
@@ -64,6 +65,100 @@ calcDimensions _ _ aAddress bAddress =
     , left = left
     , right = right
     }
+
+
+{-| The drawn shape of a swap edge: a cubic Bézier between two different
+nodes, or a teardrop loop when both ends are the same node.
+-}
+type Curve
+    = Bezier ( Float, Float ) ( Float, Float )
+    | Loop
+        { c1 : ( Float, Float )
+        , c2 : ( Float, Float )
+        , tip : ( Float, Float )
+        , c3 : ( Float, Float )
+        , c4 : ( Float, Float )
+        }
+
+
+type alias Layout =
+    { curve : Curve
+    , node : ( Float, Float )
+    }
+
+
+{-| Where the curve runs and where the swap icon sits on it. `start`/`end` are
+the attachment points (right side of the two nodes), `nodeOffset` is how far
+the user dragged the icon from its default place.
+
+A dragged icon keeps the curve running through it: on the Bézier the icon is
+the point at t = 0.5, (start + 3 c1 + 3 c2 + end) / 8, so shifting both control
+points by 4/3 of the offset moves that point by exactly the offset. On a loop
+the icon is the tip, which moves with its two neighbouring control points.
+
+-}
+layout :
+    { start : ( Float, Float )
+    , end : ( Float, Float )
+    , displacementIndex : Int
+    , nodeOffset : { x : Float, y : Float }
+    }
+    -> Layout
+layout { start, end, displacementIndex, nodeOffset } =
+    let
+        ( startX, startY ) =
+            start
+
+        ( endX, endY ) =
+            end
+
+        -- Length of horizontal extension from nodes
+        horizontalExtension =
+            150.0 + (30 * toFloat displacementIndex)
+
+        -- Teardrop loop parameters
+        loopXDisplacement =
+            80.0
+
+        loopYDisplacement =
+            40.0 + (30 * toFloat displacementIndex)
+
+        shift k ( x, y ) =
+            ( x + k * nodeOffset.x, y + k * nodeOffset.y )
+
+        isSamePoint =
+            abs (startX - endX) < 1.0 && abs (startY - endY) < 1.0
+    in
+    if isSamePoint then
+        let
+            tip =
+                shift 1 ( startX + (loopXDisplacement * 1.2), startY - loopYDisplacement )
+        in
+        { curve =
+            Loop
+                { c1 = ( startX + (loopXDisplacement * 0.7), startY - (loopYDisplacement * 0.2) )
+                , c2 = shift 1 ( startX + (loopXDisplacement * 1.1), startY - (loopYDisplacement * 0.8) )
+                , tip = tip
+                , c3 = shift 1 ( startX + (loopXDisplacement * 1.1), startY - (loopYDisplacement * 1.2) )
+                , c4 = ( startX + (loopXDisplacement * 0.3), startY - (loopYDisplacement * 0.4) )
+                }
+        , node = tip
+        }
+
+    else
+        let
+            ( c1X, c1Y ) =
+                shift (4 / 3) ( startX + horizontalExtension, startY )
+
+            ( c2X, c2Y ) =
+                shift (4 / 3) ( endX + horizontalExtension, endY )
+        in
+        { curve = Bezier ( c1X, c1Y ) ( c2X, c2Y )
+        , node =
+            ( (startX + 3 * c1X + 3 * c2X + endX) / 8
+            , (startY + 3 * c1Y + 3 * c2Y + endY) / 8
+            )
+        }
 
 
 view : View.Config -> Highlight -> ConversionEdge -> Int -> Address -> Address -> Svg Msg
@@ -123,18 +218,6 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
                 Api.Data.ExternalConversionConversionTypeBridgeTx ->
                     (cr.fromNetwork |> String.toUpper) ++ "-" ++ (conversion.fromAsset |> String.toUpper) ++ " / " ++ (cr.toNetwork |> String.toUpper) ++ "-" ++ (conversion.toAsset |> String.toUpper)
 
-        horizontalExtension =
-            150.0 + (30 * toFloat displacementIndex)
-
-        -- Teardrop loop parameters
-        loopXDisplacement =
-            80.0
-
-        -- Horizontal extension for teardrop
-        loopYDisplacement =
-            40.0 + (30 * toFloat displacementIndex)
-
-        -- Vertical displacement based on displacement index
         { left, right } =
             calcDimensions vc conversion inputAddress outputAddress
 
@@ -151,116 +234,34 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
         startY =
             left.y * unit
 
-        endX =
-            right.x * unit + rad
+        currentOffset =
+            conversion.nodeOffset |> Maybe.withDefault { x = 0, y = 0 }
 
-        endY =
-            right.y * unit
+        edgeLayout =
+            layout
+                { start = ( startX, startY )
+                , end = ( right.x * unit + rad, right.y * unit )
+                , displacementIndex = displacementIndex
+                , nodeOffset = currentOffset
+                }
 
-        -- Check if start and end points are the same
-        isSamePoint =
-            abs (startX - endX) < 1.0 && abs (startY - endY) < 1.0
-
-        -- Create path - either loop or curve
         pat =
-            if isSamePoint then
-                -- Create a teardrop-shaped loop with round head
-                let
-                    -- Teardrop tip position
-                    tipX =
-                        startX + (loopXDisplacement * 1.2)
+            case edgeLayout.curve of
+                Loop { c1, c2, tip, c3, c4 } ->
+                    pathD
+                        [ M ( startX, startY )
+                        , C c1 c2 tip
+                        , C c3 c4 ( startX, startY )
+                        ]
 
-                    tipY =
-                        startY - loopYDisplacement
+                Bezier c1 c2 ->
+                    pathD
+                        [ M ( startX, startY )
+                        , C c1 c2 ( right.x * unit + rad, right.y * unit )
+                        ]
 
-                    -- Control points for smooth teardrop shape
-                    control1X =
-                        startX + (loopXDisplacement * 0.7)
-
-                    -- Gentle outward curve
-                    control1Y =
-                        startY - (loopYDisplacement * 0.2)
-
-                    -- Slight upward
-                    control2X =
-                        startX + (loopXDisplacement * 1.1)
-
-                    -- Near the tip
-                    control2Y =
-                        startY - (loopYDisplacement * 0.8)
-
-                    -- Close to tip height
-                    -- Return curve control points
-                    control3X =
-                        startX + (loopXDisplacement * 1.1)
-
-                    -- Mirror of control2X
-                    control3Y =
-                        startY - (loopYDisplacement * 1.2)
-
-                    -- Above the tip for round shape
-                    control4X =
-                        startX + (loopXDisplacement * 0.3)
-
-                    -- Gentle return
-                    control4Y =
-                        startY - (loopYDisplacement * 0.4)
-
-                    -- Smooth back to start
-                in
-                pathD
-                    [ M ( startX, startY ) -- Start at the node
-                    , C ( control1X, control1Y ) ( control2X, control2Y ) ( tipX, tipY ) -- First curve to tip
-                    , C ( control3X, control3Y ) ( control4X, control4Y ) ( startX, startY ) -- Return curve to start
-                    ]
-
-            else
-                -- Original curve path (unchanged)
-                let
-                    -- Calculate control points for cubic Bézier curve
-                    -- First control point - extend horizontally to the right from start
-                    control1X =
-                        startX + horizontalExtension
-
-                    control1Y =
-                        startY
-
-                    -- Second control point - extend horizontally to the right from end, with curvature offset
-                    control2X =
-                        endX + horizontalExtension
-
-                    control2Y =
-                        endY
-                in
-                pathD
-                    [ M ( startX, startY ) -- Start at node
-                    , C ( control1X, control1Y ) ( control2X, control2Y ) ( endX, endY ) -- Single curve
-                    ]
-
-        -- Calculate node position
         ( nodeX, nodeY ) =
-            if isSamePoint then
-                -- Position node at the tip of the teardrop
-                ( startX + (loopXDisplacement * 1.2), startY - loopYDisplacement )
-
-            else
-                -- Original calculation for curve (unchanged)
-                let
-                    control1X =
-                        startX + horizontalExtension
-
-                    control1Y =
-                        startY
-
-                    control2X =
-                        endX + horizontalExtension
-
-                    control2Y =
-                        endY
-                in
-                ( (startX + 3 * control1X + 3 * control2X + endX) / 8
-                , (startY + 3 * control1Y + 3 * control2Y + endY) / 8
-                )
+            edgeLayout.node
 
         -- Node properties
         iconSize =
@@ -284,7 +285,10 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
                             |> onMouseLeave
                         , UserMovesMouseOverConversionEdge id conversion
                             |> onMouseOver
-                        , pointer
+                        , mousedown (UserPushesLeftMouseButtonOnConversionNode id currentOffset)
+
+                        -- the icon is grabbed, not clicked: a move cursor says so
+                        , css [ Css.cursor Css.move ]
                         ]
                     |> Rs.s_swapNodeInner
                         ([ (Css.property "background-color" <|

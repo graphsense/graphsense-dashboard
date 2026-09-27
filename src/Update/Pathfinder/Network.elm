@@ -102,9 +102,14 @@ addConversion conversion inputTx outputTx network =
                         |> Dict.update (second edgeAddressIds) edgeMapUpsertFn
                         |> Dict.update (first edgeId) edgeMapUpsertFn
                         |> Dict.update (second edgeId) edgeMapUpsertFn
+
+                -- the same swap answered again (a leg reloaded, the whole tx
+                -- re-asked) must not snap a dragged swap icon back
+                keptOffset =
+                    Dict.get edgeId network.conversions |> Maybe.andThen .nodeOffset
             in
             { network
-                | conversions = Dict.insert edgeId c network.conversions
+                | conversions = Dict.insert edgeId { c | nodeOffset = keptOffset } network.conversions
                 , conversionsEdgeMap = conversionsEdgeMap1
             }
 

@@ -383,6 +383,9 @@ shallPushHistory msg _ =
         UserPushesLeftMouseButtonOnAggEdgeLabel _ _ _ ->
             False
 
+        UserPushesLeftMouseButtonOnConversionNode _ _ _ ->
+            False
+
         ToolbarHovercardMsg _ ->
             False
 

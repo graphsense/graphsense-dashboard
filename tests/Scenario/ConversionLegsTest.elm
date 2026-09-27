@@ -21,11 +21,13 @@ import Init.Pathfinder.Id as Id
 import Model
 import Model.Dialog as Dialog
 import Model.Notification as Notification
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (FindPosition(..))
 import Msg.Pathfinder exposing (Msg(..), OutMsg(..))
 import Support.App as App exposing (App)
 import Support.MainApp as MainApp
 import Test exposing (Test, describe, test)
+import Update.Graph.Transform as Transform
 import Update.Statusbar as Statusbar
 import Util exposing (removeLeading0x)
 
@@ -287,6 +289,110 @@ swapEdges app =
     (App.model app).network.conversions
         |> Dict.keys
         |> List.map (\( ( _, input ), ( _, output ) ) -> ( input, output ))
+
+
+
+-- MOVING THE SWAP ICON
+
+
+{-| The one swap edge on the graph, once both legs are loaded.
+-}
+withSwapEdge : App -> App
+withSwapEdge =
+    withTx inputLegTx >> gotSwapFor inputLegId >> answerTxRequest outputLegTx
+
+
+swapEdgeId : App -> Maybe ( Id, Id )
+swapEdgeId app =
+    (App.model app).network.conversions |> Dict.keys |> List.head
+
+
+nodeOffsetOf : App -> Maybe { x : Float, y : Float }
+nodeOffsetOf app =
+    (App.model app).network.conversions
+        |> Dict.values
+        |> List.head
+        |> Maybe.andThen .nodeOffset
+
+
+{-| Press on the swap icon at `from`, move the mouse to `to`, release.
+-}
+dragSwapIcon : { x : Float, y : Float } -> { x : Float, y : Float } -> App -> App
+dragSwapIcon from to app =
+    case swapEdgeId app of
+        Just id ->
+            app
+                |> App.step (UserPushesLeftMouseButtonOnConversionNode id (nodeOffsetOf app |> Maybe.withDefault { x = 0, y = 0 }) from)
+                |> App.step (UserMovesMouseOnGraph to)
+                |> App.step UserReleasesMouseButton
+
+        Nothing ->
+            app
+
+
+dragVector : { x : Float, y : Float } -> { x : Float, y : Float } -> App -> { x : Float, y : Float }
+dragVector from to app =
+    Transform.vector from to (App.model app).transform
+
+
+movingTheSwapIcon : Test
+movingTheSwapIcon =
+    describe "moving the swap icon"
+        [ test "an edge starts where it always was" <|
+            \_ ->
+                App.init
+                    |> withSwapEdge
+                    |> nodeOffsetOf
+                    |> Expect.equal Nothing
+        , test "dragging moves the icon by the mouse's way" <|
+            \_ ->
+                let
+                    app =
+                        App.init |> withSwapEdge
+                in
+                app
+                    |> dragSwapIcon { x = 100, y = 100 } { x = 160, y = 130 }
+                    |> nodeOffsetOf
+                    |> Expect.equal (Just (dragVector { x = 100, y = 100 } { x = 160, y = 130 } app))
+        , test "after the release the mouse no longer moves it" <|
+            \_ ->
+                let
+                    app =
+                        App.init |> withSwapEdge |> dragSwapIcon { x = 100, y = 100 } { x = 160, y = 130 }
+                in
+                app
+                    |> App.step (UserMovesMouseOnGraph { x = 400, y = 400 })
+                    |> nodeOffsetOf
+                    |> Expect.equal (nodeOffsetOf app)
+        , test "a second drag continues from where the icon was left" <|
+            \_ ->
+                let
+                    app =
+                        App.init |> withSwapEdge
+
+                    first =
+                        dragVector { x = 100, y = 100 } { x = 160, y = 130 } app
+
+                    second =
+                        dragVector { x = 10, y = 10 } { x = 0, y = 50 } app
+                in
+                app
+                    |> dragSwapIcon { x = 100, y = 100 } { x = 160, y = 130 }
+                    |> dragSwapIcon { x = 10, y = 10 } { x = 0, y = 50 }
+                    |> nodeOffsetOf
+                    |> Expect.equal (Just { x = first.x + second.x, y = first.y + second.y })
+        , test "the same swap answered again keeps the moved icon" <|
+            \_ ->
+                let
+                    app =
+                        App.init |> withSwapEdge |> dragSwapIcon { x = 100, y = 100 } { x = 160, y = 130 }
+                in
+                app
+                    |> gotSwapFor inputLegId
+                    |> answerTxRequest outputLegTx
+                    |> nodeOffsetOf
+                    |> Expect.equal (nodeOffsetOf app)
+        ]
 
 
 
@@ -640,4 +746,5 @@ suite =
                         |> App.outMsgs
                         |> Expect.equal []
             ]
+        , movingTheSwapIcon
         ]
