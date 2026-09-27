@@ -27,6 +27,7 @@ module View.Locale exposing
     , timestampTimeUniform
     , title
     , titleCase
+    , unknownCurrency
     , valuesToFloat
     )
 
@@ -500,7 +501,17 @@ coinWithOptions showCode model rawAsset v =
                             " " ++ String.toUpper asset.asset
                        )
             )
-        |> Maybe.withDefault ("unknown currency " ++ rawAsset.asset)
+        |> Maybe.withDefault unknownCurrency
+
+
+{-| What a value reads when the dashboard has no metadata for its asset (no
+decimals, so no honest number). The asset itself is not spelled out: a table
+cell makes this label the click target that copies the contract address, and
+shows the address on hover (View.Pathfinder.Table.Columns.assetsCell).
+-}
+unknownCurrency : String
+unknownCurrency =
+    "unknown currency"
 
 
 normalizeCoinValue : Model -> AssetIdentifier -> Int -> Maybe Float

@@ -1,4 +1,4 @@
-module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, emptyCell, firstToUpper, fixFillRule, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, makeValuesList, noTextSelection, none, onClickWithStop, onMiddleClick, p, pointer, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, copyOnClick, emptyCell, firstToUpper, fixFillRule, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, makeValuesList, noTextSelection, none, onClickWithStop, onMiddleClick, p, pointer, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -16,7 +16,9 @@ import Json.Decode
 import List.Extra
 import Model.Currency as Currency exposing (AssetIdentifier)
 import Model.Locale as Locale
-import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_triangle)
+import RecordSetter exposing (s_anchor, s_hint, s_iconsCopyS, s_label, s_root, s_triangle)
+import Svg.Styled
+import Svg.Styled.Attributes
 import Theme.Colors as Colors
 import Theme.Html.Fields as Fields
 import Theme.Html.GraphComponents
@@ -181,6 +183,109 @@ copyIconPathfinderFixed =
 copyIconPathfinderAbove : View.Config -> String -> Html msg
 copyIconPathfinderAbove =
     copyIconWithAttrPathfinderInternal False Above False (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
+
+
+{-| Makes `content` itself the click target of a copy: a click copies `value`
+to the clipboard, and hovering shows `hoverText` verbatim (not a locale key: a
+contract address, say), which turns into the "copied!" label for a moment after
+the click. Same custom element as the copy icons (`copy-icon`, src/main.js).
+-}
+copyOnClick : View.Config -> { hoverText : String, value : String } -> Html msg -> Html msg
+copyOnClick vc { hoverText, value } content =
+    let
+        -- the theme's hint bubble sits ABOVE a 24px icon; an inline label at
+        -- the right edge of a table needs it BELOW and right-aligned, so the
+        -- bubble is rebuilt from the theme's own styles: upward triangle first,
+        -- bubble under it, both flush with the label's right edge
+        bubble =
+            Html.Styled.div
+                [ attribute "data-hint" ""
+                , css
+                    (Theme.Html.GraphComponents.iconWithHintAboveHint_details.styles
+                        ++ [ Css.display Css.none
+                           , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 10))
+                           , Css.position Css.fixed |> Css.important
+                           , Css.flexDirection Css.column |> Css.important
+                           , Css.alignItems Css.flexEnd |> Css.important
+                           , Css.justifyContent Css.flexStart |> Css.important
+                           ]
+                    )
+                ]
+                [ Html.Styled.div
+                    [ css
+                        [ Css.position Css.relative
+                        , Css.property "width" "9.8125px"
+                        , Css.property "height" "6.34912109375px"
+                        , Css.marginRight (Css.px 6)
+                        ]
+                    ]
+                    [ triangleUp ]
+                , Html.Styled.div
+                    [ css Theme.Html.GraphComponents.iconWithHintAboveContent_details.styles ]
+                    [ Html.Styled.div
+                        [ attribute "data-label" ""
+                        , css
+                            (Theme.Html.GraphComponents.iconWithHintAboveLabel_details.styles
+                                ++ [ Css.whiteSpace Css.noWrap |> Css.important ]
+                            )
+                        ]
+                        [ Html.Styled.text hoverText ]
+                    ]
+                ]
+    in
+    Html.Styled.node "copy-icon"
+        [ attribute "data-value" value
+        , Locale.string vc.locale "Copied-hint"
+            |> attribute "data-copied-label"
+        , pointer
+        , css [ Css.display Css.inlineBlock ]
+        ]
+        [ Theme.Html.GraphComponents.iconWithHintAboveWithInstances
+            (Theme.Html.GraphComponents.iconWithHintAboveAttributes
+                |> s_root
+                    [ css
+                        [ Css.width Css.auto |> Css.important
+                        , Css.height Css.auto |> Css.important
+                        ]
+                    ]
+                |> s_anchor
+                    [ css
+                        [ Css.top (Css.pct 100) |> Css.important
+                        , Css.left Css.auto |> Css.important
+                        , Css.right (Css.px 0) |> Css.important
+                        , Css.justifyContent Css.flexStart |> Css.important
+                        , Css.alignItems Css.flexEnd |> Css.important
+                        , Css.px 1 |> Css.width |> Css.important
+                        ]
+                    ]
+            )
+            (Theme.Html.GraphComponents.iconWithHintAboveInstances
+                |> s_hint (Just bubble)
+            )
+            { root =
+                { hint = hoverText
+                , instance = content
+                }
+            }
+        ]
+
+
+{-| The theme triangle points down (bubble above); this one points up, in
+the theme's size and colour.
+-}
+triangleUp : Html msg
+triangleUp =
+    Svg.Styled.svg
+        [ Svg.Styled.Attributes.width "9.8125"
+        , Svg.Styled.Attributes.height "6.34912109375"
+        , Svg.Styled.Attributes.viewBox "0 0 9.8125 6.34912109375"
+        ]
+        [ Svg.Styled.path
+            [ Svg.Styled.Attributes.d "M4.90614 0L0 6.34912L9.81228 6.34912L4.90614 0Z"
+            , Svg.Styled.Attributes.css [ Css.property "fill" "var(--c-pathAggregated)" ]
+            ]
+            []
+        ]
 
 
 copyIconWithAttrPathfinder : Bool -> List (Attribute msg) -> View.Config -> String -> Html msg

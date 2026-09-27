@@ -157,7 +157,13 @@ suite =
             , test "an unknown asset says so instead of showing a wrong number" <|
                 \_ ->
                     Locale.coin en (asset "eth" "nosuchtoken") 2500000
-                        |> Expect.equal "unknown currency nosuchtoken"
+                        |> Expect.equal "unknown currency"
+            , test "an unknown contract does not print its address" <|
+                \_ ->
+                    -- the address is behind the table cell's copy target and
+                    -- its hover, not spelled out in the text
+                    Locale.coin en (asset "bnb" "0x9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a") 2500000
+                        |> Expect.equal "unknown currency"
             , test "a transfer keyed by contract address reads by its registered symbol" <|
                 \_ ->
                     -- a swap leg keyed by contract address: the conversion
