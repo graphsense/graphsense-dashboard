@@ -1,4 +1,4 @@
-module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, emptyCell, firstToUpper, fixFillRule, fullWidthCss, hovercard, iconWithHint, ifTrue, indirectTagFillAttr, inputFieldStyles, makeValuesList, noTextSelection, none, onClickWithStop, onMiddleClick, p, pointer, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+module Util.View exposing (HintConfig, HintPosition(..), ValuesFormatted, ValuesRow, addDot, colorToHex, conditionalHide, copyIconPathfinder, copyIconPathfinderAbove, copyIconPathfinderFixed, emptyCell, firstToUpper, fixFillRule, fullWidthCss, hovercard, iconWithHint, ifTrue, inputFieldStyles, makeValuesList, noTextSelection, none, onClickWithStop, onMiddleClick, p, pointer, testId, testKey, timeToCell, toCssColor, truncate, truncateLongIdentifier, truncateLongIdentifierWithLengths)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -399,14 +399,6 @@ fixFillRule =
     [ Css.property "fill-rule" "evenodd"
     ]
         |> css
-
-
-indirectTagFillAttr : List (Attribute msg)
-indirectTagFillAttr =
-    -- `--c-greyBlue500` resolves to a near-white in dark mode, turning the
-    -- "indirect tag" icon white. Force the literal light-mode gray so the
-    -- icon looks the same in both modes (matches View.Pathfinder.TagDetailsList).
-    [ css [ Css.important (Css.property "fill" Colors.greyBlue300_string) ] ]
 
 
 timeToCell : View.Config -> Int -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
