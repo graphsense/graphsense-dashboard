@@ -61,7 +61,6 @@ init uc flags url key =
       , error = ""
       , statusbar = Statusbar.init
       , supportedTokens = Dict.empty
-      , tokenLists = Dict.empty
       , dialog = Nothing
       , plugins = pluginStates
       , dirty = False

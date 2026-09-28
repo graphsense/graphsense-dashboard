@@ -78,15 +78,12 @@ txTab vc isTxOnGraph viewState =
         |> subTxsTab
 
 
-{-| The asset the input leg moves, on the network the conversion starts on.
--}
 inputAsset : ConversionEdge -> AssetIdentifier
 inputAsset c =
     asset c.raw.fromNetwork (c.rawInputTransaction |> Tx.getAssetFromRawTx)
 
 
-{-| The asset the output leg moves, on the network the conversion ends on: for
-a bridge that is the destination network, not the one the input leg is on.
+{-| On the destination network: a bridge's output leg is not on the input's network.
 -}
 outputAsset : ConversionEdge -> AssetIdentifier
 outputAsset c =

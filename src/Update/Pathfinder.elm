@@ -326,15 +326,14 @@ appLevelOutMsgs msg model =
             []
 
 
-{-| A served dex swap's legs are curated on the backend, so their symbol and
-decimals are trusted display metadata; register them keyed by contract address
-so the value formatter labels and scales the leg.
+{-| Swap legs carry backend-curated symbol/decimals; register them by contract
+so the formatter labels and scales the leg.
 -}
 conversionAssetRegistrations : Api.Data.ExternalConversion -> List OutMsg
 conversionAssetRegistrations c =
     let
         reg network asset symbol decimals =
-            if asset == "native" then
+            if asset == ConversionEdge.nativeAsset then
                 []
 
             else
@@ -343,7 +342,7 @@ conversionAssetRegistrations c =
                         [ RegisterConversionAsset network
                             { contractAddress = Just asset
                             , decimals = d
-                            , pegCurrency = Just "market"
+                            , pegCurrency = Nothing
                             , ticker = s
                             }
                         ]
@@ -1839,13 +1838,19 @@ updateByMsg uc msg model =
         UserReleasesMouseButton ->
             -- End any active mid-edge label drag in addition to the normal
             -- node/graph drag flow.
+            -- Also ends a swap-icon drag.
             let
                 model_ =
                     { model | draggingAggEdgeLabel = Nothing, draggingConversionNode = Nothing }
             in
             case model_.dragging of
                 NoDragging ->
-                    n model_
+                    case model.draggingConversionNode of
+                        Just nodeDrag ->
+                            releaseConversionNode nodeDrag model_
+
+                        Nothing ->
+                            n model_
 
                 Dragging _ _ _ ->
                     case model_.pointerTool of
@@ -2416,8 +2421,7 @@ updateByMsg uc msg model =
                         |> EventualMessages.addMessage eventualMsg (InternalConversionLoopAddressesLoaded conversion)
             in
             if Tx.getTxId tx == txA.id then
-                -- the OTHER leg was asked for, but the leg already in hand came
-                -- back: pairing it would draw a swap edge from a tx to itself
+                -- never pair a leg with itself
                 n model
 
             else
@@ -2436,11 +2440,8 @@ updateByMsg uc msg model =
                     |> Tuple.mapSecond ((++) (mcmd |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault []))
 
         BrowserGotConversions tx conversions ->
-            -- Which leg is `tx`? For a sub-tx id the API only returns conversions
-            -- naming it, but for the whole tx (bare hash / root trace) it returns
-            -- every conversion — whose legs are OTHER sub-txs. Pairing such a tx
-            -- with a leg drew a second, bogus swap edge through the root whenever
-            -- the root and a leg were both on the graph.
+            -- a sub-tx id gets only its own conversions, a bare hash every conversion
+            -- of the tx (legs are other sub-txs): check which leg `tx` is
             let
                 txid =
                     Tx.getTxIdForTx tx
@@ -2485,43 +2486,36 @@ updateByMsg uc msg model =
                 |> List.foldl
                     (\conversion ( aggm, effects ) ->
                         let
-                            inputLegId =
-                                Id.init conversion.fromNetwork conversion.fromAssetTransfer
+                            withLeg network transfer continuation =
+                                case Dict.get (Id.init network (removeLeading0x transfer)) aggm.network.txs of
+                                    Just leg ->
+                                        updateByMsg uc (continuation (Tx.getRawTx leg)) aggm
 
-                            outputLegId =
-                                Id.init conversion.toNetwork conversion.toAssetTransfer
+                                    Nothing ->
+                                        ( aggm, [ fetch (Id.init network transfer) continuation ] )
 
-                            eff =
+                            ( nextModel, eff ) =
                                 if isLeg conversion.toNetwork conversion.toAssetTransfer then
-                                    fetch inputLegId (BrowserGotConversionLoop tx conversion)
+                                    withLeg conversion.fromNetwork conversion.fromAssetTransfer (BrowserGotConversionLoop tx conversion)
 
                                 else if isLeg conversion.fromNetwork conversion.fromAssetTransfer then
-                                    fetch outputLegId (BrowserGotConversionLoop tx conversion)
+                                    withLeg conversion.toNetwork conversion.toAssetTransfer (BrowserGotConversionLoop tx conversion)
 
                                 else
-                                    -- whole-tx answer: `tx` is no leg, so load the
-                                    -- input leg and let IT drive the pairing
-                                    fetch inputLegId (BrowserGotConversionInputLeg tx conversion)
+                                    -- whole-tx answer: `tx` is no leg; the input leg drives the pairing
+                                    withLeg conversion.fromNetwork conversion.fromAssetTransfer (BrowserGotConversionInputLeg tx conversion)
                         in
-                        ( aggm, effects ++ [ eff ] )
+                        ( nextModel, effects ++ eff )
                     )
                     ( modelWithFlag, [] )
 
         BrowserGotConversionInputLeg anchor conversion tx ->
-            -- the swap's input leg, loaded on behalf of a whole-tx answer: put it
-            -- next to the tx that was answered, then continue as if the leg's own
-            -- conversions had arrived (-> fetch the output leg, pair the two legs)
             let
                 pos =
                     anchor |> Tx.toFinalCoords
 
-                -- we asked for this tx by the identifier the swap names for its
-                -- INPUT leg, so only that leg may continue the walk. Were a
-                -- backend to answer under a different identifier, continuing would
-                -- pair nothing and ask for the very same leg again, forever; were
-                -- it to answer with the OUTPUT leg, the walk would ask for the
-                -- input leg once more and could pair the output leg with itself
-                -- -- so drop either instead.
+                -- only the input leg we asked for may continue; any other answer
+                -- would re-request forever or pair a leg with itself
                 isInputLeg =
                     isLegTransfer (Tx.getTxId tx) conversion.fromNetwork conversion.fromAssetTransfer
 
@@ -2931,9 +2925,8 @@ updateByMsg uc msg model =
         UserSelectsAnnotationColor ids clr ->
             n { model | annotations = List.foldl (\id ann -> Annotations.setColor id clr ann) model.annotations ids }
 
-        UserPushesLeftMouseButtonOnConversionNode key currentOffset coords ->
-            -- Start dragging a swap icon; the curve re-routes through it (see
-            -- View.Pathfinder.ConversionEdge.layout)
+        UserPushesLeftMouseButtonOnConversionNode key coords ->
+            -- the curve re-routes through the icon (View.Pathfinder.ConversionEdge.layout)
             case ( model.dragging, model.transform.state ) of
                 ( NoDragging, Transform.Settled _ ) ->
                     n
@@ -2942,7 +2935,7 @@ updateByMsg uc msg model =
                                 Just
                                     { key = key
                                     , start = coords
-                                    , baseOffset = currentOffset
+                                    , baseOffset = conversionNodeOffset key model
                                     }
                         }
 
@@ -3593,13 +3586,10 @@ browserGotTx uc { pos, loadAddresses, autoLinkInTraceMode, requestedTxHash } tx 
             ( newTx, newNetwork ) =
                 Network.addTxWithPosition model.config pos tx model.network
 
-            -- opened by its bare hash (deep link, search): every swap in the
-            -- tx, not only those of the sub-tx that happened to be loaded —
-            -- a batch of trades has swaps whose legs are other sub-txs, some
-            -- not even listed as flows (uncurated tokens). A sub-tx id asks
-            -- for its own swaps only.
+            -- a bare hash asks for every swap in the tx (legs may be other, even
+            -- unlisted, sub-txs); a sub-tx id only for its own
             conversionsOf =
-                if String.contains "_" requestedTxHash then
+                if Data.isSubTxIdentifier requestedTxHash then
                     Tx.getTxIdForTx newTx |> Id.id
 
                 else
@@ -5300,6 +5290,27 @@ selectAggEdge _ id model =
                 |> n
 
 
+{-| The icon's own click is swallowed, so a release in place is what selects:
+a drag must not also open the swap's details.
+-}
+releaseConversionNode : DraggingOffset -> Model -> ( Model, List Effect )
+releaseConversionNode nodeDrag model =
+    if conversionNodeOffset nodeDrag.key model == nodeDrag.baseOffset then
+        selectConversionEdge nodeDrag.key model
+
+    else
+        n model
+
+
+{-| The icon is never auto-placed, so the stored offset is where it is drawn.
+-}
+conversionNodeOffset : ( Id, Id ) -> Model -> { x : Float, y : Float }
+conversionNodeOffset key model =
+    Dict.get key model.network.conversions
+        |> Maybe.andThen .nodeOffset
+        |> Maybe.withDefault { x = 0, y = 0 }
+
+
 selectConversionEdge : ( Id, Id ) -> Model -> ( Model, List Effect )
 selectConversionEdge ( a, b ) model =
     let
@@ -6423,15 +6434,7 @@ autoLoadConversionsOf : String -> Tx -> Model -> ( Model, List Effect )
 autoLoadConversionsOf identifier tx model =
     let
         currency =
-            case tx.type_ of
-                Tx.Account atx ->
-                    atx.raw.network
-
-                Tx.Utxo utxoTx ->
-                    utxoTx.raw.currency
-
-        txHash =
-            identifier
+            Tx.getTxIdForTx tx |> Id.network
     in
     if not (supports NetworkCapabilities.Conversions currency model) then
         ( model, [] )
@@ -6441,7 +6444,7 @@ autoLoadConversionsOf identifier tx model =
         , BrowserGotConversions tx
             |> Api.GetConversionEffect
                 { currency = currency
-                , txHash = txHash
+                , txHash = identifier
                 }
             |> ApiEffect
             |> List.singleton

@@ -33,7 +33,7 @@ cell asset =
 
 values : Api.Data.Values
 values =
-    { value = -4127208515966861312, fiatValues = [] }
+    { value = 1, fiatValues = [] }
 
 
 suite : Test
@@ -42,8 +42,8 @@ suite =
         [ test "reads unknown currency, without the address in the text" <|
             \_ ->
                 cell { network = "bnb", asset = unknownContract }
-                    |> Query.find [ Selector.tag "copy-icon" ]
-                    |> Query.has [ Selector.containing [ Selector.text "unknown currency" ] ]
+                    |> Query.find [ Selector.tag "span", Selector.containing [ Selector.text "unknown currency" ] ]
+                    |> Query.hasNot [ Selector.containing [ Selector.text unknownContract ] ]
         , test "copies the contract address on click" <|
             \_ ->
                 cell { network = "bnb", asset = unknownContract }

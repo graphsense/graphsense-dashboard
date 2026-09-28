@@ -1,86 +1,39 @@
 module Scenario.ConversionAssetRegistrationTest exposing (suite)
 
-{-| A served dex swap names its legs' assets, and the Pathfinder hands that
-curated symbol/decimals pair up to the shell as a token config so the value
-formatter can label and scale the leg (`RegisterConversionAsset`).
-
-That registration races the per-network token list: the two write the same
-`supportedTokens` entry, and the swap answer can arrive first — a deep link
-waits for the capabilities, not for the token list. These pin that neither
-write loses: a registered asset survives the list arriving, and a network that
-only ever got a registration still asks for its list.
-
-The merged entry is the formatter's. The Stats page's "Supported tokens" pills
-show only the network's list as it arrived, so a curated leg the list lacks is
-labelled in the graph but never advertised as a supported token.
-
+{-| A served dex swap's curated leg asset (`RegisterConversionAsset`) and the
+network's `/supported_tokens` list arrive in either order. The formatter reads
+both; asset filters, ticker scaling and the Stats pills only the list.
 -}
 
 import Api.Data
-import Dict exposing (Dict)
+import Dict
 import Effect.Api
 import Expect
 import Http
 import Init.Pathfinder.Id as Id
-import Model exposing (Effect(..), Msg(..), listedTokens)
-import Model.Pathfinder.Network exposing (FindPosition(..))
+import Model exposing (Effect(..), Msg(..))
+import Model.Locale
 import Msg.Pathfinder as Pathfinder
 import Support.MainApp as App exposing (App)
+import Support.SwapFixture exposing (accountTx, dexSwap, inputLegId, settlement, swapper, txRequest, usd1Contract)
 import Test exposing (Test, describe, test)
+import View.Locale as Locale
 
 
 
 -- FIXTURE: one curated dex swap inside one bnb tx
 
 
-hash : String
-hash =
-    "63336a5ace33dc969cdb769f64b8499eae7f142741895fa4d589dbfa41bf5d95"
-
-
-swapper : String
-swapper =
-    "0xe17ad4f88be9cd479a8036a058b893a0da62bc7a"
-
-
-settlement : String
-settlement =
-    "0x9008d19f58aabd9ed0d60971565aa8510560ab41"
-
-
-inputLegId : String
-inputLegId =
-    hash ++ "_T95"
-
-
-outputLegId : String
-outputLegId =
-    hash ++ "_T108"
-
-
-usd1Contract : String
-usd1Contract =
-    "0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d"
+{-| USD1's contract in the EIP-55 checksummed casing the API serves.
+-}
+usd1Checksummed : String
+usd1Checksummed =
+    "0x8D0D000Ee44948FC98c9B98A4FA4921476f08B0d"
 
 
 inputLegTx : Api.Data.Tx
 inputLegTx =
-    Api.Data.TxTxAccount
-        { contractCreation = Nothing
-        , currency = "bnb"
-        , fee = Nothing
-        , fromAddress = swapper
-        , height = 119317568
-        , identifier = inputLegId
-        , isExternal = Nothing
-        , network = "bnb"
-        , timestamp = 1788254088
-        , toAddress = settlement
-        , tokenTxId = Nothing
-        , txHash = hash
-        , txType = "account"
-        , value = { fiatValues = [], value = 1 }
-        }
+    accountTx inputLegId swapper settlement
 
 
 {-| A dex swap whose token leg carries the curated display metadata the
@@ -88,25 +41,11 @@ adapter serves; `contract` is the casing that leg's asset arrives in.
 -}
 curatedSwap : String -> Api.Data.ExternalConversion
 curatedSwap contract =
-    { conversionType = Api.Data.ExternalConversionConversionTypeDexSwap
-    , fromAddress = swapper
-    , fromAmount = "0x16a4ecb955b8a31b"
-    , fromAsset = "native"
-    , fromAssetTransfer = "0x" ++ inputLegId
-    , fromIsSupportedAsset = True
-    , fromNetwork = "bnb"
-    , toAddress = swapper
-    , toAmount = "0x16a56e085c4dad4f"
-    , toAsset = contract
-    , toAssetTransfer = "0x" ++ outputLegId
-    , toIsSupportedAsset = True
-    , toNetwork = "bnb"
-    , fromAssetSymbol = Nothing
-    , toAssetSymbol = Just "USD1"
-    , fromAssetDecimals = Nothing
-    , toAssetDecimals = Just 18
-    , fromAmountFiatValues = Nothing
-    , toAmountFiatValues = Nothing
+    { dexSwap
+        | fromAsset = "native"
+        , toAsset = contract
+        , toAssetSymbol = Just "USD1"
+        , toAssetDecimals = Just 18
     }
 
 
@@ -125,13 +64,12 @@ tokenList =
     }
 
 
-{-| The same list, but it does carry the swapped token — under its own ticker
-and in the checksummed casing the API serves.
+{-| The same list, but it does carry the swapped token, under its own ticker.
 -}
 tokenListWithUsd1 : Api.Data.TokenConfigs
 tokenListWithUsd1 =
     { tokenConfigs =
-        { contractAddress = Just "0x8D0D000Ee44948FC98c9B98A4FA4921476f08B0d"
+        { contractAddress = Just usd1Checksummed
         , decimals = 18
         , pegCurrency = Just "USD"
         , ticker = "WORLD LIBERTY USD"
@@ -175,32 +113,39 @@ statsFor networks =
 -}
 withInputLeg : App -> App
 withInputLeg =
-    App.step
-        (PathfinderMsg
-            (Pathfinder.BrowserGotTx
-                { pos = Auto
-                , loadAddresses = False
-                , autoLinkInTraceMode = False
-                , requestedTxHash = inputLegId
-                }
-                inputLegTx
-            )
-        )
+    App.step (PathfinderMsg (Pathfinder.BrowserGotTx (txRequest inputLegId) inputLegTx))
 
 
 {-| The API answered the leg's `/conversions` with the curated swap, which is
 what makes the Pathfinder register the token leg's asset.
 -}
 gotCuratedSwap : String -> App -> App
-gotCuratedSwap contract app =
+gotCuratedSwap =
+    curatedSwap >> gotSwap
+
+
+gotSwap : Api.Data.ExternalConversion -> App -> App
+gotSwap swap app =
     Dict.get (Id.init "bnb" inputLegId) (App.model app).pathfinder.network.txs
-        |> Maybe.map (\tx -> App.step (PathfinderMsg (Pathfinder.BrowserGotConversions tx [ curatedSwap contract ])) app)
+        |> Maybe.map (\tx -> App.step (PathfinderMsg (Pathfinder.BrowserGotConversions tx [ swap ])) app)
         |> Maybe.withDefault app
 
 
 register : App -> App
 register app =
     app |> withInputLeg |> gotCuratedSwap usd1Contract
+
+
+{-| A curated leg on another contract whose symbol spells the listed `USDT`
+ticker, with other decimals.
+-}
+registerUsdtNamesake : App -> App
+registerUsdtNamesake =
+    let
+        swap =
+            curatedSwap "0x1111111111111111111111111111111111111111"
+    in
+    withInputLeg >> gotSwap { swap | toAssetSymbol = Just "USDT", toAssetDecimals = Just 9 }
 
 
 gotTokenList : Api.Data.TokenConfigs -> App -> App
@@ -252,42 +197,45 @@ tokenListRequests app =
     )
 
 
-{-| What the model knows about bnb's tokens, as ( contract address, ticker ).
+{-| bnb's curated swap assets, as ( contract address, ticker ).
 -}
-knownTokens : App -> List ( String, String )
-knownTokens app =
-    App.model app
-        |> .supportedTokens
+registered : App -> List ( String, String )
+registered app =
+    (App.model app).config.locale.swapAssets
+        |> Dict.get "bnb"
+        |> Maybe.withDefault []
         |> tokensOf
 
 
-{-| The same, from what the Stats page is handed: the network's own list.
+{-| bnb's token list as the Stats page is handed it.
 -}
 listed : App -> List ( String, String )
 listed app =
-    App.model app
-        |> listedTokens
-        |> tokensOf
-
-
-{-| The same, from the copy the value formatter reads.
--}
-formatterTokens : App -> List ( String, String )
-formatterTokens app =
-    App.model app
-        |> .config
-        |> .locale
-        |> .supportedTokens
-        |> tokensOf
-
-
-tokensOf : Dict String Api.Data.TokenConfigs -> List ( String, String )
-tokensOf tokens =
-    Dict.get "bnb" tokens
+    (App.model app).supportedTokens
+        |> Dict.get "bnb"
         |> Maybe.map .tokenConfigs
         |> Maybe.withDefault []
-        |> List.map (\c -> ( c.contractAddress |> Maybe.withDefault "" |> String.toLower, c.ticker ))
-        |> List.sort
+        |> tokensOf
+
+
+tokensOf : List Api.Data.TokenConfig -> List ( String, String )
+tokensOf =
+    List.map (\c -> ( c.contractAddress |> Maybe.withDefault "" |> String.toLower, c.ticker ))
+        >> List.sort
+
+
+{-| The tickers the tx and address asset filters offer for bnb.
+-}
+filterTickers : App -> List String
+filterTickers app =
+    Model.Locale.getTokenTickers (App.model app).config.locale "bnb"
+
+
+{-| How the value formatter reads a bnb amount of `asset`.
+-}
+formatted : String -> Int -> App -> String
+formatted asset value app =
+    Locale.coin (App.model app).config.locale { network = "bnb", asset = asset } value
 
 
 usdt : ( String, String )
@@ -301,50 +249,50 @@ usdt =
 
 suite : Test
 suite =
-    describe "a conversion asset registration and the token list share an entry"
+    describe "a conversion asset registration and the token list"
         [ describe "a registered swap asset"
-            [ test "lands in the model" <|
+            [ test "lands in the swap assets" <|
                 \_ ->
                     App.initAt "/"
                         |> register
-                        |> knownTokens
+                        |> registered
                         |> Expect.equal [ ( usd1Contract, "USD1" ) ]
-            , test "lands in the copy the value formatter reads" <|
+            , test "labels and scales the leg in the value formatter" <|
                 \_ ->
                     App.initAt "/"
                         |> register
-                        |> formatterTokens
-                        |> Expect.equal [ ( usd1Contract, "USD1" ) ]
+                        |> formatted usd1Contract (10 ^ 18)
+                        |> Expect.equal "1.00 USD1"
             , test "is registered once, whatever casing the asset arrives in" <|
                 \_ ->
                     App.initAt "/"
                         |> register
-                        |> gotCuratedSwap (String.toUpper usd1Contract)
-                        |> knownTokens
+                        |> gotCuratedSwap usd1Checksummed
+                        |> registered
                         |> Expect.equal [ ( usd1Contract, "USD1" ) ]
             ]
         , describe "when the token list arrives after a registration"
-            [ test "the registered asset survives in the model" <|
+            [ test "the registered asset survives" <|
                 \_ ->
                     App.initAt "/"
                         |> register
                         |> gotTokenList tokenList
-                        |> knownTokens
-                        |> Expect.equal [ usdt, ( usd1Contract, "USD1" ) ]
-            , test "and in the copy the value formatter reads" <|
+                        |> registered
+                        |> Expect.equal [ ( usd1Contract, "USD1" ) ]
+            , test "and the formatter still reads the leg by it" <|
                 \_ ->
                     App.initAt "/"
                         |> register
                         |> gotTokenList tokenList
-                        |> formatterTokens
-                        |> Expect.equal [ usdt, ( usd1Contract, "USD1" ) ]
+                        |> formatted usd1Contract (10 ^ 18)
+                        |> Expect.equal "1.00 USD1"
             , test "a token the list carries itself is taken from the list" <|
                 \_ ->
                     App.initAt "/"
                         |> register
                         |> gotTokenList tokenListWithUsd1
-                        |> knownTokens
-                        |> Expect.equal [ usdt, ( usd1Contract, "WORLD LIBERTY USD" ) ]
+                        |> formatted usd1Contract (10 ^ 18)
+                        |> Expect.equal "1.00 WORLD LIBERTY USD"
             ]
         , describe "the Stats page"
             [ test "lists only what the network's token list carries" <|
@@ -352,20 +300,34 @@ suite =
                     App.initAt "/"
                         |> gotTokenList tokenList
                         |> register
-                        |> (\app -> ( listed app, knownTokens app, formatterTokens app ))
+                        |> (\app -> ( listed app, registered app, formatted usd1Contract (10 ^ 18) app ))
                         |> Expect.equal
                             ( [ usdt ]
-                            , [ usdt, ( usd1Contract, "USD1" ) ]
-                            , [ usdt, ( usd1Contract, "USD1" ) ]
+                            , [ ( usd1Contract, "USD1" ) ]
+                            , "1.00 USD1"
                             )
             , test "a registration alone creates no Stats pills" <|
                 \_ ->
                     App.initAt "/"
                         |> register
-                        |> App.model
-                        |> listedTokens
-                        |> Dict.member "bnb"
-                        |> Expect.equal False
+                        |> (\app -> ( registered app, Dict.member "bnb" (App.model app).supportedTokens ))
+                        |> Expect.equal ( [ ( usd1Contract, "USD1" ) ], False )
+            ]
+        , describe "the asset filters"
+            [ test "offer only the network's list, whichever arrives first" <|
+                \_ ->
+                    ( App.initAt "/" |> gotTokenList tokenList |> register |> filterTickers
+                    , App.initAt "/" |> register |> gotTokenList tokenList |> filterTickers
+                    )
+                        |> Expect.equal ( [ "USDT" ], [ "USDT" ] )
+            ]
+        , describe "a curated symbol that spells a listed ticker"
+            [ test "does not rescale the listed ticker, whichever arrives first" <|
+                \_ ->
+                    ( App.initAt "/" |> gotTokenList tokenList |> registerUsdtNamesake |> formatted "usdt" (5 * 10 ^ 18)
+                    , App.initAt "/" |> registerUsdtNamesake |> gotTokenList tokenList |> formatted "usdt" (5 * 10 ^ 18)
+                    )
+                        |> Expect.equal ( "5.00 USDT", "5.00 USDT" )
             ]
         , describe "when the statistics arrive after a registration"
             [ test "the network's token list is still asked for" <|

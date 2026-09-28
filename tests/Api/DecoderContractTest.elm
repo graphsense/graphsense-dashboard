@@ -104,29 +104,18 @@ suite =
                         |> Expect.equal Nothing
             ]
         , describe "a dex swap leg's curated display metadata and fiat"
-            -- A swap leg may move a token the dashboard's own token list does
-            -- not carry. The adapter only serves a dex_swap when both legs are
-            -- on its curated list, so it can name the token for us: the
-            -- optional per-leg symbol/decimals are trusted display metadata,
-            -- and per-leg fiat arrives only when the backend could price that
-            -- leg. All six are absent from the spec and from any baseline
-            -- body, so these pin the hand patch in openapi/src/Api/Data.elm.
+            -- The six optional per-leg keys are in neither the spec nor any
+            -- baseline body: these pin the hand patch in openapi/src/Api/Data.elm.
             [ test "decodes symbol, decimals and fiat when the adapter sends them" <|
                 \_ ->
                     enrichedDexSwap
                         |> Json.Decode.decodeString Api.Data.externalConversionDecoder
-                        |> Result.map
-                            (\c ->
-                                -- Elm has no four-tuple
-                                { toAssetSymbol = c.toAssetSymbol
-                                , toAssetDecimals = c.toAssetDecimals
-                                , fromAmountFiatValues = c.fromAmountFiatValues
-                                , toAmountFiatValues = c.toAmountFiatValues
-                                }
-                            )
+                        |> Result.map legMetadata
                         |> Expect.equal
                             (Ok
-                                { toAssetSymbol = Just "KAISER"
+                                { fromAssetSymbol = Nothing
+                                , fromAssetDecimals = Nothing
+                                , toAssetSymbol = Just "KAISER"
                                 , toAssetDecimals = Just 9
                                 , fromAmountFiatValues = Just [ { code = "usd", value = 60.0 } ]
                                 , toAmountFiatValues = Nothing
@@ -148,9 +137,8 @@ suite =
                             )
                         |> Expect.equal (Ok [ False, False, False, False, False, False ])
             , test "decodes the from leg's symbol and decimals when it is a token" <|
-                -- the from-leg registration (Update.Pathfinder) fires only on
-                -- a decoded symbol and decimals: a typo in either key would
-                -- silently turn them into Nothing
+                -- the from-leg registration fires only on decoded symbol+decimals;
+                -- a key typo would silently yield Nothing
                 \_ ->
                     tokenInputDexSwap
                         |> Json.Decode.decodeString Api.Data.externalConversionDecoder
@@ -161,6 +149,8 @@ suite =
                                 , fromAssetDecimals = Just 6
                                 , toAssetSymbol = Nothing
                                 , toAssetDecimals = Nothing
+                                , fromAmountFiatValues = Just [ { code = "usd", value = 60.0 } ]
+                                , toAmountFiatValues = Nothing
                                 }
                             )
             , test "a null from-leg symbol decodes to Nothing" <|
@@ -175,6 +165,8 @@ suite =
                                 , fromAssetDecimals = Just 6
                                 , toAssetSymbol = Nothing
                                 , toAssetDecimals = Nothing
+                                , fromAmountFiatValues = Just [ { code = "usd", value = 60.0 } ]
+                                , toAmountFiatValues = Nothing
                                 }
                             )
             ]
@@ -282,28 +274,16 @@ txlessAddress =
     """{"currency":"eth","address":"0xab","entity":1,"cluster":1,"status":"clean","balance":{"value":0,"fiat_values":[]},"total_received":{"value":0,"fiat_values":[]},"total_spent":{"value":0,"fiat_values":[]},"in_degree":0,"out_degree":0,"no_incoming_txs":0,"no_outgoing_txs":0}"""
 
 
-{-| A dex\_swap as the live baseline serves it, byte for byte: the single row
-of harness fixture be8b3e387e9f, recorded 2026-09-22 (the adapter's
-`harness/baseline_snapshots/eth/be8b3e387e9f.json`, which is gitignored there).
-
-Exactly the thirteen keys the spec declares, hex amounts, native in and a token
-out the baseline does not count as a supported asset.
-
+{-| The live baseline's dex\_swap row byte for byte (adapter harness fixture
+be8b3e387e9f): exactly the thirteen spec keys.
 -}
 baselineDexSwap : String
 baselineDexSwap =
     """{"conversion_type":"dex_swap","from_address":"0x4c2d696441a11760429cd9845bd84987b9313242","to_address":"0x4c2d696441a11760429cd9845bd84987b9313242","from_asset":"native","to_asset":"0x87b723960c170561e6b7cb74188b5f159e272c74","from_amount":"0x470de4df820000","to_amount":"0x22db8e23bcaee","from_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_I603","to_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_T250","from_network":"eth","to_network":"eth","from_is_supported_asset":true,"to_is_supported_asset":false}"""
 
 
-{-| The same row as the adapter serves it once it adds curated display
-metadata: the thirteen keys plus the token leg's symbol and decimals from its
-curated list, and fiat for the leg it could price — the native one here, since
-the baseline-parity pin KAISER has no quote.
-
-The three optional keys are added by hand: the snapshot above predates the
-enrichment. Symbol and decimals are the curated list's own
-(`instance/swap_assets.yaml`); the fiat figure is illustrative.
-
+{-| The same row plus the curated token leg's symbol/decimals and a fiat quote
+for the priced native leg (figure illustrative).
 -}
 enrichedDexSwap : String
 enrichedDexSwap =
@@ -322,12 +302,21 @@ tokenInputDexSwap =
 
 legMetadata :
     Api.Data.ExternalConversion
-    -> { fromAssetSymbol : Maybe String, fromAssetDecimals : Maybe Int, toAssetSymbol : Maybe String, toAssetDecimals : Maybe Int }
+    ->
+        { fromAssetSymbol : Maybe String
+        , fromAssetDecimals : Maybe Int
+        , toAssetSymbol : Maybe String
+        , toAssetDecimals : Maybe Int
+        , fromAmountFiatValues : Maybe (List Api.Data.Rate)
+        , toAmountFiatValues : Maybe (List Api.Data.Rate)
+        }
 legMetadata c =
     { fromAssetSymbol = c.fromAssetSymbol
     , fromAssetDecimals = c.fromAssetDecimals
     , toAssetSymbol = c.toAssetSymbol
     , toAssetDecimals = c.toAssetDecimals
+    , fromAmountFiatValues = c.fromAmountFiatValues
+    , toAmountFiatValues = c.toAmountFiatValues
     }
 
 

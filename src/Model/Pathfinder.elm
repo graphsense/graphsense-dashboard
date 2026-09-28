@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), DraggingAggEdgeLabel, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, MultiAdd, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, isLiteNetwork, supports, unit)
+module Model.Pathfinder exposing (Details(..), DraggingOffset, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, MultiAdd, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, isLiteNetwork, supports, unit)
 
 import Api.Data exposing (Actor, Cluster)
 import AssocList
@@ -71,11 +71,8 @@ type alias Model =
     , colors : ScopedColorAssignment
     , annotations : AnnotationModel
     , dragging : Dragging Id
-    , draggingAggEdgeLabel : Maybe DraggingAggEdgeLabel
-
-    -- a swap icon being dragged: same shape, `key` is the conversion edge id
-    -- and `baseOffset` its nodeOffset when the drag started
-    , draggingConversionNode : Maybe DraggingAggEdgeLabel
+    , draggingAggEdgeLabel : Maybe DraggingOffset
+    , draggingConversionNode : Maybe DraggingOffset
     , selection : Selection
     , hovered : Hovered
     , search : Search.Model
@@ -128,8 +125,12 @@ type alias MultiAdd =
 label at `start` (screen coords) when its offset was `baseOffset`; subsequent
 mouse-move events update the edge's `labelOffset` to `baseOffset + Δ`, where
 Δ is the transform-corrected mouse vector.
+
+A swap-icon drag uses the same shape, updating the conversion edge's
+`nodeOffset` instead.
+
 -}
-type alias DraggingAggEdgeLabel =
+type alias DraggingOffset =
     { key : ( Id, Id )
     , start : Coords
     , baseOffset : { x : Float, y : Float }

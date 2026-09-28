@@ -185,54 +185,11 @@ copyIconPathfinderAbove =
     copyIconWithAttrPathfinderInternal False Above False (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
 
 
-{-| Makes `content` itself the click target of a copy: a click copies `value`
-to the clipboard, and hovering shows `hoverText` verbatim (not a locale key: a
-contract address, say), which turns into the "copied!" label for a moment after
-the click. Same custom element as the copy icons (`copy-icon`, src/main.js).
+{-| Makes `content` the copy target (the `copy-icon` element of src/main.js);
+`hoverText` is shown verbatim, not a locale key.
 -}
 copyOnClick : View.Config -> { hoverText : String, value : String } -> Html msg -> Html msg
 copyOnClick vc { hoverText, value } content =
-    let
-        -- the theme's hint bubble sits ABOVE a 24px icon; an inline label at
-        -- the right edge of a table needs it BELOW and right-aligned, so the
-        -- bubble is rebuilt from the theme's own styles: upward triangle first,
-        -- bubble under it, both flush with the label's right edge
-        bubble =
-            Html.Styled.div
-                [ attribute "data-hint" ""
-                , css
-                    (Theme.Html.GraphComponents.iconWithHintAboveHint_details.styles
-                        ++ [ Css.display Css.none
-                           , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 10))
-                           , Css.position Css.fixed |> Css.important
-                           , Css.flexDirection Css.column |> Css.important
-                           , Css.alignItems Css.flexEnd |> Css.important
-                           , Css.justifyContent Css.flexStart |> Css.important
-                           ]
-                    )
-                ]
-                [ Html.Styled.div
-                    [ css
-                        [ Css.position Css.relative
-                        , Css.property "width" "9.8125px"
-                        , Css.property "height" "6.34912109375px"
-                        , Css.marginRight (Css.px 6)
-                        ]
-                    ]
-                    [ triangleUp ]
-                , Html.Styled.div
-                    [ css Theme.Html.GraphComponents.iconWithHintAboveContent_details.styles ]
-                    [ Html.Styled.div
-                        [ attribute "data-label" ""
-                        , css
-                            (Theme.Html.GraphComponents.iconWithHintAboveLabel_details.styles
-                                ++ [ Css.whiteSpace Css.noWrap |> Css.important ]
-                            )
-                        ]
-                        [ Html.Styled.text hoverText ]
-                    ]
-                ]
-    in
     Html.Styled.node "copy-icon"
         [ attribute "data-value" value
         , Locale.string vc.locale "Copied-hint"
@@ -260,7 +217,7 @@ copyOnClick vc { hoverText, value } content =
                     ]
             )
             (Theme.Html.GraphComponents.iconWithHintAboveInstances
-                |> s_hint (Just bubble)
+                |> s_hint (Just (hintBubbleBelow hoverText))
             )
             { root =
                 { hint = hoverText
@@ -270,19 +227,90 @@ copyOnClick vc { hoverText, value } content =
         ]
 
 
-{-| The theme triangle points down (bubble above); this one points up, in
-the theme's size and colour.
+{-| The theme bubble sits above a 24px icon; a label at a table's right edge
+needs it below and right-aligned, so it is rebuilt from the theme's styles.
+-}
+hintBubbleBelow : String -> Html msg
+hintBubbleBelow hoverText =
+    Html.Styled.div
+        [ attribute "data-hint" ""
+        , css
+            (Theme.Html.GraphComponents.iconWithHintAboveHint_details.styles
+                ++ [ Css.display Css.none
+                   , Css.zIndex (Css.int hintZIndex)
+                   , Css.position Css.fixed |> Css.important
+                   , Css.flexDirection Css.column |> Css.important
+                   , Css.alignItems Css.flexEnd |> Css.important
+                   , Css.justifyContent Css.flexStart |> Css.important
+                   ]
+            )
+        ]
+        [ Html.Styled.div
+            [ css
+                [ Css.position Css.relative
+                , Css.width (Css.px triangle.renderedWidth)
+                , Css.height (Css.px triangle.renderedHeight)
+                , Css.marginRight (Css.px hintTriangleRightInset)
+                ]
+            ]
+            [ triangleUp ]
+        , Html.Styled.div
+            [ css Theme.Html.GraphComponents.iconWithHintAboveContent_details.styles ]
+            [ Html.Styled.div
+                [ attribute "data-label" ""
+                , css
+                    (Theme.Html.GraphComponents.iconWithHintAboveLabel_details.styles
+                        ++ [ Css.whiteSpace Css.noWrap |> Css.important ]
+                    )
+                ]
+                [ Html.Styled.text hoverText ]
+            ]
+        ]
+
+
+hintZIndex : Int
+hintZIndex =
+    Util.Css.zIndexMainValue + 10
+
+
+{-| How far the triangle sits in from the bubble's right edge, in px.
+-}
+hintTriangleRightInset : Float
+hintTriangleRightInset =
+    6
+
+
+triangle : { renderedWidth : Float, renderedHeight : Float }
+triangle =
+    let
+        details =
+            Theme.Html.GraphComponents.iconWithHintAboveTriangle_details
+    in
+    { renderedWidth = details.renderedWidth, renderedHeight = details.renderedHeight }
+
+
+{-| The theme triangle points down (bubble above); this one points up.
 -}
 triangleUp : Html msg
 triangleUp =
+    let
+        w =
+            String.fromFloat triangle.renderedWidth
+
+        h =
+            String.fromFloat triangle.renderedHeight
+
+        tipX =
+            String.fromFloat (triangle.renderedWidth / 2)
+    in
     Svg.Styled.svg
-        [ Svg.Styled.Attributes.width "9.8125"
-        , Svg.Styled.Attributes.height "6.34912109375"
-        , Svg.Styled.Attributes.viewBox "0 0 9.8125 6.34912109375"
+        [ Svg.Styled.Attributes.width w
+        , Svg.Styled.Attributes.height h
+        , Svg.Styled.Attributes.viewBox ("0 0 " ++ w ++ " " ++ h)
         ]
         [ Svg.Styled.path
-            [ Svg.Styled.Attributes.d "M4.90614 0L0 6.34912L9.81228 6.34912L4.90614 0Z"
-            , Svg.Styled.Attributes.css [ Css.property "fill" "var(--c-pathAggregated)" ]
+            [ Svg.Styled.Attributes.d ("M" ++ tipX ++ " 0L0 " ++ h ++ "L" ++ w ++ " " ++ h ++ "Z")
+            , Svg.Styled.Attributes.css [ Css.property "fill" Colors.pathAggregated ]
             ]
             []
         ]
@@ -334,7 +362,7 @@ copyIconWithAttrPathfinderInternal fixedHint hp hideHint attr vc value =
                         [ Html.Styled.Attributes.attribute "data-hint" ""
                         , css <|
                             [ Css.display Css.none
-                            , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 10))
+                            , Css.zIndex (Css.int hintZIndex)
                             ]
                                 ++ (if fixedHint then
                                         [ Css.position Css.fixed |> Css.important ]
@@ -410,7 +438,7 @@ iconWithHint vc { position, hint, hide, icon } attr =
                     [ Html.Styled.Attributes.attribute "data-hint" ""
                     , css
                         [ Css.display Css.none
-                        , Css.zIndex (Css.int (Util.Css.zIndexMainValue + 10))
+                        , Css.zIndex (Css.int hintZIndex)
                         , Css.position Css.fixed |> Css.important
                         ]
                     ]

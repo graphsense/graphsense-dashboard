@@ -1,92 +1,12 @@
 module Model.Pathfinder.ConversionEdgeTest exposing (suite)
 
-{-| A swap leg is rendered from the amounts of the LOADED leg transaction, but
-the fiat quote the conversion itself carries is the better one: the backend
-priced the leg at the swap's own asset and height, while the leg tx's own
-`fiatValues` may be empty for a token the baseline cannot price.
--}
-
 import Api.Data
 import Expect
 import Init.Pathfinder.ConversionEdge as ConversionEdge
 import Init.Pathfinder.Id as Id
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
+import Support.SwapFixture exposing (accountTx, dexSwap, inputLegId, outputLegId, settlement, swapper)
 import Test exposing (Test, describe, test)
-
-
-swapper : String
-swapper =
-    "0x1c1df1eb43bb46e1f6e1a4d59bd15ddbf7a0cdaf"
-
-
-settlement : String
-settlement =
-    "0x0a0c1a9cbaef41e1e5a5b4e34d4b2a49f8b7e2b1"
-
-
-accountTx : String -> String -> String -> Api.Data.Tx
-accountTx identifier from to =
-    Api.Data.TxTxAccount
-        { contractCreation = Nothing
-        , currency = "bnb"
-        , fee = Nothing
-        , fromAddress = from
-        , height = 119317568
-        , identifier = identifier
-        , isExternal = Nothing
-        , network = "bnb"
-        , timestamp = 1788254088
-        , toAddress = to
-        , tokenTxId = Nothing
-        , txHash = "0xdeadbeef"
-        , txType = "account"
-        , value = { fiatValues = [], value = 1 }
-        }
-
-
-conversion : Api.Data.ExternalConversion
-conversion =
-    { conversionType = Api.Data.ExternalConversionConversionTypeDexSwap
-    , fromAddress = swapper
-    , fromAmount = "0x16a4ecb955b8a31b"
-    , fromAsset = "0xe9e7cea3dedca5984780bafc599bd69add087d56"
-    , fromAssetTransfer = "0xaaa_T1"
-    , fromIsSupportedAsset = True
-    , fromNetwork = "bnb"
-    , toAddress = swapper
-    , toAmount = "0x16a56e085c4dad4f"
-    , toAsset = "0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d"
-    , toAssetTransfer = "0xaaa_T2"
-    , toIsSupportedAsset = True
-    , toNetwork = "bnb"
-    , fromAssetSymbol = Nothing
-    , toAssetSymbol = Nothing
-    , fromAssetDecimals = Nothing
-    , toAssetDecimals = Nothing
-    , fromAmountFiatValues = Nothing
-    , toAmountFiatValues = Nothing
-    }
-
-
-edge : Api.Data.ExternalConversion -> ConversionEdge
-edge raw =
-    ConversionEdge.init raw
-        ( Id.init "bnb" "aaa_T1", Id.init "bnb" "aaa_T2" )
-        ( Id.init "bnb" swapper, Id.init "bnb" swapper )
-        (accountTx "aaa_T1" swapper settlement)
-        (accountTx "aaa_T2" settlement swapper)
-
-
-{-| The same edge, but its leg transactions move value between two other
-addresses: the conversion's `fromAddress`/`toAddress` is on neither.
--}
-mismatchedEdge : Api.Data.ExternalConversion -> ConversionEdge
-mismatchedEdge raw =
-    ConversionEdge.init raw
-        ( Id.init "bnb" "aaa_T1", Id.init "bnb" "aaa_T2" )
-        ( Id.init "bnb" swapper, Id.init "bnb" swapper )
-        (accountTx "aaa_T1" stranger settlement)
-        (accountTx "aaa_T2" settlement stranger)
 
 
 stranger : String
@@ -94,9 +14,33 @@ stranger =
     "0x00000000000000000000000000000000000000ff"
 
 
-usd6 : Maybe (List Api.Data.Rate)
+{-| The swap's edge whose leg transactions move value between `legAddress` and
+the settlement contract.
+-}
+edgeWith : String -> Api.Data.ExternalConversion -> ConversionEdge
+edgeWith legAddress raw =
+    ConversionEdge.init raw
+        ( Id.init "bnb" inputLegId, Id.init "bnb" outputLegId )
+        ( Id.init "bnb" swapper, Id.init "bnb" swapper )
+        (accountTx inputLegId legAddress settlement)
+        (accountTx outputLegId settlement legAddress)
+
+
+edge : Api.Data.ExternalConversion -> ConversionEdge
+edge =
+    edgeWith swapper
+
+
+{-| The conversion's `fromAddress`/`toAddress` is on neither leg transaction.
+-}
+mismatchedEdge : Api.Data.ExternalConversion -> ConversionEdge
+mismatchedEdge =
+    edgeWith stranger
+
+
+usd6 : List Api.Data.Rate
 usd6 =
-    Just [ { code = "usd", value = 6 } ]
+    [ { code = "usd", value = 6 } ]
 
 
 suite : Test
@@ -104,36 +48,33 @@ suite =
     describe "Model.Pathfinder.ConversionEdge leg values"
         [ test "the conversion's own quote wins over the leg transaction's" <|
             \_ ->
-                edge { conversion | toAmountFiatValues = Just [ { code = "usd", value = 6 } ] }
+                edge { dexSwap | toAmountFiatValues = Just usd6 }
                     |> ConversionEdge.outputValues
-                    |> Expect.equal { fiatValues = [ { code = "usd", value = 6 } ], value = 1 }
+                    |> Expect.equal { fiatValues = usd6, value = 1 }
         , test "without a quote the leg transaction's own values are untouched" <|
             \_ ->
-                edge conversion
+                edge dexSwap
                     |> ConversionEdge.outputValues
                     |> Expect.equal { fiatValues = [], value = 1 }
-        , test "the input leg reads the same way" <|
+        , test "the input leg's own quote wins too" <|
             \_ ->
-                ( edge { conversion | fromAmountFiatValues = Just [ { code = "usd", value = 6 } ] }
+                edge { dexSwap | fromAmountFiatValues = Just usd6 }
                     |> ConversionEdge.inputValues
-                , edge conversion |> ConversionEdge.inputValues
-                )
-                    |> Expect.equal
-                        ( { fiatValues = [ { code = "usd", value = 6 } ], value = 1 }
-                        , { fiatValues = [], value = 1 }
-                        )
-        , test "an address-mismatched leg carries no fiat beside its zero amount" <|
-            -- the leg tx does not move the conversion address's funds, so its
-            -- amount falls back to zero; a quote next to that zero would claim
-            -- a value the panel cannot show
+                    |> Expect.equal { fiatValues = usd6, value = 1 }
+        , test "without a quote the input leg's own values are untouched" <|
             \_ ->
-                mismatchedEdge { conversion | fromAmountFiatValues = usd6 }
+                edge dexSwap
+                    |> ConversionEdge.inputValues
+                    |> Expect.equal { fiatValues = [], value = 1 }
+        , test "an address-mismatched leg carries no fiat beside its zero amount" <|
+            \_ ->
+                mismatchedEdge { dexSwap | fromAmountFiatValues = Just usd6 }
                     |> ConversionEdge.inputValues
                     |> .fiatValues
                     |> Expect.equal []
         , test "an address-mismatched output leg carries no fiat either" <|
             \_ ->
-                mismatchedEdge { conversion | toAmountFiatValues = usd6 }
+                mismatchedEdge { dexSwap | toAmountFiatValues = Just usd6 }
                     |> ConversionEdge.outputValues
                     |> .fiatValues
                     |> Expect.equal []

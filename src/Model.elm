@@ -1,4 +1,4 @@
-module Model exposing (AddTagDialogMsgs(..), Auth(..), Effect(..), Flags, Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..), RequestLimit(..), RequestLimitInterval(..), SettingsMsg(..), UserModel, listedTokens, requestLimitIntervalToString, showResetCounterAtRemaining, userSettingsFromMainModel)
+module Model exposing (AddTagDialogMsgs(..), Auth(..), Effect(..), Flags, Model, Msg(..), NavbarSubMenu, NavbarSubMenuType(..), Page(..), RequestLimit(..), RequestLimitInterval(..), SettingsMsg(..), UserModel, requestLimitIntervalToString, showResetCounterAtRemaining, userSettingsFromMainModel)
 
 import Api.Data
 import Browser exposing (UrlRequest)
@@ -62,12 +62,6 @@ type alias Model navigationKey =
     , statusbar : Model.Statusbar.Model
     , dialog : Maybe (Model.Dialog.Model Msg)
     , supportedTokens : Dict String Api.Data.TokenConfigs
-
-    -- each network's `/supported_tokens` answer as received, written only by
-    -- `BrowserGotSupportedTokens`. Distinct from `supportedTokens`, which also
-    -- holds the curated swap assets `RegisterConversionAsset` adds: a key here
-    -- means the list loaded, and the Stats pills show only these tokens.
-    , tokenLists : Dict String Api.Data.TokenConfigs
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
     , notifications : Model.Notification.Model
     , localeSelectBox : SelectBox.Model String
@@ -233,14 +227,6 @@ type Effect
     | NotificationEffect Model.Notification.Effect
     | PostponeUpdateByUrlEffect Url
     | PostponeDeserializeEffect ( String, Json.Encode.Value )
-
-
-{-| The token lists the networks answered, without the curated swap assets
-the value formatter also knows.
--}
-listedTokens : Model key -> Dict String Api.Data.TokenConfigs
-listedTokens =
-    .tokenLists
 
 
 userSettingsFromMainModel : Model key -> UserSettings

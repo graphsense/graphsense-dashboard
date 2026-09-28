@@ -1,5 +1,6 @@
 module View.Locale exposing
-    ( coin
+    ( assetTicker
+    , coin
     , coinWithoutCode
     , currency
     , currencyWithoutCode
@@ -368,13 +369,11 @@ currencyWithOptions options model values =
                     |> fiat model code
 
             else
-                -- a leg the backend could not price carries no quote: the
-                -- coin amount, never a fabricated "0.00 USD"
+                -- unpriced: show the coin amount, never a fabricated 0.00
                 currencyWithOptions { options | currency = Coin } model values
 
 
-{-| Whether any of the values carries a fiat quote at all. A zero quote
-counts (a priced asset can be worth nothing); an unpriced asset has none.
+{-| A zero quote counts; an unpriced asset carries none.
 -}
 hasFiat : List ( AssetIdentifier, Api.Data.Values ) -> Bool
 hasFiat =
@@ -422,9 +421,18 @@ coinWithoutCode =
     coinWithOptions False
 
 
-{-| A contract-keyed asset reads by the symbol registered for that contract
-(`RegisterConversionAsset`).
+{-| The ticker of a token: the registered one, else the symbol the data carries.
 -}
+assetTicker : Model -> AssetIdentifier -> Maybe String -> Maybe String
+assetTicker model asset symbol =
+    case registeredConfig model asset of
+        Just tc ->
+            Just (String.toUpper tc.ticker)
+
+        Nothing ->
+            Maybe.map String.toUpper symbol
+
+
 resolveAsset : Model -> AssetIdentifier -> AssetIdentifier
 resolveAsset model asset =
     registeredConfig model asset
@@ -432,21 +440,27 @@ resolveAsset model asset =
         |> Maybe.withDefault asset
 
 
-{-| The token config registered for a contract-keyed asset, matched by address
-because the address is the identity — a ticker is a label, two contracts may
-share one.
+{-| Matched by address, since two contracts may share a ticker. The network's
+list wins over a curated swap asset for the same contract.
 -}
 registeredConfig : Model -> AssetIdentifier -> Maybe Api.Data.TokenConfig
 registeredConfig model asset =
+    let
+        sameContract tc =
+            Maybe.map String.toLower tc.contractAddress
+                == Just (String.toLower asset.asset)
+
+        listed =
+            Dict.get asset.network model.supportedTokens
+                |> Maybe.map .tokenConfigs
+                |> Maybe.withDefault []
+
+        curated =
+            Dict.get asset.network model.swapAssets
+                |> Maybe.withDefault []
+    in
     if isContractAddress asset.asset then
-        Dict.get asset.network model.supportedTokens
-            |> Maybe.map .tokenConfigs
-            |> Maybe.withDefault []
-            |> find
-                (\tc ->
-                    Maybe.map String.toLower tc.contractAddress
-                        == Just (String.toLower asset.asset)
-                )
+        find sameContract (listed ++ curated)
 
     else
         Nothing
@@ -504,10 +518,7 @@ coinWithOptions showCode model rawAsset v =
         |> Maybe.withDefault unknownCurrency
 
 
-{-| What a value reads when the dashboard has no metadata for its asset (no
-decimals, so no honest number). The asset itself is not spelled out: a table
-cell makes this label the click target that copies the contract address, and
-shows the address on hover (View.Pathfinder.Table.Columns.assetsCell).
+{-| Label for an asset without decimals: no honest number can be shown.
 -}
 unknownCurrency : String
 unknownCurrency =
@@ -516,7 +527,6 @@ unknownCurrency =
 
 normalizeCoinValue : Model -> AssetIdentifier -> Int -> Maybe Float
 normalizeCoinValue model rawAsset v =
-    -- a contract-keyed asset scales by the decimals registered for THAT contract
     (case registeredConfig model rawAsset of
         Just tc ->
             Just (10 ^ toFloat tc.decimals)

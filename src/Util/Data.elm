@@ -1,4 +1,4 @@
-module Util.Data exposing (absValues, addressCluster, isAccountLike, isEvmHexNetwork, looksLikeTxHash, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, normalizeTxIdentifier, parseMultiIdentifierInput, selfCluster, splitMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addressCluster, isAccountLike, isEvmHexNetwork, isSubTxIdentifier, looksLikeTxHash, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, normalizeTxIdentifier, parseMultiIdentifierInput, selfCluster, splitMultiIdentifierInput, subValues, sumValues, timestampToPosix)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -156,6 +156,13 @@ ensure0x s =
 
     else
         "0x" ++ s
+
+
+{-| A sub-tx id (`{hash}_T1`, `{hash}_I1`) rather than a bare tx hash.
+-}
+isSubTxIdentifier : String -> Bool
+isSubTxIdentifier =
+    String.contains "_"
 
 
 {-| Lowercase the hex part of an address or tx identifier on networks

@@ -2,12 +2,10 @@ module Scenario.ConversionLegsTest exposing (suite)
 
 {-| Pins which sub-transactions a swap edge is drawn between.
 
-The API answers `/txs/{id}/conversions` for a sub-tx id with the conversions that
-name it as a leg, but for the whole tx (a bare hash, or the root trace `_I0`) it
-returns EVERY conversion of the tx — whose legs are other sub-txs. The handler
-used to assume the answered tx is always a leg, so the root got paired with the
-output leg as a second, bogus swap edge whenever the root and a leg were both on
-the graph (seen live: one bnb swap rendered as two "Swap BUSD / USD1" edges).
+For a sub-tx id `/txs/{id}/conversions` returns the conversions naming it as a
+leg; for the whole tx (bare hash or root `_I0`) it returns every conversion of
+the tx, whose legs are other sub-txs, so the answered tx must never itself be
+paired as a leg.
 
 -}
 
@@ -16,18 +14,25 @@ import Dict
 import Effect.Api
 import Effect.Pathfinder
 import Expect
+import Html.Attributes
 import Http
+import Init.Pathfinder.Address as Address
 import Init.Pathfinder.Id as Id
 import Model
 import Model.Dialog as Dialog
 import Model.Notification as Notification
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Network exposing (FindPosition(..))
+import Model.Pathfinder.Selection exposing (Selection(..))
 import Msg.Pathfinder exposing (Msg(..), OutMsg(..))
 import Support.App as App exposing (App)
 import Support.MainApp as MainApp
+import Support.SwapFixture exposing (accountTx, dexSwap, hash, inputLegId, outputLegId, settlement, swapper, txRequest)
 import Test exposing (Test, describe, test)
+import Test.Html.Event as Event
+import Test.Html.Query as Query
+import Test.Html.Selector as Selector
 import Update.Graph.Transform as Transform
+import Update.Pathfinder.Network as Network
 import Update.Statusbar as Statusbar
 import Util exposing (removeLeading0x)
 
@@ -36,59 +41,14 @@ import Util exposing (removeLeading0x)
 -- FIXTURE: one dex swap inside one bnb tx
 
 
-hash : String
-hash =
-    "63336a5ace33dc969cdb769f64b8499eae7f142741895fa4d589dbfa41bf5d95"
-
-
 sender : String
 sender =
     "0x53227a6d5a129143b6ad760810ece62c79ab8e97"
 
 
-settlement : String
-settlement =
-    "0x9008d19f58aabd9ed0d60971565aa8510560ab41"
-
-
-swapper : String
-swapper =
-    "0xe17ad4f88be9cd479a8036a058b893a0da62bc7a"
-
-
 rootId : String
 rootId =
     hash ++ "_I0"
-
-
-inputLegId : String
-inputLegId =
-    hash ++ "_T95"
-
-
-outputLegId : String
-outputLegId =
-    hash ++ "_T108"
-
-
-accountTx : String -> String -> String -> Api.Data.Tx
-accountTx identifier from to =
-    Api.Data.TxTxAccount
-        { contractCreation = Nothing
-        , currency = "bnb"
-        , fee = Nothing
-        , fromAddress = from
-        , height = 119317568
-        , identifier = identifier
-        , isExternal = Nothing
-        , network = "bnb"
-        , timestamp = 1788254088
-        , toAddress = to
-        , tokenTxId = Nothing
-        , txHash = hash
-        , txType = "account"
-        , value = { fiatValues = [], value = 1 }
-        }
 
 
 rootTx : Api.Data.Tx
@@ -106,50 +66,21 @@ outputLegTx =
     accountTx outputLegId settlement swapper
 
 
-{-| The swap's leg identifiers carry a `0x` prefix, as the API serves dex swaps.
--}
-swap : Api.Data.ExternalConversion
-swap =
-    { conversionType = Api.Data.ExternalConversionConversionTypeDexSwap
-    , fromAddress = swapper
-    , fromAmount = "0x16a4ecb955b8a31b"
-    , fromAsset = "0xe9e7cea3dedca5984780bafc599bd69add087d56"
-    , fromAssetTransfer = "0x" ++ inputLegId
-    , fromIsSupportedAsset = True
-    , fromNetwork = "bnb"
-    , toAddress = swapper
-    , toAmount = "0x16a56e085c4dad4f"
-    , toAsset = "0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d"
-    , toAssetTransfer = "0x" ++ outputLegId
-    , toIsSupportedAsset = True
-    , toNetwork = "bnb"
-    , fromAssetSymbol = Nothing
-    , toAssetSymbol = Nothing
-    , fromAssetDecimals = Nothing
-    , toAssetDecimals = Nothing
-    , fromAmountFiatValues = Nothing
-    , toAmountFiatValues = Nothing
-    }
-
-
 {-| The same swap as the adapter serves it enriched: the native input leg
 carries no display metadata, the token output leg carries its curated symbol
 and decimals.
 -}
 curatedSwap : Api.Data.ExternalConversion
 curatedSwap =
-    { swap
+    { dexSwap
         | fromAsset = "native"
         , toAssetSymbol = Just "USD1"
         , toAssetDecimals = Just 18
     }
 
 
-{-| A native input leg the adapter synthesized (DASHBOARD\_CHANGES D-27): its
-`_I<k>` index sits at or above the adapter's SYNTHESIZED\_INDEX\_BASE (1048576).
-The id is opaque: the dashboard must ask for it exactly as served, never parse
-or display `k`, and treat a 404 (a leg that cannot be reconstructed) as the end
-of the walk.
+{-| A native leg the adapter synthesized (DASHBOARD\_CHANGES D-27): an opaque
+id, fetched exactly as served; a 404 ends the walk.
 -}
 synthesizedLegId : String
 synthesizedLegId =
@@ -163,7 +94,7 @@ synthesizedLegTx =
 
 nativeInSwap : Api.Data.ExternalConversion
 nativeInSwap =
-    { swap
+    { dexSwap
         | fromAsset = "native"
         , fromAssetTransfer = "0x" ++ synthesizedLegId
     }
@@ -187,15 +118,7 @@ identifierOf tx =
 -}
 withTx : Api.Data.Tx -> App -> App
 withTx tx =
-    App.step
-        (BrowserGotTx
-            { pos = Auto
-            , loadAddresses = False
-            , autoLinkInTraceMode = False
-            , requestedTxHash = identifierOf tx
-            }
-            tx
-        )
+    App.step (BrowserGotTx (txRequest (identifierOf tx)) tx)
 
 
 {-| The API answered `/txs/{identifier}/conversions` with these conversions.
@@ -211,7 +134,7 @@ gotConversionsFor identifier conversions app =
 -}
 gotSwapFor : String -> App -> App
 gotSwapFor identifier =
-    gotConversionsFor identifier [ swap ]
+    gotConversionsFor identifier [ dexSwap ]
 
 
 answerTxRequest : Api.Data.Tx -> App -> App
@@ -233,39 +156,15 @@ answerTxRequest tx =
 {-| The sub-tx ids the last step asked the API for, without the `0x` prefix.
 -}
 requestedTxs : App -> List String
-requestedTxs app =
-    App.apiEffects app
-        |> List.filterMap
-            (\eff ->
-                case eff of
-                    Effect.Api.GetTxEffect { txHash } _ ->
-                        Just (removeLeading0x txHash)
-
-                    Effect.Api.GetConversionLegEffect { txHash } _ ->
-                        Just (removeLeading0x txHash)
-
-                    _ ->
-                        Nothing
-            )
+requestedTxs =
+    requestedTxsVerbatim >> List.map removeLeading0x
 
 
 {-| The tx ids the last step asked the API for, exactly as they go on the wire.
 -}
 requestedTxsVerbatim : App -> List String
-requestedTxsVerbatim app =
-    App.apiEffects app
-        |> List.filterMap
-            (\eff ->
-                case eff of
-                    Effect.Api.GetTxEffect { txHash } _ ->
-                        Just txHash
-
-                    Effect.Api.GetConversionLegEffect { txHash } _ ->
-                        Just txHash
-
-                    _ ->
-                        Nothing
-            )
+requestedTxsVerbatim =
+    App.apiEffects >> List.filterMap requestedTxHash
 
 
 {-| The ids the last step asked `/conversions` for, without the `0x` prefix.
@@ -307,12 +206,17 @@ swapEdgeId app =
     (App.model app).network.conversions |> Dict.keys |> List.head
 
 
-nodeOffsetOf : App -> Maybe { x : Float, y : Float }
-nodeOffsetOf app =
-    (App.model app).network.conversions
-        |> Dict.values
-        |> List.head
-        |> Maybe.andThen .nodeOffset
+{-| The swap icon's stored offset, or an `Err` unless there is exactly one swap
+edge, so no offset assertion passes on a graph without the edge.
+-}
+swapIconOffset : App -> Result String (Maybe { x : Float, y : Float })
+swapIconOffset app =
+    case Dict.values (App.model app).network.conversions of
+        [ edge ] ->
+            Ok edge.nodeOffset
+
+        edges ->
+            Err (String.fromInt (List.length edges) ++ " swap edges")
 
 
 {-| Press on the swap icon at `from`, move the mouse to `to`, release.
@@ -322,12 +226,48 @@ dragSwapIcon from to app =
     case swapEdgeId app of
         Just id ->
             app
-                |> App.step (UserPushesLeftMouseButtonOnConversionNode id (nodeOffsetOf app |> Maybe.withDefault { x = 0, y = 0 }) from)
+                |> App.step (UserPushesLeftMouseButtonOnConversionNode id from)
                 |> App.step (UserMovesMouseOnGraph to)
                 |> App.step UserReleasesMouseButton
 
         Nothing ->
             app
+
+
+{-| The swap edge is drawn only once both its addresses are on the graph.
+-}
+withSwapOnScreen : App -> App
+withSwapOnScreen app =
+    case swapEdgeId app of
+        Just id ->
+            App.mapModel
+                (\m ->
+                    { m
+                        | network =
+                            Network.updateConversionEdge id
+                                (\edge ->
+                                    { edge
+                                        | inputAddress = Just (Address.init (Id.init "bnb" sender) { x = 0, y = 0 })
+                                        , outputAddress = Just (Address.init (Id.init "bnb" swapper) { x = 0, y = 5 })
+                                    }
+                                )
+                                m.network
+                    }
+                )
+                app
+
+        Nothing ->
+            app
+
+
+isSwapSelected : App -> Bool
+isSwapSelected app =
+    case ( (App.model app).selection, swapEdgeId app ) of
+        ( SelectedConversionEdge selected, Just id ) ->
+            selected == id
+
+        _ ->
+            False
 
 
 dragVector : { x : Float, y : Float } -> { x : Float, y : Float } -> App -> { x : Float, y : Float }
@@ -342,8 +282,8 @@ movingTheSwapIcon =
             \_ ->
                 App.init
                     |> withSwapEdge
-                    |> nodeOffsetOf
-                    |> Expect.equal Nothing
+                    |> swapIconOffset
+                    |> Expect.equal (Ok Nothing)
         , test "dragging moves the icon by the mouse's way" <|
             \_ ->
                 let
@@ -352,18 +292,19 @@ movingTheSwapIcon =
                 in
                 app
                     |> dragSwapIcon { x = 100, y = 100 } { x = 160, y = 130 }
-                    |> nodeOffsetOf
-                    |> Expect.equal (Just (dragVector { x = 100, y = 100 } { x = 160, y = 130 } app))
+                    |> swapIconOffset
+                    |> Expect.equal (Ok (Just (dragVector { x = 100, y = 100 } { x = 160, y = 130 } app)))
         , test "after the release the mouse no longer moves it" <|
             \_ ->
                 let
                     app =
-                        App.init |> withSwapEdge |> dragSwapIcon { x = 100, y = 100 } { x = 160, y = 130 }
+                        App.init |> withSwapEdge
                 in
                 app
+                    |> dragSwapIcon { x = 100, y = 100 } { x = 160, y = 130 }
                     |> App.step (UserMovesMouseOnGraph { x = 400, y = 400 })
-                    |> nodeOffsetOf
-                    |> Expect.equal (nodeOffsetOf app)
+                    |> swapIconOffset
+                    |> Expect.equal (Ok (Just (dragVector { x = 100, y = 100 } { x = 160, y = 130 } app)))
         , test "a second drag continues from where the icon was left" <|
             \_ ->
                 let
@@ -379,19 +320,43 @@ movingTheSwapIcon =
                 app
                     |> dragSwapIcon { x = 100, y = 100 } { x = 160, y = 130 }
                     |> dragSwapIcon { x = 10, y = 10 } { x = 0, y = 50 }
-                    |> nodeOffsetOf
-                    |> Expect.equal (Just { x = first.x + second.x, y = first.y + second.y })
+                    |> swapIconOffset
+                    |> Expect.equal (Ok (Just { x = first.x + second.x, y = first.y + second.y }))
+        , test "pressing and releasing the icon in place selects the swap" <|
+            \_ ->
+                App.init
+                    |> withSwapEdge
+                    |> dragSwapIcon { x = 100, y = 100 } { x = 100, y = 100 }
+                    |> isSwapSelected
+                    |> Expect.equal True
+        , test "dragging the icon does not select the swap" <|
+            \_ ->
+                App.init
+                    |> withSwapEdge
+                    |> dragSwapIcon { x = 100, y = 100 } { x = 160, y = 130 }
+                    |> (\app -> ( swapEdgeId app /= Nothing, isSwapSelected app ))
+                    |> Expect.equal ( True, False )
+        , test "the click that ends a drag stops at the icon" <|
+            \_ ->
+                App.init
+                    |> withSwapEdge
+                    |> withSwapOnScreen
+                    |> App.html
+                    |> Query.find [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-swap-node") ]
+                    |> Event.simulate Event.click
+                    |> Event.expect NoOp
         , test "the same swap answered again keeps the moved icon" <|
             \_ ->
                 let
                     app =
-                        App.init |> withSwapEdge |> dragSwapIcon { x = 100, y = 100 } { x = 160, y = 130 }
+                        App.init |> withSwapEdge
                 in
                 app
+                    |> dragSwapIcon { x = 100, y = 100 } { x = 160, y = 130 }
                     |> gotSwapFor inputLegId
                     |> answerTxRequest outputLegTx
-                    |> nodeOffsetOf
-                    |> Expect.equal (nodeOffsetOf app)
+                    |> swapIconOffset
+                    |> Expect.equal (Ok (Just (dragVector { x = 100, y = 100 } { x = 160, y = 130 } app)))
         ]
 
 
@@ -399,29 +364,15 @@ movingTheSwapIcon =
 -- DRIVING THE WHOLE DASHBOARD
 
 
-{-| The shell's side of a failed synthesized-leg fetch. The output leg is on the
-graph and its conversions name the synthesized input leg, so the Pathfinder
-asks for that leg. Statusbar tokens are handed out as `Main.main` does before
-performing, and the one API request that step made is answered with a 404.
-`before` is the state the request was sent from, `after` the state once the
-404 is handled.
+{-| The output leg names a synthesized input leg; the one leg request is
+answered with a 404. `before`/`after` bracket that answer, `answered` names it.
 -}
-shellLegNotFound : { before : MainApp.App, after : MainApp.App }
+shellLegNotFound : { before : MainApp.App, after : MainApp.App, answered : List String }
 shellLegNotFound =
     let
         withOutputLeg =
             MainApp.initAt "/"
-                |> MainApp.step
-                    (Model.PathfinderMsg
-                        (BrowserGotTx
-                            { pos = Auto
-                            , loadAddresses = False
-                            , autoLinkInTraceMode = False
-                            , requestedTxHash = outputLegId
-                            }
-                            outputLegTx
-                        )
-                    )
+                |> MainApp.step (Model.PathfinderMsg (BrowserGotTx (txRequest outputLegId) outputLegTx))
 
         asked =
             Dict.get (Id.init "bnb" outputLegId) (MainApp.model withOutputLeg).pathfinder.network.txs
@@ -434,17 +385,15 @@ shellLegNotFound =
         before =
             MainApp.mapModel (always tokened) asked
 
-        after =
+        ( after, answered ) =
             case List.filterMap apiRequest tagged of
                 [ ( token, request ) ] ->
-                    answer404 token request before
+                    ( answer404 token request before, List.filterMap requestedTxHash [ request ] )
 
                 _ ->
-                    -- not exactly the one leg request: nothing is answered,
-                    -- and the statusbar test fails on the entry left open
-                    before
+                    ( before, [] )
     in
-    { before = before, after = after }
+    { before = before, after = after, answered = answered }
 
 
 apiRequest : ( Maybe String, Model.Effect ) -> Maybe ( Maybe String, Effect.Api.Effect Model.Msg )
@@ -460,6 +409,19 @@ apiRequest ( token, eff ) =
             Nothing
 
 
+requestedTxHash : Effect.Api.Effect msg -> Maybe String
+requestedTxHash eff =
+    case eff of
+        Effect.Api.GetTxEffect { txHash } _ ->
+            Just txHash
+
+        Effect.Api.GetConversionLegEffect { txHash } _ ->
+            Just txHash
+
+        _ ->
+            Nothing
+
+
 answer404 : Maybe String -> Effect.Api.Effect Model.Msg -> MainApp.App -> MainApp.App
 answer404 token request =
     MainApp.step
@@ -468,17 +430,20 @@ answer404 token request =
         )
 
 
-dialogShown : MainApp.App -> Maybe Dialog.ErrorType
+{-| The open dialog's error type; `Just Nothing` for a dialog that is no error.
+-}
+dialogShown : MainApp.App -> Maybe (Maybe Dialog.ErrorType)
 dialogShown app =
-    case (MainApp.model app).dialog of
-        Just (Dialog.Error { type_ }) ->
-            Just type_
+    (MainApp.model app).dialog
+        |> Maybe.map
+            (\dialog ->
+                case dialog of
+                    Dialog.Error { type_ } ->
+                        Just type_
 
-        Just _ ->
-            Just (Dialog.General { title = "some other dialog", message = "", variables = [] })
-
-        Nothing ->
-            Nothing
+                    _ ->
+                        Nothing
+            )
 
 
 isNotificationEffect : Model.Effect -> Bool
@@ -502,15 +467,7 @@ suite =
             [ test "a tx opened by its bare hash asks for every swap in the tx" <|
                 \_ ->
                     App.init
-                        |> App.step
-                            (BrowserGotTx
-                                { pos = Auto
-                                , loadAddresses = False
-                                , autoLinkInTraceMode = False
-                                , requestedTxHash = hash
-                                }
-                                inputLegTx
-                            )
+                        |> App.step (BrowserGotTx (txRequest hash) inputLegTx)
                         |> requestedConversions
                         |> Expect.equal [ hash ]
             , test "a sub-transfer toggled on asks for its own swaps only" <|
@@ -544,15 +501,15 @@ suite =
                         |> swapEdges
                         |> Expect.equal [ ( inputLegId, outputLegId ) ]
             , test "the output leg answered with itself is never paired with itself" <|
-                -- it asked for the input leg; a backend serving the output leg
-                -- back must not produce an edge from a tx to itself
                 \_ ->
-                    App.init
-                        |> withTx outputLegTx
-                        |> gotSwapFor outputLegId
-                        |> answerTxRequest outputLegTx
-                        |> swapEdges
-                        |> Expect.equal []
+                    let
+                        asked =
+                            App.init
+                                |> withTx outputLegTx
+                                |> gotSwapFor outputLegId
+                    in
+                    ( requestedTxs asked, answerTxRequest outputLegTx asked |> swapEdges )
+                        |> Expect.equal ( [ inputLegId ], [] )
             ]
         , describe "when the whole tx's conversions arrive on its root trace"
             [ test "the root asks for the input leg, since it is no leg itself" <|
@@ -580,10 +537,7 @@ suite =
                         |> swapEdges
                         |> Expect.equal [ ( inputLegId, outputLegId ) ]
             , test "a leg served under an identifier the swap does not name stops the walk" <|
-                -- the input leg is asked for by the identifier the swap names;
-                -- were the backend to answer under a normalised one, pairing it
-                -- would fail and the handler would ask for the very same leg
-                -- again, forever
+                -- pairing a renamed leg fails, and the handler would re-ask for it forever
                 \_ ->
                     App.init
                         |> withTx rootTx
@@ -592,9 +546,7 @@ suite =
                         |> (\app -> ( requestedTxs app, Dict.size (App.model app).network.txs ))
                         |> Expect.equal ( [], 1 )
             , test "the input-leg request answered with the output leg stops the walk" <|
-                -- the root asked for the INPUT leg; taking the output leg in its
-                -- place would ask for the input leg again, and a second output-leg
-                -- answer would then be paired with itself
+                -- taking it would re-ask for the input leg and later pair the output leg with itself
                 \_ ->
                     App.init
                         |> withTx rootTx
@@ -618,12 +570,38 @@ suite =
                         |> withTx rootTx
                         |> withTx inputLegTx
                         |> gotSwapFor rootId
-                        |> answerTxRequest inputLegTx
                         |> answerTxRequest outputLegTx
                         |> (\app -> ( swapEdges app, Dict.size (App.model app).network.txs ))
                         |> Expect.equal ( [ ( inputLegId, outputLegId ) ], 3 )
             ]
-        , describe "a synthesized native leg (D-27) is a normal, opaque leg"
+        , describe "a leg already on the graph is not fetched again"
+            [ test "the input leg pairs with an output leg in hand without a request" <|
+                \_ ->
+                    App.init
+                        |> withTx outputLegTx
+                        |> withTx inputLegTx
+                        |> gotSwapFor inputLegId
+                        |> (\app -> ( requestedTxs app, swapEdges app ))
+                        |> Expect.equal ( [], [ ( inputLegId, outputLegId ) ] )
+            , test "a whole-tx answer goes straight to the output leg when the input leg is in hand" <|
+                \_ ->
+                    App.init
+                        |> withTx rootTx
+                        |> withTx inputLegTx
+                        |> gotSwapFor rootId
+                        |> requestedTxs
+                        |> Expect.equal [ outputLegId ]
+            , test "a whole-tx answer with both legs in hand pairs them without a request" <|
+                \_ ->
+                    App.init
+                        |> withTx rootTx
+                        |> withTx inputLegTx
+                        |> withTx outputLegTx
+                        |> gotSwapFor rootId
+                        |> (\app -> ( requestedTxs app, swapEdges app, Dict.size (App.model app).network.txs ))
+                        |> Expect.equal ( [], [ ( inputLegId, outputLegId ) ], 3 )
+            ]
+        , describe "a synthesized native leg is a normal, opaque leg"
             [ test "a synthesized native leg id is fetched verbatim" <|
                 \_ ->
                     App.init
@@ -647,8 +625,13 @@ suite =
                         |> (\app -> ( swapEdges app, Dict.size (App.model app).network.txs ))
                         |> Expect.equal ( [ ( synthesizedLegId, outputLegId ) ], 2 )
             ]
-        , describe "a synthesized leg the API answers with 404 (D-27) ends the walk quietly"
-            [ test "no dialog opens" <|
+        , describe "a synthesized leg the API answers with 404 ends the walk quietly"
+            [ test "the one request answered is the synthesized leg's" <|
+                \_ ->
+                    shellLegNotFound
+                        |> .answered
+                        |> Expect.equal [ nativeInSwap.fromAssetTransfer ]
+            , test "no dialog opens" <|
                 \_ ->
                     shellLegNotFound
                         |> .after
@@ -700,17 +683,7 @@ suite =
                                 , includeIo = True
                                 , tokenTxId = Nothing
                                 }
-                                (\tx ->
-                                    Model.PathfinderMsg
-                                        (BrowserGotTx
-                                            { pos = Auto
-                                            , loadAddresses = False
-                                            , autoLinkInTraceMode = False
-                                            , requestedTxHash = synthesizedLegId
-                                            }
-                                            tx
-                                        )
-                                )
+                                (BrowserGotTx (txRequest synthesizedLegId) >> Model.PathfinderMsg)
 
                         start =
                             MainApp.initAt "/"
@@ -721,7 +694,7 @@ suite =
                     MainApp.mapModel (always tokened) start
                         |> answer404 (List.head tagged |> Maybe.andThen Tuple.first) lookup
                         |> dialogShown
-                        |> Expect.equal (Just (Dialog.TxNotFound [ synthesizedLegId ]))
+                        |> Expect.equal (Just (Just (Dialog.TxNotFound [ synthesizedLegId ])))
             ]
         , describe "a swap leg's curated symbol and decimals are registered"
             [ test "the token leg registers what the conversion carries" <|
@@ -734,7 +707,7 @@ suite =
                             [ RegisterConversionAsset "bnb"
                                 { contractAddress = Just "0x8d0d000ee44948fc98c9b98a4fa4921476f08b0d"
                                 , decimals = 18
-                                , pegCurrency = Just "market"
+                                , pegCurrency = Nothing
                                 , ticker = "USD1"
                                 }
                             ]
@@ -743,8 +716,8 @@ suite =
                     App.init
                         |> withTx inputLegTx
                         |> gotSwapFor inputLegId
-                        |> App.outMsgs
-                        |> Expect.equal []
+                        |> (\app -> ( requestedTxs app, App.outMsgs app ))
+                        |> Expect.equal ( [ outputLegId ], [] )
             ]
         , movingTheSwapIcon
         ]

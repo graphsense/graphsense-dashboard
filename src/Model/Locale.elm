@@ -37,6 +37,10 @@ type alias Model =
     , timeLang : DateFormat.Language
     , unitToString : Int -> Locale.Durations.Unit -> String
     , supportedTokens : Dict String Api.Data.TokenConfigs
+
+    -- curated swap-leg assets per network, read only by the contract-keyed
+    -- formatter so their tickers never reach asset filters or the Stats pills
+    , swapAssets : Dict String (List Api.Data.TokenConfig)
     }
 
 

@@ -1,4 +1,4 @@
-module Model.Pathfinder.ConversionEdge exposing (ConversionEdge, getInputTransferId, getInputTransferIdRaw, getOutputTransferId, getOutputTransferIdRaw, inputValues, outputValues, toIdString)
+module Model.Pathfinder.ConversionEdge exposing (ConversionEdge, getInputTransferId, getInputTransferIdRaw, getOutputTransferId, getOutputTransferIdRaw, inputValues, nativeAsset, outputValues, toIdString)
 
 import Api.Data
 import Init.Pathfinder.Id as Id
@@ -6,7 +6,6 @@ import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx
 import Util exposing (removeLeading0x)
-import Util.Data as Data
 
 
 type alias ConversionEdge =
@@ -23,10 +22,16 @@ type alias ConversionEdge =
     , selected : Bool
     , hovered : Bool
 
-    -- where the user dragged the swap icon, relative to where the layout puts
-    -- it (graph units, same space as the rendered curve); Nothing = unmoved
+    -- drag offset of the swap icon from its layout position (graph units); Nothing = unmoved
     , nodeOffset : Maybe { x : Float, y : Float }
     }
+
+
+{-| The asset a conversion leg names for the network's own coin.
+-}
+nativeAsset : String
+nativeAsset =
+    "native"
 
 
 getOutputTransferIdRaw : Api.Data.ExternalConversion -> Id
@@ -54,15 +59,9 @@ toIdString conversion =
     conversion.raw.fromAssetTransfer ++ "_" ++ conversion.raw.toAssetTransfer
 
 
-{-| The amounts of the swap's input leg: the value the loaded leg transaction
-moves, quoted with the conversion's own per-leg fiat rates when the backend
-sent them (it prices the leg at the swap's asset and height, which the leg
-transaction itself may not be priced at at all).
-
-When the conversion's address is not on the leg transaction the amount falls
-back to zero, and that zero carries no fiat: a quote beside it would price an
-amount the panel does not show.
-
+{-| The input leg's amount from the loaded leg tx, quoted with the conversion's
+own fiat when sent (the leg tx may be unpriced). A leg tx not touching
+`fromAddress` reads as zero with no fiat.
 -}
 inputValues : ConversionEdge -> Api.Data.Values
 inputValues c =
@@ -79,28 +78,13 @@ outputValues c =
 
 
 legValues : Maybe (List Api.Data.Rate) -> Maybe Api.Data.Values -> Api.Data.Values
-legValues rates matched =
-    case matched of
-        Just values ->
-            withFiat rates values
-
-        Nothing ->
-            unmatchedLegValues
-
-
-{-| The zero amount a leg falls back to, stripped of the zero quotes
-`Data.valuesZero` carries.
--}
-unmatchedLegValues : Api.Data.Values
-unmatchedLegValues =
-    { value = Data.valuesZero.value, fiatValues = [] }
+legValues rates =
+    Maybe.map (withFiat rates)
+        >> Maybe.withDefault { value = 0, fiatValues = [] }
 
 
 withFiat : Maybe (List Api.Data.Rate) -> Api.Data.Values -> Api.Data.Values
 withFiat rates values =
-    case rates of
-        Just rs ->
-            { values | fiatValues = rs }
-
-        Nothing ->
-            values
+    rates
+        |> Maybe.map (\rs -> { values | fiatValues = rs })
+        |> Maybe.withDefault values

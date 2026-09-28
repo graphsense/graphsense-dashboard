@@ -365,9 +365,7 @@ assetsCell vc hideCode colorFlowDirection isOutgoing assets =
         valueAttrs =
             [ addCss |> List.map Css.important |> css ]
 
-        -- a token the dashboard has no metadata for reads "unknown currency";
-        -- that label copies the asset's contract address on click and shows
-        -- it on hover, instead of printing the address in the cell
+        -- no metadata: the label is the copy target for the contract address (D-28)
         unknownCopiesAddress =
             case assets of
                 [ ( { asset }, _ ) ] ->

@@ -30,6 +30,7 @@ init uc =
       , timeLang = DateFormat.english
       , unitToString = Locale.English.unitToString
       , supportedTokens = Dict.empty
+      , swapAssets = Dict.empty
       }
         |> switch locale
     , Effect.Locale.getTranslationEffect locale

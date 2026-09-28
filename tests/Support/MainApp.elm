@@ -140,7 +140,6 @@ initialModel url =
     , statusbar = Init.Statusbar.init
     , dialog = Nothing
     , supportedTokens = Dict.empty
-    , tokenLists = Dict.empty
     , plugins = Plugin.Model.emptyModelState
     , notifications = Init.Notification.init
     , localeSelectBox = TSelectBox.init <| List.map first Model.Locale.locales

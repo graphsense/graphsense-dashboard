@@ -65,7 +65,6 @@ import Util exposing (and, n)
 import Util.Data
 import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
-import Util.TokenConfigs as TokenConfigs
 import View.Locale as Locale
 import View.Pathfinder.Legend exposing (legendView)
 
@@ -185,7 +184,8 @@ update uc msg model =
                 tokenCurrencyEffects =
                     stats.currencies
                         |> List.map .name
-                        |> List.filter (\currency -> not (Dict.member currency model.tokenLists))
+                        -- a failed list stored nothing, so it is re-asked on every /stats answer
+                        |> List.filter (\currency -> not (Dict.member currency model.supportedTokens))
                         |> List.map
                             (\currency ->
                                 Effect.Api.ListSupportedTokensEffect currency (BrowserGotSupportedTokens currency)
@@ -229,27 +229,13 @@ update uc msg model =
             setAbuseConcepts concepts model
                 |> n
 
-        -- Only a successful answer lands in `tokenLists`. A failed
-        -- `/supported_tokens` stores nothing, so the next `/stats` answer asks
-        -- for that network's list again (see BrowserGotStatistics). This retry
-        -- is intended: it is bounded by `/stats` arrivals, not a loop, and has
-        -- no cap of its own.
         BrowserGotSupportedTokens currency configs ->
             let
-                -- the list is the network's own answer, but it may arrive after
-                -- a dex swap registered a curated asset it does not carry; keep
-                -- those rather than replacing the entry outright
-                merged =
-                    Dict.get currency model.supportedTokens
-                        |> Maybe.withDefault { tokenConfigs = [] }
-                        |> TokenConfigs.merge configs
-
                 locale =
-                    Locale.setSupportedTokens merged currency model.config.locale
+                    Locale.setSupportedTokens configs currency model.config.locale
             in
             { model
-                | supportedTokens = Dict.insert currency merged model.supportedTokens
-                , tokenLists = Dict.insert currency configs model.tokenLists
+                | supportedTokens = Dict.insert currency configs model.supportedTokens
                 , config =
                     model.config
                         |> s_locale locale
@@ -359,40 +345,41 @@ update uc msg model =
                             False
 
                 newDialog =
-                    case result of
-                        Err ( Http.BadStatus 401, _, Effect.Api.GetMeEffect _ ) ->
-                            model.dialog
+                    if isUnreconstructableLeg then
+                        model.dialog
 
-                        Err ( Http.BadStatus 404, _, Effect.Api.GetConversionLegEffect _ _ ) ->
-                            model.dialog
+                    else
+                        case result of
+                            Err ( Http.BadStatus 401, _, Effect.Api.GetMeEffect _ ) ->
+                                model.dialog
 
-                        Err ( Http.BadStatus 401, _, _ ) ->
-                            UserClosesDialog
-                                |> Dialog.generalError
-                                    { title = "Session expired"
-                                    , message = "popup-session-expired-info"
-                                    , variables = []
-                                    }
-                                |> Just
+                            Err ( Http.BadStatus 401, _, _ ) ->
+                                UserClosesDialog
+                                    |> Dialog.generalError
+                                        { title = "Session expired"
+                                        , message = "popup-session-expired-info"
+                                        , variables = []
+                                        }
+                                    |> Just
 
-                        Err e ->
-                            statusbarToken
-                                |> Maybe.andThen
-                                    (\token ->
-                                        case e of
-                                            ( Http.BadStatus 404, _, _ ) ->
-                                                notFound token
+                            Err e ->
+                                statusbarToken
+                                    |> Maybe.andThen
+                                        (\token ->
+                                            case e of
+                                                ( Http.BadStatus 404, _, _ ) ->
+                                                    notFound token
 
-                                            ( Http.BadStatus 400, _, _ ) ->
-                                                notFound token
+                                                ( Http.BadStatus 400, _, _ ) ->
+                                                    notFound token
 
-                                            _ ->
-                                                model.dialog
-                                    )
-                                |> Maybe.Extra.orElse model.dialog
+                                                _ ->
+                                                    model.dialog
+                                        )
+                                    |> Maybe.Extra.orElse model.dialog
 
-                        _ ->
-                            model.dialog
+                            _ ->
+                                model.dialog
 
                 isErrorDialogShown =
                     case newDialog of
@@ -1817,25 +1804,12 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
             n (model |> s_dialog Nothing |> s_notifications (model.notifications |> Notification.pop))
 
         Pathfinder.RegisterConversionAsset network config ->
-            let
-                existing =
-                    Dict.get network model.supportedTokens
-                        |> Maybe.withDefault { tokenConfigs = [] }
-
-                merged =
-                    TokenConfigs.register config existing
-            in
-            if merged == existing then
-                n model
-
-            else
-                n
-                    { model
-                        | supportedTokens = Dict.insert network merged model.supportedTokens
-                        , config =
-                            model.config
-                                |> s_locale (Locale.setSupportedTokens merged network model.config.locale)
-                    }
+            n
+                { model
+                    | config =
+                        model.config
+                            |> s_locale (Locale.registerSwapAsset network config model.config.locale)
+                }
     )
         |> Tuple.mapSecond ((++) effects)
 

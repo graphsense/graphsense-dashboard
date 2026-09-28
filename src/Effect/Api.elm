@@ -333,11 +333,8 @@ type Effect msg
         }
         (Api.Data.RelatedAddresses -> msg)
     | GetConversionEffect { currency : String, txHash : String } (List Api.Data.ExternalConversion -> msg)
-      {- A swap/bridge leg named by a conversion, fetched like `GetTxEffect`
-         with io. Its own constructor so the shell can tell a leg the API
-         cannot reconstruct (a 404 on a synthesized leg, D-27) from a tx the
-         user asked for: the first ends the walk quietly, the second is a
-         "transaction not found" error.
+      {- A conversion leg, fetched like GetTxEffect with io; its own constructor
+         so a 404 ends the swap walk quietly instead of raising tx-not-found (D-27).
       -}
     | GetConversionLegEffect { currency : String, txHash : String } (Api.Data.Tx -> msg)
     | ListTxFlowsEffect
@@ -761,25 +758,8 @@ perform apiKey wrapMsg cancelMsg effect =
             Api.Request.Blocks.listBlockTxs currency block
                 |> send apiKey wrapMsg effect toMsg
 
-        GetTxEffect { currency, txHash, tokenTxId, includeIo } toMsg ->
-            let
-                includeHeuristics =
-                    if includeIo then
-                        Just
-                            [ Api.Request.Txs.IncludeHeuristicAll
-                            ]
-
-                    else
-                        Nothing
-
-                includeIoIndex =
-                    if includeIo then
-                        Just True
-
-                    else
-                        Nothing
-            in
-            Api.Request.Txs.getTx currency txHash (Just includeIo) Nothing includeIoIndex tokenTxId includeHeuristics
+        GetTxEffect params toMsg ->
+            getTxRequest params
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxUtxoAddressesEffect { currency, txHash, isOutgoing } toMsg ->
@@ -1038,7 +1018,7 @@ perform apiKey wrapMsg cancelMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetConversionLegEffect { currency, txHash } toMsg ->
-            Api.Request.Txs.getTx currency txHash (Just True) Nothing (Just True) Nothing (Just [ Api.Request.Txs.IncludeHeuristicAll ])
+            getTxRequest { currency = currency, txHash = txHash, includeIo = True, tokenTxId = Nothing }
                 |> send apiKey wrapMsg effect toMsg
 
         ListTxFlowsEffect { currency, txHash, includeZeroValueSubTxs, token_currency, pagesize, nextpage } toMsg ->
@@ -1437,6 +1417,19 @@ withAuthorization apiKey request =
 
     else
         Api.withHeader "Authorization" apiKey request
+
+
+getTxRequest : { currency : String, txHash : String, tokenTxId : Maybe Int, includeIo : Bool } -> Api.Request Api.Data.Tx
+getTxRequest { currency, txHash, tokenTxId, includeIo } =
+    let
+        whenIo value =
+            if includeIo then
+                Just value
+
+            else
+                Nothing
+    in
+    Api.Request.Txs.getTx currency txHash (Just includeIo) Nothing (whenIo True) tokenTxId (whenIo [ Api.Request.Txs.IncludeHeuristicAll ])
 
 
 send : String -> (Result ( Http.Error, Headers, eff ) ( Headers, msg ) -> msg) -> eff -> (a -> msg) -> Api.Request a -> Cmd msg

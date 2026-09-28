@@ -128,7 +128,7 @@ type Msg
     | UserInputsAnnotation (List Id) String
     | UserSelectsAnnotationColor (List Id) (Maybe Color)
     | UserPushesLeftMouseButtonOnAggEdgeLabel ( Id, Id ) { x : Float, y : Float } Coords
-    | UserPushesLeftMouseButtonOnConversionNode ( Id, Id ) { x : Float, y : Float } Coords
+    | UserPushesLeftMouseButtonOnConversionNode ( Id, Id ) Coords
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraph (Maybe Time.Posix)
     | BrowserGotTagSummariesForExportGraphTxsAsCSV Dialog.ExportArea Bool Bool (List ( Id, Api.Data.TagSummary ))
@@ -204,9 +204,7 @@ type OutMsg
       -- enter on one identifier the search matched nowhere; the shell owns the toast
     | IdentifierNotFound String
     | CloseTopmostOverlay
-      -- display metadata a served swap leg carries — curated on the backend,
-      -- keyed by contract address — so the value formatter can label and
-      -- scale the leg
+      -- a served swap leg's curated symbol/decimals, keyed by contract address
     | RegisterConversionAsset String Api.Data.TokenConfig
 
 

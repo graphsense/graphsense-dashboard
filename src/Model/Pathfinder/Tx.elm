@@ -416,7 +416,7 @@ getInputs tx =
 
 
 {-| What the raw tx moves out of `address`, or `Nothing` when `address` is not
-among its inputs (callers decide what a missing leg is worth).
+among its inputs.
 -}
 getInputValueForAddressFromRawTx : String -> Api.Data.Tx -> Maybe Api.Data.Values
 getInputValueForAddressFromRawTx address tx =

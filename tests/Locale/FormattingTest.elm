@@ -38,6 +38,7 @@ localeModel locale =
         |> Tuple.first
         |> s_valueDetail Exact
         |> s_supportedTokens supportedTokens
+        |> (\m -> { m | swapAssets = swapAssets })
 
 
 magnitude : Model -> Model
@@ -71,30 +72,37 @@ supportedTokens =
                 ]
             }
           )
-
-        -- display metadata a served swap leg carried, registered the way
-        -- Update.RegisterConversionAsset does: two registrations spell the same
-        -- ticker with different decimals — the contract address, not the
-        -- ticker, is the key
         , ( "bnb"
           , { tokenConfigs =
-                [ { contractAddress = Just usdtLikeContract
-                  , decimals = 9
-                  , pegCurrency = Just "market"
-                  , ticker = "USDT"
-                  }
-                , { contractAddress = Just akeContract
-                  , decimals = 18
-                  , pegCurrency = Just "market"
-                  , ticker = "AKE"
-                  }
-                , { contractAddress = Just "0x55d398326f99059ff775485246999027b3197955"
+                [ { contractAddress = Just "0x55d398326f99059ff775485246999027b3197955"
                   , decimals = 18
                   , pegCurrency = Just "usd"
                   , ticker = "usdt"
                   }
                 ]
             }
+          )
+        ]
+
+
+{-| Curated swap-leg assets: one spells the listed `usdt` ticker with other
+decimals, so the contract address, not the ticker, has to be the key.
+-}
+swapAssets : Dict String (List Api.Data.TokenConfig)
+swapAssets =
+    Dict.fromList
+        [ ( "bnb"
+          , [ { contractAddress = Just usdtLikeContract
+              , decimals = 9
+              , pegCurrency = Nothing
+              , ticker = "USDT"
+              }
+            , { contractAddress = Just akeContract
+              , decimals = 18
+              , pegCurrency = Nothing
+              , ticker = "AKE"
+              }
+            ]
           )
         ]
 
@@ -160,16 +168,11 @@ suite =
                         |> Expect.equal "unknown currency"
             , test "an unknown contract does not print its address" <|
                 \_ ->
-                    -- the address is behind the table cell's copy target and
-                    -- its hover, not spelled out in the text
                     Locale.coin en (asset "bnb" "0x9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a") 2500000
                         |> Expect.equal "unknown currency"
             , test "a transfer keyed by contract address reads by its registered symbol" <|
                 \_ ->
-                    -- a swap leg keyed by contract address: the conversion
-                    -- carried the curated symbol and decimals
-                    -- (computed: an integer literal this large would overflow
-                    -- the compiler's 64-bit parse; the app gets it as a JSON double)
+                    -- computed: this literal would overflow the compiler's Int parse
                     Locale.coin (magnitude en) (asset "bnb" akeContract) (34154 * 10 ^ 18)
                         |> Expect.equal "34.15k AKE"
             , test "the contract address is matched case-insensitively" <|
@@ -197,8 +200,7 @@ suite =
         , describe "fiat display"
             [ test "an asset without a fiat quote falls back to its coin amount" <|
                 \_ ->
-                    -- a leg the backend could not price carries no quote: the
-                    -- coin amount, never a fabricated "0.00 USD"
+                    -- never a fabricated "0.00 USD"
                     Locale.currency (Fiat "usd") en [ ( asset "bnb" akeContract, values (10 ^ 18) [] ) ]
                         |> Expect.equal "1.00 AKE"
             , test "a priced asset shows its fiat value" <|

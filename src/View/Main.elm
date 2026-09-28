@@ -4,7 +4,7 @@ import Config.View as View
 import Css
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Model exposing (Model, Msg(..), Page(..), listedTokens)
+import Model exposing (Model, Msg(..), Page(..))
 import Model.NetworkCapabilities as NetworkCapabilities
 import Plugin.View as Plugin
 import RecordSetter as Rs
@@ -34,7 +34,7 @@ view vc model =
             Stats.stats vc
                 (model.capabilities |> RemoteData.withDefault NetworkCapabilities.none)
                 model.stats
-                (listedTokens model)
+                model.supportedTokens
 
         Settings ->
             Settings.view vc model
