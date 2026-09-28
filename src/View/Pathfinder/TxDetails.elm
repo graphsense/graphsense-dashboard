@@ -197,6 +197,7 @@ account vc viewState id txExistsFn =
                 }
             , sidePanelTxHeader =
                 { headerText = (Id.network id |> String.toUpper) ++ " " ++ Locale.string vc.locale "Transaction"
+                , showLiteBadge = False
                 }
             , titleOfContractCreation = { infoLabel = Locale.string vc.locale "contract creation" }
             , valueOfContractCreation =
@@ -412,6 +413,7 @@ utxo vc model id viewState tx =
         , sidePanelTxHeader =
             { headerText =
                 (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "Transaction"
+            , showLiteBadge = False
             }
         }
 
