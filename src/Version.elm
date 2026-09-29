@@ -3,4 +3,4 @@ module Version exposing (version)
 
 version : String
 version =
-    "v26.08.1+pflite.19"
+    "v26.08.1+pflite.20"
