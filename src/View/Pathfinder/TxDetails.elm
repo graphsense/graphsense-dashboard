@@ -165,7 +165,7 @@ account vc viewState model id txExistsFn =
                 |> Rs.s_iconsCloseBlack (closeAttrs Pathfinder.UserClosedDetailsView)
                 |> Rs.s_liteBadge
                     (Util.View.testId "tx-lite-badge"
-                        :: (Util.TooltipType.Text "lite-badge-tx-tooltip"
+                        :: (Util.TooltipType.Text (Locale.interpolated vc.locale "lite-badge-tooltip" [ String.toUpper (Id.network id) ])
                                 |> Tooltip.attributes "tx-lite-badge" (Util.Tooltip.tooltipConfig vc (\tooltipMsg -> Pathfinder.TxDetailsMsg (TooltipMsg tooltipMsg)))
                            )
                     )
@@ -310,7 +310,7 @@ utxo vc model id viewState tx =
             |> Rs.s_iconsCloseBlack (closeAttrs Pathfinder.UserClosedDetailsView)
             |> Rs.s_liteBadge
                 (Util.View.testId "tx-lite-badge"
-                    :: (Util.TooltipType.Text "lite-badge-tx-tooltip"
+                    :: (Util.TooltipType.Text (Locale.interpolated vc.locale "lite-badge-tooltip" [ String.toUpper (Id.network id) ])
                             |> Tooltip.attributes "tx-lite-badge" (Util.Tooltip.tooltipConfig vc (\tooltipMsg -> Pathfinder.TxDetailsMsg (TooltipMsg tooltipMsg)))
                        )
                 )

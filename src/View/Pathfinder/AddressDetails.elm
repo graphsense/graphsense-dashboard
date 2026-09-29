@@ -196,7 +196,7 @@ utxo pluginStates vc model id viewState address =
                     [ css [ Css.display Css.none ] ]
                 )
             |> Rs.s_liteBadge
-                (Util.TooltipType.Text "lite-badge-address-tooltip"
+                (Util.TooltipType.Text (Locale.interpolated vc.locale "lite-badge-tooltip" [ String.toUpper (Id.network id) ])
                     |> Tooltip.attributes "address-lite-badge" (Util.Tooltip.tooltipConfig vc (\tooltipMsg -> Pathfinder.AddressDetailsMsg id (TooltipMsg tooltipMsg)))
                 )
         )
@@ -1063,7 +1063,7 @@ account pluginStates vc model id viewState address =
             |> Rs.s_totalReceivedRow hideOnLiteNetwork
             |> Rs.s_totalSentRow hideOnLiteNetwork
             |> Rs.s_liteBadge
-                (Util.TooltipType.Text "lite-badge-address-tooltip"
+                (Util.TooltipType.Text (Locale.interpolated vc.locale "lite-badge-tooltip" [ String.toUpper (Id.network id) ])
                     |> Tooltip.attributes "address-lite-badge" (Util.Tooltip.tooltipConfig vc (\tooltipMsg -> Pathfinder.AddressDetailsMsg id (TooltipMsg tooltipMsg)))
                 )
         )
