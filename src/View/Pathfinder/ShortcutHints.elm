@@ -1,8 +1,12 @@
-module View.Pathfinder.ShortcutHints exposing (view)
+module View.Pathfinder.ShortcutHints exposing (rows, view)
 
 {-| The overlay that lists the keyboard shortcuts while Ctrl/Cmd is held down,
 the way command-line tools show their key bindings. Purely informational: it
 takes no pointer events and closes with the key.
+
+`rows` is the list itself, shared with the "Keyboard shortcuts" dialog behind
+the help menu so the two cannot drift apart.
+
 -}
 
 import Config.View as View
@@ -46,8 +50,13 @@ view vc =
                 ]
             ]
             [ Locale.string vc.locale "Keyboard shortcuts" |> text ]
-            :: List.map (row vc) Shortcuts.all
+            :: rows vc
         )
+
+
+rows : View.Config -> List (Html msg)
+rows vc =
+    List.map (row vc) Shortcuts.all
 
 
 row : View.Config -> Shortcut -> Html msg

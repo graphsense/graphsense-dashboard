@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- An account transaction and the internal or token transfers it triggers are separate edges on the graph. Hovering any of them now highlights all of them, so the transfers can be traced back to the transaction they belong to. Each is still selected on its own
 - Addresses on a blacklist or whitelist (the `black_list` and `white_list` concepts and their governmental `gov_` variants) show a black or white tag icon on the graph node and in the address details, instead of the usual yellow or grey one. Only the address's own tags count, not those inherited from its cluster or a shared pubkey. A blacklist wins when an address is on both. The legend lists the two new icons
 - BNB Smart Chain (`bnb`) and Arbitrum (`arb`) render like Ethereum: lowercased `0x` identifiers, 18-decimal units, names, icons and explorer links. Native amounts on Arbitrum are labelled ETH, the currency its fees are paid in
 - Base (`base`), Optimism (`opt`), Polygon (`polygon`), Avalanche (`avax`) and Gnosis (`gnosis`) join them, each with its own explorer links; native amounts are labelled ETH on Base and Optimism, POL, AVAX and XDAI on the others
@@ -21,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Ctrl+D (Cmd+D on macOS) duplicates the whole graph into a new tab, positions and notes included, through the same hand-over as "Open in new tab" on a multi-selection
 - "Open in new tab" on the right-click menu of a multi-selection opens the selected nodes as their own graph in a new tab, positions and notes included. The selection is handed over as a `.gs` payload, so it goes through the same import path as an opened file; a selected transaction whose addresses are not selected opens as a lone transaction
 - Holding Ctrl (Cmd on macOS) on the Pathfinder for a moment shows a small overlay listing the keyboard shortcuts, the way command-line tools show their key bindings; it disappears with the key. The toolbar tooltips now carry the shortcut too, e.g. "Save file (Ctrl+S)", so daily users can find them without reading the docs
+- The help menu behind the question mark on the Pathfinder gains a "Keyboard shortcuts" entry next to "Legend", opening a dialog with the same list the overlay shows, for anyone who never holds the key long enough to see it
 - Ctrl+K (Cmd+K on macOS) focuses the address search box on the Pathfinder, so more addresses can be added without reaching for the mouse; Ctrl+F remains the find-on-graph search
 
 ### Changed
@@ -41,6 +43,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Opening a value-carrying account transaction from a deep link or the search never showed its details panel
 - The token list under "Balance" clipped after about five rows, hiding tokens without a fiat price
 - "Align horizontally" left a selected node off the row whenever an unselected node sat in the same column just above the target row: the overlap pass that follows the alignment pushed the aligned node away instead of the bystander. Aligned nodes now stay on the row and the other node moves
+- Opening a `.gs` file that contains a swap or bridge rearranged the saved graph once the conversion loaded: the addresses of both legs were moved next to their transactions, and the whole graph was snapped to the grid, moving unrelated nodes too. Nodes from the file now stay where the file put them. The conversion edge is still drawn, and only a leg the file lacks, with its addresses, is placed automatically
+- A swap or bridge leg with several input or output addresses on the graph put them all on the same spot when the conversion was laid out. They are now stacked one below the other
 - Plugin entries on an address's right-click menu were still active on a multi-selection although they act on the one address that was clicked. They are now greyed out there, like core's own per-address entries
 
 ## [26.08.1] - 2026-08-28

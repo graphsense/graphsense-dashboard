@@ -1,4 +1,4 @@
-module Util.Pathfinder.ListTag exposing (ListTag(..), fromTagSummary, tagIconAttr)
+module Util.Pathfinder.ListTag exposing (ListTag(..), fromTagSummary)
 
 {-| Black and white lists get their own tag icon colour: black for a blacklist,
 white for a whitelist. They are recognised by the `black_list` and `white_list`
@@ -8,12 +8,7 @@ concepts of the tagpack taxonomy and their governmental variants
 
 import Api.Data
 import Basics.Extra exposing (flip)
-import Css
 import Dict
-import Html.Styled exposing (Attribute)
-import Html.Styled.Attributes exposing (css)
-import Theme.Colors as Colors
-import Util.View exposing (testId)
 
 
 type ListTag
@@ -57,31 +52,3 @@ fromTagSummary tagdata =
 
     else
         Nothing
-
-
-{-| For the `tagIcon` node of the generated tag icons.
-
-The colours are the light-mode literals on purpose: `--c-black0` and
-`--c-white` swap in dark mode, which would turn a blacklist icon white. The
-outline in the opposite colour keeps the white icon visible on a light
-background and the black one on a dark background.
-
--}
-tagIconAttr : ListTag -> List (Attribute msg)
-tagIconAttr list =
-    let
-        ( fill, outline, name ) =
-            case list of
-                Blacklist ->
-                    ( Colors.black0_string, Colors.white_string, "gs-blacklist-tag" )
-
-                Whitelist ->
-                    ( Colors.white_string, Colors.black0_string, "gs-whitelist-tag" )
-    in
-    [ testId name
-    , css
-        [ Css.important (Css.property "fill" fill)
-        , Css.important (Css.property "stroke" outline)
-        , Css.important (Css.property "stroke-width" "1")
-        ]
-    ]

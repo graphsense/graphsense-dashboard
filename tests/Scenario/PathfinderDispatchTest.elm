@@ -19,12 +19,15 @@ here goes red.
 -}
 
 import Expect
+import Html.Attributes
 import Model exposing (Msg(..))
 import Msg.Pathfinder as Pathfinder exposing (OutMsg(..))
 import Route.Pathfinder as PathfinderRoute
 import Support.App as Pf
 import Support.MainApp as App exposing (App)
 import Test exposing (Test, describe, test)
+import Test.Html.Query as Query
+import Test.Html.Selector as Selector
 
 
 {-| The shell is what owns dialogs, so "a dialog is open" is the observable proof
@@ -45,6 +48,12 @@ suite =
                         |> Pf.step Pathfinder.UserClickedShowLegend
                         |> Pf.outMsgs
                         |> Expect.equal [ ShowLegendDialog ]
+            , test "showing the keyboard shortcuts" <|
+                \_ ->
+                    Pf.initAt PathfinderRoute.Root
+                        |> Pf.step Pathfinder.UserClickedShowShortcuts
+                        |> Pf.outMsgs
+                        |> Expect.equal [ ShowShortcutsDialog ]
             , test "opening the export dialog" <|
                 \_ ->
                     Pf.initAt PathfinderRoute.Root
@@ -89,6 +98,25 @@ suite =
                 \_ ->
                     App.initAt "/pathfinder"
                         |> App.step (PathfinderMsg Pathfinder.UserClickedShowLegend)
+                        |> App.step (PathfinderMsg Pathfinder.UserReleasedEscape)
+                        |> dialogIsOpen
+                        |> Expect.equal False
+            , test "the shortcuts dialog lists the shortcuts" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.step (PathfinderMsg Pathfinder.UserClickedShowShortcuts)
+                        |> App.html
+                        |> Query.find [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-shortcuts-dialog") ]
+                        |> Query.has
+                            [ Selector.text "Keyboard shortcuts"
+                            , Selector.text "Add address or tx"
+                            , Selector.text "Find on graph"
+                            , Selector.text "Ctrl"
+                            ]
+            , test "escape closes the shortcuts dialog" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.step (PathfinderMsg Pathfinder.UserClickedShowShortcuts)
                         |> App.step (PathfinderMsg Pathfinder.UserReleasedEscape)
                         |> dialogIsOpen
                         |> Expect.equal False

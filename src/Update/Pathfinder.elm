@@ -268,6 +268,9 @@ appLevelOutMsgs msg model =
         UserClickedShowLegend ->
             [ ShowLegendDialog ]
 
+        UserClickedShowShortcuts ->
+            [ ShowShortcutsDialog ]
+
         UserClickedRestart ->
             if model.isDirty then
                 [ ConfirmRestart ]
@@ -308,7 +311,7 @@ appLevelOutMsgs msg model =
         UserReleasedEscape ->
             [ CloseTopmostOverlay ]
 
-        BrowserGotConversions _ conversions ->
+        BrowserGotConversions _ _ conversions ->
             conversions |> List.concatMap conversionAssetRegistrations
 
         SearchMsg Search.UserClicksResultLine ->
@@ -1526,7 +1529,8 @@ updateByMsg uc msg model =
                             (AddressDetails.update uc subm)
 
                 AddressDetails.UserClickedAddressCheckboxInTable id ->
-                    userClickedAddressCheckboxInTable id model
+                    -- related (cluster/pubkey) addresses go below the selected one
+                    userClickedAddressCheckboxInTable (Below addressId) id model
 
                 AddressDetails.UserClickedAggEdgeCheckboxInTable dir anchorId data ->
                     userClickedAggEdgeCheckboxInTable dir anchorId data model
@@ -2266,7 +2270,7 @@ updateByMsg uc msg model =
             loadAddress False id model
 
         UserClickedAddressCheckboxInTable id ->
-            userClickedAddressCheckboxInTable id model
+            userClickedAddressCheckboxInTable Auto id model
 
         UserClickedAllAddressCheckboxInTable dir ->
             case model.details of
@@ -2316,7 +2320,7 @@ updateByMsg uc msg model =
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
 
-        InternalConversionLoopAddressesLoaded conv ->
+        InternalConversionLoopAddressesLoaded keepPositionOf conv ->
             let
                 mtxInput =
                     ConversionEdge.getInputTransferIdRaw conv |> flip Dict.get model.network.txs
@@ -2326,45 +2330,48 @@ updateByMsg uc msg model =
 
                 arrangeConversionNodes txInput txOutput =
                     let
-                        moveNode v txOrAdrId net =
-                            Network.updateAddress txOrAdrId (Node.moveAbs v) net
-
                         displacementFromTx =
                             4
 
-                        --input leg
-                        inputTxCoords =
-                            txInput |> Tx.toFinalCoords
-
-                        a =
-                            txInput
-                                |> Tx.getInputAddressIds
-                                |> List.foldl (moveNode { x = inputTxCoords.x - displacementFromTx, y = inputTxCoords.y }) model.network
-
-                        b =
-                            txInput
-                                |> Tx.getOutputAddressIds
-                                |> List.foldl (moveNode { x = inputTxCoords.x + displacementFromTx, y = inputTxCoords.y }) a
-
-                        -- output leg
-                        outputTxCoords =
-                            txOutput |> Tx.toFinalCoords
-
-                        c =
-                            txOutput
-                                |> Tx.getOutputAddressIds
-                                |> List.foldl (moveNode { x = outputTxCoords.x - displacementFromTx, y = outputTxCoords.y }) b
+                        -- Several addresses on one side of a leg are stacked
+                        -- nodeYOffset apart, like findAddressCoordsNextToTx
+                        -- does, rather than all put on the same point.
+                        -- Addresses positioned by a loaded file stay put.
+                        placeNextTo tx dx ids net =
+                            let
+                                txCoords =
+                                    Tx.toFinalCoords tx
+                            in
+                            ids
+                                |> List.Extra.unique
+                                |> List.filter (\id -> Dict.member id net.addresses && not (Set.member id keepPositionOf))
+                                |> List.indexedMap
+                                    (\i id ->
+                                        Network.updateAddress id
+                                            (Node.moveAbs
+                                                { x = txCoords.x + dx
+                                                , y = txCoords.y + toFloat i * nodeYOffset
+                                                }
+                                            )
+                                    )
+                                |> List.foldl (<|) net
 
                         netOut =
-                            txOutput
-                                |> Tx.getInputAddressIds
-                                |> List.foldl (moveNode { x = outputTxCoords.x + displacementFromTx, y = outputTxCoords.y }) c
+                            model.network
+                                -- input leg
+                                |> placeNextTo txInput -displacementFromTx (Tx.getInputAddressIds txInput)
+                                |> placeNextTo txInput displacementFromTx (Tx.getOutputAddressIds txInput)
+                                -- output leg, mirrored
+                                |> placeNextTo txOutput -displacementFromTx (Tx.getOutputAddressIds txOutput)
+                                |> placeNextTo txOutput displacementFromTx (Tx.getInputAddressIds txOutput)
                     in
                     n
                         { model
                             | network =
                                 netOut
-                                    |> (if model.config.snapToGrid then
+                                    -- Snapping the whole network would move
+                                    -- the file's nodes too.
+                                    |> (if model.config.snapToGrid && Set.isEmpty keepPositionOf then
                                             Network.snapToGrid
 
                                         else
@@ -2375,7 +2382,7 @@ updateByMsg uc msg model =
             Maybe.map2 arrangeConversionNodes mtxInput mtxOutput
                 |> Maybe.withDefault (n model)
 
-        BrowserGotConversionLoop txA conversion tx ->
+        BrowserGotConversionLoop keepPositionOf txA conversion tx ->
             let
                 posA =
                     txA |> Tx.toFinalCoords
@@ -2418,7 +2425,7 @@ updateByMsg uc msg model =
 
                 ( eventualMessagesNew, mcmd ) =
                     model.eventualMessages
-                        |> EventualMessages.addMessage eventualMsg (InternalConversionLoopAddressesLoaded conversion)
+                        |> EventualMessages.addMessage eventualMsg (InternalConversionLoopAddressesLoaded keepPositionOf conversion)
             in
             if Tx.getTxId tx == txA.id then
                 -- never pair a leg with itself
@@ -2439,7 +2446,7 @@ updateByMsg uc msg model =
                         )
                     |> Tuple.mapSecond ((++) (mcmd |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault []))
 
-        BrowserGotConversions tx conversions ->
+        BrowserGotConversions keepPositionOf tx conversions ->
             -- a sub-tx id gets only its own conversions, a bare hash every conversion
             -- of the tx (legs are other sub-txs): check which leg `tx` is
             let
@@ -2496,20 +2503,20 @@ updateByMsg uc msg model =
 
                             ( nextModel, eff ) =
                                 if isLeg conversion.toNetwork conversion.toAssetTransfer then
-                                    withLeg conversion.fromNetwork conversion.fromAssetTransfer (BrowserGotConversionLoop tx conversion)
+                                    withLeg conversion.fromNetwork conversion.fromAssetTransfer (BrowserGotConversionLoop keepPositionOf tx conversion)
 
                                 else if isLeg conversion.fromNetwork conversion.fromAssetTransfer then
-                                    withLeg conversion.toNetwork conversion.toAssetTransfer (BrowserGotConversionLoop tx conversion)
+                                    withLeg conversion.toNetwork conversion.toAssetTransfer (BrowserGotConversionLoop keepPositionOf tx conversion)
 
                                 else
                                     -- whole-tx answer: `tx` is no leg; the input leg drives the pairing
-                                    withLeg conversion.fromNetwork conversion.fromAssetTransfer (BrowserGotConversionInputLeg tx conversion)
+                                    withLeg conversion.fromNetwork conversion.fromAssetTransfer (BrowserGotConversionInputLeg keepPositionOf tx conversion)
                         in
                         ( nextModel, effects ++ eff )
                     )
                     ( modelWithFlag, [] )
 
-        BrowserGotConversionInputLeg anchor conversion tx ->
+        BrowserGotConversionInputLeg keepPositionOf anchor conversion tx ->
             let
                 pos =
                     anchor |> Tx.toFinalCoords
@@ -2533,7 +2540,7 @@ updateByMsg uc msg model =
             else
                 model
                     |> s_network nn
-                    |> updateByMsg uc (BrowserGotConversions legTx [ conversion ])
+                    |> updateByMsg uc (BrowserGotConversions keepPositionOf legTx [ conversion ])
                     |> and
                         (if newTx then
                             autoLoadAddresses False legTx
@@ -2906,11 +2913,17 @@ updateByMsg uc msg model =
             let
                 updatedModel =
                     { model | network = ingestTxs model.config model.network deserializing.deserialized.txs txs }
+
+                positionedByFile =
+                    deserializing.deserialized.addresses
+                        ++ deserializing.deserialized.txs
+                        |> List.map .id
+                        |> Set.fromList
             in
             -- Load Conversion Edges for new loaded transactions
             updatedModel.network.txs
                 |> Dict.values
-                |> List.foldl (\tx acc -> acc |> and (autoLoadConversions tx)) ( updatedModel, [] )
+                |> List.foldl (\tx acc -> acc |> and (autoLoadConversions positionedByFile tx)) ( updatedModel, [] )
 
         UserClickedOpenGraph ->
             ( model
@@ -2986,6 +2999,9 @@ updateByMsg uc msg model =
             n { model | contextMenu = Nothing, helpDropdownOpen = False }
 
         UserClickedShowLegend ->
+            n model
+
+        UserClickedShowShortcuts ->
             n model
 
         UserClickedToggleHelpDropdown ->
@@ -3605,7 +3621,7 @@ browserGotTx uc { pos, loadAddresses, autoLinkInTraceMode, requestedTxHash } tx 
                  else
                     n
                 )
-            |> and (autoLoadConversionsOf conversionsOf newTx)
+            |> and (autoLoadConversionsOf Set.empty conversionsOf newTx)
 
 
 addFeeRows : Update.Config -> Id -> List Api.Data.TxAccount -> List Api.Data.TxAccount
@@ -4270,13 +4286,13 @@ updateAddressRelatedData id x model =
     }
 
 
-userClickedAddressCheckboxInTable : Id -> Model -> ( Model, List Effect )
-userClickedAddressCheckboxInTable id model =
+userClickedAddressCheckboxInTable : FindPosition -> Id -> Model -> ( Model, List Effect )
+userClickedAddressCheckboxInTable position id model =
     if Dict.member id model.network.addresses then
         removeAddress id model
 
     else
-        loadAddress True id model
+        loadAddressWithPosition True position id model
 
 
 userClickedAggEdgeCheckboxInTable : Direction -> Id -> Api.Data.NeighborAddress -> Model -> ( Model, List Effect )
@@ -5565,7 +5581,7 @@ unhover model =
                     unhoverAddress a model.network
 
                 HoveredTx a ->
-                    Network.updateTx a (s_hovered False) model.network
+                    Network.setTxHovered a False model.network
                         |> Network.trySetHoverConversionLoop a False
 
                 HoveredAggEdge a ->
@@ -6014,7 +6030,7 @@ addTx uc anchorAddressId direction addressId tx model =
                     loadAddressWithPosition True position a newmodel
                 )
             |> Maybe.withDefault (n newmodel)
-            |> and (autoLoadConversions newTx)
+            |> and (autoLoadConversions Set.empty newTx)
 
 
 checkSelection : Update.Config -> Model -> ( Model, List Effect )
@@ -6422,16 +6438,19 @@ fromDeserialized deserialized model =
     )
 
 
-autoLoadConversions : Tx -> Model -> ( Model, List Effect )
-autoLoadConversions tx =
-    autoLoadConversionsOf (Tx.getTxIdForTx tx |> Id.id) tx
+{-| Nodes in `keepPositionOf` are not rearranged once the conversion resolves:
+those are the ones a loaded file has put somewhere.
+-}
+autoLoadConversions : Set Id -> Tx -> Model -> ( Model, List Effect )
+autoLoadConversions keepPositionOf tx =
+    autoLoadConversionsOf keepPositionOf (Tx.getTxIdForTx tx |> Id.id) tx
 
 
 {-| Asks for the conversions of `identifier` (a bare tx hash or a sub-tx id)
 on behalf of `tx`, the node the answer is handled for.
 -}
-autoLoadConversionsOf : String -> Tx -> Model -> ( Model, List Effect )
-autoLoadConversionsOf identifier tx model =
+autoLoadConversionsOf : Set Id -> String -> Tx -> Model -> ( Model, List Effect )
+autoLoadConversionsOf keepPositionOf identifier tx model =
     let
         currency =
             Tx.getTxIdForTx tx |> Id.network
@@ -6441,7 +6460,7 @@ autoLoadConversionsOf identifier tx model =
 
     else
         ( model
-        , BrowserGotConversions tx
+        , BrowserGotConversions keepPositionOf tx
             |> Api.GetConversionEffect
                 { currency = currency
                 , txHash = identifier
@@ -7078,7 +7097,7 @@ handleTxHover id model =
                 in
                 { unhovered
                     | network =
-                        Network.updateTx id (s_hovered True) unhovered.network
+                        Network.setTxHovered id True unhovered.network
                             |> Network.trySetHoverConversionLoop id True
                     , hovered = HoveredTx id
                 }

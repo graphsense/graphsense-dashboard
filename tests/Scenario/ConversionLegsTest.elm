@@ -24,6 +24,7 @@ import Model.Notification as Notification
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Selection exposing (Selection(..))
 import Msg.Pathfinder exposing (Msg(..), OutMsg(..))
+import Set
 import Support.App as App exposing (App)
 import Support.MainApp as MainApp
 import Support.SwapFixture exposing (accountTx, dexSwap, hash, inputLegId, outputLegId, settlement, swapper, txRequest)
@@ -126,7 +127,7 @@ withTx tx =
 gotConversionsFor : String -> List Api.Data.ExternalConversion -> App -> App
 gotConversionsFor identifier conversions app =
     Dict.get (Id.init "bnb" identifier) (App.model app).network.txs
-        |> Maybe.map (\tx -> App.step (BrowserGotConversions tx conversions) app)
+        |> Maybe.map (\tx -> App.step (BrowserGotConversions Set.empty tx conversions) app)
         |> Maybe.withDefault app
 
 
@@ -376,7 +377,7 @@ shellLegNotFound =
 
         asked =
             Dict.get (Id.init "bnb" outputLegId) (MainApp.model withOutputLeg).pathfinder.network.txs
-                |> Maybe.map (\tx -> MainApp.step (Model.PathfinderMsg (BrowserGotConversions tx [ nativeInSwap ])) withOutputLeg)
+                |> Maybe.map (\tx -> MainApp.step (Model.PathfinderMsg (BrowserGotConversions Set.empty tx [ nativeInSwap ])) withOutputLeg)
                 |> Maybe.withDefault withOutputLeg
 
         ( tokened, tagged ) =

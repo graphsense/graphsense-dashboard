@@ -14,6 +14,7 @@ import Init.Pathfinder.Id as Id
 import Model exposing (Effect(..), Msg(..))
 import Model.Locale
 import Msg.Pathfinder as Pathfinder
+import Set
 import Support.MainApp as App exposing (App)
 import Support.SwapFixture exposing (accountTx, dexSwap, inputLegId, settlement, swapper, txRequest, usd1Contract)
 import Test exposing (Test, describe, test)
@@ -127,7 +128,7 @@ gotCuratedSwap =
 gotSwap : Api.Data.ExternalConversion -> App -> App
 gotSwap swap app =
     Dict.get (Id.init "bnb" inputLegId) (App.model app).pathfinder.network.txs
-        |> Maybe.map (\tx -> App.step (PathfinderMsg (Pathfinder.BrowserGotConversions tx [ swap ])) app)
+        |> Maybe.map (\tx -> App.step (PathfinderMsg (Pathfinder.BrowserGotConversions Set.empty tx [ swap ])) app)
         |> Maybe.withDefault app
 
 
