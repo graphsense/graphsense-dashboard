@@ -440,6 +440,18 @@ update uc msg model =
                         _ ->
                             model.capabilities
 
+                -- /stats failed for good (the retries above ran out, or the
+                -- error is not transient): without this the statistics stay
+                -- Loading forever, and so would an opened graph that waits for
+                -- them; it then proceeds with every network counted as served
+                statsAfterError =
+                    case result of
+                        Err ( err, _, Effect.Api.GetStatisticsEffect _ ) ->
+                            RD.Failure err
+
+                        _ ->
+                            model.stats
+
                 dialogAfterError =
                     case result of
                         Err ( _, _, Effect.Api.GetAddressTagsEffect _ _ ) ->
@@ -534,6 +546,7 @@ update uc msg model =
                         , dialog = dialogAfterError
                         , notifications = notifications
                         , capabilities = capabilitiesAfterError
+                        , stats = statsAfterError
                     }
                         |> handleResponse
                             uc
