@@ -4209,8 +4209,11 @@ browserGotAddressData uc providedId position data model =
         -- API round-trip (user decision 2026-08-31). Results are parked in
         -- TxsPrefetched via the *Prefetch workflow messages; a reloaded
         -- address (already on the graph with data) is not prefetched again.
+        -- Lite networks only: their cold listings take seconds, while on
+        -- core networks the listing is fast and the prefetch mostly spends
+        -- the user's request quota on addresses nobody expands.
         prefetchEff =
-            if Network.hasLoadedAddress id model.network then
+            if Network.hasLoadedAddress id model.network || not (isLiteNetwork (Id.network id) model) then
                 []
 
             else
