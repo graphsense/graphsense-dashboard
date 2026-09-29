@@ -141,7 +141,7 @@ utxo pluginStates vc model id viewState address =
         sidePanelAddressHeader =
             { iconInstance =
                 Address.toNodeIconHtml address
-            , showLiteBadge = False
+            , showLiteBadge = NetworkCapabilities.isLiteNetwork model.networkCapabilities (Id.network id)
             , headerText =
                 (String.toUpper <| Id.network id)
                     ++ " "
@@ -931,7 +931,7 @@ account pluginStates vc model id viewState address =
         sidePanelAddressHeader =
             { iconInstance =
                 Address.toNodeIconHtml address
-            , showLiteBadge = False
+            , showLiteBadge = NetworkCapabilities.isLiteNetwork model.networkCapabilities (Id.network id)
             , headerText =
                 (String.toUpper <| Id.network id)
                     ++ " "
