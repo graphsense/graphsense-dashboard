@@ -596,6 +596,7 @@ csv-note-visible-only: "Only flows touching a visible address were exported."
 unknown url: "Unknown URL: {0}"
 not supported on lite networks: not supported on lite networks
 Relationship mode not supported on lite networks: Relationship mode not supported on lite networks
+Network switched off in the settings (lite networks): Network switched off in the settings (lite networks)
 Keyboard shortcuts: "Keyboard shortcuts"
 Add address or tx: "Add address or tx"
 Select all: "Select all"
@@ -604,3 +605,7 @@ Move the selection along the graph: "Move the selection along the graph"
 Close search or dialog: "Close search or dialog"
 Find on graph: "Find on graph"
 Duplicate graph in new tab: "Duplicate graph in new tab"
+lite networks: "Lite networks"
+lite-networks-setting-hint: "Networks served by the lite data service (BNB Smart Chain, Arbitrum, Base and the other EVM networks). Off: the app works on the core networks only and sends no request to the lite service, for the case that the service is congested or unavailable."
+on: "On"
+off: "Off"

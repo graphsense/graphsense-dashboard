@@ -39,7 +39,7 @@ blockExplorerLinks =
           , [ ( "https://optimistic.etherscan.io/address/", "Etherscan" )
             ]
           )
-        , ( "polygon"
+        , ( "pol"
           , [ ( "https://polygonscan.com/address/", "PolygonScan" )
             ]
           )
@@ -107,7 +107,7 @@ blockExplorerTransactionLinks =
           , [ ( "https://optimistic.etherscan.io/tx/0x", "Etherscan" )
             ]
           )
-        , ( "polygon"
+        , ( "pol"
           , [ ( "https://polygonscan.com/tx/0x", "PolygonScan" )
             ]
           )

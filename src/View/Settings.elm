@@ -2,7 +2,7 @@ module View.Settings exposing (view)
 
 import Config.View exposing (Config)
 import Css
-import Html.Styled exposing (Html, div)
+import Html.Styled exposing (Html, div, span, text)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import List.Extra
@@ -146,7 +146,8 @@ generalSettings vc m =
             }
 
         pluginProfiles =
-            Plugin.profile m.plugins vc
+            ( Locale.string vc.locale "lite networks", liteNetworksSetting vc )
+                :: Plugin.profile m.plugins vc
     in
     Sp.settingsPageGeneralWithInstances
         (Sp.settingsPageGeneralAttributes
@@ -193,6 +194,35 @@ generalSettings vc m =
                     )
         }
         generalSettingsProperties
+
+
+{-| The lite-networks switch (user decision 2026-09-17). Off means the app asks
+the API for its core networks only (Effect.apiHeaders): the lite networks leave
+the statistics, the search, the network switch and the cross-chain rows, and no
+request reaches the lite data service. Meant for the case that the service is
+congested or down, so investigators keep working on the core networks without
+error messages.
+-}
+liteNetworksSetting : Config -> Html Model.Msg
+liteNetworksSetting vc =
+    div
+        [ css
+            [ Css.displayFlex
+            , Css.flexDirection Css.column
+            , Css.alignItems Css.flexStart
+            , Css.property "gap" "0.75rem"
+            , Css.width (Css.em 36)
+            , Css.maxWidth (Css.pct 100)
+            ]
+        ]
+        [ Vc.toggleWithText
+            { selectedA = vc.liteNetworks
+            , titleA = Locale.string vc.locale "on"
+            , titleB = Locale.string vc.locale "off"
+            , msg = SettingsMsg UserToggledLiteNetworks
+            }
+        , span [ css [ Css.width (Css.pct 100), Css.lineHeight (Css.num 1.4) ] ] [ text (Locale.string vc.locale "lite-networks-setting-hint") ]
+        ]
 
 
 {-| The plan details as text: the expiration, the username if the user endpoint

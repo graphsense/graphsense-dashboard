@@ -28,9 +28,6 @@ nativeAsset network =
         "opt" ->
             "eth"
 
-        "polygon" ->
-            "pol"
-
         "gnosis" ->
             "xdai"
 

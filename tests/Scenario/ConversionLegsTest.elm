@@ -471,12 +471,12 @@ suite =
                         |> App.step (BrowserGotTx (txRequest hash) inputLegTx)
                         |> requestedConversions
                         |> Expect.equal [ hash ]
-            , test "a sub-transfer toggled on asks for its own swaps only" <|
+            , test "a sub-transfer toggled on asks for its tx's swaps, by the tx hash" <|
                 \_ ->
                     App.init
                         |> withTx inputLegTx
                         |> requestedConversions
-                        |> Expect.equal [ inputLegId ]
+                        |> Expect.equal [ hash ]
             ]
         , describe "when a leg's conversions arrive"
             [ test "the input leg asks for the output leg" <|

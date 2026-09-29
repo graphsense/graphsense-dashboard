@@ -393,9 +393,17 @@ address vc tracingMode capabilities tags adr =
         curr =
             View.toCurrency vc
     in
-    -- a faded node (View.Pathfinder.Address) takes no part in this mode:
-    -- one hint why, none of the usual figures
-    if NetworkCapabilities.inactiveInRelationshipMode tracingMode capabilities net then
+    -- a faded node (View.Pathfinder.Address) gets one hint why and none of
+    -- the usual figures: its network is switched off in the settings, or it
+    -- takes no part in relationship mode
+    if not (View.networkServed vc net) then
+        [ div [ css baseRowStyle ]
+            [ Locale.string vc.locale "Network switched off in the settings (lite networks)"
+                |> text
+            ]
+        ]
+
+    else if NetworkCapabilities.inactiveInRelationshipMode tracingMode capabilities net then
         [ div [ css baseRowStyle ]
             [ Locale.string vc.locale "Relationship mode not supported on lite networks"
                 |> text

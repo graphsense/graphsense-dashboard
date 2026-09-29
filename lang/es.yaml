@@ -266,6 +266,7 @@ server error: error del servidor
 not found: no encontrado
 not supported on lite networks: no compatible con redes lite
 Relationship mode not supported on lite networks: Modo de relaciones no compatible con redes lite
+Network switched off in the settings (lite networks): Red desactivada en la configuración (redes lite)
 data error: error de datos
 service not reachable: servicio no accesible.
 unexpected data format: formato de datos inesperado.
@@ -625,3 +626,7 @@ Move the selection along the graph: "Mover la selección por el gráfico"
 Close search or dialog: "Cerrar la búsqueda o el diálogo"
 Find on graph: "Buscar en el gráfico"
 Duplicate graph in new tab: "Duplicar el gráfico en una nueva pestaña"
+lite networks: "Redes lite"
+lite-networks-setting-hint: "Redes servidas por el servicio de datos lite (BNB Smart Chain, Arbitrum, Base y las demás redes EVM). Desactivado: la aplicación trabaja solo con las redes principales y no envía ninguna solicitud al servicio lite, por si está saturado o no disponible."
+on: "Activado"
+off: "Desactivado"

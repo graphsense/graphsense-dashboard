@@ -157,6 +157,7 @@ type SettingsMsg
     = UserChangedPreferredCurrency String
     | UserToggledValueDisplay
     | UserToggledBothValueDisplay
+    | UserToggledLiteNetworks
 
 
 type RequestLimit
@@ -244,6 +245,7 @@ userSettingsFromMainModel model =
     , tracingMode = Just model.pathfinder.config.tracingMode
     , showHash = Just model.config.showHash
     , showBothValues = Just model.config.showBothValues
+    , liteNetworks = Just model.config.liteNetworks
     , avoidOverlapingNodes = Just model.pathfinder.config.avoidOverlapingNodes
     , recentSearches = model.search.recentSearches
     }

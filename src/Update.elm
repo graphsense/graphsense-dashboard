@@ -374,6 +374,10 @@ update uc msg model =
                                                 ( Http.BadStatus 400, _, _ ) ->
                                                     notFound token
 
+                                                -- a currency the account (or the lite-networks switch) has opted out of
+                                                ( Http.BadStatus 403, _, _ ) ->
+                                                    notFound token
+
                                                 _ ->
                                                     model.dialog
                                         )
@@ -911,6 +915,26 @@ update uc msg model =
                     }
             in
             ( newModel, [ saveUserSettings newModel ] )
+
+        SettingsMsg UserToggledLiteNetworks ->
+            -- the flag changes what every request asks for (Effect.apiHeaders),
+            -- so the network list and the capabilities are fetched again: the
+            -- statistics arrive without (or with) the lite networks and the
+            -- app hides (or shows) them from there on
+            let
+                newModel =
+                    { model
+                        | config =
+                            model.config
+                                |> s_liteNetworks (not model.config.liteNetworks)
+                    }
+            in
+            ( newModel
+            , [ saveUserSettings newModel
+              , ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics)
+              , ApiEffect (Effect.Api.GetCapabilitiesEffect BrowserGotCapabilities)
+              ]
+            )
 
         AddTagDialog smsg ->
             case model.dialog of

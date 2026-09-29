@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (continueImageExport, deserialize, endExportRendering, fetchTagSummaryForId, finishImageExport, fromDeserialized, isLegacyPf1GsFile, multiSearch, resultLineToRoute, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (continueImageExport, deserialize, endExportRendering, fetchTagSummaryForId, finishImageExport, fromDeserialized, isLegacyPf1GsFile, isOutputLegOf, multiSearch, resultLineToRoute, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -499,10 +499,19 @@ syncUrl model =
 syncSidePanel : Update.Config -> Model -> ( Model, List Effect )
 syncSidePanel uc model =
     let
+        -- A node of a network the statistics no longer list (lite-networks
+        -- setting off, or the account lacks the currency role) gets NO details
+        -- panel: building one refetches the address, which 403s, and `syncUrl`
+        -- would then push a route the router cannot resolve ("Unknown URL").
+        -- The node stays selectable, so it can still be moved or deleted.
         makeAddressDetails aid =
-            Dict.get aid model.network.addresses
-                |> Maybe.map (AddressDetails.init (supports NetworkCapabilities.Relations (Id.network aid) model) (AssocList.get (TxsFilterAddress aid) model.txsFilters))
-                |> Maybe.map (AddressDetails aid)
+            if not (Update.networkServed uc (Id.network aid)) then
+                Nothing
+
+            else
+                Dict.get aid model.network.addresses
+                    |> Maybe.map (AddressDetails.init (supports NetworkCapabilities.Relations (Id.network aid) model) (AssocList.get (TxsFilterAddress aid) model.txsFilters))
+                    |> Maybe.map (AddressDetails aid)
 
         makeTxDetails tid =
             let
@@ -513,8 +522,12 @@ syncSidePanel uc model =
                 txsFilter =
                     AssocList.get (TxsFilterTx tid) model.txsFilters
             in
-            Dict.get tid model.network.txs
-                |> Maybe.map (TxDetails.init txsFilter assets >> TxDetails tid)
+            if not (Update.networkServed uc (Id.network tid)) then
+                Nothing
+
+            else
+                Dict.get tid model.network.txs
+                    |> Maybe.map (TxDetails.init txsFilter assets >> TxDetails tid)
 
         makeRelationDetails rid =
             Dict.get rid model.network.aggEdges
@@ -1442,7 +1455,7 @@ updateByMsg uc msg model =
                         |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedTx txId ->
-                    userClickedTx txId model
+                    userClickedTx uc txId model
                         |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedAllTxCheckboxInTable isA2b ->
@@ -1554,7 +1567,7 @@ updateByMsg uc msg model =
                     addOrRemoveTx (Just addressId) (Tx.getTxIdForAddressTx tx) model
 
                 AddressDetails.UserClickedTx id ->
-                    userClickedTx id model
+                    userClickedTx uc id model
 
                 AddressDetails.TooltipMsg tm ->
                     handleTooltipMsg tm model
@@ -2256,6 +2269,12 @@ updateByMsg uc msg model =
                 toggleMultiSelect model (MSelectedAddress id)
                     |> n
 
+            else if not (Update.networkServed uc (Id.network id)) then
+                -- a faded node of a switched-off network: its URL would not
+                -- parse (the router only knows served networks) and its details
+                -- would 403, so select it in place and leave it at that
+                selectAddress id model
+
             else
                 ( model
                 , Route.addressRoute
@@ -2315,7 +2334,7 @@ updateByMsg uc msg model =
                     n model
 
         UserClickedTx id ->
-            userClickedTx id model
+            userClickedTx uc id model
 
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
@@ -2395,13 +2414,28 @@ updateByMsg uc msg model =
                         Nothing ->
                             ( Network.addTxWithPosition model.config (Fixed posA.x (posA.y + 2)) tx model.network, True )
 
-                -- order txs such from and to, according to the which is the output leg (to) and which is the input leg (from)
+                -- Order the two txs into (from leg, to leg).
+                --
+                -- Decided by matching txA against the OUTPUT leg, the same test
+                -- BrowserGotConversions already uses to pick which leg to fetch:
+                -- network first, then the sub-tx id. Matching the INPUT leg
+                -- instead is not equivalent, because txA is often the tx the
+                -- user opened by its BARE HASH while fromAssetTransfer names a
+                -- sub-transfer of it -- `<hash>` never equals `<hash>_T60`. That
+                -- fell through to the else branch and declared the source tx to
+                -- be the output leg, which put a bnb tx on the ethereum side and
+                -- rendered the edge as "BNB-USDT / ETH-BNB" (ConversionEdge.init
+                -- reads its labels off the loaded txs, not off the conversion).
+                --
+                -- It stayed hidden while THORChain was the only bridge: its
+                -- native deposits name `_I<root trace>`, which IS the base tx
+                -- id, so the old comparison happened to hold.
                 ( inputTx, outputTx ) =
-                    if (txA.id |> Id.id |> removeLeading0x) == (conversion.fromAssetTransfer |> removeLeading0x) then
-                        ( txA, ntx )
+                    if isOutputLegOf conversion txA.id then
+                        ( ntx, txA )
 
                     else
-                        ( ntx, txA )
+                        ( txA, ntx )
 
                 nnn =
                     nn
@@ -3593,7 +3627,7 @@ finishImageExport error model =
 
 
 browserGotTx : Update.Config -> AddingTxConfig -> Api.Data.Tx -> Model -> ( Model, List Effect )
-browserGotTx uc { pos, loadAddresses, autoLinkInTraceMode, requestedTxHash } tx model =
+browserGotTx uc { pos, loadAddresses, autoLinkInTraceMode } tx model =
     if Dict.member (Tx.getTxId tx) model.network.txs then
         n model
 
@@ -3601,15 +3635,6 @@ browserGotTx uc { pos, loadAddresses, autoLinkInTraceMode, requestedTxHash } tx 
         let
             ( newTx, newNetwork ) =
                 Network.addTxWithPosition model.config pos tx model.network
-
-            -- a bare hash asks for every swap in the tx (legs may be other, even
-            -- unlisted, sub-txs); a sub-tx id only for its own
-            conversionsOf =
-                if Data.isSubTxIdentifier requestedTxHash then
-                    Tx.getTxIdForTx newTx |> Id.id
-
-                else
-                    requestedTxHash
         in
         model
             |> s_network newNetwork
@@ -3621,7 +3646,7 @@ browserGotTx uc { pos, loadAddresses, autoLinkInTraceMode, requestedTxHash } tx 
                  else
                     n
                 )
-            |> and (autoLoadConversionsOf Set.empty conversionsOf newTx)
+            |> and (autoLoadConversions Set.empty newTx)
 
 
 addFeeRows : Update.Config -> Id -> List Api.Data.TxAccount -> List Api.Data.TxAccount
@@ -4348,14 +4373,31 @@ userClickedAggEdgeCheckboxInTable dir anchorId data model =
             loadAddressWithPosition True (NextTo ( dir, anchorId )) id model
 
 
-userClickedTx : Id -> Model -> ( Model, List Effect )
-userClickedTx id model =
+userClickedTx : Update.Config -> Id -> Model -> ( Model, List Effect )
+userClickedTx uc id model =
     if model.modPressed || model.pointerTool == Select then
         let
             modelS =
                 toggleMultiSelect model (MSelectedTx id)
         in
         n { modelS | details = Nothing }
+
+    else if not (Update.networkServed uc (Id.network id)) then
+        -- switched-off network (see UserClickedAddress): select in place, and
+        -- skip the tag lookup selectTx would fire — that request would 403 too
+        case Dict.get id model.network.txs of
+            Just _ ->
+                let
+                    ( m1, eff ) =
+                        unselect model
+                in
+                Network.updateTx id (s_selected True) m1.network
+                    |> flip s_network m1
+                    |> s_selection (SelectedTx id)
+                    |> pairTo eff
+
+            Nothing ->
+                n model
 
     else
         ( model
@@ -6442,18 +6484,23 @@ fromDeserialized deserialized model =
 those are the ones a loaded file has put somewhere.
 -}
 autoLoadConversions : Set Id -> Tx -> Model -> ( Model, List Effect )
-autoLoadConversions keepPositionOf tx =
-    autoLoadConversionsOf keepPositionOf (Tx.getTxIdForTx tx |> Id.id) tx
-
-
-{-| Asks for the conversions of `identifier` (a bare tx hash or a sub-tx id)
-on behalf of `tx`, the node the answer is handled for.
--}
-autoLoadConversionsOf : Set Id -> String -> Tx -> Model -> ( Model, List Effect )
-autoLoadConversionsOf keepPositionOf identifier tx model =
+autoLoadConversions keepPositionOf tx model =
     let
-        currency =
-            Tx.getTxIdForTx tx |> Id.network
+        -- The TRANSACTION's hash, not the sub-transfer identifier this node
+        -- happens to carry. "Which conversions does this tx have" and "is this
+        -- sub-transfer a leg of one" are different questions, and only the
+        -- second one is scoped by `_I<n>`/`_T<n>`: asking with `<hash>_I0` --
+        -- the native transfer of an account tx -- means asking whether the
+        -- messaging FEE of a Stargate send is a bridge leg, which it is not.
+        -- The legs are then matched by `fromAssetTransfer`/`toAssetTransfer`;
+        -- swaps whose legs are other sub-txs are paired through their input leg.
+        ( currency, txHash ) =
+            case tx.type_ of
+                Tx.Account atx ->
+                    ( atx.raw.network, atx.raw.txHash )
+
+                Tx.Utxo utxoTx ->
+                    ( utxoTx.raw.currency, utxoTx.raw.txHash )
     in
     if not (supports NetworkCapabilities.Conversions currency model) then
         ( model, [] )
@@ -6463,7 +6510,7 @@ autoLoadConversionsOf keepPositionOf identifier tx model =
         , BrowserGotConversions keepPositionOf tx
             |> Api.GetConversionEffect
                 { currency = currency
-                , txHash = identifier
+                , txHash = txHash
                 }
             |> ApiEffect
             |> List.singleton
@@ -7112,3 +7159,27 @@ handleTxHover id model =
 
             _ ->
                 hovered () |> n
+
+
+{-| Is `txId` the conversion's OUTPUT (to) leg?
+
+Both the leg fetch and the leg ordering ask this, and they must agree or the
+edge is built back to front. Network first, then the sub-tx id: a cross-chain
+conversion is settled on a different network, so the network alone already
+rules most candidates out, and the id then separates the two legs of a
+same-network conversion (a dex swap has both legs inside one tx).
+
+Deliberately phrased as "is it the OUTPUT leg", not "is it the input leg".
+`fromAssetTransfer` names a SUB-transfer (`<hash>_T60`, `<hash>_I390`), while
+the tx a user opened by its bare hash has the plain `<hash>` as its id, so a
+positive test against the input leg misses and whatever the else branch assumes
+becomes the answer. Assuming "input leg" there is right far more often: it is
+the tx the graph already held, and the output leg is the one being fetched.
+
+-}
+isOutputLegOf : Api.Data.ExternalConversion -> Id -> Bool
+isOutputLegOf conversion txId =
+    Id.network txId
+        == conversion.toNetwork
+        && (Id.id txId |> removeLeading0x)
+        == (conversion.toAssetTransfer |> removeLeading0x)

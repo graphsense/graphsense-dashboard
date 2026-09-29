@@ -1,4 +1,4 @@
-module Config.View exposing (CharacterDimension, Config, characterDimensionsDecoder, getConceptName, toCurrency)
+module Config.View exposing (CharacterDimension, Config, characterDimensionsDecoder, getConceptName, networkServed, toCurrency)
 
 import Api.Data
 import Dict exposing (Dict)
@@ -27,6 +27,7 @@ type alias Config =
     , showBothValues : Bool
     , isMac : Bool -- shortcut hints read Cmd instead of Ctrl
     , networks : List Api.Data.CurrencyStats -- what the backend serves; empty until the statistics arrive
+    , liteNetworks : Bool -- off: every request carries X-Ikn-Currency-Opt-Out: all-light, so the gateway drops the lite roles, the API serves the core networks only and nothing reaches the lite data service
     }
 
 
@@ -80,3 +81,14 @@ toCurrency { showValuesInFiat, preferredFiatCurrency } =
 
     else
         Coin
+
+
+{-| Does the backend currently serve this network? Driven by the statistics
+response, which lists only the networks the API serves right now: with the
+lite-networks setting off, the lite networks are missing from it, so their
+nodes on the graph are drawn faded. Unknown until the statistics arrive.
+-}
+networkServed : Config -> String -> Bool
+networkServed vc network =
+    List.isEmpty vc.networks
+        || List.any (\n -> String.toLower n.name == String.toLower network) vc.networks
