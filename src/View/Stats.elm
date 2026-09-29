@@ -2,12 +2,14 @@ module View.Stats exposing (cappedTokenPills, stats)
 
 import Api.Data
 import Config.View exposing (Config)
+import Css
 import Dict exposing (Dict)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Http
 import List.Nonempty
 import Model.NetworkCapabilities as NetworkCapabilities exposing (NetworkCapabilities)
+import RecordSetter as Rs
 import RemoteData exposing (WebData)
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes exposing (d, viewBox)
@@ -22,8 +24,19 @@ import View.Locale as Locale
 
 stats : Config -> NetworkCapabilities -> WebData Api.Data.Stats -> Dict String Api.Data.TokenConfigs -> Html msg
 stats vc capabilities sts tokens =
+    -- The page sits directly in the layout row, without the `main_` wrapper
+    -- that gives every other page its scroll container, and the generated root
+    -- sets `overflow: hidden`. Together that clips the network list at the fold
+    -- with no way to reach the rest.
     Page.pageWithTitleWithAttributes
-        Page.pageWithTitleAttributes
+        (Page.pageWithTitleAttributes
+            |> Rs.s_root
+                [ [ Css.overflowY Css.auto |> Css.important
+                  , Css.flexGrow (Css.num 1)
+                  ]
+                    |> css
+                ]
+        )
         { root =
             { title = Locale.string vc.locale "Ledger statistics"
             , subtitle = ""
