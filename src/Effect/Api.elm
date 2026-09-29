@@ -609,10 +609,12 @@ perform apiKey extraHeaders wrapMsg cancelMsg effect =
 
         GetStatisticsEffect toMsg ->
             Api.Request.General.getStatistics
+                |> Api.withTimeout bootRequestTimeoutMs
                 |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetCapabilitiesEffect toMsg ->
             Api.Request.General.getCapabilities
+                |> Api.withTimeout bootRequestTimeoutMs
                 |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetConceptsEffect taxonomy toMsg ->
@@ -1501,3 +1503,12 @@ listWithMaybes : Json.Decode.Decoder a -> Json.Decode.Decoder (List a)
 listWithMaybes decoder =
     Json.Decode.list (Json.Decode.maybe decoder)
         |> Json.Decode.map (List.filterMap identity)
+
+
+{-| The app holds deep links and opened graphs until `/stats` and
+`/capabilities` answer; a request that hangs must not hold them forever. A
+timeout is a transient error, so it is retried like one.
+-}
+bootRequestTimeoutMs : Float
+bootRequestTimeoutMs =
+    10000
