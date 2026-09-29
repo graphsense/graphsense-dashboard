@@ -20,6 +20,7 @@ import List.Extra
 import Maybe.Extra
 import Model.Currency exposing (asset, assetFromBase)
 import Model.Graph.Coords as Coords
+import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Pathfinder as Pathfinder exposing (getHavingTags)
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -38,6 +39,8 @@ import Util.Css exposing (spread)
 import Util.Data
 import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
+import Util.Tooltip
+import Util.TooltipType
 import Util.View exposing (copyIconPathfinder, copyIconPathfinderAbove, none, timeToCell, truncateLongIdentifierWithLengths)
 import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
@@ -66,7 +69,7 @@ view vc model id viewState =
                 txExistsFn =
                     \tid -> Dict.member tid model.network.txs
             in
-            account vc viewState id txExistsFn
+            account vc viewState model id txExistsFn
 
 
 accountAssetList : View.Config -> TxDetails.Model -> (Id -> Bool) -> Html Pathfinder.Msg
@@ -112,8 +115,8 @@ accountAssetList vc viewState txExistsFn =
         none
 
 
-account : View.Config -> TxDetails.Model -> Id -> (Id -> Bool) -> Html Pathfinder.Msg
-account vc viewState id txExistsFn =
+account : View.Config -> TxDetails.Model -> Pathfinder.Model -> Id -> (Id -> Bool) -> Html Pathfinder.Msg
+account vc viewState model id txExistsFn =
     let
         chevronActions =
             div [ stopPropagationOn "click" (Json.Decode.succeed ( Pathfinder.NoOp, True )) ]
@@ -160,6 +163,12 @@ account vc viewState id txExistsFn =
                     ]
                 |> Rs.s_sidePanelHeaderText [ spread ]
                 |> Rs.s_iconsCloseBlack (closeAttrs Pathfinder.UserClosedDetailsView)
+                |> Rs.s_liteBadge
+                    (Util.View.testId "tx-lite-badge"
+                        :: (Util.TooltipType.Text "lite-badge-tx-tooltip"
+                                |> Tooltip.attributes "tx-lite-badge" (Util.Tooltip.tooltipConfig vc (\tooltipMsg -> Pathfinder.TxDetailsMsg (TooltipMsg tooltipMsg)))
+                           )
+                    )
             )
             { identifierWithCopyIcon =
                 { identifier = baseTxIdString |> truncateLongIdentifierWithLengths 8 4
@@ -197,6 +206,7 @@ account vc viewState id txExistsFn =
                 }
             , sidePanelTxHeader =
                 { headerText = (Id.network id |> String.toUpper) ++ " " ++ Locale.string vc.locale "Transaction"
+                , showLiteBadge = NetworkCapabilities.isLiteNetwork model.networkCapabilities (Id.network id)
                 }
             , titleOfContractCreation = { infoLabel = Locale.string vc.locale "contract creation" }
             , valueOfContractCreation =
@@ -298,6 +308,12 @@ utxo vc model id viewState tx =
             -- |> Rs.s_sidePanelTxDetails [ css fullWidth ]
             |> Rs.s_sidePanelHeaderText [ spread ]
             |> Rs.s_iconsCloseBlack (closeAttrs Pathfinder.UserClosedDetailsView)
+            |> Rs.s_liteBadge
+                (Util.View.testId "tx-lite-badge"
+                    :: (Util.TooltipType.Text "lite-badge-tx-tooltip"
+                            |> Tooltip.attributes "tx-lite-badge" (Util.Tooltip.tooltipConfig vc (\tooltipMsg -> Pathfinder.TxDetailsMsg (TooltipMsg tooltipMsg)))
+                       )
+                )
         )
         sidePanelTxInstances
         { identifierWithCopyIcon =
@@ -412,6 +428,7 @@ utxo vc model id viewState tx =
         , sidePanelTxHeader =
             { headerText =
                 (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "Transaction"
+            , showLiteBadge = NetworkCapabilities.isLiteNetwork model.networkCapabilities (Id.network id)
             }
         }
 
