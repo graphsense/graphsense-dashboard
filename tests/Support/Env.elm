@@ -48,6 +48,7 @@ updateConfig =
     , size = Just viewport
     , allConcepts = []
     , abuseConcepts = []
+    , networks = []
     }
 
 
@@ -70,4 +71,5 @@ viewConfig =
     , showBothValues = False
     , isMac = False
     , networks = []
+    , liteNetworks = True
     }

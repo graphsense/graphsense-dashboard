@@ -433,6 +433,7 @@ surface =
     , ref View.Pathfinder.ContextMenuItem.init
     , ref View.Pathfinder.ContextMenuItem.init2
     , ref View.Pathfinder.ContextMenuItem.initLink2
+    , ref View.Pathfinder.ContextMenuItem.setAvailableOnLiteNetworks
     , ref View.Pathfinder.ContextMenuItem.setDisabled
     , ref View.Pathfinder.ContextMenuItem.view
 

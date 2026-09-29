@@ -1,0 +1,101 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - img [ref=e7] [cursor=pointer]
+          - img [ref=e16]
+          - generic [ref=e20]:
+            - generic [ref=e21]:
+              - img [ref=e23]
+              - generic [ref=e31]: Pathfinder
+            - link "CaseConnect" [ref=e32] [cursor=pointer]:
+              - /url: /caseconnect/
+              - generic [ref=e33]:
+                - img [ref=e35]
+                - generic [ref=e50]: CaseConnect
+            - link "CSAM Check" [ref=e51] [cursor=pointer]:
+              - /url: /csam-check/
+              - generic [ref=e52]:
+                - img [ref=e54]
+                - generic [ref=e61]: CSAM Check
+            - link "QuickLock" [ref=e62] [cursor=pointer]:
+              - /url: /quicklock/
+              - generic [ref=e63]:
+                - img [ref=e65]
+                - generic [ref=e73]: QuickLock
+            - generic [ref=e75] [cursor=pointer]:
+              - img [ref=e77]
+              - generic [ref=e81]: More
+        - generic [ref=e82]:
+          - link "Settings" [ref=e83] [cursor=pointer]:
+            - /url: /settings
+            - img [ref=e85]
+          - img [ref=e91]
+          - link "Statistics" [ref=e95] [cursor=pointer]:
+            - /url: /stats
+            - generic [ref=e97]: Statistics
+      - main [ref=e98]:
+        - generic [ref=e99]:
+          - img [ref=e100]
+          - generic:
+            - generic [ref=e104]:
+              - generic [ref=e105]: Open a case
+              - img [ref=e107]
+              - img [ref=e113] [cursor=pointer]
+            - generic [ref=e117]:
+              - generic [ref=e118]:
+                - generic [ref=e119]:
+                  - img [ref=e121]
+                  - img [ref=e126]
+                - textbox "Search" [ref=e132]:
+                  - /placeholder: Address, transaction
+              - generic [ref=e133]:
+                - generic [ref=e134]:
+                  - generic "Restart" [ref=e135] [cursor=pointer]:
+                    - img [ref=e136]
+                  - generic "Save file" [ref=e140] [cursor=pointer]:
+                    - img [ref=e141]
+                  - generic "Open" [ref=e147] [cursor=pointer]:
+                    - img [ref=e148]
+                  - generic "Export graph" [ref=e154] [cursor=pointer]:
+                    - img [ref=e155]
+                - img [ref=e160]
+                - generic [ref=e164]:
+                  - generic "Redo" [ref=e165] [cursor=pointer]:
+                    - img [ref=e166]
+                  - generic "Undo" [ref=e170] [cursor=pointer]:
+                    - img [ref=e171]
+                - img [ref=e176]
+                - generic [ref=e180]:
+                  - generic "Selection Tool" [ref=e181] [cursor=pointer]:
+                    - img [ref=e182]
+                  - generic "Center graph" [ref=e188] [cursor=pointer]:
+                    - img [ref=e189]
+                  - generic "Align horizontally" [ref=e193] [cursor=pointer]:
+                    - img [ref=e194]
+                - img [ref=e205]
+                - generic [ref=e209]:
+                  - generic "Delete" [ref=e210] [cursor=pointer]:
+                    - img [ref=e211]
+                  - generic "Annotate" [ref=e218] [cursor=pointer]:
+                    - img [ref=e219]
+                - img [ref=e224]
+                - generic "Display settings" [ref=e229] [cursor=pointer]:
+                  - img [ref=e230]
+            - img [ref=e239] [cursor=pointer]
+          - generic:
+            - generic [ref=e246] [cursor=pointer]:
+              - generic [ref=e248]: Transaction-based
+              - generic [ref=e250]: Relationship-based
+            - img [ref=e253]
+    - contentinfo [ref=e257]:
+      - generic [ref=e258]:
+        - generic [ref=e259]:
+          - img [ref=e261]
+          - generic [ref=e278]: Loading supported token currencies for AVAX
+        - generic [ref=e279]: v26.08.1+pflite.5
+  - generic [ref=e280] [cursor=pointer]:
+    - img [ref=e281]
+    - generic [ref=e290]: "32"

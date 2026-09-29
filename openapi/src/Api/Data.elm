@@ -25,6 +25,7 @@ module Api.Data exposing
     , AddressOutput
     , Block
     , BlockAtDate
+    , Capabilities
     , ChangeHeuristics
     , Concept
     , ConsensusEntry
@@ -43,6 +44,7 @@ module Api.Data exposing
     , NeighborAddresses
     , NeighborClusters
     , NeighborCluster
+    , NetworkDisabledCapabilities
     , OneTimeChangeHeuristic
     , Rate
     , Rates
@@ -86,6 +88,7 @@ module Api.Data exposing
     , encodeAddressOutput
     , encodeBlock
     , encodeBlockAtDate
+    , encodeCapabilities
     , encodeChangeHeuristics
     , encodeConcept
     , encodeConsensusEntry
@@ -104,6 +107,7 @@ module Api.Data exposing
     , encodeNeighborAddresses
     , encodeNeighborClusters
     , encodeNeighborCluster
+    , encodeNetworkDisabledCapabilities
     , encodeOneTimeChangeHeuristic
     , encodeRate
     , encodeRates
@@ -147,6 +151,7 @@ module Api.Data exposing
     , addressOutputDecoder
     , blockDecoder
     , blockAtDateDecoder
+    , capabilitiesDecoder
     , changeHeuristicsDecoder
     , conceptDecoder
     , consensusEntryDecoder
@@ -165,6 +170,7 @@ module Api.Data exposing
     , neighborAddressesDecoder
     , neighborClustersDecoder
     , neighborClusterDecoder
+    , networkDisabledCapabilitiesDecoder
     , oneTimeChangeHeuristicDecoder
     , rateDecoder
     , ratesDecoder
@@ -238,10 +244,16 @@ type alias Address =
     , currency : String
     , cluster : Int
     , freshClusterId : Maybe Int
-    , firstTx : TxSummary
+    -- nullable and NOT required in the spec (address.first_tx/last_tx are
+    -- anyOf [tx_summary, null]): an address with no transactions of its own —
+    -- a coinbase-only or failed-gas-only account, or one whose whole history
+    -- is in tokens the backend does not index — has neither. The generated
+    -- client had both as required, so such a body decoded to a fatal
+    -- "Expecting an OBJECT with a field named `last_tx`".
+    , firstTx : Maybe TxSummary
     , inDegree : Int
     , isContract : Maybe Bool
-    , lastTx : TxSummary
+    , lastTx : Maybe TxSummary
     , noIncomingTxs : Int
     , noOutgoingTxs : Int
     , outDegree : Int
@@ -251,6 +263,11 @@ type alias Address =
     , totalSpent : Values
     , totalTokensReceived : Maybe (Dict.Dict String (Values))
     , totalTokensSpent : Maybe (Dict.Dict String (Values))
+    -- extension fields of backends that serve networks without a full index:
+    -- the server's "possible service" verdict, and per field the qualifier of a
+    -- reported number ("gt" = lower bound, "approx" = estimate)
+    , isPossibleService : Maybe Bool
+    , qualifiers : Maybe (Dict.Dict String String)
     }
 
 
@@ -474,9 +491,14 @@ type alias Cluster =
     , bestAddressTag : Maybe AddressTag
     , currency : String
     , cluster : Int
-    , firstTx : TxSummary
+    -- REQUIRED and non-nullable on the wire (the decoder below still insists on
+    -- both), Maybe only so the app can build one itself: Util.Data.selfCluster
+    -- synthesizes the singleton cluster of an account address on a network that
+    -- serves no cluster data, and such an address may have no transactions of
+    -- its own to copy.
+    , firstTx : Maybe TxSummary
     , inDegree : Int
-    , lastTx : TxSummary
+    , lastTx : Maybe TxSummary
     , noAddressTags : Int
     , noAddresses : Int
     , noIncomingTxs : Int
@@ -511,6 +533,14 @@ type alias ExternalConversion =
     , toAssetTransfer : String
     , toIsSupportedAsset : Bool
     , toNetwork : String
+    -- hand-patched (DASHBOARD_CHANGES D-26, fiat per D-19 'optional fiat per leg');
+    -- drop once the spec carries these fields
+    , fromAssetSymbol : Maybe String
+    , toAssetSymbol : Maybe String
+    , fromAssetDecimals : Maybe Int
+    , toAssetDecimals : Maybe Int
+    , fromAmountFiatValues : Maybe (List Rate)
+    , toAmountFiatValues : Maybe (List Rate)
     }
 
 
@@ -713,6 +743,20 @@ type alias Stats =
     { currencies : List (CurrencyStats)
     , requestTimestamp : String
     , version : String
+    }
+
+
+-- GET /capabilities of backends that serve networks without a full index:
+-- per network the DISABLED features; a network absent from the list is fully
+-- enabled. Read only by Model.NetworkCapabilities.
+type alias Capabilities =
+    { networks : List (NetworkDisabledCapabilities)
+    }
+
+
+type alias NetworkDisabledCapabilities =
+    { network : String
+    , disabled : List String
     }
 
 
@@ -951,10 +995,10 @@ encodeAddressPairs model =
             , encode "currency" Json.Encode.string model.currency
             , encode "cluster" Json.Encode.int model.cluster
             , maybeEncode "fresh_cluster_id" Json.Encode.int model.freshClusterId
-            , encode "first_tx" encodeTxSummary model.firstTx
+            , maybeEncode "first_tx" encodeTxSummary model.firstTx
             , encode "in_degree" Json.Encode.int model.inDegree
             , maybeEncode "is_contract" Json.Encode.bool model.isContract
-            , encode "last_tx" encodeTxSummary model.lastTx
+            , maybeEncode "last_tx" encodeTxSummary model.lastTx
             , encode "no_incoming_txs" Json.Encode.int model.noIncomingTxs
             , encode "no_outgoing_txs" Json.Encode.int model.noOutgoingTxs
             , encode "out_degree" Json.Encode.int model.outDegree
@@ -964,6 +1008,8 @@ encodeAddressPairs model =
             , encode "total_spent" encodeValues model.totalSpent
             , maybeEncode "total_tokens_received" (Json.Encode.dict identity encodeValues) model.totalTokensReceived
             , maybeEncode "total_tokens_spent" (Json.Encode.dict identity encodeValues) model.totalTokensSpent
+            , maybeEncode "is_possible_service" Json.Encode.bool model.isPossibleService
+            , maybeEncode "qualifiers" (Json.Encode.dict identity Json.Encode.string) model.qualifiers
             ]
     in
     pairs
@@ -1565,9 +1611,9 @@ encodeClusterPairs model =
             , maybeEncode "best_address_tag" encodeAddressTag model.bestAddressTag
             , encode "currency" Json.Encode.string model.currency
             , encode "cluster" Json.Encode.int model.cluster
-            , encode "first_tx" encodeTxSummary model.firstTx
+            , maybeEncode "first_tx" encodeTxSummary model.firstTx
             , encode "in_degree" Json.Encode.int model.inDegree
-            , encode "last_tx" encodeTxSummary model.lastTx
+            , maybeEncode "last_tx" encodeTxSummary model.lastTx
             , encode "no_address_tags" Json.Encode.int model.noAddressTags
             , encode "no_addresses" Json.Encode.int model.noAddresses
             , encode "no_incoming_txs" Json.Encode.int model.noIncomingTxs
@@ -1632,6 +1678,12 @@ encodeExternalConversionPairs model =
             , encode "to_asset_transfer" Json.Encode.string model.toAssetTransfer
             , encode "to_is_supported_asset" Json.Encode.bool model.toIsSupportedAsset
             , encode "to_network" Json.Encode.string model.toNetwork
+            , maybeEncode "from_asset_symbol" Json.Encode.string model.fromAssetSymbol
+            , maybeEncode "to_asset_symbol" Json.Encode.string model.toAssetSymbol
+            , maybeEncode "from_asset_decimals" Json.Encode.int model.fromAssetDecimals
+            , maybeEncode "to_asset_decimals" Json.Encode.int model.toAssetDecimals
+            , maybeEncode "from_amount_fiat_values" (Json.Encode.list encodeRate) model.fromAmountFiatValues
+            , maybeEncode "to_amount_fiat_values" (Json.Encode.list encodeRate) model.toAmountFiatValues
             ]
     in
     pairs
@@ -2226,6 +2278,37 @@ encodeStatsPairs model =
     pairs
 
 
+encodeCapabilities : Capabilities -> Json.Encode.Value
+encodeCapabilities =
+    encodeObject << encodeCapabilitiesPairs
+
+
+encodeCapabilitiesPairs : Capabilities -> List EncodedField
+encodeCapabilitiesPairs model =
+    let
+        pairs =
+            [ encode "networks" (Json.Encode.list encodeNetworkDisabledCapabilities) model.networks
+            ]
+    in
+    pairs
+
+
+encodeNetworkDisabledCapabilities : NetworkDisabledCapabilities -> Json.Encode.Value
+encodeNetworkDisabledCapabilities =
+    encodeObject << encodeNetworkDisabledCapabilitiesPairs
+
+
+encodeNetworkDisabledCapabilitiesPairs : NetworkDisabledCapabilities -> List EncodedField
+encodeNetworkDisabledCapabilitiesPairs model =
+    let
+        pairs =
+            [ encode "network" Json.Encode.string model.network
+            , encode "disabled" (Json.Encode.list Json.Encode.string) model.disabled
+            ]
+    in
+    pairs
+
+
 encodeTag : Tag -> Json.Encode.Value
 encodeTag =
     encodeObject << encodeTagPairs
@@ -2674,11 +2757,11 @@ addressDecoder =
         |> decode "currency" Json.Decode.string
         |> decode "cluster" Json.Decode.int
         |> maybeDecode "fresh_cluster_id" Json.Decode.int Nothing
-        |> decode "first_tx" txSummaryDecoder
+        |> maybeDecode "first_tx" txSummaryDecoder Nothing
         |> decode "in_degree" Json.Decode.int
         |> maybeDecode "is_contract" Json.Decode.bool Nothing
-        |> decode "last_tx" txSummaryDecoder 
-        |> decode "no_incoming_txs" Json.Decode.int 
+        |> maybeDecode "last_tx" txSummaryDecoder Nothing
+        |> decode "no_incoming_txs" Json.Decode.int
         |> decode "no_outgoing_txs" Json.Decode.int 
         |> decode "out_degree" Json.Decode.int 
         |> decode "status" addressStatusDecoder 
@@ -2687,6 +2770,8 @@ addressDecoder =
         |> decode "total_spent" valuesDecoder 
         |> maybeDecode "total_tokens_received" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
         |> maybeDecode "total_tokens_spent" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
+        |> maybeDecode "is_possible_service" Json.Decode.bool Nothing
+        |> maybeDecode "qualifiers" (Json.Decode.dict Json.Decode.string) Nothing
 
 
 addressStatusDecoder : Json.Decode.Decoder AddressStatus
@@ -2852,9 +2937,11 @@ clusterDecoder =
         |> maybeDecode "best_address_tag" addressTagDecoder Nothing
         |> decode "currency" Json.Decode.string
         |> decode "cluster" Json.Decode.int
-        |> decode "first_tx" txSummaryDecoder
+        -- still REQUIRED on the wire; Just-wrapped only because the field is a
+        -- Maybe in the type (see the type alias)
+        |> decode "first_tx" (Json.Decode.map Just txSummaryDecoder)
         |> decode "in_degree" Json.Decode.int
-        |> decode "last_tx" txSummaryDecoder
+        |> decode "last_tx" (Json.Decode.map Just txSummaryDecoder)
         |> decode "no_address_tags" Json.Decode.int
         |> decode "no_addresses" Json.Decode.int
         |> decode "no_incoming_txs" Json.Decode.int
@@ -2891,6 +2978,12 @@ externalConversionDecoder =
         |> decode "to_asset_transfer" Json.Decode.string 
         |> decode "to_is_supported_asset" Json.Decode.bool 
         |> decode "to_network" Json.Decode.string 
+        |> maybeDecode "from_asset_symbol" Json.Decode.string Nothing
+        |> maybeDecode "to_asset_symbol" Json.Decode.string Nothing
+        |> maybeDecode "from_asset_decimals" Json.Decode.int Nothing
+        |> maybeDecode "to_asset_decimals" Json.Decode.int Nothing
+        |> maybeDecode "from_amount_fiat_values" (Json.Decode.list rateDecoder) Nothing
+        |> maybeDecode "to_amount_fiat_values" (Json.Decode.list rateDecoder) Nothing
 
 
 externalConversionConversionTypeDecoder : Json.Decode.Decoder ExternalConversionConversionType
@@ -3147,6 +3240,19 @@ statsDecoder =
         |> decode "currencies" (Json.Decode.list currencyStatsDecoder) 
         |> decode "request_timestamp" Json.Decode.string 
         |> decode "version" Json.Decode.string 
+
+
+capabilitiesDecoder : Json.Decode.Decoder Capabilities
+capabilitiesDecoder =
+    Json.Decode.succeed Capabilities
+        |> decode "networks" (Json.Decode.list networkDisabledCapabilitiesDecoder) 
+
+
+networkDisabledCapabilitiesDecoder : Json.Decode.Decoder NetworkDisabledCapabilities
+networkDisabledCapabilitiesDecoder =
+    Json.Decode.succeed NetworkDisabledCapabilities
+        |> decode "network" Json.Decode.string 
+        |> decode "disabled" (Json.Decode.list Json.Decode.string) 
 
 
 tagDecoder : Json.Decode.Decoder Tag

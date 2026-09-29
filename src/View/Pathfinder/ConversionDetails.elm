@@ -1,4 +1,4 @@
-module View.Pathfinder.ConversionDetails exposing (view)
+module View.Pathfinder.ConversionDetails exposing (outputAsset, view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -7,8 +7,9 @@ import Css
 import Css.Pathfinder exposing (sidePanelCss)
 import Css.Table
 import Html.Styled exposing (Html, div)
-import Model.Currency exposing (asset)
+import Model.Currency exposing (AssetIdentifier, asset)
 import Model.Pathfinder.ConversionDetails exposing (ConversionDetailsModel)
+import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder
@@ -77,6 +78,18 @@ txTab vc isTxOnGraph viewState =
         |> subTxsTab
 
 
+inputAsset : ConversionEdge -> AssetIdentifier
+inputAsset c =
+    asset c.raw.fromNetwork (c.rawInputTransaction |> Tx.getAssetFromRawTx)
+
+
+{-| On the destination network: a bridge's output leg is not on the input's network.
+-}
+outputAsset : ConversionEdge -> AssetIdentifier
+outputAsset c =
+    asset c.raw.toNetwork (c.rawOutputTransaction |> Tx.getAssetFromRawTx)
+
+
 view : View.Config -> ( Id, Id ) -> (Id -> Bool) -> ConversionDetailsModel -> Html Pathfinder.Msg
 view vc _ isTxOnGraph viewState =
     let
@@ -132,13 +145,11 @@ view vc _ isTxOnGraph viewState =
         , titleOfSender = { infoLabel = Locale.string vc.locale "sender" }
         , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
         , valueOfInputValue =
-            viewState.raw.rawInputTransaction
-                |> Tx.getInputValueForAddressFromRawTx cr.fromAddress
-                |> valuesToCell vc (asset cr.fromNetwork (viewState.raw.rawInputTransaction |> Tx.getAssetFromRawTx))
+            ConversionEdge.inputValues viewState.raw
+                |> valuesToCell vc (inputAsset viewState.raw)
         , valueOfOutputValue =
-            viewState.raw.rawOutputTransaction
-                |> Tx.getOutputValueForAddressFromRawTx cr.toAddress
-                |> valuesToCell vc (asset cr.fromNetwork (viewState.raw.rawOutputTransaction |> Tx.getAssetFromRawTx))
+            ConversionEdge.outputValues viewState.raw
+                |> valuesToCell vc (outputAsset viewState.raw)
         , valueOfReceiver = { copyIconInstance = copyIconPathfinderAbove vc cr.toAddress, firstRowText = cr.toAddress |> truncateLongIdentifierWithLengths 8 4 }
         , valueOfSender = { copyIconInstance = copyIconPathfinderAbove vc cr.fromAddress, firstRowText = cr.fromAddress |> truncateLongIdentifierWithLengths 8 4 }
         , valueOfTimestamp = viewState.raw.rawOutputTransaction |> getTimestamp |> timeToCell vc

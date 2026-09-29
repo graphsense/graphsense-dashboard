@@ -311,6 +311,9 @@ shallPushHistory msg _ =
         BrowserGotConversionLoop _ _ _ _ ->
             False
 
+        BrowserGotConversionInputLeg _ _ _ _ ->
+            False
+
         BrowserGotConversions _ _ _ ->
             False
 
@@ -330,6 +333,15 @@ shallPushHistory msg _ =
             False
 
         WorkflowNextTxByTime _ _ _ ->
+            False
+
+        WorkflowNextUtxoTxPrefetch _ _ ->
+            False
+
+        WorkflowNextTxByTimePrefetch _ _ ->
+            False
+
+        BrowserGotPrefetchedAddressData _ _ ->
             False
 
         UserPushesLeftMouseButtonOnUtxoTx _ _ ->
@@ -372,6 +384,9 @@ shallPushHistory msg _ =
             True
 
         UserPushesLeftMouseButtonOnAggEdgeLabel _ _ _ ->
+            False
+
+        UserPushesLeftMouseButtonOnConversionNode _ _ ->
             False
 
         ToolbarHovercardMsg _ ->

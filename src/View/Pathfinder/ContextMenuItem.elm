@@ -1,4 +1,4 @@
-module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, init, init2, initLink2, map, setDisabled, view)
+module View.Pathfinder.ContextMenuItem exposing (ContextMenuItem, availableOnLiteNetworks, init, init2, initLink2, map, setAvailableOnLiteNetworks, setDisabled, setTooltip, view)
 
 import Config.View as View
 import Css
@@ -29,12 +29,19 @@ type alias ContextMenuItemInternal msg =
     , text2 : Maybe String
     , action : ContextMenuItemActions msg
     , disabled : Bool
+    , tooltip : Maybe String
+    , availableOnLiteNetworks : Bool
     }
 
 
 view : View.Config -> ContextMenuItem msg -> Html msg
-view vc (ContextMenuItem { icon, text1, text2, action, disabled }) =
+view vc (ContextMenuItem { icon, text1, text2, action, disabled, tooltip }) =
     let
+        tooltipAttr =
+            tooltip
+                |> Maybe.map (Locale.string vc.locale >> Html.Styled.Attributes.title >> List.singleton)
+                |> Maybe.withDefault []
+
         styledIcon =
             if disabled then
                 -- note overwriting black did not work since icon ins already overwrites it as primary
@@ -100,6 +107,7 @@ view vc (ContextMenuItem { icon, text1, text2, action, disabled }) =
                     |> css
                  )
                     :: msg
+                    ++ tooltipAttr
                 )
             |> Rs.s_placeholder1
                 unsetFontStyle
@@ -125,19 +133,21 @@ view vc (ContextMenuItem { icon, text1, text2, action, disabled }) =
 
 
 map : (a -> b) -> ContextMenuItem a -> ContextMenuItem b
-map mp (ContextMenuItem { icon, text1, text2, action, disabled }) =
+map mp (ContextMenuItem item) =
     ContextMenuItem
-        { icon = Html.map mp icon
-        , text1 = text1
-        , text2 = text2
+        { icon = Html.map mp item.icon
+        , text1 = item.text1
+        , text2 = item.text2
         , action =
-            case action of
+            case item.action of
                 ClickMsg msg ->
                     ClickMsg (mp msg)
 
                 ClickLink blank l ->
                     ClickLink blank l
-        , disabled = disabled
+        , disabled = item.disabled
+        , tooltip = item.tooltip
+        , availableOnLiteNetworks = item.availableOnLiteNetworks
         }
 
 
@@ -170,6 +180,8 @@ init2 { icon, text1, text2, msg } =
         , text2 = text2
         , action = ClickMsg msg
         , disabled = False
+        , tooltip = Nothing
+        , availableOnLiteNetworks = False
         }
 
 
@@ -188,6 +200,8 @@ initLink2 { icon, text1, text2, blank, link } =
         , text2 = text2
         , action = ClickLink blank link
         , disabled = False
+        , tooltip = Nothing
+        , availableOnLiteNetworks = False
         }
 
 
@@ -195,3 +209,26 @@ setDisabled : Bool -> ContextMenuItem msg -> ContextMenuItem msg
 setDisabled disabled (ContextMenuItem item) =
     ContextMenuItem
         { item | disabled = disabled }
+
+
+{-| Localized on render; shown as the native browser tooltip.
+-}
+setTooltip : String -> ContextMenuItem msg -> ContextMenuItem msg
+setTooltip tooltip (ContextMenuItem item) =
+    ContextMenuItem
+        { item | tooltip = Just tooltip }
+
+
+{-| Declares that this item's feature works on lite networks (backends that
+serve no relations/cluster data), so the menu must not disable it there.
+Off by default: an item that does not opt in is assumed to need full data.
+-}
+setAvailableOnLiteNetworks : ContextMenuItem msg -> ContextMenuItem msg
+setAvailableOnLiteNetworks (ContextMenuItem item) =
+    ContextMenuItem
+        { item | availableOnLiteNetworks = True }
+
+
+availableOnLiteNetworks : ContextMenuItem msg -> Bool
+availableOnLiteNetworks (ContextMenuItem item) =
+    item.availableOnLiteNetworks

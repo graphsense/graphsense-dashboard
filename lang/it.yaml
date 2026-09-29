@@ -190,6 +190,9 @@ timeout: tempo scaduto
 network error: errore di rete
 server error: errore del server
 not found: non trovato
+not supported on lite networks: non supportato sulle reti lite
+Relationship mode not supported on lite networks: Modalità relazioni non supportata sulle reti lite
+Network switched off in the settings (lite networks): Rete disattivata nelle impostazioni (reti lite)
 data error: errore nei dati
 this table is empty: questa tabella è vuota
 for entities: per entità
@@ -644,3 +647,12 @@ Move the selection along the graph: "Sposta la selezione nel grafico"
 Close search or dialog: "Chiudi la ricerca o la finestra"
 Find on graph: "Cerca nel grafico"
 Duplicate graph in new tab: "Duplica il grafico in una nuova scheda"
+lite networks: "Reti lite"
+lite-networks-setting-hint: "Reti servite dal servizio dati lite (BNB Smart Chain, Arbitrum, Base e le altre reti EVM). Disattivato: l'app lavora solo con le reti principali e non invia alcuna richiesta al servizio lite, nel caso sia sovraccarico o non disponibile."
+lite-badge-tooltip: "La rete {0} ha un supporto limitato delle funzionalità."
+gs-file-networks-title: "Alcuni nodi non sono stati caricati"
+gs-file-networks-lite-off: "Questo grafo contiene nodi su {0} che non sono stati caricati perché le reti lite sono disattivate. Attivale nelle Impostazioni e riapri il file."
+gs-file-networks-not-on-account: "Questo grafo contiene nodi su {0} che non sono disponibili per il tuo account. Non sono stati caricati, ma vengono mantenuti quando salvi il grafo."
+Not available on your account: "Non disponibile per il tuo account"
+on: "Attivo"
+off: "Disattivo"

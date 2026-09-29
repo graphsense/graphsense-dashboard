@@ -11,7 +11,9 @@ module Model.Pathfinder.Address exposing
     , getCoords
     , getTotalReceived
     , getTotalSpent
+    , getTxTotal
     , getTxs
+    , isFloored
     , isSharedService
     , isSmartContract
     , txsGetSet
@@ -68,6 +70,9 @@ type Txs
     | TxsLastCheckedChangeTx Api.Data.TxUtxo
     | TxsLoading
     | TxsNotFetched
+      -- background prefetch already resolved the next tx in this direction;
+      -- an expand click consumes it without any API round-trip
+    | TxsPrefetched Api.Data.Tx
 
 
 type AddressServiceType
@@ -123,14 +128,42 @@ isSmartContract a =
 
 getActivityRangeAddress : Address -> Maybe ( Posix, Posix )
 getActivityRangeAddress a =
-    RemoteData.unwrap Nothing (getActivityRange >> Just) a.data
+    RemoteData.unwrap Nothing getActivityRange a.data
 
 
-getActivityRange : Api.Data.Address -> ( Posix, Posix )
+{-| Nothing for an address with no transactions of its own — it has no span to
+report, so callers must not invent one.
+-}
+getActivityRange : Api.Data.Address -> Maybe ( Posix, Posix )
 getActivityRange x =
-    ( timestampToPosix x.firstTx.timestamp
-    , timestampToPosix x.lastTx.timestamp
-    )
+    Maybe.map2
+        (\first last -> ( timestampToPosix first.timestamp, timestampToPosix last.timestamp ))
+        x.firstTx
+        x.lastTx
+
+
+{-| Whether the backend reports `field` as a lower bound
+(`qualifiers[field] == "gt"`): a capped count that must not be presented as
+exact. Driven only by the server's qualifier map, never by a client-side
+threshold; a body without qualifiers is unqualified.
+-}
+isFloored : String -> Api.Data.Address -> Bool
+isFloored field data =
+    (data.qualifiers |> Maybe.andThen (Dict.get field)) == Just "gt"
+
+
+{-| The transaction count shown as the address's total, and whether it is a
+floor. Exact parts add up; once either direction is a lower bound the sum is
+not a number the backend vouches for, so the total becomes the larger part,
+itself a floor -- "500+ in, 217 out" reads "500+" (user decision 2026-09-07).
+-}
+getTxTotal : Api.Data.Address -> ( Int, Bool )
+getTxTotal data =
+    if isFloored "no_incoming_txs" data || isFloored "no_outgoing_txs" data then
+        ( max data.noIncomingTxs data.noOutgoingTxs, True )
+
+    else
+        ( data.noIncomingTxs + data.noOutgoingTxs, False )
 
 
 getTxs : Address -> Direction -> Txs
@@ -177,23 +210,51 @@ getClusterId { data } =
         |> Maybe.map Id.initClusterIdFromAddress
 
 
+{-| The server-side `is_possible_service` verdict, when present, replaces the
+structural judgment (cluster shape / degree thresholds); the actor still
+decides known vs. unknown. Absent (old server) = local heuristics.
+
+REMOVABLE: once every deployed backend serves `is_possible_service` on
+address detail (graphsense-lib >= the external-backend-capabilities release
+computes it for account AND utxo networks), the `Nothing` branch below,
+`isPossibleServiceAccountLike`, and `Model.Entity.isPossibleServiceUtxo` can
+be deleted — but only after checking that no code path feeds this function
+an embedded listing row (those carry no `is_possible_service`).
+
+-}
 getAddressType : Address -> Maybe Api.Data.Cluster -> AddressServiceType
 getAddressType address cluster =
-    if Maybe.map isPossibleServiceUtxo cluster |> Maybe.withDefault False then
-        if address.actor == Nothing then
-            LikelyUnknownService
+    case address.data |> RemoteData.toMaybe |> Maybe.andThen .isPossibleService of
+        Just True ->
+            if address.actor == Nothing then
+                LikelyUnknownService
 
-        else
-            KnownService
+            else
+                KnownService
 
-    else if (address.id |> Id.network |> isAccountLike) && (address.actor |> Maybe.Extra.isJust) then
-        KnownService
+        Just False ->
+            if (address.id |> Id.network |> isAccountLike) && (address.actor |> Maybe.Extra.isJust) then
+                KnownService
 
-    else if (address.id |> Id.network |> isAccountLike) && isPossibleServiceAccountLike address then
-        LikelyUnknownService
+            else
+                UnknownService
 
-    else
-        UnknownService
+        Nothing ->
+            if Maybe.map isPossibleServiceUtxo cluster |> Maybe.withDefault False then
+                if address.actor == Nothing then
+                    LikelyUnknownService
+
+                else
+                    KnownService
+
+            else if (address.id |> Id.network |> isAccountLike) && (address.actor |> Maybe.Extra.isJust) then
+                KnownService
+
+            else if (address.id |> Id.network |> isAccountLike) && isPossibleServiceAccountLike address then
+                LikelyUnknownService
+
+            else
+                UnknownService
 
 
 isPossibleServiceAccountLike : Address -> Bool

@@ -123,6 +123,10 @@ body vc model =
             [ [ Css.displayFlex
               , Css.flexDirection Css.row
               , Css.flexGrow (Css.num 1)
+
+              -- a flex item defaults to `min-height: auto` and grows to its
+              -- content; 0 keeps the row at the viewport so pages can scroll
+              , Css.minHeight (Css.px 0)
               , Css.alignItems Css.stretch
               , Css.property "background-color" Theme.Colors.greyBlue20
               ]

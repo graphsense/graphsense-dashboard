@@ -70,6 +70,7 @@ type Effect msg
         }
         (Api.Data.SearchResult -> msg)
     | GetStatisticsEffect (Api.Data.Stats -> msg)
+    | GetCapabilitiesEffect (Api.Data.Capabilities -> msg)
     | GetConceptsEffect String (List Api.Data.Concept -> msg)
     | ListSupportedTokensEffect String (Api.Data.TokenConfigs -> msg)
     | GetMeEffect (UserInfo -> msg)
@@ -332,6 +333,10 @@ type Effect msg
         }
         (Api.Data.RelatedAddresses -> msg)
     | GetConversionEffect { currency : String, txHash : String } (List Api.Data.ExternalConversion -> msg)
+      {- A conversion leg, fetched like GetTxEffect with io; its own constructor
+         so a 404 ends the swap walk quietly instead of raising tx-not-found (D-27).
+      -}
+    | GetConversionLegEffect { currency : String, txHash : String } (Api.Data.Tx -> msg)
     | ListTxFlowsEffect
         { currency : String
         , txHash : String
@@ -376,6 +381,11 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> GetStatisticsEffect
+
+        GetCapabilitiesEffect m ->
+            m
+                >> mapMsg
+                |> GetCapabilitiesEffect
 
         GetConceptsEffect eff m ->
             m
@@ -567,12 +577,17 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetConversionEffect eff
 
+        GetConversionLegEffect eff m ->
+            m
+                >> mapMsg
+                |> GetConversionLegEffect eff
+
         CancelEffect s ->
             CancelEffect s
 
 
-perform : String -> (Result ( Http.Error, Headers, Effect msg ) ( Headers, msg ) -> msg) -> (String -> msg) -> Effect msg -> Cmd msg
-perform apiKey wrapMsg cancelMsg effect =
+perform : String -> List ( String, String ) -> (Result ( Http.Error, Headers, Effect msg ) ( Headers, msg ) -> msg) -> (String -> msg) -> Effect msg -> Cmd msg
+perform apiKey extraHeaders wrapMsg cancelMsg effect =
     let
         withTracker =
             effectToTracker effect
@@ -581,33 +596,39 @@ perform apiKey wrapMsg cancelMsg effect =
     in
     case effect of
         AddUserReportedTag data toMsg ->
-            Api.Request.Tags.reportTag data |> send apiKey wrapMsg effect toMsg
+            Api.Request.Tags.reportTag data |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetAddressTagSummaryEffect { currency, address, includeBestClusterTag } toMsg ->
             Api.Request.Experimental.getTagSummaryByAddress currency address (Just includeBestClusterTag)
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         SearchEffect { query, currency, limit, config } toMsg ->
             Api.Request.General.search query currency limit config.includeSubTxIdentifiers config.includeLabels config.includeActors config.includeTxs config.includeAddresses
                 |> Api.withTracker "search"
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetStatisticsEffect toMsg ->
             Api.Request.General.getStatistics
-                |> send apiKey wrapMsg effect toMsg
+                |> Api.withTimeout bootRequestTimeoutMs
+                |> send apiKey extraHeaders wrapMsg effect toMsg
+
+        GetCapabilitiesEffect toMsg ->
+            Api.Request.General.getCapabilities
+                |> Api.withTimeout bootRequestTimeoutMs
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetConceptsEffect taxonomy toMsg ->
             Api.Request.Tags.listConcepts taxonomy
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         ListSupportedTokensEffect currency toMsg ->
             Api.Request.Tokens.listSupportedTokens currency
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetMeEffect toMsg ->
             if isUserEndpointConfigured then
                 Api.request "GET" userEndpointUrl [] [] [] Nothing userInfoDecoder
-                    |> send apiKey wrapMsg effect toMsg
+                    |> send apiKey extraHeaders wrapMsg effect toMsg
 
             else
                 Cmd.none
@@ -618,7 +639,7 @@ perform apiKey wrapMsg cancelMsg effect =
                     isOutgoingToDirection isOutgoing
             in
             Api.Request.Clusters.listClusterNeighbors currency entity direction onlyIds (Just False) (Just False) (Just True) nextpage (Just pagesize)
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, includeActors, nextpage } toMsg ->
             let
@@ -631,35 +652,35 @@ perform apiKey wrapMsg cancelMsg effect =
             in
             Api.Request.Addresses.listAddressNeighbors currency address direction onlyIds (Just includeLabels) (Just includeActors) nextpage (Just pagesize)
                 |> withTracker
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetAddressEffect { currency, address, includeActors } toMsg ->
             Api.Request.Addresses.getAddress currency address (Just includeActors)
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetEntityEffect { currency, entity } toMsg ->
             Api.Request.Clusters.getCluster currency entity (Just False) (Just True)
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetEntityEffectWithDetails { currency, entity, includeActors, includeBestTag } toMsg ->
             Api.Request.Clusters.getCluster currency entity (Just (not includeBestTag)) (Just includeActors)
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetActorEffect { actorId } toMsg ->
             Api.Request.Tags.getActor actorId
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetBlockEffect { currency, height } toMsg ->
             Api.Request.Blocks.getBlock currency height
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetBlockByDateEffect { currency, datetime } toMsg ->
             Api.Request.Blocks.getBlockByDate currency datetime
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetEntityForAddressEffect { currency, address } toMsg ->
             Api.Request.Addresses.getAddressCluster currency address Nothing
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetAddressTxsEffect { currency, address, direction, minHeight, maxHeight, order, tokenCurrency, pagesize, nextpage } toMsg ->
             let
@@ -676,7 +697,7 @@ perform apiKey wrapMsg cancelMsg effect =
             in
             -- currency_path address_path neighbor_query minHeight_query maxHeight_query order_query page_query pagesize_query
             Api.Request.Addresses.listAddressTxs currency address dir minHeight maxHeight Nothing Nothing order tokenCurrency nextpage (Just pagesize)
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetAddressTxsByDateEffect { currency, address, direction, minDate, maxDate, order, tokenCurrency, pagesize, nextpage } toMsg ->
             let
@@ -693,72 +714,55 @@ perform apiKey wrapMsg cancelMsg effect =
             in
             Api.Request.Addresses.listAddressTxs currency address dir Nothing Nothing minDate maxDate order tokenCurrency nextpage (Just pagesize)
                 |> withTracker
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         ListSpendingTxRefsEffect { currency, txHash, index } toMsg ->
             Api.Request.Txs.getSpendingTxs currency txHash index
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         ListSpentInTxRefsEffect { currency, txHash, index } toMsg ->
             Api.Request.Txs.getSpentInTxs currency txHash index
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetAddresslinkTxsEffect { currency, source, target, minHeight, maxHeight, minDate, maxDate, tokenCurrency, order, pagesize, nextpage } toMsg ->
             Api.Request.Addresses.listAddressLinks currency source target minHeight maxHeight minDate maxDate order tokenCurrency nextpage (Just pagesize)
                 |> withTracker
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetEntitylinkTxsEffect { currency, source, target, minHeight, maxHeight, pagesize, nextpage, order } toMsg ->
             Api.Request.Clusters.listClusterLinks currency source target minHeight maxHeight Nothing Nothing order Nothing nextpage (Just pagesize)
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetAddressTagsEffect { currency, address, pagesize, nextpage, includeBestClusterTag } toMsg ->
             Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize) (Just includeBestClusterTag)
                 |> withTracker
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetActorTagsEffect { actorId, pagesize, nextpage } toMsg ->
             Api.Request.Tags.getActorTags actorId nextpage (Just pagesize)
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetEntityAddressTagsEffect { currency, entity, pagesize, nextpage } toMsg ->
             Api.Request.Clusters.listAddressTagsByCluster currency entity nextpage (Just pagesize)
                 |> withTracker
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetEntityAddressesEffect { currency, entity, pagesize, nextpage } toMsg ->
             Api.Request.Clusters.listClusterAddresses currency entity nextpage (Just pagesize)
                 |> withTracker
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetEntityTxsEffect { currency, entity, pagesize, nextpage } toMsg ->
             Api.Request.Clusters.listClusterTxs currency entity Nothing Nothing Nothing Nothing Nothing Nothing Nothing nextpage (Just pagesize)
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetBlockTxsEffect { currency, block } toMsg ->
             Api.Request.Blocks.listBlockTxs currency block
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
-        GetTxEffect { currency, txHash, tokenTxId, includeIo } toMsg ->
-            let
-                includeHeuristics =
-                    if includeIo then
-                        Just
-                            [ Api.Request.Txs.IncludeHeuristicAll
-                            ]
-
-                    else
-                        Nothing
-
-                includeIoIndex =
-                    if includeIo then
-                        Just True
-
-                    else
-                        Nothing
-            in
-            Api.Request.Txs.getTx currency txHash (Just includeIo) Nothing includeIoIndex tokenTxId includeHeuristics
-                |> send apiKey wrapMsg effect toMsg
+        GetTxEffect params toMsg ->
+            getTxRequest params
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetTxUtxoAddressesEffect { currency, txHash, isOutgoing } toMsg ->
             let
@@ -770,7 +774,7 @@ perform apiKey wrapMsg cancelMsg effect =
                         Api.Request.Txs.IoInputs
             in
             Api.Request.Txs.getTxIo currency txHash io Nothing Nothing
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         SearchEntityNeighborsEffect e toMsg ->
             let
@@ -778,15 +782,15 @@ perform apiKey wrapMsg cancelMsg effect =
                     isOutgoingToDirection e.isOutgoing
             in
             Api.Request.Clusters.searchClusterNeighbors e.currency e.entity direction e.key e.value e.depth (Just e.breadth) (Just e.maxAddresses)
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         ListAddressTagsEffect { label, nextpage, pagesize } toMsg ->
             Api.Request.Tags.listAddressTags label nextpage pagesize
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetTokenTxsEffect { currency, txHash } toMsg ->
             Api.Request.Txs.listTokenTxs currency txHash
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         BulkGetAddressEffect e toMsg ->
             if List.isEmpty e.addresses then
@@ -803,7 +807,7 @@ perform apiKey wrapMsg cancelMsg effect =
                             [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
                             ]
                         )
-                    |> send apiKey wrapMsg effect toMsg
+                    |> send apiKey extraHeaders wrapMsg effect toMsg
 
         BulkGetAddressTagsEffect e toMsg ->
             if List.isEmpty e.addresses then
@@ -826,7 +830,7 @@ perform apiKey wrapMsg cancelMsg effect =
                             , ( "include_best_cluster_tag", Json.Encode.bool e.includeBestClusterTag )
                             ]
                         )
-                    |> send apiKey wrapMsg effect toMsg
+                    |> send apiKey extraHeaders wrapMsg effect toMsg
 
         BulkGetEntityEffect e toMsg ->
             if List.isEmpty e.entities then
@@ -843,7 +847,7 @@ perform apiKey wrapMsg cancelMsg effect =
                             [ ( "entity", Json.Encode.list Json.Encode.int e.entities )
                             ]
                         )
-                    |> send apiKey wrapMsg effect toMsg
+                    |> send apiKey extraHeaders wrapMsg effect toMsg
 
         BulkGetAddressEntityEffect e toMsg ->
             if List.isEmpty e.addresses then
@@ -868,7 +872,7 @@ perform apiKey wrapMsg cancelMsg effect =
                             [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
                             ]
                         )
-                    |> send apiKey wrapMsg effect toMsg
+                    |> send apiKey extraHeaders wrapMsg effect toMsg
 
         BulkGetEntityNeighborsEffect e toMsg ->
             if List.isEmpty e.entities then
@@ -909,7 +913,7 @@ perform apiKey wrapMsg cancelMsg effect =
                                         []
                                    )
                         )
-                    |> send apiKey wrapMsg effect toMsg
+                    |> send apiKey extraHeaders wrapMsg effect toMsg
 
         BulkGetAddressNeighborsEffect e toMsg ->
             if List.isEmpty e.addresses then
@@ -951,7 +955,7 @@ perform apiKey wrapMsg cancelMsg effect =
                                         |> Maybe.withDefault []
                                    )
                         )
-                    |> send apiKey wrapMsg effect toMsg
+                    |> send apiKey extraHeaders wrapMsg effect toMsg
 
         BulkGetTxEffect e toMsg ->
             if List.isEmpty e.txs then
@@ -977,7 +981,7 @@ perform apiKey wrapMsg cancelMsg effect =
                             , ( "include_io", Json.Encode.bool True )
                             ]
                         )
-                    |> send apiKey wrapMsg effect toMsg
+                    |> send apiKey extraHeaders wrapMsg effect toMsg
 
         BulkGetAddressTagSummaryEffect { currency, addresses, includeBestClusterTag } toMsg ->
             if List.isEmpty addresses then
@@ -1005,19 +1009,23 @@ perform apiKey wrapMsg cancelMsg effect =
                             , ( "include_best_cluster_tag", Json.Encode.bool includeBestClusterTag )
                             ]
                         )
-                    |> send apiKey wrapMsg effect toMsg
+                    |> send apiKey extraHeaders wrapMsg effect toMsg
 
         ListRelatedAddressesEffect { currency, address, reltype, pagesize, nextpage } toMsg ->
             Api.Request.Addresses.listRelatedAddresses currency address (Just reltype) nextpage (Just pagesize)
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         GetConversionEffect { currency, txHash } toMsg ->
             Api.Request.Txs.getTxConversions currency txHash
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
+
+        GetConversionLegEffect { currency, txHash } toMsg ->
+            getTxRequest { currency = currency, txHash = txHash, includeIo = True, tokenTxId = Nothing }
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         ListTxFlowsEffect { currency, txHash, includeZeroValueSubTxs, token_currency, pagesize, nextpage } toMsg ->
             Api.Request.Txs.listTxFlows currency txHash (Just (not includeZeroValueSubTxs)) Nothing token_currency nextpage pagesize
-                |> send apiKey wrapMsg effect toMsg
+                |> send apiKey extraHeaders wrapMsg effect toMsg
 
         CancelEffect tracker ->
             [ Http.cancel tracker
@@ -1221,6 +1229,9 @@ retryToken effect =
         GetStatisticsEffect _ ->
             hash "GetStatisticsEffect"
 
+        GetCapabilitiesEffect _ ->
+            hash "GetCapabilitiesEffect"
+
         GetConceptsEffect taxonomy _ ->
             hash (join [ "GetConceptsEffect", taxonomy ])
 
@@ -1384,6 +1395,9 @@ retryToken effect =
         GetConversionEffect { currency, txHash } _ ->
             hash (join [ "GetConversionEffect", currency, txHash ])
 
+        GetConversionLegEffect { currency, txHash } _ ->
+            hash (join [ "GetConversionLegEffect", currency, txHash ])
+
         ListTxFlowsEffect { currency, txHash, includeZeroValueSubTxs, token_currency, pagesize, nextpage } _ ->
             hash
                 (join
@@ -1407,9 +1421,23 @@ withAuthorization apiKey request =
         Api.withHeader "Authorization" apiKey request
 
 
-send : String -> (Result ( Http.Error, Headers, eff ) ( Headers, msg ) -> msg) -> eff -> (a -> msg) -> Api.Request a -> Cmd msg
-send apiKey wrapMsg effect toMsg =
+getTxRequest : { currency : String, txHash : String, tokenTxId : Maybe Int, includeIo : Bool } -> Api.Request Api.Data.Tx
+getTxRequest { currency, txHash, tokenTxId, includeIo } =
+    let
+        whenIo value =
+            if includeIo then
+                Just value
+
+            else
+                Nothing
+    in
+    Api.Request.Txs.getTx currency txHash (Just includeIo) Nothing (whenIo True) tokenTxId (whenIo [ Api.Request.Txs.IncludeHeuristicAll ])
+
+
+send : String -> List ( String, String ) -> (Result ( Http.Error, Headers, eff ) ( Headers, msg ) -> msg) -> eff -> (a -> msg) -> Api.Request a -> Cmd msg
+send apiKey extraHeaders wrapMsg effect toMsg =
     withAuthorization apiKey
+        >> Api.withHeaders extraHeaders
         >> Api.sendAndAlsoReceiveHeaders wrapMsg effect toMsg
 
 
@@ -1475,3 +1503,12 @@ listWithMaybes : Json.Decode.Decoder a -> Json.Decode.Decoder (List a)
 listWithMaybes decoder =
     Json.Decode.list (Json.Decode.maybe decoder)
         |> Json.Decode.map (List.filterMap identity)
+
+
+{-| The app holds deep links and opened graphs until `/stats` and
+`/capabilities` answer; a request that hangs must not hold them forever. A
+timeout is a transient error, so it is retried like one.
+-}
+bootRequestTimeoutMs : Float
+bootRequestTimeoutMs =
+    10000

@@ -281,6 +281,12 @@ fromHttpErrorWithMoreInfo infoData errorData =
                 |> map (Rs.s_title (Just "Bad URL"))
                 |> map (Rs.s_moreInfo (toMoreInfo []))
 
+        -- a currency the account lacks, or one the lite-networks switch turned off
+        Http.BadStatus 403 ->
+            errorDefault "Not available on your account"
+                |> map (Rs.s_title (Just "Request error"))
+                |> map (Rs.s_moreInfo (toMoreInfo []))
+
         Http.BadStatus _ ->
             errorDefault "Unexpected status code"
                 |> map (Rs.s_title (Just "Request error"))

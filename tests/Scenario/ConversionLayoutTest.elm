@@ -18,6 +18,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Set
 import Support.App as App exposing (App)
+import Support.Env as Env
 import Test exposing (Test, describe, test)
 import Update.Pathfinder
 
@@ -88,6 +89,12 @@ conversion =
     , toAssetTransfer = btcHash
     , toIsSupportedAsset = True
     , toNetwork = "btc"
+    , fromAssetSymbol = Nothing
+    , toAssetSymbol = Nothing
+    , fromAssetDecimals = Nothing
+    , toAssetDecimals = Nothing
+    , fromAmountFiatValues = Nothing
+    , toAmountFiatValues = Nothing
     }
 
 
@@ -158,7 +165,7 @@ open legs deserialized =
                         m.config
                 in
                 { m | config = { config | snapToGrid = True } }
-                    |> Update.Pathfinder.fromDeserialized deserialized
+                    |> Update.Pathfinder.fromDeserialized Env.updateConfig deserialized
                     |> Tuple.first
             )
         |> App.steps
@@ -167,31 +174,36 @@ open legs deserialized =
             )
 
 
-{-| Answers the conversion lookups, then the lookup of the other leg, and
-returns the `BrowserGotConversionLoop` that produces -- the step that carries
-the set of nodes to leave alone into the layout.
+{-| Answers the conversion lookups, then the lookup of a leg the graph lacks.
+Returns the `BrowserGotConversions` answers, which carry the set of nodes to
+leave alone into the layout, and the `BrowserGotConversionLoop`s the leg
+lookups produce. A leg already on the graph is paired right away, without a
+lookup.
 -}
-resolveConversion : Legs -> App -> ( App, List Msg )
+resolveConversion : Legs -> App -> ( App, List Msg, List Msg )
 resolveConversion legs app =
     let
-        withConversions =
-            App.respond
-                (\eff ->
-                    case eff of
-                        Effect.Api.GetConversionEffect _ toMsg ->
-                            Just (toMsg [ conversion ])
+        answers =
+            App.apiEffects app
+                |> List.filterMap
+                    (\eff ->
+                        case eff of
+                            Effect.Api.GetConversionEffect _ toMsg ->
+                                Just (toMsg [ conversion ])
 
-                        _ ->
-                            Nothing
-                )
-                app
+                            _ ->
+                                Nothing
+                    )
+
+        withConversions =
+            App.steps answers app
 
         loops =
             App.apiEffects withConversions
                 |> List.filterMap
                     (\eff ->
                         case eff of
-                            Effect.Api.GetTxEffect { txHash } toMsg ->
+                            Effect.Api.GetConversionLegEffect { txHash } toMsg ->
                                 if txHash == ethHash then
                                     Just (toMsg legs.eth)
 
@@ -205,18 +217,22 @@ resolveConversion legs app =
                                 Nothing
                     )
     in
-    ( withConversions, loops )
+    ( withConversions, answers, loops )
 
 
 {-| What the eventual message fires once the addresses are loaded. It goes out
 as a `Cmd`, which the harness cannot follow, so it is rebuilt from the loop
-message that registered it.
+message that registered it, or, for a leg paired without a lookup, from the
+conversions answer whose set that loop is handed.
 -}
 arrangeFor : Msg -> List Msg
 arrangeFor msg =
     case msg of
         BrowserGotConversionLoop keep _ conv _ ->
             [ InternalConversionLoopAddressesLoaded keep conv ]
+
+        BrowserGotConversions keep _ convs ->
+            List.map (InternalConversionLoopAddressesLoaded keep) convs
 
         _ ->
             []
@@ -283,14 +299,14 @@ suite =
                 withLegs <|
                     \legs ->
                         let
-                            ( app, loops ) =
+                            ( app, answers, loops ) =
                                 open legs bothLegs
                                     |> resolveConversion legs
 
                             arranged =
                                 app
                                     |> App.steps loops
-                                    |> App.steps (List.concatMap arrangeFor loops)
+                                    |> App.steps (List.concatMap arrangeFor answers)
 
                             positions a =
                                 ( List.map (\t -> addressAt t.id a) bothLegs.addresses
@@ -298,7 +314,7 @@ suite =
                                 )
                         in
                         Expect.all
-                            [ \_ -> List.length loops |> Expect.greaterThan 0
+                            [ \_ -> List.length answers |> Expect.greaterThan 0
                             , \a ->
                                 positions a
                                     |> Expect.equal
@@ -319,7 +335,7 @@ suite =
                                     , txs = List.filter (\t -> t.id == btcTxId) bothLegs.txs
                                 }
 
-                            ( app, loops ) =
+                            ( app, _, loops ) =
                                 open legs btcOnly
                                     |> resolveConversion legs
 

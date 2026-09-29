@@ -10,6 +10,7 @@ import Init.Graph.Transform as Transform
 import Init.Pathfinder.Network as Network
 import Init.Search as Search
 import Model.Graph exposing (Dragging(..))
+import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Pathfinder exposing (Hovered(..), Model)
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
@@ -33,12 +34,15 @@ init us =
       , colors = Colors.init
       , annotations = Annotations.empty
       , clusters = Dict.empty
+      , prefetchedAddresses = Dict.empty
+      , unservedTxs = []
       , selection = NoSelection
       , hovered = NoHover
       , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) us.recentSearches
       , onGraphSearch = SearchBox.empty
       , dragging = NoDragging
       , draggingAggEdgeLabel = Nothing
+      , draggingConversionNode = Nothing
       , transform = Transform.init
       , history = History.init
       , details = Nothing
@@ -49,6 +53,7 @@ init us =
             , avoidOverlapingNodes = us.avoidOverlapingNodes |> Maybe.withDefault True
             , hideForExport = NoExport
             }
+      , networkCapabilities = NetworkCapabilities.none
       , pointerTool = Drag
       , modPressed = False
       , modKeyPressCount = 0

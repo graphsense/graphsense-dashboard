@@ -2,15 +2,17 @@ module View.Settings exposing (view)
 
 import Config.View exposing (Config)
 import Css
-import Html.Styled exposing (Html, div)
+import Html.Styled exposing (Html, div, span, text)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import List.Extra
 import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), UserModel, requestLimitIntervalToString)
 import Model.Locale as Locale
+import Model.NetworkCapabilities as NetworkCapabilities
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin
 import RecordSetter as Rs
+import RemoteData
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsPage as Sp
 import Time
@@ -145,8 +147,26 @@ generalSettings vc m =
                 }
             }
 
+        -- Nothing to switch where the backend serves core networks only, so
+        -- such a deployment gets no switch. Once it is off the lite networks
+        -- are gone from the capabilities too (Effect.apiHeaders), which is why
+        -- the off state alone keeps the row -- otherwise there would be no way
+        -- back on.
+        showLiteNetworks =
+            not vc.liteNetworks
+                || (m.capabilities
+                        |> RemoteData.map NetworkCapabilities.hasLiteNetwork
+                        |> RemoteData.withDefault False
+                   )
+
         pluginProfiles =
-            Plugin.profile m.plugins vc
+            (if showLiteNetworks then
+                [ ( Locale.string vc.locale "lite networks", liteNetworksSetting vc ) ]
+
+             else
+                []
+            )
+                ++ Plugin.profile m.plugins vc
     in
     Sp.settingsPageGeneralWithInstances
         (Sp.settingsPageGeneralAttributes
@@ -193,6 +213,35 @@ generalSettings vc m =
                     )
         }
         generalSettingsProperties
+
+
+{-| The lite-networks switch (user decision 2026-09-17). Off means the app asks
+the API for its core networks only (Effect.apiHeaders): the lite networks leave
+the statistics, the search, the network switch and the cross-chain rows, and no
+request reaches the lite data service. Meant for the case that the service is
+congested or down, so investigators keep working on the core networks without
+error messages.
+-}
+liteNetworksSetting : Config -> Html Model.Msg
+liteNetworksSetting vc =
+    div
+        [ css
+            [ Css.displayFlex
+            , Css.flexDirection Css.column
+            , Css.alignItems Css.flexStart
+            , Css.property "gap" "0.75rem"
+            , Css.width (Css.em 36)
+            , Css.maxWidth (Css.pct 100)
+            ]
+        ]
+        [ Vc.toggleWithText
+            { selectedA = vc.liteNetworks
+            , titleA = Locale.string vc.locale "on"
+            , titleB = Locale.string vc.locale "off"
+            , msg = SettingsMsg UserToggledLiteNetworks
+            }
+        , span [ css [ Css.width (Css.pct 100), Css.lineHeight (Css.num 1.4) ] ] [ text (Locale.string vc.locale "lite-networks-setting-hint") ]
+        ]
 
 
 {-| The plan details as text: the expiration, the username if the user endpoint

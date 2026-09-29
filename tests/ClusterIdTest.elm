@@ -24,10 +24,10 @@ apiAddress freshClusterId =
     , currency = "btc"
     , cluster = 1
     , freshClusterId = freshClusterId
-    , firstTx = { height = 1, timestamp = 0, txHash = "h" }
+    , firstTx = Just { height = 1, timestamp = 0, txHash = "h" }
     , inDegree = 1
     , isContract = Nothing
-    , lastTx = { height = 1, timestamp = 0, txHash = "h" }
+    , lastTx = Just { height = 1, timestamp = 0, txHash = "h" }
     , noIncomingTxs = 1
     , noOutgoingTxs = 1
     , outDegree = 1
@@ -37,6 +37,8 @@ apiAddress freshClusterId =
     , totalSpent = Data.Api.values
     , totalTokensReceived = Nothing
     , totalTokensSpent = Nothing
+    , isPossibleService = Nothing
+    , qualifiers = Nothing
     }
 
 
@@ -119,5 +121,82 @@ suite =
                         |> Maybe.andThen getClusterId
                         |> Maybe.map (\cid -> isClusterFriendAlreadyOnGraph cid net)
                         |> Expect.equal (Just True)
+            ]
+        , describe "Util.Data.selfCluster"
+            -- on lite networks core synthesizes the cluster from the address
+            -- itself instead of fetching it (account-model clusters are
+            -- singletons); these pin the eth wire shape of that derivation
+            [ test "roots at the address with a single member" <|
+                \_ ->
+                    Util.Data.selfCluster (apiAddress (Just 42))
+                        |> Expect.all
+                            [ .rootAddress >> Expect.equal "a1234567"
+                            , .noAddresses >> Expect.equal 1
+                            , .currency >> Expect.equal "btc"
+                            , .noAddressTags >> Expect.equal 0
+                            , .bestAddressTag >> Expect.equal Nothing
+                            ]
+            , test "derives the entity id fresh-aware" <|
+                \_ ->
+                    Util.Data.selfCluster (apiAddress (Just 42))
+                        |> .cluster
+                        |> Expect.equal 42
+            , test "falls back to the legacy cluster id" <|
+                \_ ->
+                    Util.Data.selfCluster (apiAddress Nothing)
+                        |> .cluster
+                        |> Expect.equal 1
+            , test "mirrors the address stats" <|
+                \_ ->
+                    let
+                        a =
+                            apiAddress Nothing
+                    in
+                    Util.Data.selfCluster a
+                        |> Expect.all
+                            [ .balance >> Expect.equal a.balance
+                            , .totalReceived >> Expect.equal a.totalReceived
+                            , .totalSpent >> Expect.equal a.totalSpent
+                            , .firstTx >> Expect.equal a.firstTx
+                            , .lastTx >> Expect.equal a.lastTx
+                            , .inDegree >> Expect.equal a.inDegree
+                            , .outDegree >> Expect.equal a.outDegree
+                            , .noIncomingTxs >> Expect.equal a.noIncomingTxs
+                            , .noOutgoingTxs >> Expect.equal a.noOutgoingTxs
+                            , .tokenBalances >> Expect.equal a.tokenBalances
+                            ]
+            , test "cluster id agrees with initClusterIdFromAddress" <|
+                \_ ->
+                    let
+                        a =
+                            apiAddress (Just 42)
+
+                        c =
+                            Util.Data.selfCluster a
+                    in
+                    PathfinderId.initClusterId c.currency c.cluster
+                        |> Expect.equal (PathfinderId.initClusterIdFromAddress a)
+            ]
+        , describe "initClusterId hex encoding"
+            -- Hex.toString hard-freezes on ints >= 2^35 (its `//` recursion
+            -- wraps to 32-bit signed), so initClusterId uses its own encoder;
+            -- these pin format parity for small ids and correct, terminating
+            -- output across the whole exact-Int range.
+            [ test "matches the legacy Hex.toString format for small ids" <|
+                \_ ->
+                    PathfinderId.initClusterId "btc" 264711
+                        |> Expect.equal ( "btc", "40a07" )
+            , test "zero" <|
+                \_ ->
+                    PathfinderId.initClusterId "btc" 0
+                        |> Expect.equal ( "btc", "0" )
+            , test "terminates and encodes a 48-bit server-minted id" <|
+                \_ ->
+                    PathfinderId.initClusterId "arb" 246237048184833
+                        |> Expect.equal ( "arb", "dff387c9a001" )
+            , test "handles the largest exact Int (2^53 - 1)" <|
+                \_ ->
+                    PathfinderId.initClusterId "eth" 9007199254740991
+                        |> Expect.equal ( "eth", "1fffffffffffff" )
             ]
         ]

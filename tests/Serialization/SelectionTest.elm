@@ -23,6 +23,7 @@ import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter exposing (s_annotations, s_network, s_txs)
 import Set
 import Support.App as App
+import Support.Env as Env
 import Test exposing (Test, describe, test)
 import Update.Pathfinder
 import Util.Annotations as Annotations
@@ -119,7 +120,7 @@ suite =
 
                             loaded =
                                 App.init
-                                    |> App.mapModel (Update.Pathfinder.fromDeserialized deserialized >> Tuple.first)
+                                    |> App.mapModel (Update.Pathfinder.fromDeserialized Env.updateConfig deserialized >> Tuple.first)
                                     |> App.step
                                         (BrowserGotBulkTxs
                                             { deserialized = deserialized, addresses = [], txs = [] }

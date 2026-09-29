@@ -28,6 +28,7 @@ import Model.Address as Address
 import Model.Dialog as Dialog
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale as Locale
+import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Notification as Notification exposing (Notification)
 import Model.Pathfinder
 import Model.Pathfinder.Error exposing (Error(..))
@@ -184,6 +185,7 @@ update uc msg model =
                 tokenCurrencyEffects =
                     stats.currencies
                         |> List.map .name
+                        -- a failed list stored nothing, so it is re-asked on every /stats answer
                         |> List.filter (\currency -> not (Dict.member currency model.supportedTokens))
                         |> List.map
                             (\currency ->
@@ -204,6 +206,20 @@ update uc msg model =
                 }
                 |> Tuple.mapSecond (\effects -> PluginEffect cmd :: (tokenCurrencyEffects ++ effects))
                 |> updateByPluginOutMsg uc outMsg
+
+        BrowserGotCapabilities capabilities ->
+            let
+                networkCapabilities =
+                    NetworkCapabilities.fromApi capabilities
+
+                pathfinder =
+                    model.pathfinder
+            in
+            n
+                { model
+                    | capabilities = RD.Success networkCapabilities
+                    , pathfinder = { pathfinder | networkCapabilities = networkCapabilities }
+                }
 
         -- Plugin handling
         BrowserGotEntityTaxonomy concepts ->
@@ -319,38 +335,56 @@ update uc msg model =
                                     Nothing
                             )
 
-                newDialog =
+                -- a swap/bridge leg the API cannot reconstruct (D-27): the
+                -- walk just ends, it is no "transaction not found" error
+                isUnreconstructableLeg =
                     case result of
-                        Err ( Http.BadStatus 401, _, Effect.Api.GetMeEffect _ ) ->
-                            model.dialog
-
-                        Err ( Http.BadStatus 401, _, _ ) ->
-                            UserClosesDialog
-                                |> Dialog.generalError
-                                    { title = "Session expired"
-                                    , message = "popup-session-expired-info"
-                                    , variables = []
-                                    }
-                                |> Just
-
-                        Err e ->
-                            statusbarToken
-                                |> Maybe.andThen
-                                    (\token ->
-                                        case e of
-                                            ( Http.BadStatus 404, _, _ ) ->
-                                                notFound token
-
-                                            ( Http.BadStatus 400, _, _ ) ->
-                                                notFound token
-
-                                            _ ->
-                                                model.dialog
-                                    )
-                                |> Maybe.Extra.orElse model.dialog
+                        Err ( Http.BadStatus 404, _, Effect.Api.GetConversionLegEffect _ _ ) ->
+                            True
 
                         _ ->
-                            model.dialog
+                            False
+
+                newDialog =
+                    if isUnreconstructableLeg then
+                        model.dialog
+
+                    else
+                        case result of
+                            Err ( Http.BadStatus 401, _, Effect.Api.GetMeEffect _ ) ->
+                                model.dialog
+
+                            Err ( Http.BadStatus 401, _, _ ) ->
+                                UserClosesDialog
+                                    |> Dialog.generalError
+                                        { title = "Session expired"
+                                        , message = "popup-session-expired-info"
+                                        , variables = []
+                                        }
+                                    |> Just
+
+                            Err e ->
+                                statusbarToken
+                                    |> Maybe.andThen
+                                        (\token ->
+                                            case e of
+                                                ( Http.BadStatus 404, _, _ ) ->
+                                                    notFound token
+
+                                                ( Http.BadStatus 400, _, _ ) ->
+                                                    notFound token
+
+                                                -- a currency the account (or the lite-networks switch) has opted out of
+                                                ( Http.BadStatus 403, _, _ ) ->
+                                                    notFound token
+
+                                                _ ->
+                                                    model.dialog
+                                        )
+                                    |> Maybe.Extra.orElse model.dialog
+
+                            _ ->
+                                model.dialog
 
                 isErrorDialogShown =
                     case newDialog of
@@ -368,8 +402,18 @@ update uc msg model =
                         Err ( _, _, Effect.Api.GetMeEffect _ ) ->
                             True
 
+                        -- a backend without the endpoint answers 404; every
+                        -- network is then fully enabled
+                        Err ( _, _, Effect.Api.GetCapabilitiesEffect _ ) ->
+                            True
+
+                        -- a 501 here is the backend declining to resolve this
+                        -- tx's conversions: render "no conversions", not an error
+                        Err ( Http.BadStatus 501, _, Effect.Api.GetConversionEffect _ _ ) ->
+                            True
+
                         _ ->
-                            False
+                            isUnreconstructableLeg
 
                 ( notifications, notificationEffects ) =
                     case ( isErrorDialogShown, isNonCriticalApiError, result ) of
@@ -385,6 +429,28 @@ update uc msg model =
 
                         _ ->
                             n model.notifications
+
+                -- no answer from /capabilities (404 on older backends): stop
+                -- holding routes, every network is fully enabled
+                capabilitiesAfterError =
+                    case result of
+                        Err ( err, _, Effect.Api.GetCapabilitiesEffect _ ) ->
+                            RD.Failure err
+
+                        _ ->
+                            model.capabilities
+
+                -- /stats failed for good (the retries above ran out, or the
+                -- error is not transient): without this the statistics stay
+                -- Loading forever, and so would an opened graph that waits for
+                -- them; it then proceeds with every network counted as served
+                statsAfterError =
+                    case result of
+                        Err ( err, _, Effect.Api.GetStatisticsEffect _ ) ->
+                            RD.Failure err
+
+                        _ ->
+                            model.stats
 
                 dialogAfterError =
                     case result of
@@ -454,7 +520,11 @@ update uc msg model =
                                                 Nothing
 
                                             Err ( err, _, _ ) ->
-                                                Just err
+                                                if isUnreconstructableLeg then
+                                                    Nothing
+
+                                                else
+                                                    Just err
 
                                             Ok _ ->
                                                 Nothing
@@ -475,6 +545,8 @@ update uc msg model =
                                                 model.statusbar
                         , dialog = dialogAfterError
                         , notifications = notifications
+                        , capabilities = capabilitiesAfterError
+                        , stats = statsAfterError
                     }
                         |> handleResponse
                             uc
@@ -857,6 +929,26 @@ update uc msg model =
             in
             ( newModel, [ saveUserSettings newModel ] )
 
+        SettingsMsg UserToggledLiteNetworks ->
+            -- the flag changes what every request asks for (Effect.apiHeaders),
+            -- so the network list and the capabilities are fetched again: the
+            -- statistics arrive without (or with) the lite networks and the
+            -- app hides (or shows) them from there on
+            let
+                newModel =
+                    { model
+                        | config =
+                            model.config
+                                |> s_liteNetworks (not model.config.liteNetworks)
+                    }
+            in
+            ( newModel
+            , [ saveUserSettings newModel
+              , ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics)
+              , ApiEffect (Effect.Api.GetCapabilitiesEffect BrowserGotCapabilities)
+              ]
+            )
+
         AddTagDialog smsg ->
             case model.dialog of
                 Just (Dialog.AddTag conf) ->
@@ -1151,20 +1243,38 @@ update uc msg model =
                 ( { newModel | plugins = newPluginsState }, newEffects ++ [ PluginEffect cmd ] )
                     |> updateByPluginOutMsg uc outMsg
 
-        BrowserGotDeserializedGS ( filename, data ) ->
-            let
-                ( newPluginsState, outMsg, cmdp ) =
-                    PluginInterface.Reset
-                        |> Plugin.updateByCoreMsg uc model.plugins
-            in
-            ( { model | plugins = newPluginsState }
-            , [ PluginEffect cmdp ]
-            )
-                |> updateByPluginOutMsg uc outMsg
-                |> (\( mdl, eff ) ->
-                        deserialize uc filename data mdl
-                            |> mapSecond ((++) eff)
-                   )
+        BrowserGotDeserializedGS (( filename, data ) as payload) ->
+            if
+                RD.isLoading model.capabilities
+                    || RD.isNotAsked model.capabilities
+                    || RD.isLoading model.stats
+                    || RD.isNotAsked model.stats
+            then
+                -- A graph handed over to a fresh tab ("Open in new tab",
+                -- Ctrl+D) or a ?import= deep link arrives at boot, before
+                -- /capabilities has answered. Loading it decides per network
+                -- which optional requests it may fire (pair-edge discovery,
+                -- conversions), and without the answer every network counts
+                -- as fully enabled -- so it waits, exactly as a deep link does.
+                -- It waits for the statistics too: they say which networks the
+                -- backend serves, and until they arrive every network counts as
+                -- served, so the lite nodes of the file would be requested (403).
+                ( model, [ PostponeDeserializeEffect payload ] )
+
+            else
+                let
+                    ( newPluginsState, outMsg, cmdp ) =
+                        PluginInterface.Reset
+                            |> Plugin.updateByCoreMsg uc model.plugins
+                in
+                ( { model | plugins = newPluginsState }
+                , [ PluginEffect cmdp ]
+                )
+                    |> updateByPluginOutMsg uc outMsg
+                    |> (\( mdl, eff ) ->
+                            deserialize uc filename data mdl
+                                |> mapSecond ((++) eff)
+                       )
 
         UserClickedConfirm ms ->
             update uc ms model |> Tuple.mapFirst (s_dialog Nothing)
@@ -1419,6 +1529,7 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
             let
                 ( m, cmd ) =
                     Init.Pathfinder.init (Model.userSettingsFromMainModel model)
+                        |> Tuple.mapFirst (\pf -> { pf | networkCapabilities = model.pathfinder.networkCapabilities })
 
                 ( newPluginsState, outMsg, cmdp ) =
                     PluginInterface.Reset
@@ -1749,6 +1860,14 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
 
         Pathfinder.CloseTopmostOverlay ->
             n (model |> s_dialog Nothing |> s_notifications (model.notifications |> Notification.pop))
+
+        Pathfinder.RegisterConversionAsset network config ->
+            n
+                { model
+                    | config =
+                        model.config
+                            |> s_locale (Locale.registerSwapAsset network config model.config.locale)
+                }
     )
         |> Tuple.mapSecond ((++) effects)
 
@@ -1878,28 +1997,61 @@ updateByPluginOutMsg uc outMsgs ( mo, effects ) =
                     PluginInterface.GetEntitiesForAddresses addresses toMsg ->
                         let
                             -- separate loaded clusters from loading ones
+                            clustersDisabled currency =
+                                model.capabilities
+                                    |> RD.toMaybe
+                                    |> Maybe.map
+                                        (\caps ->
+                                            NetworkCapabilities.supports NetworkCapabilities.Clusters caps currency
+                                                |> not
+                                        )
+                                    |> Maybe.withDefault False
+
                             ( ready, loading ) =
                                 addresses
                                     |> List.foldl
                                         (\address ( ready_, loading_ ) ->
                                             let
-                                                addr =
+                                                addressData =
                                                     Dict.get (Id.initFromRecord address) model.pathfinder.network.addresses
-                                                        |> Maybe.andThen (.data >> RD.toMaybe)
+                                                        |> Maybe.map .data
+                                            in
+                                            if clustersDisabled address.currency then
+                                                -- the backend serves no cluster data on this network;
+                                                -- since account-model clusters are singletons, derive
+                                                -- the cluster from the address itself instead of
+                                                -- fetching (which would 501), and keep polling while
+                                                -- the address data is still on its way
+                                                case addressData of
+                                                    Just (RD.Success a) ->
+                                                        ( ( address, Util.Data.selfCluster a ) :: ready_, loading_ )
+
+                                                    Just RD.Loading ->
+                                                        ( ready_, address :: loading_ )
+
+                                                    Just RD.NotAsked ->
+                                                        ( ready_, address :: loading_ )
+
+                                                    _ ->
+                                                        ( ready_, loading_ )
+
+                                            else
+                                                case
+                                                    addressData
+                                                        |> Maybe.andThen RD.toMaybe
                                                         |> Maybe.andThen
                                                             (\a ->
                                                                 Dict.get (Id.initClusterIdFromAddress a) model.pathfinder.clusters
                                                             )
-                                            in
-                                            case addr of
-                                                Just RD.Loading ->
-                                                    ( ready_, address :: loading_ )
+                                                of
+                                                    Just RD.Loading ->
+                                                        ( ready_, address :: loading_ )
 
-                                                Just (RD.Success c) ->
-                                                    ( ( address, c ) :: ready_, loading_ )
+                                                    Just (RD.Success c) ->
+                                                        ( ( address, c ) :: ready_, loading_ )
 
-                                                _ ->
-                                                    ( ready_, loading_ )
+                                                    _ ->
+                                                        ( ready_, loading_ )
                                         )
                                         ( [], [] )
                         in
@@ -2103,13 +2255,13 @@ updateByUrl uc url model =
 
                     Route.Pathfinder pfRoute ->
                         let
-                            ( pfn, graphEffect ) =
-                                Pathfinder.updateByRoute uc pfRoute model.pathfinder
-
-                            -- Skip the search auto-focus when the URL loads an
-                            -- address/tx — the focused search input swallows
-                            -- keyboard events (e.g. arrow-key navigation) that
-                            -- the user expects to act on the selected node.
+                            -- Whether the URL loads an address/tx. Two things hang
+                            -- on it: the search auto-focus is skipped (the focused
+                            -- input swallows keyboard events, e.g. arrow-key
+                            -- navigation, that the user expects to act on the
+                            -- selected node), and the load waits for the
+                            -- /capabilities answer, which decides per network
+                            -- which optional requests it may issue.
                             pfRouteLoadsContent =
                                 case pfRoute of
                                     Route.Pathfinder.Network _ (Route.Pathfinder.Address _ _) ->
@@ -2118,34 +2270,48 @@ updateByUrl uc url model =
                                     Route.Pathfinder.Network _ (Route.Pathfinder.Tx _) ->
                                         True
 
+                                    Route.Pathfinder.Network _ (Route.Pathfinder.Relation _ _) ->
+                                        True
+
                                     Route.Pathfinder.Path _ _ ->
                                         True
 
                                     _ ->
                                         False
 
-                            focusEffect =
-                                case ( oldRoute, pfRouteLoadsContent ) of
-                                    ( Route.Pathfinder _, _ ) ->
-                                        []
-
-                                    ( _, True ) ->
-                                        []
-
-                                    _ ->
-                                        [ focusSearchEffect ]
+                            capabilitiesPending =
+                                RD.isLoading model.capabilities || RD.isNotAsked model.capabilities
                         in
-                        ( { model
-                            | page = Pathfinder
-                            , pathfinder = pfn
-                            , url = url
-                            , navbarSubMenu = Nothing
-                          }
-                        , focusEffect
-                            ++ (graphEffect
-                                    |> List.map PathfinderEffect
-                               )
-                        )
+                        if pfRouteLoadsContent && capabilitiesPending then
+                            ( model, [ PostponeUpdateByUrlEffect url ] )
+
+                        else
+                            let
+                                ( pfn, graphEffect ) =
+                                    Pathfinder.updateByRoute uc pfRoute model.pathfinder
+
+                                focusEffect =
+                                    case ( oldRoute, pfRouteLoadsContent ) of
+                                        ( Route.Pathfinder _, _ ) ->
+                                            []
+
+                                        ( _, True ) ->
+                                            []
+
+                                        _ ->
+                                            [ focusSearchEffect ]
+                            in
+                            ( { model
+                                | page = Pathfinder
+                                , pathfinder = pfn
+                                , url = url
+                                , navbarSubMenu = Nothing
+                              }
+                            , focusEffect
+                                ++ (graphEffect
+                                        |> List.map PathfinderEffect
+                                   )
+                            )
 
                     Route.Plugin ( pluginType, urlValue ) ->
                         let
@@ -2398,6 +2564,10 @@ handleResponse uc result model =
                     { model | user = updateRequestLimit headers model.user }
                         |> n
 
+                Effect.Api.GetCapabilitiesEffect _ ->
+                    { model | user = updateRequestLimit headers model.user }
+                        |> n
+
                 _ ->
                     { model | user = updateRequestLimit headers model.user }
                         |> n
@@ -2428,19 +2598,50 @@ clearSearch model =
 
 
 deserialize : Config -> String -> Value -> Model key -> ( Model key, List Effect )
-deserialize _ filename data model =
+deserialize uc filename data model =
     Pathfinder.deserialize data
         |> Result.map
             (\deser ->
                 let
                     ( pathfinder, pathfinderEffects ) =
-                        Pathfinder.fromDeserialized deser model.pathfinder
+                        Pathfinder.fromDeserialized uc deser model.pathfinder
+
+                    -- one notice naming the networks the load left unfetched,
+                    -- instead of a generic error toast per 403
+                    unservedNetworks =
+                        (deser.addresses ++ deser.txs)
+                            |> List.map (.id >> PathfinderId.network)
+                            |> List.Extra.unique
+                            |> List.filter (Config.Update.networkServed uc >> not)
+                            |> List.map String.toUpper
+
+                    ( notifications, notificationEffects ) =
+                        if List.isEmpty unservedNetworks then
+                            ( model.notifications, [] )
+
+                        else
+                            Notification.add
+                                ((if model.config.liteNetworks then
+                                    "gs-file-networks-not-on-account"
+
+                                  else
+                                    "gs-file-networks-lite-off"
+                                 )
+                                    |> Notification.infoDefault
+                                    |> Notification.map
+                                        (s_title (Just "gs-file-networks-title")
+                                            >> s_variables [ String.join ", " unservedNetworks ]
+                                        )
+                                )
+                                model.notifications
                 in
                 ( { model
                     | pathfinder = pathfinder
                     , page = Pathfinder
+                    , notifications = notifications
                   }
                 , List.map PathfinderEffect pathfinderEffects
+                    ++ List.map NotificationEffect notificationEffects
                 )
             )
         |> Result.Extra.unpack

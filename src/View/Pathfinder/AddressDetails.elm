@@ -22,8 +22,9 @@ import Model.Currency exposing (asset, assetFromBase)
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Locale as Locale
+import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary)
-import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.ContextMenu as ContextMenu
@@ -104,23 +105,7 @@ utxo pluginStates vc model id viewState address =
             not (List.isEmpty crosschainTargets)
 
         crosschainLedgersList =
-            (crosschainTargets
-                |> List.map
-                    (\( network, targetId ) ->
-                        div
-                            [ onClick (Pathfinder.UserClickedCrosschainAddress targetId)
-                            , css [ Css.cursor Css.pointer ]
-                            ]
-                            [ TagsComponents.categoryTag
-                                { root =
-                                    { tagLabel = network
-                                    , closeVisible = False
-                                    }
-                                }
-                            ]
-                    )
-            )
-                ++ [ crosschainMoreInfoButton vc id ]
+            crosschainLedgerChips vc id Pathfinder.UserClickedCrosschainAddress crosschainTargets
 
         pluginTagsVisible =
             List.length pluginTagsList > 0
@@ -156,6 +141,7 @@ utxo pluginStates vc model id viewState address =
         sidePanelAddressHeader =
             { iconInstance =
                 Address.toNodeIconHtml address
+            , showLiteBadge = NetworkCapabilities.isLiteNetwork model.networkCapabilities (Id.network id)
             , headerText =
                 (String.toUpper <| Id.network id)
                     ++ " "
@@ -209,6 +195,10 @@ utxo pluginStates vc model id viewState address =
                  else
                     [ css [ Css.display Css.none ] ]
                 )
+            |> Rs.s_liteBadge
+                (Util.TooltipType.Text (Locale.interpolated vc.locale "lite-badge-tooltip" [ String.toUpper (Id.network id) ])
+                    |> Tooltip.attributes "address-lite-badge" (Util.Tooltip.tooltipConfig vc (\tooltipMsg -> Pathfinder.AddressDetailsMsg id (TooltipMsg tooltipMsg)))
+                )
         )
         (SidePanelComponents.sidePanelAddressInstances
             |> Rs.s_labelOfActor (labelOfActor vc model id)
@@ -238,26 +228,52 @@ utxo pluginStates vc model id viewState address =
         , sidePanelAddressDetails = sidePanelAddressDetails
         , sidePanelAddressHeader = sidePanelAddressHeader
         , titleOfBalance = { infoLabel = Locale.string vc.locale "Balance" }
-        , valueOfBalance = viewState.address.data |> RemoteData.map (.balance >> valuesToCell vc assetId) |> RemoteData.withDefault emptyCell
+        , valueOfBalance = viewState.address.data |> RemoteData.map (qualifiedValueCell vc assetId "balance" .balance) |> RemoteData.withDefault emptyCell
         , titleOfTotalReceived = { infoLabel = Locale.string vc.locale "Total received" }
-        , valueOfTotalReceived = viewState.address.data |> RemoteData.map (.totalReceived >> valuesToCell vc assetId) |> RemoteData.withDefault emptyCell
+        , valueOfTotalReceived = viewState.address.data |> RemoteData.map (qualifiedValueCell vc assetId "total_received" .totalReceived) |> RemoteData.withDefault emptyCell
         , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
-        , valueOfTotalSent = viewState.address.data |> RemoteData.map (.totalSpent >> valuesToCell vc assetId) |> RemoteData.withDefault emptyCell
+        , valueOfTotalSent = viewState.address.data |> RemoteData.map (qualifiedValueCell vc assetId "total_spent" .totalSpent) |> RemoteData.withDefault emptyCell
         , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
-        , valueOfLastUsage = viewState.address.data |> RemoteData.map (.lastTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
+        , valueOfLastUsage = viewState.address.data |> RemoteData.toMaybe |> Maybe.andThen .lastTx |> usageCell vc
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
-        , valueOfFirstUsage = viewState.address.data |> RemoteData.map (.firstTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
+        , valueOfFirstUsage = viewState.address.data |> RemoteData.toMaybe |> Maybe.andThen .firstTx |> usageCell vc
         }
+
+
+{-| "+" when the backend reports the field as a lower bound: "63,037" would
+present a capped count as exact, "63,037+" says at least that many. Driven only
+by the server's qualifier map (`qualifiers[field] == "gt"`), never by a
+client-side threshold; a body without qualifiers renders unqualified.
+-}
+floorQualifier : String -> Api.Data.Address -> String
+floorQualifier field data =
+    if Address.isFloored field data then
+        "+"
+
+    else
+        ""
+
+
+{-| Append the floor qualifier to a value cell's first row ("1,234.56 ETH+").
+-}
+qualifiedValueCell : View.Config -> Model.Currency.AssetIdentifier -> String -> (Api.Data.Address -> Api.Data.Values) -> Api.Data.Address -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
+qualifiedValueCell vc assetId field getValues a =
+    let
+        cell =
+            valuesToCell vc assetId (getValues a)
+    in
+    { cell | firstRowText = cell.firstRowText ++ floorQualifier field a }
 
 
 neighborsDataTab : View.Config -> Pathfinder.Model -> Id -> AddressDetails.Model -> Direction -> Html AddressDetails.Msg
 neighborsDataTab vc model id viewState direction =
     let
-        { lbl, getNoAddresses, getTableOpen, getTable } =
+        { lbl, getNoAddresses, floorField, getTableOpen, getTable } =
             case direction of
                 Outgoing ->
                     { lbl = "Outgoing relations"
                     , getNoAddresses = .outDegree
+                    , floorField = "out_degree"
                     , getTableOpen = .outgoingNeighborsTableOpen
                     , getTable = .neighborsOutgoing
                     }
@@ -265,6 +281,7 @@ neighborsDataTab vc model id viewState direction =
                 Incoming ->
                     { lbl = "Incoming relations"
                     , getNoAddresses = .inDegree
+                    , floorField = "in_degree"
                     , getTableOpen = .incomingNeighborsTableOpen
                     , getTable = .neighborsIncoming
                     }
@@ -283,7 +300,11 @@ neighborsDataTab vc model id viewState direction =
                     { label = label
                     , number =
                         viewState.address.data
-                            |> RemoteData.map (getNoAddresses >> Locale.int vc.locale)
+                            |> RemoteData.map
+                                (\a ->
+                                    Locale.int vc.locale (getNoAddresses a)
+                                        ++ floorQualifier floorField a
+                                )
                             |> RemoteData.withDefault ""
                     }
                 }
@@ -583,9 +604,9 @@ clusterInfoView vc open colors clstr =
                 , titleOfTotalSent = { infoLabel = Locale.string vc.locale "Total sent" }
                 , valueOfTotalSent = valuesToCell vc assetId clstr.totalSpent
                 , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
-                , valueOfLastUsage = timeToCell vc clstr.lastTx.timestamp
+                , valueOfLastUsage = usageCell vc clstr.lastTx
                 , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
-                , valueOfFirstUsage = timeToCell vc clstr.firstTx.timestamp
+                , valueOfFirstUsage = usageCell vc clstr.firstTx
                 }
 
         else
@@ -689,18 +710,21 @@ transactionsDataTab vc model id viewState =
         txOnGraphFn =
             flip Network.hasTx model.network
 
-        noIncomingTxs =
+        -- exact parts add up; with a floored part it is the larger part, as a floor
+        ( totalNumber, totalQualifier ) =
             viewState.address.data
-                |> RemoteData.map .noIncomingTxs
-                |> RemoteData.withDefault 0
+                |> RemoteData.map
+                    (Address.getTxTotal
+                        >> Tuple.mapSecond
+                            (\floored ->
+                                if floored then
+                                    "+"
 
-        noOutgoingTxs =
-            viewState.address.data
-                |> RemoteData.map .noOutgoingTxs
-                |> RemoteData.withDefault 0
-
-        totalNumber =
-            noIncomingTxs + noOutgoingTxs
+                                else
+                                    ""
+                            )
+                    )
+                |> RemoteData.withDefault ( 0, "" )
     in
     dataTab
         { title =
@@ -710,15 +734,17 @@ transactionsDataTab vc model id viewState =
                 )
                 { root =
                     { totalNumber =
-                        totalNumber
-                            |> Locale.int vc.locale
+                        Locale.int vc.locale totalNumber
+                            ++ totalQualifier
                     , incomingNumber =
                         viewState.address.data
-                            |> RemoteData.map (.noIncomingTxs >> Locale.int vc.locale)
+                            |> RemoteData.map
+                                (\a -> Locale.int vc.locale a.noIncomingTxs ++ floorQualifier "no_incoming_txs" a)
                             |> RemoteData.withDefault ""
                     , outgoingNumber =
                         viewState.address.data
-                            |> RemoteData.map (.noOutgoingTxs >> Locale.int vc.locale)
+                            |> RemoteData.map
+                                (\a -> Locale.int vc.locale a.noOutgoingTxs ++ floorQualifier "no_outgoing_txs" a)
                             |> RemoteData.withDefault ""
                     , title = Locale.string vc.locale "Transactions"
                     }
@@ -837,7 +863,13 @@ accountValueRundown vc conf =
                 |> Rs.s_sidePanelRowChevronOpen [ fw ]
                 |> Rs.s_iconGroup fixedleftAttr
                 |> Rs.s_tokensList
-                    [ css [ Css.overflowY Css.auto ] ]
+                    -- the generated component caps the list at 100px (~5 rows),
+                    -- silently clipping the fiat-less tokens that sort last
+                    [ css
+                        [ Css.overflowY Css.auto
+                        , Css.maxHeight Css.none |> Css.important
+                        ]
+                    ]
             )
             { tokensList =
                 (nativeValue
@@ -886,23 +918,7 @@ account pluginStates vc model id viewState address =
             not (List.isEmpty crosschainTargets)
 
         crosschainLedgersList =
-            (crosschainTargets
-                |> List.map
-                    (\( network, targetId ) ->
-                        div
-                            [ onClick (Pathfinder.UserClickedAddress targetId)
-                            , css [ Css.cursor Css.pointer ]
-                            ]
-                            [ TagsComponents.categoryTag
-                                { root =
-                                    { tagLabel = network
-                                    , closeVisible = False
-                                    }
-                                }
-                            ]
-                    )
-            )
-                ++ [ crosschainMoreInfoButton vc id ]
+            crosschainLedgerChips vc id Pathfinder.UserClickedAddress crosschainTargets
 
         pluginList =
             Plugin.addressSidePanelHeader pluginStates vc address
@@ -919,6 +935,7 @@ account pluginStates vc model id viewState address =
         sidePanelAddressHeader =
             { iconInstance =
                 Address.toNodeIconHtml address
+            , showLiteBadge = NetworkCapabilities.isLiteNetwork model.networkCapabilities (Id.network id)
             , headerText =
                 (String.toUpper <| Id.network id)
                     ++ " "
@@ -981,6 +998,13 @@ account pluginStates vc model id viewState address =
                             }
                     )
 
+        onLiteNetwork =
+            Pathfinder.isLiteNetwork (Id.network id) model
+
+        -- the tab renders on every account network, INCLUDING lite ones: the
+        -- multi-input cluster is always empty here (account clusters are
+        -- singletons), but the same tab carries the cross-chain pubkey table,
+        -- which lite networks do serve. It disables itself when both are empty.
         relatedAddressesTab =
             [ relatedAddressesDataTab vc model id viewState RemoteData.NotAsked ]
 
@@ -988,6 +1012,15 @@ account pluginStates vc model id viewState address =
             transactionsOrNeighborsDataTabs vc model id viewState
                 ++ relatedAddressesTab
                 |> List.map (Html.map (Pathfinder.AddressDetailsMsg viewState.address.id))
+
+        -- a lite network has no precomputed aggregates; total received/sent
+        -- are capped there or missing, so the two rows are hidden entirely
+        hideOnLiteNetwork =
+            if onLiteNetwork then
+                [ css [ Css.display Css.none ] ]
+
+            else
+                []
     in
     SidePanelComponents.sidePanelEthAddressWithInstances
         (SidePanelComponents.sidePanelEthAddressAttributes
@@ -1027,11 +1060,32 @@ account pluginStates vc model id viewState address =
                  else
                     [ css [ Css.display Css.none ] ]
                 )
+            |> Rs.s_totalReceivedRow hideOnLiteNetwork
+            |> Rs.s_totalSentRow hideOnLiteNetwork
+            |> Rs.s_liteBadge
+                (Util.TooltipType.Text (Locale.interpolated vc.locale "lite-badge-tooltip" [ String.toUpper (Id.network id) ])
+                    |> Tooltip.attributes "address-lite-badge" (Util.Tooltip.tooltipConfig vc (\tooltipMsg -> Pathfinder.AddressDetailsMsg id (TooltipMsg tooltipMsg)))
+                )
         )
         (SidePanelComponents.sidePanelEthAddressInstances
             |> Rs.s_labelOfActor (labelOfActor vc model id)
-            |> Rs.s_totalReceivedRow totalReceivedRundown
-            |> Rs.s_totalSentRow totalSentRundown
+            -- an instance override REPLACES the default row that carries the
+            -- hideOnLiteNetwork attributes, so it must stay Nothing there
+            -- for the display:none default to render
+            |> Rs.s_totalReceivedRow
+                (if onLiteNetwork then
+                    Nothing
+
+                 else
+                    totalReceivedRundown
+                )
+            |> Rs.s_totalSentRow
+                (if onLiteNetwork then
+                    Nothing
+
+                 else
+                    totalSentRundown
+                )
             |> Rs.s_balanceRow balanceRundown
             |> Rs.s_sidePanelEthAddressDetails
                 (viewState.address.data
@@ -1061,9 +1115,9 @@ account pluginStates vc model id viewState address =
             , clusterInfoInstance = none
             }
         , titleOfLastUsage = { infoLabel = Locale.string vc.locale "Last usage" }
-        , valueOfLastUsage = viewState.address.data |> RemoteData.map (.lastTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
+        , valueOfLastUsage = viewState.address.data |> RemoteData.toMaybe |> Maybe.andThen .lastTx |> usageCell vc
         , titleOfFirstUsage = { infoLabel = Locale.string vc.locale "First usage" }
-        , valueOfFirstUsage = viewState.address.data |> RemoteData.map (.firstTx >> .timestamp >> timeToCell vc) |> RemoteData.withDefault emptyCell
+        , valueOfFirstUsage = viewState.address.data |> RemoteData.toMaybe |> Maybe.andThen .firstTx |> usageCell vc
         , balanceRow = { iconInstance = none, title = "", value = "" }
         , totalSentRow = { iconInstance = none, title = "", value = "" }
         , sidePanelRowChevronOpen = { iconInstance = none, title = "", value = "" }
@@ -1078,9 +1132,17 @@ transactionsOrNeighborsDataTabs vc model id viewState =
             ]
 
         AggregateTracingMode ->
-            [ neighborsDataTab vc model id viewState Outgoing
-            , neighborsDataTab vc model id viewState Incoming
-            ]
+            -- no relations capability = no precomputed relations: the
+            -- network takes no part in this mode (its nodes are drawn
+            -- faded), so no table at all rather than a transactions table
+            -- where the user expects counterparties
+            if not (Pathfinder.supports NetworkCapabilities.Relations (Id.network id) model) then
+                []
+
+            else
+                [ neighborsDataTab vc model id viewState Outgoing
+                , neighborsDataTab vc model id viewState Incoming
+                ]
 
 
 tagsList : View.Config -> Pathfinder.Model -> Id -> List (Html Pathfinder.Msg)
@@ -1158,6 +1220,15 @@ tagsList vc model id =
                     ++ [ learnMoreButton vc id ]
 
 
+{-| The "first usage"/"last usage" cell of a first\_tx/last\_tx that may be
+absent — an address with no transactions of its own has no usage to show, and
+renders the same empty cell as one whose data has not arrived.
+-}
+usageCell : View.Config -> Maybe Api.Data.TxSummary -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
+usageCell vc =
+    Maybe.map (.timestamp >> timeToCell vc) >> Maybe.withDefault emptyCell
+
+
 learnMoreButton : View.Config -> Id -> Html Pathfinder.Msg
 learnMoreButton _ id =
     Pathfinder.UserOpensDialogWindow (TagsList id)
@@ -1175,6 +1246,59 @@ crosschainMoreInfoButton vc id =
                         |> Tooltip.withOpenDelay 500
                     )
             )
+
+
+{-| How many cross-chain networks are shown as chips before the rest collapses
+into one "+N" chip (user decision 2026-09-17): an EVM address is the same
+address on every EVM network, so a lite address routinely lists 7 or 8 twins
+and the chips wrapped over three rows. The "+N" chip and the three-dots button
+both open the pubkey-related-addresses table with the full list; the counter
+is the same component the tag row uses for its overflow.
+-}
+crosschainChipLimit : Int
+crosschainChipLimit =
+    2
+
+
+crosschainLedgerChips : View.Config -> Id -> (Id -> Pathfinder.Msg) -> List ( String, Id ) -> List (Html Pathfinder.Msg)
+crosschainLedgerChips vc id onChipClick targets =
+    let
+        chip label msg =
+            div
+                [ onClick msg
+                , css [ Css.cursor Css.pointer ]
+                ]
+                [ TagsComponents.categoryTag
+                    { root =
+                        { tagLabel = label
+                        , closeVisible = False
+                        }
+                    }
+                ]
+
+        shown =
+            targets
+                |> List.take crosschainChipLimit
+                |> List.map (\( network, targetId ) -> chip network (onChipClick targetId))
+
+        hidden =
+            List.length targets - crosschainChipLimit
+
+        more =
+            if hidden > 0 then
+                [ div
+                    [ onClick (Pathfinder.AddressDetailsMsg id AddressDetails.UserClickedShowPubkeyRelatedAddresses)
+                    , css [ Css.cursor Css.pointer ]
+                    ]
+                    [ TagsComponents.moreItemsInfo
+                        { root = { number = String.fromInt hidden } }
+                    ]
+                ]
+
+            else
+                []
+    in
+    shown ++ more ++ [ crosschainMoreInfoButton vc id ]
 
 
 crosschainLedgerTargets : Id -> Address -> List ( String, Id )

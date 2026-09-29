@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, CustomHeaders, HtmlColumnConfig, TwoValuesCellConfig, ValueColumnOptions, addHeaderAttributes, addressColumn, applyHeaderCustomizations, assetsColumnWithOptions, checkboxColumn, debitCreditColumn, htmlColumn, initCustomHeaders, setHeaderCheckbox, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumnWithOptions, wrapCell)
+module View.Pathfinder.Table.Columns exposing (CheckboxColumnConfig, ColumnConfig, CustomHeaders, HtmlColumnConfig, TwoValuesCellConfig, ValueColumnOptions, addHeaderAttributes, addressColumn, applyHeaderCustomizations, assetsCell, assetsColumnWithOptions, checkboxColumn, debitCreditColumn, htmlColumn, initCustomHeaders, setHeaderCheckbox, sortableDebitCreditColumn, stringColumn, timestampDateMultiRowColumn, twoValuesColumn, valueColumnWithOptions, wrapCell)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -20,7 +20,7 @@ import Tuple exposing (mapFirst, mapSecond, pair)
 import Tuple3
 import Util.Checkbox
 import Util.Data as Data
-import Util.View exposing (copyIconPathfinder, none, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, copyOnClick, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (simpleThead, valuesSorter)
 import View.Locale as Locale
 
@@ -361,11 +361,39 @@ assetsCell vc hideCode colorFlowDirection isOutgoing assets =
 
             else
                 []
+
+        valueAttrs =
+            [ addCss |> List.map Css.important |> css ]
+
+        -- no metadata: the label is the copy target for the contract address (D-28)
+        unknownCopiesAddress =
+            case assets of
+                [ ( { asset }, _ ) ] ->
+                    if value == Locale.unknownCurrency then
+                        Html.Styled.span
+                            (css
+                                [ Css.textDecorationLine Css.underline
+                                , Css.textDecorationStyle Css.dotted
+                                ]
+                                :: valueAttrs
+                            )
+                            [ text Locale.unknownCurrency ]
+                            |> copyOnClick vc { hoverText = asset, value = asset }
+                            |> Just
+
+                    else
+                        Nothing
+
+                _ ->
+                    Nothing
     in
     Table.HtmlDetails [ css [ Css.verticalAlign Css.middle ] ]
-        [ SidePanelComponents.sidePanelListValueCellWithAttributes
+        [ SidePanelComponents.sidePanelListValueCellWithInstances
             (SidePanelComponents.sidePanelListValueCellAttributes
-                |> Rs.s_value [ addCss |> List.map Css.important |> css ]
+                |> Rs.s_value valueAttrs
+            )
+            (SidePanelComponents.sidePanelListValueCellInstances
+                |> Rs.s_value unknownCopiesAddress
             )
             { root =
                 { value = value

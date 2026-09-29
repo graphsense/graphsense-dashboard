@@ -55,6 +55,7 @@ init uc flags url key =
             , hovercard = Nothing
             }
       , stats = NotAsked
+      , capabilities = NotAsked
       , width = flags.width
       , height = flags.height
       , error = ""
@@ -84,8 +85,10 @@ init uc flags url key =
 getStatistics : ( Model key, List Effect ) -> ( Model key, List Effect )
 getStatistics ( model, eff ) =
     if model.stats == NotAsked then
-        ( { model | stats = RemoteData.Loading }
-        , ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics) :: eff
+        ( { model | stats = RemoteData.Loading, capabilities = RemoteData.Loading }
+        , ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics)
+            :: ApiEffect (Effect.Api.GetCapabilitiesEffect BrowserGotCapabilities)
+            :: eff
         )
 
     else
@@ -123,4 +126,5 @@ viewConfigFromSettings isMac locale characterDimensions settings =
     , showBothValues = settings.showBothValues |> Maybe.withDefault False
     , isMac = isMac
     , networks = []
+    , liteNetworks = settings.liteNetworks |> Maybe.withDefault True
     }

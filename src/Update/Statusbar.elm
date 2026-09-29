@@ -131,6 +131,9 @@ messageFromEffect model effect =
         Model.PostponeUpdateByUrlEffect _ ->
             Nothing
 
+        Model.PostponeDeserializeEffect _ ->
+            Nothing
+
         Model.PathfinderEffect Pathfinder.RepositionTooltipEffect ->
             Nothing
 
@@ -284,6 +287,9 @@ messageFromApiEffect model effect =
             Api.GetStatisticsEffect _ ->
                 Nothing
 
+            Api.GetCapabilitiesEffect _ ->
+                Nothing
+
             Api.GetMeEffect _ ->
                 Nothing
 
@@ -377,6 +383,14 @@ messageFromApiEffect model effect =
                     |> Just
 
             Api.GetTxEffect e _ ->
+                ( loadingTransactionKey
+                , [ e.txHash
+                  , e.currency |> String.toUpper
+                  ]
+                )
+                    |> Just
+
+            Api.GetConversionLegEffect e _ ->
                 ( loadingTransactionKey
                 , [ e.txHash
                   , e.currency |> String.toUpper

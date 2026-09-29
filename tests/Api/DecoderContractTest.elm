@@ -74,6 +74,102 @@ suite =
             , decodes "tx_value" Api.Data.txValueDecoder Fixture.txValue
             , decodes "values" Api.Data.valuesDecoder Fixture.values
             ]
+        , describe "an address with no transactions of its own"
+            -- first_tx/last_tx are nullable and NOT required in the spec: an
+            -- address that only ever paid a failed-tx gas fee, only received a
+            -- coinbase reward, or whose whole history is in tokens the backend
+            -- does not index has neither. The generated client had both as
+            -- required, so such a body failed to decode entirely and the UI
+            -- showed "Unexpected data format ... Expecting an OBJECT with a
+            -- field named `last_tx`" instead of the address.
+            [ test "decodes with the fields omitted, as exclude_none serializes them" <|
+                \_ ->
+                    txlessAddress
+                        |> Json.Decode.decodeString Api.Data.addressDecoder
+                        |> Result.map (\a -> ( a.firstTx, a.lastTx ))
+                        |> Expect.equal (Ok ( Nothing, Nothing ))
+            , test "decodes with the fields explicitly null" <|
+                \_ ->
+                    txlessAddressWithNulls
+                        |> Json.Decode.decodeString Api.Data.addressDecoder
+                        |> Result.map (\a -> ( a.firstTx, a.lastTx ))
+                        |> Expect.equal (Ok ( Nothing, Nothing ))
+            , test "a cluster still requires them — only local synthesis may omit them" <|
+                \_ ->
+                    -- the Maybe on Api.Data.Cluster exists for Util.Data.selfCluster,
+                    -- NOT because a server may leave them out
+                    """{"currency":"eth","entity":1,"cluster":1,"root_address":"0xab","balance":{"value":0,"fiat_values":[]},"total_received":{"value":0,"fiat_values":[]},"total_spent":{"value":0,"fiat_values":[]},"in_degree":0,"out_degree":0,"no_addresses":1,"no_incoming_txs":0,"no_outgoing_txs":0,"no_address_tags":0}"""
+                        |> Json.Decode.decodeString Api.Data.clusterDecoder
+                        |> Result.toMaybe
+                        |> Expect.equal Nothing
+            ]
+        , describe "a dex swap leg's curated display metadata and fiat"
+            -- The six optional per-leg keys are in neither the spec nor any
+            -- baseline body: these pin the hand patch in openapi/src/Api/Data.elm.
+            [ test "decodes symbol, decimals and fiat when the adapter sends them" <|
+                \_ ->
+                    enrichedDexSwap
+                        |> Json.Decode.decodeString Api.Data.externalConversionDecoder
+                        |> Result.map legMetadata
+                        |> Expect.equal
+                            (Ok
+                                { fromAssetSymbol = Nothing
+                                , fromAssetDecimals = Nothing
+                                , toAssetSymbol = Just "KAISER"
+                                , toAssetDecimals = Just 9
+                                , fromAmountFiatValues = Just [ { code = "usd", value = 60.0 } ]
+                                , toAmountFiatValues = Nothing
+                                }
+                            )
+            , test "a baseline body without them still decodes" <|
+                \_ ->
+                    baselineDexSwap
+                        |> Json.Decode.decodeString Api.Data.externalConversionDecoder
+                        |> Result.map
+                            (\c ->
+                                [ c.fromAssetSymbol /= Nothing
+                                , c.toAssetSymbol /= Nothing
+                                , c.fromAssetDecimals /= Nothing
+                                , c.toAssetDecimals /= Nothing
+                                , c.fromAmountFiatValues /= Nothing
+                                , c.toAmountFiatValues /= Nothing
+                                ]
+                            )
+                        |> Expect.equal (Ok [ False, False, False, False, False, False ])
+            , test "decodes the from leg's symbol and decimals when it is a token" <|
+                -- the from-leg registration fires only on decoded symbol+decimals;
+                -- a key typo would silently yield Nothing
+                \_ ->
+                    tokenInputDexSwap
+                        |> Json.Decode.decodeString Api.Data.externalConversionDecoder
+                        |> Result.map legMetadata
+                        |> Expect.equal
+                            (Ok
+                                { fromAssetSymbol = Just "USDT"
+                                , fromAssetDecimals = Just 6
+                                , toAssetSymbol = Nothing
+                                , toAssetDecimals = Nothing
+                                , fromAmountFiatValues = Just [ { code = "usd", value = 60.0 } ]
+                                , toAmountFiatValues = Nothing
+                                }
+                            )
+            , test "a null from-leg symbol decodes to Nothing" <|
+                \_ ->
+                    tokenInputDexSwap
+                        |> String.replace "\"from_asset_symbol\":\"USDT\"" "\"from_asset_symbol\":null"
+                        |> Json.Decode.decodeString Api.Data.externalConversionDecoder
+                        |> Result.map legMetadata
+                        |> Expect.equal
+                            (Ok
+                                { fromAssetSymbol = Nothing
+                                , fromAssetDecimals = Just 6
+                                , toAssetSymbol = Nothing
+                                , toAssetDecimals = Nothing
+                                , fromAmountFiatValues = Just [ { code = "usd", value = 60.0 } ]
+                                , toAmountFiatValues = Nothing
+                                }
+                            )
+            ]
         , describe "the client is stricter than the spec about nulls"
             -- The spec types both of these `anyOf: [string, null]`, the client
             -- as a plain String. A live instance does send them (checked
@@ -167,3 +263,65 @@ suite =
                         |> Expect.equal (Ok True)
             ]
         ]
+
+
+{-| The all-zero body a backend serves for an address it can see on chain but
+has no indexed transactions for. Serialized with exclude\_none, so the two
+nullable tx summaries are absent rather than null.
+-}
+txlessAddress : String
+txlessAddress =
+    """{"currency":"eth","address":"0xab","entity":1,"cluster":1,"status":"clean","balance":{"value":0,"fiat_values":[]},"total_received":{"value":0,"fiat_values":[]},"total_spent":{"value":0,"fiat_values":[]},"in_degree":0,"out_degree":0,"no_incoming_txs":0,"no_outgoing_txs":0}"""
+
+
+{-| The live baseline's dex\_swap row byte for byte (adapter harness fixture
+be8b3e387e9f): exactly the thirteen spec keys.
+-}
+baselineDexSwap : String
+baselineDexSwap =
+    """{"conversion_type":"dex_swap","from_address":"0x4c2d696441a11760429cd9845bd84987b9313242","to_address":"0x4c2d696441a11760429cd9845bd84987b9313242","from_asset":"native","to_asset":"0x87b723960c170561e6b7cb74188b5f159e272c74","from_amount":"0x470de4df820000","to_amount":"0x22db8e23bcaee","from_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_I603","to_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_T250","from_network":"eth","to_network":"eth","from_is_supported_asset":true,"to_is_supported_asset":false}"""
+
+
+{-| The same row plus the curated token leg's symbol/decimals and a fiat quote
+for the priced native leg (figure illustrative).
+-}
+enrichedDexSwap : String
+enrichedDexSwap =
+    """{"conversion_type":"dex_swap","from_address":"0x4c2d696441a11760429cd9845bd84987b9313242","to_address":"0x4c2d696441a11760429cd9845bd84987b9313242","from_asset":"native","to_asset":"0x87b723960c170561e6b7cb74188b5f159e272c74","from_amount":"0x470de4df820000","to_amount":"0x22db8e23bcaee","from_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_I603","to_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_T250","from_network":"eth","to_network":"eth","from_is_supported_asset":true,"to_is_supported_asset":false,"to_asset_symbol":"KAISER","to_asset_decimals":9,"from_amount_fiat_values":[{"code":"usd","value":60.0}]}"""
+
+
+{-| The enriched row turned around: a token goes in and the native coin comes
+out, so the curated symbol and decimals sit on the from leg. USDT's are the
+curated list's own; the to leg, native, carries none. The leg transfers are
+swapped to match (the token leg is a `_T` transfer, the native one a trace).
+-}
+tokenInputDexSwap : String
+tokenInputDexSwap =
+    """{"conversion_type":"dex_swap","from_address":"0x4c2d696441a11760429cd9845bd84987b9313242","to_address":"0x4c2d696441a11760429cd9845bd84987b9313242","from_asset":"0xdac17f958d2ee523a2206206994597c13d831ec7","to_asset":"native","from_amount":"0x470de4df820000","to_amount":"0x22db8e23bcaee","from_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_T250","to_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_I603","from_network":"eth","to_network":"eth","from_is_supported_asset":true,"to_is_supported_asset":true,"from_asset_symbol":"USDT","from_asset_decimals":6,"from_amount_fiat_values":[{"code":"usd","value":60.0}]}"""
+
+
+legMetadata :
+    Api.Data.ExternalConversion
+    ->
+        { fromAssetSymbol : Maybe String
+        , fromAssetDecimals : Maybe Int
+        , toAssetSymbol : Maybe String
+        , toAssetDecimals : Maybe Int
+        , fromAmountFiatValues : Maybe (List Api.Data.Rate)
+        , toAmountFiatValues : Maybe (List Api.Data.Rate)
+        }
+legMetadata c =
+    { fromAssetSymbol = c.fromAssetSymbol
+    , fromAssetDecimals = c.fromAssetDecimals
+    , toAssetSymbol = c.toAssetSymbol
+    , toAssetDecimals = c.toAssetDecimals
+    , fromAmountFiatValues = c.fromAmountFiatValues
+    , toAmountFiatValues = c.toAmountFiatValues
+    }
+
+
+{-| The same body from a serializer that keeps nulls instead of dropping them.
+-}
+txlessAddressWithNulls : String
+txlessAddressWithNulls =
+    """{"currency":"eth","address":"0xab","entity":1,"cluster":1,"status":"clean","balance":{"value":0,"fiat_values":[]},"total_received":{"value":0,"fiat_values":[]},"total_spent":{"value":0,"fiat_values":[]},"in_degree":0,"out_degree":0,"no_incoming_txs":0,"no_outgoing_txs":0,"first_tx":null,"last_tx":null}"""

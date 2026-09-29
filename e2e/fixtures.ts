@@ -41,6 +41,7 @@ const RESPONSES: Record<string, unknown> = {
     version: '1.0.0',
     request_timestamp: '2026-07-28T12:00:00'
   },
+  '/capabilities': { networks: [] },
   '/tags/taxonomies/entity/concepts': [],
   '/tags/taxonomies/abuse/concepts': [],
   '/btc/clusters/264711': {

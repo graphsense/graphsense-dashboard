@@ -173,27 +173,34 @@ update uc msg model =
             ( model |> s_totalSentDetailsOpen (not model.totalSentDetailsOpen), [] )
 
         UserClickedToggleNeighborsTable dir ->
-            getNeighborsTableAndSetter model dir
-                |> Maybe.map
-                    (\{ table, setTable, tableOpen, setTableOpen } ->
-                        let
-                            conf =
-                                neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.address.id dir
+            if not model.networkHasRelations then
+                -- no counterparty listing without the relations capability:
+                -- the tables are not rendered, and no stray message may
+                -- trigger their fetch
+                n model
 
-                            ( tblNew, eff1 ) =
-                                if tableOpen then
-                                    InfiniteTable.abort conf table
+            else
+                getNeighborsTableAndSetter model dir
+                    |> Maybe.map
+                        (\{ table, setTable, tableOpen, setTableOpen } ->
+                            let
+                                conf =
+                                    neighborsTableConfigWithMsg GotNeighborsForAddressDetails model.address.id dir
 
-                                else
-                                    InfiniteTable.gotoFirstPage conf table
-                        in
-                        ( model
-                            |> setTableOpen (not tableOpen)
-                            |> setTable tblNew
-                        , eff1
+                                ( tblNew, eff1 ) =
+                                    if tableOpen then
+                                        InfiniteTable.abort conf table
+
+                                    else
+                                        InfiniteTable.gotoFirstPage conf table
+                            in
+                            ( model
+                                |> setTableOpen (not tableOpen)
+                                |> setTable tblNew
+                            , eff1
+                            )
                         )
-                    )
-                |> Maybe.withDefault (n model)
+                    |> Maybe.withDefault (n model)
 
         NeighborsTableSubTableMsg dir pm ->
             getNeighborsTableAndSetter model dir

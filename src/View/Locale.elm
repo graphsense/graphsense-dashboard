@@ -1,5 +1,6 @@
 module View.Locale exposing
-    ( coin
+    ( assetTicker
+    , coin
     , coinWithoutCode
     , currency
     , currencyWithoutCode
@@ -7,6 +8,7 @@ module View.Locale exposing
     , durationToStringWithPrecision
     , fiat
     , fiatWithoutCode
+    , hasFiat
     , httpErrorToString
     , int
     , intWithoutValueDetailFormatting
@@ -26,6 +28,7 @@ module View.Locale exposing
     , timestampTimeUniform
     , title
     , titleCase
+    , unknownCurrency
     , valuesToFloat
     )
 
@@ -55,6 +58,11 @@ import Tuple exposing (..)
 fixpointFactor : Maybe Api.Data.TokenConfigs -> Dict String ( Float, String )
 fixpointFactor configs =
     [ ( "eth", ( 1.0e18, "wei" ) )
+    , ( "bnb", ( 1.0e18, "wei" ) )
+    , ( "arb", ( 1.0e18, "wei" ) )
+    , ( "pol", ( 1.0e18, "wei" ) )
+    , ( "avax", ( 1.0e18, "wei" ) )
+    , ( "xdai", ( 1.0e18, "wei" ) )
     , ( "trx", ( 1.0e6, "sun" ) )
     , ( "btc", ( 1.0e8, "s" ) )
     , ( "bch", ( 1.0e8, "s" ) )
@@ -66,7 +74,7 @@ fixpointFactor configs =
                     (.tokenConfigs
                         >> List.map
                             (\{ decimals, ticker } ->
-                                ( ticker, ( 10 ^ toFloat decimals, "wei" ) )
+                                ( String.toLower ticker, ( 10 ^ toFloat decimals, "wei" ) )
                             )
                     )
                 |> Maybe.withDefault []
@@ -356,8 +364,20 @@ currencyWithOptions options model values =
                     |> Maybe.withDefault "0"
 
         Fiat code ->
-            sumFiats code values
-                |> fiat model code
+            if hasFiat values then
+                sumFiats code values
+                    |> fiat model code
+
+            else
+                -- unpriced: show the coin amount, never a fabricated 0.00
+                currencyWithOptions { options | currency = Coin } model values
+
+
+{-| A zero quote counts; an unpriced asset carries none.
+-}
+hasFiat : List ( AssetIdentifier, Api.Data.Values ) -> Bool
+hasFiat =
+    List.any (\( _, v ) -> not (List.isEmpty v.fiatValues))
 
 
 currency : Currency -> Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
@@ -401,9 +421,63 @@ coinWithoutCode =
     coinWithOptions False
 
 
+{-| The ticker of a token: the registered one, else the symbol the data carries.
+-}
+assetTicker : Model -> AssetIdentifier -> Maybe String -> Maybe String
+assetTicker model asset symbol =
+    case registeredConfig model asset of
+        Just tc ->
+            Just (String.toUpper tc.ticker)
+
+        Nothing ->
+            Maybe.map String.toUpper symbol
+
+
+resolveAsset : Model -> AssetIdentifier -> AssetIdentifier
+resolveAsset model asset =
+    registeredConfig model asset
+        |> Maybe.map (\tc -> { asset | asset = tc.ticker })
+        |> Maybe.withDefault asset
+
+
+{-| Matched by address, since two contracts may share a ticker. The network's
+list wins over a curated swap asset for the same contract.
+-}
+registeredConfig : Model -> AssetIdentifier -> Maybe Api.Data.TokenConfig
+registeredConfig model asset =
+    let
+        sameContract tc =
+            Maybe.map String.toLower tc.contractAddress
+                == Just (String.toLower asset.asset)
+
+        listed =
+            Dict.get asset.network model.supportedTokens
+                |> Maybe.map .tokenConfigs
+                |> Maybe.withDefault []
+
+        curated =
+            Dict.get asset.network model.swapAssets
+                |> Maybe.withDefault []
+    in
+    if isContractAddress asset.asset then
+        find sameContract (listed ++ curated)
+
+    else
+        Nothing
+
+
+isContractAddress : String -> Bool
+isContractAddress s =
+    String.length s == 42 && String.startsWith "0x" s
+
+
 coinWithOptions : Bool -> Model -> AssetIdentifier -> Int -> String
-coinWithOptions showCode model asset v =
-    normalizeCoinValue model asset v
+coinWithOptions showCode model rawAsset v =
+    let
+        asset =
+            resolveAsset model rawAsset
+    in
+    normalizeCoinValue model rawAsset v
         |> Maybe.map
             (\value ->
                 let
@@ -441,14 +515,27 @@ coinWithOptions showCode model asset v =
                             " " ++ String.toUpper asset.asset
                        )
             )
-        |> Maybe.withDefault ("unknown currency " ++ asset.asset)
+        |> Maybe.withDefault unknownCurrency
+
+
+{-| Label for an asset without decimals: no honest number can be shown.
+-}
+unknownCurrency : String
+unknownCurrency =
+    "unknown currency"
 
 
 normalizeCoinValue : Model -> AssetIdentifier -> Int -> Maybe Float
-normalizeCoinValue model asset v =
-    fixpointFactor (Dict.get asset.network model.supportedTokens)
-        |> Dict.get (String.toLower asset.asset)
-        |> Maybe.map first
+normalizeCoinValue model rawAsset v =
+    (case registeredConfig model rawAsset of
+        Just tc ->
+            Just (10 ^ toFloat tc.decimals)
+
+        Nothing ->
+            fixpointFactor (Dict.get rawAsset.network model.supportedTokens)
+                |> Dict.get (String.toLower rawAsset.asset)
+                |> Maybe.map first
+    )
         |> Maybe.map
             (\f ->
                 if v == 0 then

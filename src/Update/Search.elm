@@ -13,6 +13,7 @@ import Ports
 import RecordSetter as Rs
 import Tuple exposing (pair)
 import Util exposing (foldLigatures, n, removeLeading0x)
+import Util.Data
 
 
 currencyToResult : String -> Api.Data.SearchResult -> ( String, Int ) -> List ResultLine
@@ -85,7 +86,7 @@ filterByPrefix input result =
                     let
                         addr =
                             String.trim
-                                (if String.toLower currency.currency == "eth" then
+                                (if Util.Data.isEvmHexNetwork currency.currency then
                                     String.toLower input |> String.split "..." |> List.head |> Maybe.withDefault input
 
                                  else

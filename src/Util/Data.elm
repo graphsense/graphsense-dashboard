@@ -1,4 +1,4 @@
-module Util.Data exposing (absValues, addressCluster, isAccountLike, looksLikeTxHash, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, parseMultiIdentifierInput, splitMultiIdentifierInput, subValues, sumValues, timestampToPosix, valuesZero)
+module Util.Data exposing (absValues, addressCluster, isAccountLike, isEvmHexNetwork, looksLikeTxHash, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, normalizeTxIdentifier, parseMultiIdentifierInput, selfCluster, splitMultiIdentifierInput, subValues, sumValues, timestampToPosix)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -31,13 +31,57 @@ addressCluster address =
     address.freshClusterId |> Maybe.withDefault address.cluster
 
 
+{-| The cluster of an address on a network that serves no cluster data.
+
+Account-model clusters are singletons — the server's own answer for e.g. eth
+is `root_address` = the address, `no_addresses` = 1 and every stat mirrored
+from the address — so the cluster can be derived locally instead of fetched.
+
+-}
+selfCluster : Api.Data.Address -> Api.Data.Cluster
+selfCluster a =
+    { actors = a.actors
+    , balance = a.balance
+    , bestAddressTag = Nothing
+    , currency = a.currency
+    , cluster = addressCluster a
+    , firstTx = a.firstTx
+    , inDegree = a.inDegree
+    , lastTx = a.lastTx
+    , noAddressTags = 0
+    , noAddresses = 1
+    , noIncomingTxs = a.noIncomingTxs
+    , noOutgoingTxs = a.noOutgoingTxs
+    , outDegree = a.outDegree
+    , rootAddress = a.address
+    , tokenBalances = a.tokenBalances
+    , totalReceived = a.totalReceived
+    , totalSpent = a.totalSpent
+    , totalTokensReceived = a.totalTokensReceived
+    , totalTokensSpent = a.totalTokensSpent
+    }
+
+
 isAccountLike : String -> Bool
 isAccountLike network =
     let
         currl =
             String.toLower network
     in
-    currl == "eth" || currl == "trx"
+    currl == "trx" || isEvmHexNetwork currl
+
+
+{-| Networks whose addresses and tx hashes are 0x-prefixed, case-insensitive
+hex (EVM). Tron is account-like but uses case-sensitive base58 identifiers,
+so it is deliberately not in here.
+-}
+isEvmHexNetwork : String -> Bool
+isEvmHexNetwork network =
+    let
+        currl =
+            String.toLower network
+    in
+    List.member currl [ "eth", "bnb", "arb", "base", "opt", "pol", "avax", "gnosis", "robinhood" ]
 
 
 negateValues : Api.Data.Values -> Api.Data.Values
@@ -115,14 +159,14 @@ ensure0x s =
 
 
 {-| Lowercase the hex part of an address or tx identifier on networks
-whose identifiers are case-insensitive hex (eth). Only the segment
+whose identifiers are case-insensitive hex (eth, bnb). Only the segment
 before the first "\_" is lowercased: sub-tx markers like "\_T1"/"\_I1"
 are case-sensitive and must be preserved. Other networks (btc, trx)
 use case-sensitive encodings and are returned unchanged.
 -}
 normalizeIdCasing : String -> String -> String
 normalizeIdCasing network identifier =
-    if String.toLower network == "eth" then
+    if isEvmHexNetwork network then
         case String.split "_" identifier of
             hex :: suffix ->
                 String.join "_" (String.toLower hex :: suffix)
@@ -134,10 +178,26 @@ normalizeIdCasing network identifier =
         identifier
 
 
+{-| Canonical form of a TX identifier for graph node ids and API requests:
+served identifiers carry no "0x" and case-SENSITIVE sub-tx markers
+("\_T1"/"\_I1"), so only the hex part before the first "\_" may be
+lowercased and a leading "0x" is stripped. Never use `normalizeIdentifier`
+(the ADDRESS normalizer) on a tx: its whole-string toLower turns "\_T2"
+into the invalid "\_t2" and its ensure0x mismatches served tx ids.
+-}
+normalizeTxIdentifier : String -> String -> String
+normalizeTxIdentifier net txId =
+    if isEvmHexNetwork net then
+        normalizeIdCasing net (removeLeading0x (String.trim txId))
+
+    else
+        txId
+
+
 normalizeIdentifier : String -> String -> String
 normalizeIdentifier net address =
     String.trim address
-        |> (if net == "eth" then
+        |> (if isEvmHexNetwork net then
                 String.toLower >> ensure0x
 
             else

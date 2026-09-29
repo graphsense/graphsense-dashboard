@@ -15,6 +15,7 @@ import Hovercard
 import Http
 import Json.Encode
 import Model.Dialog
+import Model.NetworkCapabilities exposing (NetworkCapabilities)
 import Model.Notification
 import Model.Pathfinder
 import Model.Pathfinder.Id exposing (Id)
@@ -54,6 +55,7 @@ type alias Model navigationKey =
     , pathfinder : Model.Pathfinder.Model
     , user : UserModel
     , stats : WebData Api.Data.Stats
+    , capabilities : WebData NetworkCapabilities
     , width : Int
     , height : Int
     , error : String
@@ -92,6 +94,7 @@ type Msg
     | UserRequestsUrl UrlRequest
     | BrowserChangedUrl Url
     | BrowserGotStatistics Api.Data.Stats
+    | BrowserGotCapabilities Api.Data.Capabilities
     | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Headers, Effect.Api.Effect Msg ) ( Headers, Msg ))
     | UserSwitchesLocale String
     | UserInputsApiKeyForm String
@@ -154,6 +157,7 @@ type SettingsMsg
     = UserChangedPreferredCurrency String
     | UserToggledValueDisplay
     | UserToggledBothValueDisplay
+    | UserToggledLiteNetworks
 
 
 type RequestLimit
@@ -223,6 +227,7 @@ type Effect
     | SaveUserSettingsEffect UserSettings
     | NotificationEffect Model.Notification.Effect
     | PostponeUpdateByUrlEffect Url
+    | PostponeDeserializeEffect ( String, Json.Encode.Value )
 
 
 userSettingsFromMainModel : Model key -> UserSettings
@@ -240,6 +245,7 @@ userSettingsFromMainModel model =
     , tracingMode = Just model.pathfinder.config.tracingMode
     , showHash = Just model.config.showHash
     , showBothValues = Just model.config.showBothValues
+    , liteNetworks = Just model.config.liteNetworks
     , avoidOverlapingNodes = Just model.pathfinder.config.avoidOverlapingNodes
     , recentSearches = model.search.recentSearches
     }

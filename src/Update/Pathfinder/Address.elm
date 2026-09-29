@@ -1,4 +1,4 @@
-module Update.Pathfinder.Address exposing (removeTx, txsInsertId)
+module Update.Pathfinder.Address exposing (invalidatePrefetched, removeTx, txsInsertId)
 
 import Model.Pathfinder.Address exposing (Address, Txs(..), txsToSet)
 import Model.Pathfinder.Id exposing (Id)
@@ -36,3 +36,19 @@ txsInsertId id txs =
     txsToSet txs
         |> Set.insert id
         |> Txs
+
+
+{-| Drop a parked next-tx prefetch. The live expand workflow anchors on the
+most recent adjacent tx on the graph in the OPPOSITE direction — so whenever a
+tx lands next to an address, the other direction's parked answer may be based
+on an outdated anchor. Resetting to TxsNotFetched makes the next expand click
+run the live lookup again (exactly the pre-prefetch behavior).
+-}
+invalidatePrefetched : Txs -> Txs
+invalidatePrefetched txs =
+    case txs of
+        TxsPrefetched _ ->
+            TxsNotFetched
+
+        _ ->
+            txs

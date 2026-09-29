@@ -14,6 +14,7 @@ import List.Extra
 import Maybe.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
+import Model.NetworkCapabilities as NetworkCapabilities exposing (NetworkCapabilities)
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address, AddressServiceType(..), Txs(..), expandAllowed, getTxs, isSmartContract, txsGetSet)
 import Model.Pathfinder.ContextMenu as ContextMenu
@@ -42,8 +43,8 @@ import View.CurrencyMeta as CurrencyMeta
 import View.Locale as Locale
 
 
-view : View.Config -> Pathfinder.Config -> Highlight -> DetailLevel -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
-view vc pc searchHighlight level address annotation =
+view : View.Config -> Pathfinder.Config -> NetworkCapabilities -> Highlight -> DetailLevel -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
+view vc pc capabilities searchHighlight level address annotation =
     let
         detail =
             DetailLevel.forNode address.selected level
@@ -241,6 +242,20 @@ view vc pc searchHighlight level address annotation =
             |> Html.attribute "data-selected"
          ]
             ++ dimmedOpacity searchHighlight
+            ++ -- grey out the nodes of a network that takes no part in
+               -- relationship mode so only the active ones read as such, and
+               -- the nodes of a network the backend no longer serves (lite
+               -- networks switched off in the settings); the tooltip on such
+               -- a node says why (Util.Tooltip.address)
+               (if
+                    NetworkCapabilities.inactiveInRelationshipMode pc.tracingMode capabilities (Id.network address.id)
+                        || not (View.networkServed vc (Id.network address.id))
+                then
+                    [ opacity "0.3", css [ Css.property "filter" "grayscale(1)" ] ]
+
+                else
+                    []
+               )
         )
         (GraphComponents.addressNodeDevWithAttributes
             (GraphComponents.addressNodeDevAttributes

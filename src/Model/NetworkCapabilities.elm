@@ -1,0 +1,121 @@
+module Model.NetworkCapabilities exposing
+    ( Capability(..)
+    , NetworkCapabilities
+    , fromApi
+    , hasLiteNetwork
+    , inactiveInRelationshipMode
+    , isLiteNetwork
+    , none
+    , supports
+    )
+
+{-| Which optional features the backend serves per network.
+
+`GET /capabilities` lists, per network, the features that are DISABLED. A
+network absent from the response is fully enabled, and so is every network
+when the endpoint does not exist (older backends answer 404). Words the app
+does not know are kept, so a network that only disables something we have no
+constructor for still counts as lite. This module is the only place that
+reads the wire format; everything else asks `supports` or `isLiteNetwork`.
+
+-}
+
+import Api.Data
+import Config.Pathfinder exposing (TracingMode(..))
+import Dict exposing (Dict)
+import Set exposing (Set)
+
+
+type NetworkCapabilities
+    = NetworkCapabilities (Dict String (Set String))
+
+
+type Capability
+    = Relations
+    | Clusters
+    | Tags
+    | Conversions
+    | ExactStats
+
+
+capabilityKey : Capability -> String
+capabilityKey capability =
+    case capability of
+        Relations ->
+            "relations"
+
+        Clusters ->
+            "clusters"
+
+        Tags ->
+            "tags"
+
+        Conversions ->
+            "conversions"
+
+        ExactStats ->
+            "exact_stats"
+
+
+{-| Every network fully enabled — the state before the response arrives and
+the state a backend without the endpoint leaves us in.
+-}
+none : NetworkCapabilities
+none =
+    NetworkCapabilities Dict.empty
+
+
+fromApi : Api.Data.Capabilities -> NetworkCapabilities
+fromApi capabilities =
+    capabilities.networks
+        |> List.map
+            (\entry ->
+                ( String.toLower entry.network
+                , entry.disabled |> List.map String.toLower |> Set.fromList
+                )
+            )
+        |> Dict.fromList
+        |> NetworkCapabilities
+
+
+{-| At least one feature is disabled on this network.
+-}
+isLiteNetwork : NetworkCapabilities -> String -> Bool
+isLiteNetwork (NetworkCapabilities networks) network =
+    Dict.get (String.toLower network) networks
+        |> Maybe.map (Set.isEmpty >> not)
+        |> Maybe.withDefault False
+
+
+{-| Whether the backend serves any lite network at all. Answers what the
+settings need to know: a deployment that only has core networks has nothing for
+the lite-networks switch to switch, so it does not get one.
+
+Note the switch reads this together with its own state. Turning it off makes
+every request carry the opt-out header, and the lite networks then leave the
+capabilities answer too — so this goes False, and only the switch's own state
+keeps it reachable.
+
+-}
+hasLiteNetwork : NetworkCapabilities -> Bool
+hasLiteNetwork (NetworkCapabilities networks) =
+    networks |> Dict.values |> List.any (Set.isEmpty >> not)
+
+
+{-| Relationship-based tracing grows no aggregate edges where the backend has
+no relations, so such a network takes no part in that mode: its nodes are drawn
+faded and the side panel offers no counterparty table.
+-}
+inactiveInRelationshipMode : TracingMode -> NetworkCapabilities -> String -> Bool
+inactiveInRelationshipMode tracingMode capabilities network =
+    tracingMode == AggregateTracingMode && not (supports Relations capabilities network)
+
+
+supports : Capability -> NetworkCapabilities -> String -> Bool
+supports capability (NetworkCapabilities networks) network =
+    case Dict.get (String.toLower network) networks of
+        Nothing ->
+            True
+
+        Just disabled ->
+            Set.member (capabilityKey capability) disabled |> not

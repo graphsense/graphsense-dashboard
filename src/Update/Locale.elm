@@ -1,4 +1,4 @@
-module Update.Locale exposing (changeTimeZone, changeValueDetail, setSupportedTokens, switch, update)
+module Update.Locale exposing (changeTimeZone, changeValueDetail, registerSwapAsset, setSupportedTokens, switch, update)
 
 import Api.Data
 import DateFormat
@@ -136,3 +136,28 @@ changeValueDetail curr model =
 setSupportedTokens : Api.Data.TokenConfigs -> String -> Model -> Model
 setSupportedTokens configs currency model =
     { model | supportedTokens = Dict.insert currency configs model.supportedTokens }
+
+
+{-| Keeps the first registration of a contract; the address is compared
+case-insensitively (the API serves checksummed, swap legs lowercased).
+-}
+registerSwapAsset : String -> Api.Data.TokenConfig -> Model -> Model
+registerSwapAsset network config model =
+    case config.contractAddress of
+        Nothing ->
+            model
+
+        Just address ->
+            let
+                known =
+                    Dict.get network model.swapAssets
+                        |> Maybe.withDefault []
+
+                sameContract tc =
+                    Maybe.map String.toLower tc.contractAddress == Just (String.toLower address)
+            in
+            if List.any sameContract known then
+                model
+
+            else
+                { model | swapAssets = Dict.insert network (config :: known) model.swapAssets }

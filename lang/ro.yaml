@@ -256,6 +256,9 @@ request error: eroare cerere
 network error: eroare de rețea
 server error: eroare de server
 not found: negăsit
+not supported on lite networks: nu este acceptat pe rețelele lite
+Relationship mode not supported on lite networks: Modul relații nu este acceptat pe rețelele lite
+Network switched off in the settings (lite networks): Rețea dezactivată în setări (rețele lite)
 data error: eroare de date
 service not reachable: serviciul nu este accesibil.
 unexpected data format: format de date neașteptat.
@@ -662,3 +665,12 @@ Move the selection along the graph: "Mută selecția în graf"
 Close search or dialog: "Închide căutarea sau dialogul"
 Find on graph: "Caută în graf"
 Duplicate graph in new tab: "Duplică graful într-o filă nouă"
+lite networks: "Rețele lite"
+lite-networks-setting-hint: "Rețele servite de serviciul de date lite (BNB Smart Chain, Arbitrum, Base și celelalte rețele EVM). Dezactivat: aplicația lucrează doar cu rețelele de bază și nu trimite nicio cerere serviciului lite, în cazul în care acesta este supraîncărcat sau indisponibil."
+lite-badge-tooltip: "Rețeaua {0} are suport limitat pentru funcționalități."
+gs-file-networks-title: "Unele noduri nu au fost încărcate"
+gs-file-networks-lite-off: "Acest graf conține noduri pe {0}, care nu au fost încărcate deoarece rețelele lite sunt dezactivate. Activează-le în Setări și deschide din nou fișierul."
+gs-file-networks-not-on-account: "Acest graf conține noduri pe {0}, care nu sunt disponibile pentru contul tău. Nu au fost încărcate, dar se păstrează la salvarea grafului."
+Not available on your account: "Indisponibil pentru contul tău"
+on: "Pornit"
+off: "Oprit"

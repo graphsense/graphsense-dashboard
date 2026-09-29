@@ -7,6 +7,7 @@ import Config.View as View
 import Css
 import Dict exposing (Dict)
 import List.Extra
+import Model.NetworkCapabilities exposing (NetworkCapabilities)
 import Model.Pathfinder exposing (Hovered(..), unit)
 import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
@@ -31,13 +32,13 @@ import View.Pathfinder.Tx as Tx
 import View.Pathfinder.Tx.Utxo exposing (RenderLevel(..))
 
 
-addresses : View.Config -> Pathfinder.Config -> DetailLevel -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
-addresses vc pc level searchBox annotations =
+addresses : View.Config -> Pathfinder.Config -> DetailLevel -> NetworkCapabilities -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
+addresses vc pc level capabilities searchBox annotations =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
             , Annotations.getAnnotation id annotations
-                |> Svg.lazy6 Address.view vc pc (SearchBox.highlightFor searchBox id) level address
+                |> Svg.lazy7 Address.view vc pc capabilities (SearchBox.highlightFor searchBox id) level address
             )
                 :: svg
         )

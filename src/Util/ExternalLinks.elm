@@ -21,6 +21,40 @@ blockExplorerLinks =
             -- , ( "https://oko.palkeo.com/", "Palkeo" )
             ]
           )
+        , ( "bnb"
+          , [ ( "https://bscscan.com/address/", "BscScan" )
+            , ( "https://www.oklink.com/bsc/address/", "Oklink" )
+            ]
+          )
+        , ( "arb"
+          , [ ( "https://arbiscan.io/address/", "Arbiscan" )
+            , ( "https://www.oklink.com/arbitrum-one/address/", "Oklink" )
+            ]
+          )
+        , ( "base"
+          , [ ( "https://basescan.org/address/", "BaseScan" )
+            ]
+          )
+        , ( "opt"
+          , [ ( "https://optimistic.etherscan.io/address/", "Etherscan" )
+            ]
+          )
+        , ( "pol"
+          , [ ( "https://polygonscan.com/address/", "PolygonScan" )
+            ]
+          )
+        , ( "avax"
+          , [ ( "https://snowtrace.io/address/", "Snowtrace" )
+            ]
+          )
+        , ( "gnosis"
+          , [ ( "https://gnosisscan.io/address/", "GnosisScan" )
+            ]
+          )
+        , ( "robinhood"
+          , [ ( "https://robinscan.io/address/", "Robinscan" )
+            ]
+          )
         , ( "btc"
           , [ ( "https://www.oklink.com/btc/address/", "Oklink" )
             , ( "https://www.blockchain.com/btc/address/", "Blockchain.com" )
@@ -53,6 +87,40 @@ blockExplorerTransactionLinks =
             , ( "https://www.oklink.com/eth/tx/", "Oklink" )
             , ( "https://www.blockchain.com/eth/tx/", "Blockchain.com" )
             , ( "https://blockchair.com/ethereum/transaction/", "Blockchair" )
+            ]
+          )
+        , ( "bnb"
+          , [ ( "https://bscscan.com/tx/0x", "BscScan" )
+            , ( "https://www.oklink.com/bsc/tx/", "Oklink" )
+            ]
+          )
+        , ( "arb"
+          , [ ( "https://arbiscan.io/tx/0x", "Arbiscan" )
+            , ( "https://www.oklink.com/arbitrum-one/tx/", "Oklink" )
+            ]
+          )
+        , ( "base"
+          , [ ( "https://basescan.org/tx/0x", "BaseScan" )
+            ]
+          )
+        , ( "opt"
+          , [ ( "https://optimistic.etherscan.io/tx/0x", "Etherscan" )
+            ]
+          )
+        , ( "pol"
+          , [ ( "https://polygonscan.com/tx/0x", "PolygonScan" )
+            ]
+          )
+        , ( "avax"
+          , [ ( "https://snowtrace.io/tx/0x", "Snowtrace" )
+            ]
+          )
+        , ( "gnosis"
+          , [ ( "https://gnosisscan.io/tx/0x", "GnosisScan" )
+            ]
+          )
+        , ( "robinhood"
+          , [ ( "https://robinscan.io/tx/0x", "Robinscan" )
             ]
           )
         , ( "trx"

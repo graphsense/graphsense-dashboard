@@ -10,6 +10,7 @@ import Data.Pathfinder.Address as Address
 import Data.Pathfinder.Tx as Tx
 import Expect
 import Html.Styled
+import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Pathfinder.Address
 import Model.Pathfinder.DetailLevel as DetailLevel exposing (DetailLevel(..))
 import Model.Pathfinder.SearchBox exposing (Highlight(..))
@@ -33,7 +34,7 @@ pathfinderConfig =
 
 renderAddress : DetailLevel -> Bool -> Query.Single Msg
 renderAddress level selected =
-    View.Pathfinder.Address.view Env.viewConfig pathfinderConfig NoHighlight level { address1 | selected = selected } Nothing
+    View.Pathfinder.Address.view Env.viewConfig pathfinderConfig NetworkCapabilities.none NoHighlight level { address1 | selected = selected } Nothing
         |> Html.Styled.toUnstyled
         |> Query.fromHtml
 

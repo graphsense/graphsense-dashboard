@@ -17,8 +17,13 @@ import Tuple exposing (first, pair, second)
 init : Update.Config -> Network -> Maybe TransactionFilter.Settings -> Id -> Api.Data.Address -> List String -> TransactionTable.Model
 init uc network txsFilter addressId data assets =
     let
-        ( mmin, mmax ) =
+        -- an address with no transactions of its own has no span to bound the
+        -- picker with, so it simply gets no date range picker
+        withDateRange =
             Address.getActivityRange data
+                |> Maybe.map
+                    (\( mmin, mmax ) -> TransactionFilter.withDateRangePicker uc.locale mmin mmax)
+                |> Maybe.withDefault identity
 
         quickfilters =
             getQuickFilters network addressId
@@ -52,7 +57,7 @@ init uc network txsFilter addressId data assets =
                         )
                 )
             |> TransactionFilter.init
-            |> TransactionFilter.withDateRangePicker uc.locale mmin mmax
+            |> withDateRange
             |> TransactionFilter.withAssetSelectBox assets
             |> flip (List.foldl TransactionFilter.withQuickFilter) quickfilters
     , maxChangeHopsLimit = Nothing

@@ -1,5 +1,6 @@
 module Support.MainApp exposing
     ( App
+    , effects
     , expectEffect
     , expectNoEffect
     , html
@@ -10,6 +11,7 @@ module Support.MainApp exposing
     , step
     , steps
     , title
+    , toUrl
     )
 
 {-| Drives the whole dashboard headlessly — the real `Update.update`,
@@ -131,6 +133,7 @@ initialModel url =
         , hovercard = Nothing
         }
     , stats = RemoteData.NotAsked
+    , capabilities = RemoteData.NotAsked
     , width = round Env.viewport.width
     , height = round Env.viewport.height
     , error = ""
@@ -190,6 +193,7 @@ step msg (App app) =
             { locale = app.model_.config.locale
             , size = app.model_.config.size
             , abuseConcepts = app.model_.config.abuseConcepts
+            , networks = List.map .name app.model_.config.networks
             , allConcepts = app.model_.config.allConcepts
             }
 
@@ -206,6 +210,13 @@ steps msgs app =
 
 
 -- ASSERTIONS
+
+
+{-| The effects the most recent step produced, for assertions that count them.
+-}
+effects : App -> List Effect
+effects (App app) =
+    app.effects_
 
 
 {-| Asserts that the last step produced at least one effect matching
@@ -287,6 +298,9 @@ name eff =
 
         PostponeUpdateByUrlEffect _ ->
             "PostponeUpdateByUrlEffect"
+
+        PostponeDeserializeEffect _ ->
+            "PostponeDeserializeEffect"
 
 
 

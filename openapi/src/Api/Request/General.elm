@@ -37,6 +37,19 @@ getStatistics =
 
 
 
+getCapabilities : Api.Request Api.Data.Capabilities
+getCapabilities =
+    Api.request
+        "GET"
+        "/capabilities"
+        []
+        []
+        []
+        Nothing
+        Api.Data.capabilitiesDecoder
+
+
+
 search : (String) -> Maybe (String) -> Maybe (Int) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (Bool) -> Api.Request Api.Data.SearchResult
 search q_query currency_query limit_query includeSubTxIdentifiers_query includeLabels_query includeActors_query includeTxs_query includeAddresses_query =
     Api.request

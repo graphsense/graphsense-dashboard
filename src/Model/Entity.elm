@@ -9,6 +9,10 @@ type alias Entity =
     }
 
 
+{-| Client-side fallback only — REMOVABLE together with the local heuristics
+in `Model.Pathfinder.Address.getAddressType` once every deployed backend
+serves `is_possible_service` on address detail (see the note there).
+-}
 isPossibleServiceUtxo : Api.Data.Cluster -> Bool
 isPossibleServiceUtxo =
     isPossibleService

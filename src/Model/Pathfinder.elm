@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), DraggingAggEdgeLabel, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, MultiAdd, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, unit)
+module Model.Pathfinder exposing (Details(..), DraggingOffset, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, MultiAdd, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, isLiteNetwork, supports, unit)
 
 import Api.Data exposing (Actor, Cluster)
 import AssocList
@@ -13,11 +13,13 @@ import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords, isInBBox)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
+import Model.NetworkCapabilities as NetworkCapabilities exposing (NetworkCapabilities)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
 import Model.Pathfinder.ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.ConversionDetails exposing (ConversionDetailsModel)
+import Model.Pathfinder.Deserialize exposing (DeserializedThing)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id, TxsFilterId)
 import Model.Pathfinder.Network exposing (Network, NetworkConditions)
@@ -43,16 +45,40 @@ unit =
     GraphComponents.addressNodeNodeFrame_details.width
 
 
+{-| Does the backend serve this feature on the given network?
+-}
+supports : NetworkCapabilities.Capability -> String -> Model -> Bool
+supports capability network model =
+    NetworkCapabilities.supports capability model.networkCapabilities network
+
+
+{-| At least one feature is disabled on the given network.
+-}
+isLiteNetwork : String -> Model -> Bool
+isLiteNetwork network model =
+    NetworkCapabilities.isLiteNetwork model.networkCapabilities network
+
+
 type alias Model =
     { route : Route
     , network : Network
     , actors : Dict String Actor
     , tagSummaries : Dict Id HavingTags
     , clusters : Dict Id (WebData Cluster)
+
+    -- address details fetched in the background for the counterparties of
+    -- prefetched next-txs; consumed (and removed) by loadAddressWithPosition
+    , prefetchedAddresses : Dict Id Api.Data.Address
+
+    -- txs of an opened graph on networks the backend does not serve (lite
+    -- networks switched off, or not granted to the account): never fetched,
+    -- so never on the graph, but written back out on save so the file keeps them
+    , unservedTxs : List DeserializedThing
     , colors : ScopedColorAssignment
     , annotations : AnnotationModel
     , dragging : Dragging Id
-    , draggingAggEdgeLabel : Maybe DraggingAggEdgeLabel
+    , draggingAggEdgeLabel : Maybe DraggingOffset
+    , draggingConversionNode : Maybe DraggingOffset
     , selection : Selection
     , hovered : Hovered
     , search : Search.Model
@@ -61,6 +87,7 @@ type alias Model =
     , history : History.Model Entry.Model
     , details : Maybe Details
     , config : Config
+    , networkCapabilities : NetworkCapabilities
     , pointerTool : PointerTool
     , modPressed : Bool
     , modKeyPressCount : Int -- see RuntimeModKeyHeld
@@ -104,8 +131,12 @@ type alias MultiAdd =
 label at `start` (screen coords) when its offset was `baseOffset`; subsequent
 mouse-move events update the edge's `labelOffset` to `baseOffset + Δ`, where
 Δ is the transform-corrected mouse vector.
+
+A swap-icon drag uses the same shape, updating the conversion edge's
+`nodeOffset` instead.
+
 -}
-type alias DraggingAggEdgeLabel =
+type alias DraggingOffset =
     { key : ( Id, Id )
     , start : Coords
     , baseOffset : { x : Float, y : Float }

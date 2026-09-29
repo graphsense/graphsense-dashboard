@@ -1,4 +1,4 @@
-module Update.Pathfinder exposing (continueImageExport, deserialize, endExportRendering, fetchTagSummaryForId, finishImageExport, fromDeserialized, isLegacyPf1GsFile, multiSearch, resultLineToRoute, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
+module Update.Pathfinder exposing (continueImageExport, deserialize, endExportRendering, fetchTagSummaryForId, finishImageExport, fromDeserialized, isLegacyPf1GsFile, isOutputLegOf, multiSearch, resultLineToRoute, update, updateByExportMsg, updateByPluginOutMsg, updateByRoute)
 
 import Animation as A
 import Api.Data
@@ -43,6 +43,7 @@ import Model.Graph.Coords exposing (BBox, isInBBox, relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Locale as Locale
+import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Notification as Notification
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Address exposing (Address, Txs(..), expandAllowed, getAddressType, getTxs, txsSetter)
@@ -310,6 +311,9 @@ appLevelOutMsgs msg model =
         UserReleasedEscape ->
             [ CloseTopmostOverlay ]
 
+        BrowserGotConversions _ _ conversions ->
+            conversions |> List.concatMap conversionAssetRegistrations
+
         SearchMsg Search.UserClicksResultLine ->
             let
                 query =
@@ -323,6 +327,34 @@ appLevelOutMsgs msg model =
 
         _ ->
             []
+
+
+{-| Swap legs carry backend-curated symbol/decimals; register them by contract
+so the formatter labels and scales the leg.
+-}
+conversionAssetRegistrations : Api.Data.ExternalConversion -> List OutMsg
+conversionAssetRegistrations c =
+    let
+        reg network asset symbol decimals =
+            if asset == ConversionEdge.nativeAsset then
+                []
+
+            else
+                case ( symbol, decimals ) of
+                    ( Just s, Just d ) ->
+                        [ RegisterConversionAsset network
+                            { contractAddress = Just asset
+                            , decimals = d
+                            , pegCurrency = Nothing
+                            , ticker = s
+                            }
+                        ]
+
+                    _ ->
+                        []
+    in
+    reg c.fromNetwork c.fromAsset c.fromAssetSymbol c.fromAssetDecimals
+        ++ reg c.toNetwork c.toAsset c.toAssetSymbol c.toAssetDecimals
 
 
 refreshSearchMatches : Model -> ( Model, List Effect )
@@ -467,10 +499,19 @@ syncUrl model =
 syncSidePanel : Update.Config -> Model -> ( Model, List Effect )
 syncSidePanel uc model =
     let
+        -- A node of a network the statistics no longer list (lite-networks
+        -- setting off, or the account lacks the currency role) gets NO details
+        -- panel: building one refetches the address, which 403s, and `syncUrl`
+        -- would then push a route the router cannot resolve ("Unknown URL").
+        -- The node stays selectable, so it can still be moved or deleted.
         makeAddressDetails aid =
-            Dict.get aid model.network.addresses
-                |> Maybe.map (AddressDetails.init (AssocList.get (TxsFilterAddress aid) model.txsFilters))
-                |> Maybe.map (AddressDetails aid)
+            if not (Update.networkServed uc (Id.network aid)) then
+                Nothing
+
+            else
+                Dict.get aid model.network.addresses
+                    |> Maybe.map (AddressDetails.init (supports NetworkCapabilities.Relations (Id.network aid) model) (AssocList.get (TxsFilterAddress aid) model.txsFilters))
+                    |> Maybe.map (AddressDetails aid)
 
         makeTxDetails tid =
             let
@@ -481,8 +522,12 @@ syncSidePanel uc model =
                 txsFilter =
                     AssocList.get (TxsFilterTx tid) model.txsFilters
             in
-            Dict.get tid model.network.txs
-                |> Maybe.map (TxDetails.init txsFilter assets >> TxDetails tid)
+            if not (Update.networkServed uc (Id.network tid)) then
+                Nothing
+
+            else
+                Dict.get tid model.network.txs
+                    |> Maybe.map (TxDetails.init txsFilter assets >> TxDetails tid)
 
         makeRelationDetails rid =
             Dict.get rid model.network.aggEdges
@@ -1410,7 +1455,7 @@ updateByMsg uc msg model =
                         |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedTx txId ->
-                    userClickedTx txId model
+                    userClickedTx uc txId model
                         |> and (setTracingMode TransactionTracingMode)
 
                 RelationDetails.UserClickedAllTxCheckboxInTable isA2b ->
@@ -1470,7 +1515,7 @@ updateByMsg uc msg model =
                 fetchTagSummariesForNeigbors neighbors =
                     neighbors
                         |> List.map (.address >> .address)
-                        |> fetchTagSummaryForIds True model.tagSummaries BrowserGotTagSummaries network
+                        |> fetchTagSummaryForIds True model BrowserGotTagSummaries network
                         |> pair model
                         |> and
                             (AddressDetails.update uc subm
@@ -1484,7 +1529,7 @@ updateByMsg uc msg model =
                 AddressDetails.BrowserGotAddressesForTags _ addresses ->
                     addresses
                         |> List.map .address
-                        |> fetchTagSummaryForIds False model.tagSummaries BrowserGotTagSummaries network
+                        |> fetchTagSummaryForIds False model BrowserGotTagSummaries network
                         |> pair model
                         |> and
                             (AddressDetails.update uc subm
@@ -1522,7 +1567,7 @@ updateByMsg uc msg model =
                     addOrRemoveTx (Just addressId) (Tx.getTxIdForAddressTx tx) model
 
                 AddressDetails.UserClickedTx id ->
-                    userClickedTx id model
+                    userClickedTx uc id model
 
                 AddressDetails.TooltipMsg tm ->
                     handleTooltipMsg tm model
@@ -1810,13 +1855,19 @@ updateByMsg uc msg model =
         UserReleasesMouseButton ->
             -- End any active mid-edge label drag in addition to the normal
             -- node/graph drag flow.
+            -- Also ends a swap-icon drag.
             let
                 model_ =
-                    { model | draggingAggEdgeLabel = Nothing }
+                    { model | draggingAggEdgeLabel = Nothing, draggingConversionNode = Nothing }
             in
             case model_.dragging of
                 NoDragging ->
-                    n model_
+                    case model.draggingConversionNode of
+                        Just nodeDrag ->
+                            releaseConversionNode nodeDrag model_
+
+                        Nothing ->
+                            n model_
 
                 Dragging _ _ _ ->
                     case model_.pointerTool of
@@ -2002,8 +2053,30 @@ updateByMsg uc msg model =
             )
 
         UserMovesMouseOnGraph coords ->
-            case model.draggingAggEdgeLabel of
-                Just labelDrag ->
+            case ( model.draggingConversionNode, model.draggingAggEdgeLabel ) of
+                ( Just nodeDrag, _ ) ->
+                    let
+                        vector =
+                            Transform.vector nodeDrag.start coords model.transform
+                    in
+                    ( { model
+                        | network =
+                            Network.updateConversionEdge nodeDrag.key
+                                (\edge ->
+                                    { edge
+                                        | nodeOffset =
+                                            Just
+                                                { x = nodeDrag.baseOffset.x + vector.x
+                                                , y = nodeDrag.baseOffset.y + vector.y
+                                                }
+                                    }
+                                )
+                                model.network
+                      }
+                    , []
+                    )
+
+                ( Nothing, Just labelDrag ) ->
                     let
                         vector =
                             Transform.vector labelDrag.start coords model.transform
@@ -2022,7 +2095,7 @@ updateByMsg uc msg model =
                     , []
                     )
 
-                Nothing ->
+                ( Nothing, Nothing ) ->
                     case model.dragging of
                         NoDragging ->
                             ( model, [] )
@@ -2101,7 +2174,7 @@ updateByMsg uc msg model =
                 |> Maybe.map
                     (\address ->
                         if expandAllowed address then
-                            expandAddress address direction model
+                            expandAddress uc address direction model
 
                         else
                             ( model
@@ -2196,6 +2269,12 @@ updateByMsg uc msg model =
                 toggleMultiSelect model (MSelectedAddress id)
                     |> n
 
+            else if not (Update.networkServed uc (Id.network id)) then
+                -- a faded node of a switched-off network: its URL would not
+                -- parse (the router only knows served networks) and its details
+                -- would 403, so select it in place and leave it at that
+                selectAddress id model
+
             else
                 ( model
                 , Route.addressRoute
@@ -2255,7 +2334,7 @@ updateByMsg uc msg model =
                     n model
 
         UserClickedTx id ->
-            userClickedTx id model
+            userClickedTx uc id model
 
         UserClickedRemoveAddressFromGraph id ->
             removeAddress id model
@@ -2335,13 +2414,28 @@ updateByMsg uc msg model =
                         Nothing ->
                             ( Network.addTxWithPosition model.config (Fixed posA.x (posA.y + 2)) tx model.network, True )
 
-                -- order txs such from and to, according to the which is the output leg (to) and which is the input leg (from)
+                -- Order the two txs into (from leg, to leg).
+                --
+                -- Decided by matching txA against the OUTPUT leg, the same test
+                -- BrowserGotConversions already uses to pick which leg to fetch:
+                -- network first, then the sub-tx id. Matching the INPUT leg
+                -- instead is not equivalent, because txA is often the tx the
+                -- user opened by its BARE HASH while fromAssetTransfer names a
+                -- sub-transfer of it -- `<hash>` never equals `<hash>_T60`. That
+                -- fell through to the else branch and declared the source tx to
+                -- be the output leg, which put a bnb tx on the ethereum side and
+                -- rendered the edge as "BNB-USDT / ETH-BNB" (ConversionEdge.init
+                -- reads its labels off the loaded txs, not off the conversion).
+                --
+                -- It stayed hidden while THORChain was the only bridge: its
+                -- native deposits name `_I<root trace>`, which IS the base tx
+                -- id, so the old comparison happened to hold.
                 ( inputTx, outputTx ) =
-                    if (txA.id |> Id.id |> removeLeading0x) == (conversion.fromAssetTransfer |> removeLeading0x) then
-                        ( txA, ntx )
+                    if isOutputLegOf conversion txA.id then
+                        ( ntx, txA )
 
                     else
-                        ( ntx, txA )
+                        ( txA, ntx )
 
                 nnn =
                     nn
@@ -2367,21 +2461,28 @@ updateByMsg uc msg model =
                     model.eventualMessages
                         |> EventualMessages.addMessage eventualMsg (InternalConversionLoopAddressesLoaded keepPositionOf conversion)
             in
-            (model
-                |> s_network nnn
-                |> s_eventualMessages eventualMessagesNew
-            )
-                |> checkSelection uc
-                |> and
-                    (if newTx then
-                        autoLoadAddresses False ntx
+            if Tx.getTxId tx == txA.id then
+                -- never pair a leg with itself
+                n model
 
-                     else
-                        n
-                    )
-                |> Tuple.mapSecond ((++) (mcmd |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault []))
+            else
+                (model
+                    |> s_network nnn
+                    |> s_eventualMessages eventualMessagesNew
+                )
+                    |> checkSelection uc
+                    |> and
+                        (if newTx then
+                            autoLoadAddresses False ntx
+
+                         else
+                            n
+                        )
+                    |> Tuple.mapSecond ((++) (mcmd |> Maybe.map (CmdEffect >> List.singleton) |> Maybe.withDefault []))
 
         BrowserGotConversions keepPositionOf tx conversions ->
+            -- a sub-tx id gets only its own conversions, a bare hash every conversion
+            -- of the tx (legs are other sub-txs): check which leg `tx` is
             let
                 txid =
                     Tx.getTxIdForTx tx
@@ -2410,32 +2511,77 @@ updateByMsg uc msg model =
 
                 modelWithFlag =
                     { model | network = networkWithFlag }
+
+                isLeg =
+                    isLegTransfer txid
+
+                fetch id continuation =
+                    continuation
+                        |> Api.GetConversionLegEffect
+                            { currency = Id.network id
+                            , txHash = Id.id id
+                            }
+                        |> ApiEffect
             in
             supportedConversions
                 |> List.foldl
                     (\conversion ( aggm, effects ) ->
                         let
-                            secondTransferId =
-                                if Id.network txid == conversion.toNetwork && (Id.id txid |> removeLeading0x) == (conversion.toAssetTransfer |> removeLeading0x) then
-                                    Id.init conversion.fromNetwork conversion.fromAssetTransfer
+                            withLeg network transfer continuation =
+                                case Dict.get (Id.init network (removeLeading0x transfer)) aggm.network.txs of
+                                    Just leg ->
+                                        updateByMsg uc (continuation (Tx.getRawTx leg)) aggm
+
+                                    Nothing ->
+                                        ( aggm, [ fetch (Id.init network transfer) continuation ] )
+
+                            ( nextModel, eff ) =
+                                if isLeg conversion.toNetwork conversion.toAssetTransfer then
+                                    withLeg conversion.fromNetwork conversion.fromAssetTransfer (BrowserGotConversionLoop keepPositionOf tx conversion)
+
+                                else if isLeg conversion.fromNetwork conversion.fromAssetTransfer then
+                                    withLeg conversion.toNetwork conversion.toAssetTransfer (BrowserGotConversionLoop keepPositionOf tx conversion)
 
                                 else
-                                    Id.init conversion.toNetwork conversion.toAssetTransfer
-
-                            effs =
-                                BrowserGotConversionLoop keepPositionOf tx conversion
-                                    |> Api.GetTxEffect
-                                        { currency = Id.network secondTransferId
-                                        , txHash = Id.id secondTransferId
-                                        , includeIo = True
-                                        , tokenTxId = Nothing
-                                        }
-                                    |> ApiEffect
-                                    |> List.singleton
+                                    -- whole-tx answer: `tx` is no leg; the input leg drives the pairing
+                                    withLeg conversion.fromNetwork conversion.fromAssetTransfer (BrowserGotConversionInputLeg keepPositionOf tx conversion)
                         in
-                        ( aggm, effects ++ effs )
+                        ( nextModel, effects ++ eff )
                     )
                     ( modelWithFlag, [] )
+
+        BrowserGotConversionInputLeg keepPositionOf anchor conversion tx ->
+            let
+                pos =
+                    anchor |> Tx.toFinalCoords
+
+                -- only the input leg we asked for may continue; any other answer
+                -- would re-request forever or pair a leg with itself
+                isInputLeg =
+                    isLegTransfer (Tx.getTxId tx) conversion.fromNetwork conversion.fromAssetTransfer
+
+                ( ( legTx, nn ), newTx ) =
+                    case Dict.get (Tx.getTxId tx) model.network.txs of
+                        Just oldTx ->
+                            ( ( oldTx, model.network ), False )
+
+                        Nothing ->
+                            ( Network.addTxWithPosition model.config (Fixed pos.x (pos.y + 2)) tx model.network, True )
+            in
+            if not isInputLeg then
+                n model
+
+            else
+                model
+                    |> s_network nn
+                    |> updateByMsg uc (BrowserGotConversions keepPositionOf legTx [ conversion ])
+                    |> and
+                        (if newTx then
+                            autoLoadAddresses False legTx
+
+                         else
+                            n
+                        )
 
         BrowserGotTx ({ requestedTxHash } as loadTxConfig) tx ->
             let
@@ -2444,13 +2590,27 @@ updateByMsg uc msg model =
 
                 network =
                     Id.network txId
+
+                -- account txs are keyed by the served {hash}_I{n} identifier;
+                -- a selection pending on the requested bare hash (deep link,
+                -- search) would miss that key forever and the details panel
+                -- would never open — re-point it at the served id
+                modelWithSelection =
+                    if
+                        (Id.id txId /= requestedTxHash)
+                            && (model.selection == WillSelectTx (Id.init network requestedTxHash))
+                    then
+                        s_selection (WillSelectTx txId) model
+
+                    else
+                        model
             in
-            if Dict.member txId model.network.txs then
-                n model
+            if Dict.member txId modelWithSelection.network.txs then
+                checkSelection uc modelWithSelection
 
             else if Data.isAccountLike network && Id.id txId /= requestedTxHash && Tx.isZeroValueTx tx then
                 -- a tx hash without subtx id part was requested
-                ( model
+                ( modelWithSelection
                 , BrowserGotTxFlow loadTxConfig tx
                     |> Api.ListTxFlowsEffect
                         { currency = network
@@ -2466,7 +2626,7 @@ updateByMsg uc msg model =
                     |> and (selectTx txId)
 
             else
-                browserGotTx uc loadTxConfig tx model
+                browserGotTx uc loadTxConfig tx modelWithSelection
 
         BrowserGotTxFlow loadTxConfig originalTx txs ->
             txs.nextPage
@@ -2654,6 +2814,17 @@ updateByMsg uc msg model =
             WorkflowNextTxByTime.update config wm
                 |> flip (handleWorkflowNextTxByTime uc config neighborId) model
 
+        WorkflowNextUtxoTxPrefetch config wm ->
+            WorkflowNextUtxoTx.update config wm
+                |> flip (handlePrefetchWorkflowNextUtxo config) model
+
+        WorkflowNextTxByTimePrefetch config wm ->
+            WorkflowNextTxByTime.update config wm
+                |> flip (handlePrefetchWorkflowNextTxByTime config) model
+
+        BrowserGotPrefetchedAddressData id data ->
+            n { model | prefetchedAddresses = Dict.insert id data model.prefetchedAddresses }
+
         BrowserGotTagSummaries includesBestClusterTag data ->
             List.foldl
                 (\( id, ts ) ->
@@ -2800,6 +2971,23 @@ updateByMsg uc msg model =
 
         UserSelectsAnnotationColor ids clr ->
             n { model | annotations = List.foldl (\id ann -> Annotations.setColor id clr ann) model.annotations ids }
+
+        UserPushesLeftMouseButtonOnConversionNode key coords ->
+            -- the curve re-routes through the icon (View.Pathfinder.ConversionEdge.layout)
+            case ( model.dragging, model.transform.state ) of
+                ( NoDragging, Transform.Settled _ ) ->
+                    n
+                        { model
+                            | draggingConversionNode =
+                                Just
+                                    { key = key
+                                    , start = coords
+                                    , baseOffset = conversionNodeOffset key model
+                                    }
+                        }
+
+                _ ->
+                    n model
 
         UserPushesLeftMouseButtonOnAggEdgeLabel key currentOffset coords ->
             -- Start dragging the mid-edge value label. The baseline is the
@@ -3670,6 +3858,19 @@ getRelationDetails model id =
 
 fetchEgonet : Id -> Bool -> Api.Data.Address -> Model -> ( Model, List Effect )
 fetchEgonet id autoLinkInTraceMode data model =
+    -- networks without the relations capability have no precomputed
+    -- relations: even the pair-edge lookups against visible addresses can
+    -- take tens of seconds on busy addresses, so skip edge discovery
+    -- entirely (edges appear only from expanded transactions)
+    if supports NetworkCapabilities.Relations (Id.network id) model then
+        fetchEgonetUnlimited id autoLinkInTraceMode data model
+
+    else
+        n model
+
+
+fetchEgonetUnlimited : Id -> Bool -> Api.Data.Address -> Model -> ( Model, List Effect )
+fetchEgonetUnlimited id autoLinkInTraceMode data model =
     let
         ( outOnlyIds, incOnlyIds ) =
             model.network.addresses
@@ -4003,6 +4204,21 @@ browserGotAddressData uc providedId position data model =
                   ]
                 )
 
+        -- Pre-fetch the next transaction in both directions right after the
+        -- address data arrives, so a later expand click resolves without an
+        -- API round-trip (user decision 2026-08-31). Results are parked in
+        -- TxsPrefetched via the *Prefetch workflow messages; a reloaded
+        -- address (already on the graph with data) is not prefetched again.
+        -- Lite networks only: their cold listings take seconds, while on
+        -- core networks the listing is fast and the prefetch mostly spends
+        -- the user's request quota on addresses nobody expands.
+        prefetchEff =
+            if Network.hasLoadedAddress id model.network || not (isLiteNetwork (Id.network id) model) then
+                []
+
+            else
+                prefetchNextTxEffects net id data
+
         transform =
             case position of
                 AtViewportCenter _ _ ->
@@ -4044,6 +4260,7 @@ browserGotAddressData uc providedId position data model =
                 ++ [ fetchAddressPubkeyRelations id Nothing
                    , InternalEffect (InternalPathfinderAddedAddress newAddress.id)
                    ]
+                ++ prefetchEff
             )
         |> and (checkSelection uc)
 
@@ -4108,59 +4325,82 @@ userClickedAddressCheckboxInTable position id model =
 
 userClickedAggEdgeCheckboxInTable : Direction -> Id -> Api.Data.NeighborAddress -> Model -> ( Model, List Effect )
 userClickedAggEdgeCheckboxInTable dir anchorId data model =
-    let
-        id =
-            Id.init data.address.currency data.address.address
-
-        flippedDir =
-            Direction.flip dir
-
-        aggEdgeId =
-            AggEdge.initId id anchorId
-    in
-    if Network.hasAddress id model.network then
-        if Network.hasAggEdge aggEdgeId model.network then
-            removeAggEdge aggEdgeId model
-                |> and
-                    (\newModel ->
-                        if Dict.member id newModel.network.addressAggEdgeMap then
-                            n newModel
-
-                        else
-                            removeAddress id newModel
-                    )
-
-        else
-            ( model.network
-                |> Network.upsertAggEdgeData model.config anchorId dir data
-                |> flip s_network model
-            , BrowserGotRelationsToVisibleNeighbors { id = anchorId, dir = flippedDir, requestIds = [ id ], autoLinkInTraceMode = True }
-                |> Api.GetAddressNeighborsEffect
-                    { currency = Id.network anchorId
-                    , address = Id.id anchorId
-                    , isOutgoing = flippedDir == Outgoing
-                    , onlyIds = Just [ data.address.address ]
-                    , includeLabels = False
-                    , includeActors = False
-                    , pagesize = 1
-                    , nextpage = Nothing
-                    }
-                |> ApiEffect
-                |> List.singleton
-            )
+    -- the pair request below needs the neighbors endpoint; the table is hidden
+    -- where the backend has no relations, this guards leftover paths
+    if not (supports NetworkCapabilities.Relations (Id.network anchorId) model) then
+        n model
 
     else
-        loadAddressWithPosition True (NextTo ( dir, anchorId )) id model
+        let
+            id =
+                Id.init data.address.currency data.address.address
+
+            flippedDir =
+                Direction.flip dir
+
+            aggEdgeId =
+                AggEdge.initId id anchorId
+        in
+        if Network.hasAddress id model.network then
+            if Network.hasAggEdge aggEdgeId model.network then
+                removeAggEdge aggEdgeId model
+                    |> and
+                        (\newModel ->
+                            if Dict.member id newModel.network.addressAggEdgeMap then
+                                n newModel
+
+                            else
+                                removeAddress id newModel
+                        )
+
+            else
+                ( model.network
+                    |> Network.upsertAggEdgeData model.config anchorId dir data
+                    |> flip s_network model
+                , BrowserGotRelationsToVisibleNeighbors { id = anchorId, dir = flippedDir, requestIds = [ id ], autoLinkInTraceMode = True }
+                    |> Api.GetAddressNeighborsEffect
+                        { currency = Id.network anchorId
+                        , address = Id.id anchorId
+                        , isOutgoing = flippedDir == Outgoing
+                        , onlyIds = Just [ data.address.address ]
+                        , includeLabels = False
+                        , includeActors = False
+                        , pagesize = 1
+                        , nextpage = Nothing
+                        }
+                    |> ApiEffect
+                    |> List.singleton
+                )
+
+        else
+            loadAddressWithPosition True (NextTo ( dir, anchorId )) id model
 
 
-userClickedTx : Id -> Model -> ( Model, List Effect )
-userClickedTx id model =
+userClickedTx : Update.Config -> Id -> Model -> ( Model, List Effect )
+userClickedTx uc id model =
     if model.modPressed || model.pointerTool == Select then
         let
             modelS =
                 toggleMultiSelect model (MSelectedTx id)
         in
         n { modelS | details = Nothing }
+
+    else if not (Update.networkServed uc (Id.network id)) then
+        -- switched-off network (see UserClickedAddress): select in place, and
+        -- skip the tag lookup selectTx would fire — that request would 403 too
+        case Dict.get id model.network.txs of
+            Just _ ->
+                let
+                    ( m1, eff ) =
+                        unselect model
+                in
+                Network.updateTx id (s_selected True) m1.network
+                    |> flip s_network m1
+                    |> s_selection (SelectedTx id)
+                    |> pairTo eff
+
+            Nothing ->
+                n model
 
     else
         ( model
@@ -4195,8 +4435,8 @@ fitGraph uc model =
     }
 
 
-expandAddress : Address -> Direction -> Model -> ( Model, List Effect )
-expandAddress address direction model =
+expandAddress : Update.Config -> Address -> Direction -> Model -> ( Model, List Effect )
+expandAddress uc address direction model =
     let
         id =
             address.id
@@ -4215,6 +4455,9 @@ expandAddress address direction model =
     case getTxs address direction of
         Txs _ ->
             n newmodel
+
+        TxsPrefetched tx ->
+            applyPrefetchedTx uc { addressId = id, direction = direction } tx newmodel
 
         TxsLoading ->
             n newmodel
@@ -4431,6 +4674,206 @@ getNextTxEffects network addressId direction { addBetweenLinks, addAnyLinks } ne
             )
 
 
+{-| Consume a prefetched next-tx on expand click: insert it into the graph the
+same way the live workflow's `Workflow.Ok` would, minus the skip statusbar
+logs (any change-hop skipping already happened silently at prefetch time).
+-}
+applyPrefetchedTx : Update.Config -> { addressId : Id, direction : Direction } -> Api.Data.Tx -> Model -> ( Model, List Effect )
+applyPrefetchedTx uc config tx model =
+    let
+        ( newModel, eff ) =
+            handleTx uc config Nothing tx model
+
+        -- mirror handleWorkflowNextUtxo's explicit tx-set insert: addTx's
+        -- per-address propagation misses the workflow direction on self-loop
+        -- txs, which would leave the expand handle stuck
+        modelWithLoadingCleared =
+            case tx of
+                Api.Data.TxTxUtxo t ->
+                    newModel
+                        |> s_network
+                            (Network.updateAddress config.addressId
+                                (\addr ->
+                                    case config.direction of
+                                        Incoming ->
+                                            { addr | incomingTxs = PathfinderAddress.txsInsertId (Id.init t.currency t.txHash) addr.incomingTxs }
+
+                                        Outgoing ->
+                                            { addr | outgoingTxs = PathfinderAddress.txsInsertId (Id.init t.currency t.txHash) addr.outgoingTxs }
+                                )
+                                newModel.network
+                            )
+
+                Api.Data.TxTxAccount _ ->
+                    newModel
+    in
+    ( modelWithLoadingCleared, eff )
+
+
+{-| Park a background prefetch result on the address — but only while the
+direction is still untouched: a click may have started the live workflow
+(TxsLoading) or even landed a tx (Txs \_) in the meantime, and the prefetch
+must never clobber that.
+-}
+storePrefetchResult : { a | addressId : Id, direction : Direction } -> Txs -> Model -> Model
+storePrefetchResult config txsState model =
+    model
+        |> s_network
+            (Network.updateAddress config.addressId
+                (\addr ->
+                    if getTxs addr config.direction == TxsNotFetched then
+                        txsSetter config.direction txsState addr
+
+                    else
+                        addr
+                )
+                model.network
+            )
+
+
+handlePrefetchWorkflowNextUtxo : WorkflowNextUtxoTx.Config -> WorkflowNextUtxoTx.Workflow -> Model -> ( Model, List Effect )
+handlePrefetchWorkflowNextUtxo config wf model =
+    case wf of
+        Workflow.Ok { tx } ->
+            storePrefetchResult config (TxsPrefetched (Api.Data.TxTxUtxo tx)) model
+                |> n
+
+        Workflow.Next eff ->
+            eff
+                |> List.map (Api.map (WorkflowNextUtxoTxPrefetch config))
+                |> List.map ApiEffect
+                |> pair model
+
+        Workflow.Err (WorkflowNextUtxoTx.MaxChangeHopsLimit _ lastTx) ->
+            storePrefetchResult config (TxsLastCheckedChangeTx lastTx) model
+                |> n
+
+        Workflow.Err WorkflowNextUtxoTx.NoTxFound ->
+            -- deliberately NOT stored: a later expand click re-runs the live
+            -- workflow and surfaces the "no adjacent tx" toast exactly as
+            -- before prefetching existed
+            n model
+
+
+handlePrefetchWorkflowNextTxByTime : WorkflowNextTxByTime.Config -> WorkflowNextTxByTime.Workflow -> Model -> ( Model, List Effect )
+handlePrefetchWorkflowNextTxByTime config wf model =
+    case wf of
+        Workflow.Ok tx ->
+            ( storePrefetchResult config (TxsPrefetched tx) model
+            , prefetchCounterpartyEffects config tx model
+            )
+
+        Workflow.Next eff ->
+            eff
+                |> List.map (Api.map (WorkflowNextTxByTimePrefetch config))
+                |> List.map ApiEffect
+                |> pair model
+
+        Workflow.Err WorkflowNextTxByTime.NoTxFound ->
+            n model
+
+
+{-| Background-fetch the address on the far side of a freshly prefetched
+next-tx (user decision 2026-08-31): placing that address after an expand click
+is the remaining round-trip, and on external-backend networks it is the most
+expensive one. Account txs only — a UTXO tx has no single counterparty (the
+user picks one from the io lists). One hop, no recursion: a stored address
+does not prefetch anything further until it is actually placed on the graph.
+-}
+prefetchCounterpartyEffects : { a | addressId : Id, direction : Direction } -> Api.Data.Tx -> Model -> List Effect
+prefetchCounterpartyEffects config tx model =
+    case tx of
+        Api.Data.TxTxAccount t ->
+            let
+                cid =
+                    Id.init t.network
+                        (case config.direction of
+                            Incoming ->
+                                t.fromAddress
+
+                            Outgoing ->
+                                t.toAddress
+                        )
+            in
+            if Network.hasAddress cid model.network || Dict.member cid model.prefetchedAddresses || cid == config.addressId then
+                []
+
+            else
+                [ BrowserGotPrefetchedAddressData cid
+                    |> Api.GetAddressEffect
+                        { currency = Id.network cid
+                        , address = Id.id cid
+                        , includeActors = True
+                        }
+                    |> ApiEffect
+                ]
+
+        Api.Data.TxTxUtxo _ ->
+            []
+
+
+{-| The background twin of `getNextTxEffects` (addAnyLinks semantics, no
+neighbor anchoring): same workflow entry points, but results are routed to the
+\*Prefetch messages, which park the tx instead of inserting it.
+
+A direction whose tx count is 0 is skipped outright — the expand handle is not
+even rendered there (the view's `nonZero` rule), and on external-backend
+networks the doomed pagesize-1 listing would scan the whole history looking
+for a row that does not exist (2026-08-31, the spam-token-only address case).
+
+-}
+prefetchNextTxEffects : Network -> Id -> Api.Data.Address -> List Effect
+prefetchNextTxEffects network addressId data =
+    [ ( Incoming, data.noIncomingTxs ), ( Outgoing, data.noOutgoingTxs ) ]
+        |> List.filter (\( _, count ) -> count > 0)
+        |> List.map Tuple.first
+        |> List.concatMap
+            (\direction ->
+                Network.getRecentTxForAddress network (Direction.flip direction) addressId
+                    |> Maybe.map
+                        (\tx ->
+                            case tx.type_ of
+                                Tx.Account t ->
+                                    let
+                                        config =
+                                            { addressId = addressId
+                                            , direction = direction
+                                            }
+                                    in
+                                    WorkflowNextTxByTime.startByHeight config t.raw.height t.raw.currency
+                                        |> Workflow.mapEffect (WorkflowNextTxByTimePrefetch config)
+                                        |> Workflow.next
+                                        |> List.map ApiEffect
+
+                                Tx.Utxo t ->
+                                    let
+                                        config =
+                                            { addressId = addressId
+                                            , direction = direction
+                                            , indexSelection = WorkflowNextUtxoTx.BiggestByValue
+                                            }
+                                    in
+                                    WorkflowNextUtxoTx.start config t.raw
+                                        |> Workflow.mapEffect (WorkflowNextUtxoTxPrefetch config)
+                                        |> Workflow.next
+                                        |> List.map ApiEffect
+                        )
+                    |> Maybe.Extra.withDefaultLazy
+                        (\_ ->
+                            let
+                                config =
+                                    { addressId = addressId
+                                    , direction = direction
+                                    }
+                            in
+                            WorkflowNextTxByTime.start config
+                                |> Workflow.mapEffect (WorkflowNextTxByTimePrefetch config)
+                                |> Workflow.next
+                                |> List.map ApiEffect
+                        )
+            )
+
+
 updateByRoute : Update.Config -> Route -> Model -> ( Model, List Effect )
 updateByRoute uc route model =
     let
@@ -4499,7 +4942,7 @@ addPathToGraph uc model net config list =
                     MSelectedAddress (Id.init net (Data.normalizeIdentifier net x))
 
                 TxHop txh ->
-                    MSelectedTx (Id.init net txh)
+                    MSelectedTx (Id.init net (Data.normalizeTxIdentifier net txh))
 
         startAddressCoords =
             list
@@ -4583,7 +5026,7 @@ addPathToGraph uc model net config list =
                             loadAddressWithPosition config.autolinkInTraceMode (Fixed x_ y_) ( net, Data.normalizeIdentifier net adr )
 
                         Route.TxHop h ->
-                            loadTxWithPosition (Fixed x_ y_) config.autolinkInTraceMode False ( net, h )
+                            loadTxWithPosition (Fixed x_ y_) config.autolinkInTraceMode False ( net, Data.normalizeTxIdentifier net h )
 
                 annotations =
                     case a of
@@ -4640,10 +5083,14 @@ updateByRoute_ uc route model =
         Route.Root ->
             unselect model
 
+        -- deep-link identifiers are normalized like every other entry path
+        -- (lowercase hex on EVM networks): nodes are keyed by the API's
+        -- lowercased ids, so a checksummed address in the URL would load the
+        -- node but never select it (panel stays closed)
         Route.Network network (Route.Address a _) ->
             let
                 id =
-                    Id.init network a
+                    Id.init network (Data.normalizeIdentifier network a)
             in
             { model | network = Network.clearSelection model.network }
                 |> loadAddressWithPosition True viewportCenter id
@@ -4652,7 +5099,7 @@ updateByRoute_ uc route model =
         Route.Network network (Route.Tx a) ->
             let
                 id =
-                    Id.init network a
+                    Id.init network (Data.normalizeTxIdentifier network a)
             in
             { model | network = Network.clearSelection model.network }
                 |> loadTxWithPosition viewportCenter True True id
@@ -4661,10 +5108,10 @@ updateByRoute_ uc route model =
         Route.Network network (Route.Relation a b) ->
             let
                 aId =
-                    Id.init network a
+                    Id.init network (Data.normalizeIdentifier network a)
 
                 bId =
-                    Id.init network b
+                    Id.init network (Data.normalizeIdentifier network b)
 
                 edgeId =
                     AggEdge.initId aId bId
@@ -4790,22 +5237,40 @@ loadAddressWithPosition : Bool -> FindPosition -> Id -> Model -> ( Model, List E
 loadAddressWithPosition autoLinkTxInTraceMode position id model =
     let
         request =
-            ( -- don't add the address here because it is not loaded yet
-              --{ model | network = Network.addAddressWithPosition plugins position id model.network }
-              model
-            , [ BrowserGotAddressData
-                    { id = id
-                    , pos = position
-                    , autoLinkTxInTraceMode = autoLinkTxInTraceMode
-                    }
-                    |> Api.GetAddressEffect
-                        { currency = Id.network id
-                        , address = Id.id id
-                        , includeActors = True
-                        }
-                    |> ApiEffect
-              ]
-            )
+            case Dict.get id model.prefetchedAddresses of
+                Just data ->
+                    -- a background prefetch already holds this address: replay
+                    -- it through the normal arrival path, no request at all
+                    ( { model | prefetchedAddresses = Dict.remove id model.prefetchedAddresses }
+                    , [ BrowserGotAddressData
+                            { id = id
+                            , pos = position
+                            , autoLinkTxInTraceMode = autoLinkTxInTraceMode
+                            }
+                            data
+                            |> Task.succeed
+                            |> Task.perform identity
+                            |> CmdEffect
+                      ]
+                    )
+
+                Nothing ->
+                    ( -- don't add the address here because it is not loaded yet
+                      --{ model | network = Network.addAddressWithPosition plugins position id model.network }
+                      model
+                    , [ BrowserGotAddressData
+                            { id = id
+                            , pos = position
+                            , autoLinkTxInTraceMode = autoLinkTxInTraceMode
+                            }
+                            |> Api.GetAddressEffect
+                                { currency = Id.network id
+                                , address = Id.id id
+                                , includeActors = True
+                                }
+                            |> ApiEffect
+                      ]
+                    )
     in
     Dict.get id model.network.addresses
         |> Maybe.map
@@ -4884,6 +5349,27 @@ selectAggEdge _ id model =
         Nothing ->
             s_selection (WillSelectAggEdge id) model
                 |> n
+
+
+{-| The icon's own click is swallowed, so a release in place is what selects:
+a drag must not also open the swap's details.
+-}
+releaseConversionNode : DraggingOffset -> Model -> ( Model, List Effect )
+releaseConversionNode nodeDrag model =
+    if conversionNodeOffset nodeDrag.key model == nodeDrag.baseOffset then
+        selectConversionEdge nodeDrag.key model
+
+    else
+        n model
+
+
+{-| The icon is never auto-placed, so the stored offset is where it is drawn.
+-}
+conversionNodeOffset : ( Id, Id ) -> Model -> { x : Float, y : Float }
+conversionNodeOffset key model =
+    Dict.get key model.network.conversions
+        |> Maybe.andThen .nodeOffset
+        |> Maybe.withDefault { x = 0, y = 0 }
 
 
 selectConversionEdge : ( Id, Id ) -> Model -> ( Model, List Effect )
@@ -5315,15 +5801,19 @@ isTagSummaryLoaded includeBestClusterTag existing id =
             False
 
 
-fetchTagSummaryForIds : Bool -> Dict Id HavingTags -> (Bool -> List ( Id, Api.Data.TagSummary ) -> Msg) -> String -> List String -> List Effect
-fetchTagSummaryForIds includeBestClusterTag existing toMsg network ids =
+{-| Bulk tag summaries for the ids not loaded yet. Nothing is requested on a
+network whose backend serves no tags — the bulk endpoint answers 501 there, and
+callers treat an empty effect list as "all loaded".
+-}
+fetchTagSummaryForIds : Bool -> Model -> (Bool -> List ( Id, Api.Data.TagSummary ) -> Msg) -> String -> List String -> List Effect
+fetchTagSummaryForIds includeBestClusterTag model toMsg network ids =
     let
         idsToLoad =
             ids
                 |> List.map (Id.init network)
-                |> List.filter (isTagSummaryLoaded includeBestClusterTag existing >> not)
+                |> List.filter (isTagSummaryLoaded includeBestClusterTag model.tagSummaries >> not)
     in
-    if List.isEmpty idsToLoad then
+    if List.isEmpty idsToLoad || not (supports NetworkCapabilities.Tags network model) then
         []
 
     else
@@ -5897,9 +6387,25 @@ isLegacyPf1GsFile data =
         |> Result.withDefault False
 
 
-fromDeserialized : Deserialized -> Model -> ( Model, List Effect )
-fromDeserialized deserialized model =
+{-| Things on a network the backend does not serve (lite networks switched off,
+or not granted to the account) are not requested: every such request comes back
+
+1.  Their addresses still go on the graph, drawn faded like any unserved node,
+    and their txs are parked in `unservedTxs`, so saving the graph keeps both.
+
+-}
+fromDeserialized : Update.Config -> Deserialized -> Model -> ( Model, List Effect )
+fromDeserialized uc deserialized model =
     let
+        served =
+            .id >> Id.network >> Update.networkServed uc
+
+        servedAddresses =
+            List.filter served deserialized.addresses
+
+        ( servedTxs, unservedTxs ) =
+            List.partition served deserialized.txs
+
         groupByNetworkWithField field =
             List.map field
                 >> List.Extra.gatherEqualsBy first
@@ -5909,7 +6415,7 @@ fromDeserialized deserialized model =
             groupByNetworkWithField .id
 
         addressesRequests =
-            deserialized.addresses
+            servedAddresses
                 |> groupByNetwork
                 |> List.map
                     (\( currency, addresses ) ->
@@ -5922,7 +6428,7 @@ fromDeserialized deserialized model =
                     )
 
         txsRequests =
-            deserialized.txs
+            servedTxs
                 |> groupByNetwork
                 |> List.map
                     (\( currency, txs ) ->
@@ -5947,21 +6453,26 @@ fromDeserialized deserialized model =
         relationRequests =
             let
                 addressIds =
-                    deserialized.addresses |> List.map .id
+                    servedAddresses |> List.map .id
             in
             addressIds
                 |> List.concatMap
                     (\id ->
-                        let
-                            others =
-                                addressIds
-                                    |> List.filter
-                                        (\nid ->
-                                            id < nid && Id.network nid == Id.network id
-                                        )
-                        in
-                        getRelations id Outgoing False others
-                            ++ getRelations id Incoming False others
+                        -- no relations capability: no pair-edge discovery (see fetchEgonet)
+                        if not (supports NetworkCapabilities.Relations (Id.network id) model) then
+                            []
+
+                        else
+                            let
+                                others =
+                                    addressIds
+                                        |> List.filter
+                                            (\nid ->
+                                                id < nid && Id.network nid == Id.network id
+                                            )
+                            in
+                            getRelations id Outgoing False others
+                                ++ getRelations id Incoming False others
                     )
 
         ( newAndEmptyPathfinder, _ ) =
@@ -5974,12 +6485,14 @@ fromDeserialized deserialized model =
                 }
     in
     ( { newAndEmptyPathfinder
-        | network =
+        | networkCapabilities = model.networkCapabilities
+        , network =
             ingestAddresses model.config Network.init deserialized.addresses
                 |> ingestAggEdges model.config deserialized.aggEdges
         , annotations = List.foldl (\i m -> Annotations.set i.id i.label i.color m) model.annotations deserialized.annotations
         , history = History.init
         , name = deserialized.name
+        , unservedTxs = unservedTxs
       }
     , txsRequests
         ++ addressesRequests
@@ -5993,23 +6506,44 @@ those are the ones a loaded file has put somewhere.
 autoLoadConversions : Set Id -> Tx -> Model -> ( Model, List Effect )
 autoLoadConversions keepPositionOf tx model =
     let
+        -- The TRANSACTION's hash, not the sub-transfer identifier this node
+        -- happens to carry. "Which conversions does this tx have" and "is this
+        -- sub-transfer a leg of one" are different questions, and only the
+        -- second one is scoped by `_I<n>`/`_T<n>`: asking with `<hash>_I0` --
+        -- the native transfer of an account tx -- means asking whether the
+        -- messaging FEE of a Stargate send is a bridge leg, which it is not.
+        -- The legs are then matched by `fromAssetTransfer`/`toAssetTransfer`;
+        -- swaps whose legs are other sub-txs are paired through their input leg.
         ( currency, txHash ) =
             case tx.type_ of
                 Tx.Account atx ->
-                    ( atx.raw.network, atx.raw.identifier )
+                    ( atx.raw.network, atx.raw.txHash )
 
                 Tx.Utxo utxoTx ->
                     ( utxoTx.raw.currency, utxoTx.raw.txHash )
     in
-    ( model
-    , BrowserGotConversions keepPositionOf tx
-        |> Api.GetConversionEffect
-            { currency = currency
-            , txHash = txHash
-            }
-        |> ApiEffect
-        |> List.singleton
-    )
+    if not (supports NetworkCapabilities.Conversions currency model) then
+        ( model, [] )
+
+    else
+        ( model
+        , BrowserGotConversions keepPositionOf tx
+            |> Api.GetConversionEffect
+                { currency = currency
+                , txHash = txHash
+                }
+            |> ApiEffect
+            |> List.singleton
+        )
+
+
+{-| Is the sub-transaction `txid` the leg a swap names as `transfer` on
+`network`? The conversions endpoint prefixes leg identifiers with `0x`, the txs
+endpoint does not, so the comparison drops it on both sides.
+-}
+isLegTransfer : Id -> String -> String -> Bool
+isLegTransfer txid network transfer =
+    Id.network txid == network && (Id.id txid |> removeLeading0x) == (transfer |> removeLeading0x)
 
 
 autoLoadAddresses : Bool -> Tx -> Model -> ( Model, List Effect )
@@ -6207,13 +6741,14 @@ getTagsForExport addressId table data model =
                 |> List.concatMap (\tx -> [ tx.fromAddress, tx.toAddress ])
                 |> Set.fromList
                 |> Set.toList
-                |> fetchTagSummaryForIds True model.tagSummaries toMsg (Id.network addressId)
+                |> fetchTagSummaryForIds True model toMsg (Id.network addressId)
     in
     ( model
     , if List.isEmpty effects then
-        -- Nothing left to fetch — every tag summary is already in the model, or
-        -- there are no rows at all. Complete the export anyway: waiting on a
-        -- response that will never come leaves the spinner turning forever.
+        -- Nothing left to fetch — every tag summary is already in the model, there
+        -- are no rows at all, or the network serves no tags. Complete the export
+        -- anyway: waiting on a response that will never come leaves the spinner
+        -- turning forever.
         [ InternalEffect (toMsg True []) ]
 
       else
@@ -6553,24 +7088,20 @@ exportGraphTxs uc conf model =
         ( newModel, _ ) =
             ExportCSV.update (ExportCSV.BrowserGotTime conf.time) config model.exportCSVGraph
                 |> mapFirst (flip s_exportCSVGraph model)
+
+        fetchEffects =
+            missingByNetwork
+                |> List.concatMap
+                    (\( network, addrs ) ->
+                        fetchTagSummaryForIds True model (BrowserGotTagSummariesForExportGraphTxsAsCSV conf.area conf.onlyVisibleIos) network addrs
+                    )
     in
-    if List.isEmpty missingByNetwork then
-        -- All tag summaries already loaded, proceed with export
+    if List.isEmpty fetchEffects then
+        -- every tag summary is already loaded, or nothing can be fetched:
+        -- proceed with the export
         generateGraphTxsExport uc conf.area conf.onlyVisibleIos newModel
 
     else
-        -- Need to fetch missing tag summaries first
-        let
-            toMsg =
-                BrowserGotTagSummariesForExportGraphTxsAsCSV conf.area conf.onlyVisibleIos
-
-            fetchEffects =
-                missingByNetwork
-                    |> List.concatMap
-                        (\( network, addrs ) ->
-                            fetchTagSummaryForIds True model.tagSummaries toMsg network addrs
-                        )
-        in
         ( newModel, fetchEffects )
 
 
@@ -6648,3 +7179,27 @@ handleTxHover id model =
 
             _ ->
                 hovered () |> n
+
+
+{-| Is `txId` the conversion's OUTPUT (to) leg?
+
+Both the leg fetch and the leg ordering ask this, and they must agree or the
+edge is built back to front. Network first, then the sub-tx id: a cross-chain
+conversion is settled on a different network, so the network alone already
+rules most candidates out, and the id then separates the two legs of a
+same-network conversion (a dex swap has both legs inside one tx).
+
+Deliberately phrased as "is it the OUTPUT leg", not "is it the input leg".
+`fromAssetTransfer` names a SUB-transfer (`<hash>_T60`, `<hash>_I390`), while
+the tx a user opened by its bare hash has the plain `<hash>` as its id, so a
+positive test against the input leg misses and whatever the else branch assumes
+becomes the answer. Assuming "input leg" there is right far more often: it is
+the tx the graph already held, and the output leg is the one being fetched.
+
+-}
+isOutputLegOf : Api.Data.ExternalConversion -> Id -> Bool
+isOutputLegOf conversion txId =
+    Id.network txId
+        == conversion.toNetwork
+        && (Id.id txId |> removeLeading0x)
+        == (conversion.toAssetTransfer |> removeLeading0x)

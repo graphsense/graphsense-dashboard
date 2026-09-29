@@ -594,6 +594,9 @@ export-dialog-only-visible-inoutputs-help: "When enabled, the CSV only contains 
 csv-note-capped: "Transaction too large — only flows touching a visible address were exported, truncated to the export size limit."
 csv-note-visible-only: "Only flows touching a visible address were exported."
 unknown url: "Unknown URL: {0}"
+not supported on lite networks: not supported on lite networks
+Relationship mode not supported on lite networks: Relationship mode not supported on lite networks
+Network switched off in the settings (lite networks): Network switched off in the settings (lite networks)
 Keyboard shortcuts: "Keyboard shortcuts"
 Add address or tx: "Add address or tx"
 Select all: "Select all"
@@ -602,3 +605,12 @@ Move the selection along the graph: "Move the selection along the graph"
 Close search or dialog: "Close search or dialog"
 Find on graph: "Find on graph"
 Duplicate graph in new tab: "Duplicate graph in new tab"
+lite networks: "Lite networks"
+lite-networks-setting-hint: "Networks served by the lite data service (BNB Smart Chain, Arbitrum, Base and the other EVM networks). Off: the app works on the core networks only and sends no request to the lite service, for the case that the service is congested or unavailable."
+lite-badge-tooltip: "The {0} network has restricted feature support."
+gs-file-networks-title: "Some nodes were not loaded"
+gs-file-networks-lite-off: "This graph contains nodes on {0}, which were not loaded because lite networks are switched off. Turn them on in Settings and open the file again."
+gs-file-networks-not-on-account: "This graph contains nodes on {0}, which are not available on your account. They were not loaded, but saving the graph keeps them."
+Not available on your account: "Not available on your account"
+on: "On"
+off: "Off"

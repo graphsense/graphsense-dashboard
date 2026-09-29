@@ -1,12 +1,15 @@
-module View.Stats exposing (stats)
+module View.Stats exposing (cappedTokenPills, stats)
 
 import Api.Data
 import Config.View exposing (Config)
+import Css
 import Dict exposing (Dict)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Http
 import List.Nonempty
+import Model.NetworkCapabilities as NetworkCapabilities exposing (NetworkCapabilities)
+import RecordSetter as Rs
 import RemoteData exposing (WebData)
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes exposing (d, viewBox)
@@ -19,10 +22,21 @@ import View.CurrencyMeta exposing (networks)
 import View.Locale as Locale
 
 
-stats : Config -> WebData Api.Data.Stats -> Dict String Api.Data.TokenConfigs -> Html msg
-stats vc sts tokens =
+stats : Config -> NetworkCapabilities -> WebData Api.Data.Stats -> Dict String Api.Data.TokenConfigs -> Html msg
+stats vc capabilities sts tokens =
+    -- The page sits directly in the layout row, without the `main_` wrapper
+    -- that gives every other page its scroll container, and the generated root
+    -- sets `overflow: hidden`. Together that clips the network list at the fold
+    -- with no way to reach the rest.
     Page.pageWithTitleWithAttributes
-        Page.pageWithTitleAttributes
+        (Page.pageWithTitleAttributes
+            |> Rs.s_root
+                [ [ Css.overflowY Css.auto |> Css.important
+                  , Css.flexGrow (Css.num 1)
+                  ]
+                    |> css
+                ]
+        )
         { root =
             { title = Locale.string vc.locale "Ledger statistics"
             , subtitle = ""
@@ -32,7 +46,7 @@ stats vc sts tokens =
                         { onFailure = statsLoadFailure vc
                         , onNotAsked = text ""
                         , onLoading = statsLoading
-                        , onSuccess = statsLoaded vc tokens
+                        , onSuccess = statsLoaded vc capabilities tokens
                         }
             }
         }
@@ -49,12 +63,18 @@ statsLoading =
     Loadingspinner.html []
 
 
-statsLoaded : Config -> Dict String Api.Data.TokenConfigs -> Api.Data.Stats -> Html msg
-statsLoaded vc tokens sts =
+statsLoaded : Config -> NetworkCapabilities -> Dict String Api.Data.TokenConfigs -> Api.Data.Stats -> Html msg
+statsLoaded vc capabilities tokens sts =
     Stats.networks
         { networkList =
             sts.currencies
-                |> List.map (\v -> currency vc v (Dict.get v.name tokens))
+                |> List.map
+                    (\v ->
+                        currency vc
+                            (NetworkCapabilities.supports NetworkCapabilities.ExactStats capabilities v.name)
+                            v
+                            (Dict.get v.name tokens)
+                    )
         }
         {}
 
@@ -64,17 +84,51 @@ supportedTokens configs =
     configs.tokenConfigs |> List.map (.ticker >> String.toUpper)
 
 
+maxTokenPills : Int
+maxTokenPills =
+    10
+
+
+{-| At most `maxTokenPills` pills: above that, the last pill reads "N+" for
+the N tickers that did not get one of the 9 remaining slots.
+-}
+cappedTokenPills : List String -> List String
+cappedTokenPills tickers =
+    if List.length tickers > maxTokenPills then
+        List.take (maxTokenPills - 1) tickers
+            ++ [ String.fromInt (List.length tickers - (maxTokenPills - 1)) ++ "+" ]
+
+    else
+        tickers
+
+
 supportedTokensRow : Config -> Maybe Api.Data.TokenConfigs -> List (Html msg)
 supportedTokensRow vc tokens =
     tokens
         |> Maybe.map supportedTokens
         |> Maybe.andThen (List.Nonempty.fromList >> Maybe.map List.Nonempty.toList)
-        |> Maybe.map (statsRowBadge vc "Supported tokens" >> List.singleton)
+        |> Maybe.map (cappedTokenPills >> statsRowBadge vc "Supported tokens" >> List.singleton)
         |> Maybe.withDefault []
 
 
-currency : Config -> Api.Data.CurrencyStats -> Maybe Api.Data.TokenConfigs -> Html msg
-currency vc cs tokens =
+currency : Config -> Bool -> Api.Data.CurrencyStats -> Maybe Api.Data.TokenConfigs -> Html msg
+currency vc hasExactStats cs tokens =
+    let
+        -- A backend that disables "exact_stats" serves placeholder zeros for
+        -- the pipeline numbers: hide those rows instead of rendering the zeros.
+        pipelineRows =
+            if hasExactStats then
+                [ Locale.intWithoutValueDetailFormatting vc.locale cs.noTxs
+                    |> statsRow vc "Transactions"
+                , Locale.intWithoutValueDetailFormatting vc.locale cs.noAddresses
+                    |> statsRow vc "Addresses"
+                , Locale.intWithoutValueDetailFormatting vc.locale cs.noEntities
+                    |> statsRow vc "Entities"
+                ]
+
+            else
+                []
+    in
     Stats.network
         { dataRowList =
             [ Data.timestampToPosix cs.timestamp
@@ -82,17 +136,8 @@ currency vc cs tokens =
                 |> statsRow vc "Last update"
             , Locale.intWithoutValueDetailFormatting vc.locale (cs.noBlocks - 1)
                 |> statsRow vc "Latest block"
-            , Locale.intWithoutValueDetailFormatting vc.locale cs.noTxs
-                |> statsRow vc "Transactions"
-            , Locale.intWithoutValueDetailFormatting vc.locale cs.noAddresses
-                |> statsRow vc "Addresses"
-            , Locale.intWithoutValueDetailFormatting vc.locale cs.noEntities
-                |> statsRow vc "Entities"
-            , Locale.intWithoutValueDetailFormatting vc.locale cs.noLabels
-                |> statsRow vc "Labels"
-            , taggedAddressesWithPercentage vc cs
-                |> statsRow vc "Tagged addresses"
             ]
+                ++ pipelineRows
                 ++ supportedTokensRow vc tokens
         }
         { root =
@@ -141,12 +186,3 @@ statsRowBadge vc label values =
             { key = Locale.string vc.locale label
             }
         }
-
-
-taggedAddressesWithPercentage : Config -> Api.Data.CurrencyStats -> String
-taggedAddressesWithPercentage vc cs =
-    Locale.intWithoutValueDetailFormatting vc.locale cs.noTaggedAddresses
-        ++ " ("
-        ++ Locale.percentage vc.locale
-            (toFloat cs.noTaggedAddresses / toFloat cs.noAddresses)
-        ++ ")"

@@ -89,6 +89,7 @@ type Msg
     | BrowserGotAddressData AddingAddressConfig Api.Data.Address
     | BrowserGotAddressPubkeyRelations Id Api.Data.RelatedAddresses
     | BrowserGotAddressDataToRefresh Api.Data.Address
+    | BrowserGotPrefetchedAddressData Id Api.Data.Address
       -- the Id is the cluster id the entity request was made with (fresh-aware,
       -- via Data.addressCluster) and is the key of the clusters dict; the
       -- response's .cluster field is normalized to it at the request site
@@ -109,6 +110,7 @@ type Msg
     | BrowserGotActor String Api.Data.Actor
     | BrowserGotTx AddingTxConfig Api.Data.Tx
     | BrowserGotConversionLoop (Set Id) Tx Api.Data.ExternalConversion Api.Data.Tx
+    | BrowserGotConversionInputLeg (Set Id) Tx Api.Data.ExternalConversion Api.Data.Tx
     | BrowserGotConversions (Set Id) Tx (List Api.Data.ExternalConversion)
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
     | UserClickedTx Id
@@ -116,6 +118,8 @@ type Msg
     | UserClickedAllAddressCheckboxInTable Direction
     | WorkflowNextUtxoTx WorkflowNextUtxoTx.Config (Maybe Id) WorkflowNextUtxoTx.Msg
     | WorkflowNextTxByTime WorkflowNextTxByTime.Config (Maybe Id) WorkflowNextTxByTime.Msg
+    | WorkflowNextUtxoTxPrefetch WorkflowNextUtxoTx.Config WorkflowNextUtxoTx.Msg
+    | WorkflowNextTxByTimePrefetch WorkflowNextTxByTime.Config WorkflowNextTxByTime.Msg
     | UserPushesLeftMouseButtonOnUtxoTx Id Coords
     | UserClickedRemoveAddressFromGraph Id
     | UserReleasedDeleteKey
@@ -126,6 +130,7 @@ type Msg
     | UserInputsAnnotation (List Id) String
     | UserSelectsAnnotationColor (List Id) (Maybe Color)
     | UserPushesLeftMouseButtonOnAggEdgeLabel ( Id, Id ) { x : Float, y : Float } Coords
+    | UserPushesLeftMouseButtonOnConversionNode ( Id, Id ) Coords
     | ToolbarHovercardMsg Hovercard.Msg
     | UserClickedExportGraph (Maybe Time.Posix)
     | BrowserGotTagSummariesForExportGraphTxsAsCSV Dialog.ExportArea Bool Bool (List ( Id, Api.Data.TagSummary ))
@@ -202,6 +207,8 @@ type OutMsg
       -- enter on one identifier the search matched nowhere; the shell owns the toast
     | IdentifierNotFound String
     | CloseTopmostOverlay
+      -- a served swap leg's curated symbol/decimals, keyed by contract address
+    | RegisterConversionAsset String Api.Data.TokenConfig
 
 
 type OverlayWindows

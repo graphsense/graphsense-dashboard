@@ -182,22 +182,39 @@ contextMenuView pluginStates vc model ( coords, menu ) =
 
             ContextMenu.AddressContextMenu id ->
                 let
+                    -- most plugin features need data a lite backend does not
+                    -- serve; items whose feature does work there opt in via
+                    -- ContextMenuItem.setAvailableOnLiteNetworks, the rest are
+                    -- kept visible but inert, so the user learns why instead
+                    -- of missing the feature
+                    restrictOnLiteNetwork item =
+                        if
+                            Pathfinder.isLiteNetwork (Id.network id) model
+                                && not (ContextMenuItem.availableOnLiteNetworks item)
+                        then
+                            item
+                                |> ContextMenuItem.setDisabled True
+                                |> ContextMenuItem.setTooltip "Not supported on lite networks"
+
+                        else
+                            item
+
                     -- Plugin entries act on the one address that was right-clicked,
                     -- so on a multi-selection they are greyed out like core's own
                     -- per-address entries below (annotate, copy id, open in tab).
-                    isMultiSelect =
+                    disableByMultiSelect =
                         case model.selection of
                             Pathfinder.MultiSelect _ ->
-                                True
+                                ContextMenuItem.setDisabled True
 
                             _ ->
-                                False
+                                identity
 
                     pluginsList =
                         Dict.get id model.network.addresses
                             |> Maybe.map
                                 (Plugin.addressContextMenu pluginStates vc
-                                    >> List.map (ContextMenuItem.setDisabled isMultiSelect >> ContextMenuItem.view vc)
+                                    >> List.map (restrictOnLiteNetwork >> disableByMultiSelect >> ContextMenuItem.view vc)
                                 )
                             |> Maybe.withDefault []
                 in
@@ -860,7 +877,7 @@ graphSvg vc gc model dim =
             |> Svg.preventDefaultOn "contextmenu"
          , Util.View.noTextSelection
          ]
-            ++ (if model.dragging /= NoDragging || model.draggingAggEdgeLabel /= Nothing then
+            ++ (if model.dragging /= NoDragging || model.draggingAggEdgeLabel /= Nothing || model.draggingConversionNode /= Nothing then
                     Svg.preventDefaultOn "mousemove"
                         (Util.Graph.decodeCoords Coords
                             |> Json.Decode.map (\c -> ( UserMovesMouseOnGraph c, True ))
@@ -907,7 +924,7 @@ graphSvg vc gc model dim =
                 ]
                 dim
         , Network.relations vc gc detail model.hovered model.selection model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
-        , Svg.lazy6 Network.addresses vc gc detail model.onGraphSearch model.annotations model.network.addresses
+        , Svg.lazy7 Network.addresses vc gc detail model.networkCapabilities model.onGraphSearch model.annotations model.network.addresses
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system

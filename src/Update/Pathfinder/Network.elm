@@ -103,9 +103,14 @@ addConversion conversion inputTx outputTx network =
                         |> Dict.update (second edgeAddressIds) edgeMapUpsertFn
                         |> Dict.update (first edgeId) edgeMapUpsertFn
                         |> Dict.update (second edgeId) edgeMapUpsertFn
+
+                -- the same swap answered again (a leg reloaded, the whole tx
+                -- re-asked) must not snap a dragged swap icon back
+                keptOffset =
+                    Dict.get edgeId network.conversions |> Maybe.andThen .nodeOffset
             in
             { network
-                | conversions = Dict.insert edgeId c network.conversions
+                | conversions = Dict.insert edgeId { c | nodeOffset = keptOffset } network.conversions
                 , conversionsEdgeMap = conversionsEdgeMap1
             }
 
@@ -677,11 +682,13 @@ insertAddress pc model newAddress =
                             Incoming ->
                                 { addr
                                     | outgoingTxs = txsInsertId tx.id addr.outgoingTxs
+                                    , incomingTxs = Address.invalidatePrefetched addr.incomingTxs
                                 }
 
                             Outgoing ->
                                 { addr
                                     | incomingTxs = txsInsertId tx.id addr.incomingTxs
+                                    , outgoingTxs = Address.invalidatePrefetched addr.outgoingTxs
                                 }
                         , setAddressInTx pc tx.id direction newAddress nw
                         )
@@ -1260,12 +1267,21 @@ insertTx pc network tx =
 
                         Incoming ->
                             ( .outgoingTxs, s_outgoingTxs )
+
+                ( getOpposite, setOpposite ) =
+                    case dir of
+                        Outgoing ->
+                            ( .outgoingTxs, s_outgoingTxs )
+
+                        Incoming ->
+                            ( .incomingTxs, s_incomingTxs )
             in
             if Set.member tx.id <| txsToSet <| get addr then
                 addr
 
             else
                 set (get addr |> txsInsertId tx.id) addr
+                    |> (\a -> setOpposite (Address.invalidatePrefetched (getOpposite a)) a)
     in
     Dict.get tx.id nw.txs
         |> Maybe.map
@@ -1480,7 +1496,11 @@ animateAddresses delta model =
                             }
                                 |> updateAddress id (always newAddr)
                         )
-                    |> Maybe.withDefault network
+                    |> Maybe.Extra.withDefaultLazy
+                        -- self-healing: an id whose address no longer exists can
+                        -- never satisfy the isDone check below, so evict it here
+                        -- instead of animating a ghost at 60fps forever
+                        (\_ -> { network | animatedAddresses = Set.remove id network.animatedAddresses })
             )
             model
 
@@ -1518,7 +1538,9 @@ animateTxs delta model =
                                         }
                                     )
                         )
-                    |> Maybe.withDefault network
+                    |> Maybe.Extra.withDefaultLazy
+                        -- self-healing, see animateAddresses
+                        (\_ -> { network | animatedTxs = Set.remove id network.animatedTxs })
             )
             model
 
@@ -1543,6 +1565,13 @@ deleteAddress id network =
                         )
                         { network
                             | addresses = Dict.remove id network.addresses
+
+                            -- also drop it from the animation set: the only other
+                            -- removal (in animateAddresses) sits behind a Dict.get
+                            -- that fails once the address is gone, so a stale id
+                            -- would keep the onAnimationFrameDelta subscription
+                            -- (and a 60fps full re-render) alive forever
+                            , animatedAddresses = Set.remove id network.animatedAddresses
                         }
                     |> (\nw ->
                             Dict.get id nw.addressAggEdgeMap
@@ -1597,6 +1626,10 @@ deleteTx id network =
                         )
                         { network2
                             | txs = Dict.remove id network2.txs
+
+                            -- see deleteAddress: a deleted tx must leave
+                            -- animatedTxs too, or the rAF subscription never ends
+                            , animatedTxs = Set.remove id network2.animatedTxs
                         }
             )
         |> Maybe.withDefault network
