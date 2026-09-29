@@ -7,6 +7,7 @@ import Json.Encode exposing (Value, bool, float, int, list, null, string)
 import Model.Pathfinder exposing (Model)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
+import Model.Pathfinder.Deserialize exposing (DeserializedThing)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..))
 import Model.Pathfinder.Tx exposing (Tx)
@@ -56,10 +57,16 @@ encodeWith { keepAddress, keepTx } model =
         |> Dict.values
         |> List.filter (.id >> keepAddress)
         |> list encodeAddress
-    , model.network.txs
+    , (model.network.txs
         |> Dict.values
         |> List.filter (.id >> keepTx)
-        |> list encodeTx
+        |> List.map encodeTx
+      )
+        ++ (model.unservedTxs
+                |> List.filter (.id >> keepTx)
+                |> List.map encodeUnservedTx
+           )
+        |> list identity
     , model.annotations
         |> toList
         |> List.filter (\( id, _ ) -> keepAddress id || keepTx id)
@@ -109,6 +116,20 @@ encodeTx tx =
     [ encodeId tx.id
     , float tx.x
     , float (Animation.getTo tx.y)
+    , bool tx.isStartingPoint
+    , int tx.index
+    ]
+        |> list identity
+
+
+{-| A tx of an opened graph that was never fetched (its network is not served),
+written back exactly as it was read.
+-}
+encodeUnservedTx : DeserializedThing -> Value
+encodeUnservedTx tx =
+    [ encodeId tx.id
+    , float tx.x
+    , float tx.y
     , bool tx.isStartingPoint
     , int tx.index
     ]

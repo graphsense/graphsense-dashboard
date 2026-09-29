@@ -6387,9 +6387,25 @@ isLegacyPf1GsFile data =
         |> Result.withDefault False
 
 
-fromDeserialized : Deserialized -> Model -> ( Model, List Effect )
-fromDeserialized deserialized model =
+{-| Things on a network the backend does not serve (lite networks switched off,
+or not granted to the account) are not requested: every such request comes back
+
+1.  Their addresses still go on the graph, drawn faded like any unserved node,
+    and their txs are parked in `unservedTxs`, so saving the graph keeps both.
+
+-}
+fromDeserialized : Update.Config -> Deserialized -> Model -> ( Model, List Effect )
+fromDeserialized uc deserialized model =
     let
+        served =
+            .id >> Id.network >> Update.networkServed uc
+
+        servedAddresses =
+            List.filter served deserialized.addresses
+
+        ( servedTxs, unservedTxs ) =
+            List.partition served deserialized.txs
+
         groupByNetworkWithField field =
             List.map field
                 >> List.Extra.gatherEqualsBy first
@@ -6399,7 +6415,7 @@ fromDeserialized deserialized model =
             groupByNetworkWithField .id
 
         addressesRequests =
-            deserialized.addresses
+            servedAddresses
                 |> groupByNetwork
                 |> List.map
                     (\( currency, addresses ) ->
@@ -6412,7 +6428,7 @@ fromDeserialized deserialized model =
                     )
 
         txsRequests =
-            deserialized.txs
+            servedTxs
                 |> groupByNetwork
                 |> List.map
                     (\( currency, txs ) ->
@@ -6437,7 +6453,7 @@ fromDeserialized deserialized model =
         relationRequests =
             let
                 addressIds =
-                    deserialized.addresses |> List.map .id
+                    servedAddresses |> List.map .id
             in
             addressIds
                 |> List.concatMap
@@ -6476,6 +6492,7 @@ fromDeserialized deserialized model =
         , annotations = List.foldl (\i m -> Annotations.set i.id i.label i.color m) model.annotations deserialized.annotations
         , history = History.init
         , name = deserialized.name
+        , unservedTxs = unservedTxs
       }
     , txsRequests
         ++ addressesRequests

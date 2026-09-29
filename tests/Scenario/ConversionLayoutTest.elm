@@ -18,6 +18,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Set
 import Support.App as App exposing (App)
+import Support.Env as Env
 import Test exposing (Test, describe, test)
 import Update.Pathfinder
 
@@ -164,7 +165,7 @@ open legs deserialized =
                         m.config
                 in
                 { m | config = { config | snapToGrid = True } }
-                    |> Update.Pathfinder.fromDeserialized deserialized
+                    |> Update.Pathfinder.fromDeserialized Env.updateConfig deserialized
                     |> Tuple.first
             )
         |> App.steps

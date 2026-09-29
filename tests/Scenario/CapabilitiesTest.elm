@@ -11,6 +11,8 @@ Pathfinder model from scratch: "Restart" and opening a saved graph.
 A graph handed over to a fresh tab ("Open in new tab" on a multi-selection,
 Ctrl+D) or a `?import=` deep link arrives at boot, before the answer, and
 loading it fires the same per-network requests -- so it waits the same way.
+It also waits for the statistics (see Scenario.UnservedNetworksGsTest), so the
+tests that release it deliver those first.
 
 -}
 
@@ -151,18 +153,24 @@ suite =
                     |> Expect.equal 0
         , test "the answer releases the opened graph" <|
             \_ ->
-                App.initAt "/pathfinder"
-                    |> App.step (BrowserGotCapabilities btcWithoutRelations)
-                    |> App.step (BrowserGotDeserializedGS twoAddressesGs)
-                    |> loadedAddresses
-                    |> Expect.equal 2
+                withStats <|
+                    \stats ->
+                        App.initAt "/pathfinder"
+                            |> App.step (BrowserGotStatistics stats)
+                            |> App.step (BrowserGotCapabilities btcWithoutRelations)
+                            |> App.step (BrowserGotDeserializedGS twoAddressesGs)
+                            |> loadedAddresses
+                            |> Expect.equal 2
         , test "a backend without the endpoint (404) releases the opened graph" <|
             \_ ->
-                App.initAt "/pathfinder"
-                    |> App.step capabilitiesFailed
-                    |> App.step (BrowserGotDeserializedGS twoAddressesGs)
-                    |> loadedAddresses
-                    |> Expect.equal 2
+                withStats <|
+                    \stats ->
+                        App.initAt "/pathfinder"
+                            |> App.step (BrowserGotStatistics stats)
+                            |> App.step capabilitiesFailed
+                            |> App.step (BrowserGotDeserializedGS twoAddressesGs)
+                            |> loadedAddresses
+                            |> Expect.equal 2
         , test "restart keeps the answer" <|
             \_ ->
                 App.initAt "/pathfinder"

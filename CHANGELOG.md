@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The transaction CSV exports complete without actor columns on a network whose backend serves no tags, instead of failing on the bulk tag request
 
 ### Fixed
+- Opening a saved graph with nodes on a network the account does not get (lite networks switched off, or not granted) no longer fires requests that fail with one generic error each: those nodes are not fetched, one notice names their networks, their addresses stay on the graph faded, and saving the graph keeps them
 - Clicking a faded address or transaction of a network switched off with the lite-networks setting selects it in place instead of navigating to a URL the app can no longer resolve ("Unknown URL")
 
 - A search with many hits, such as a label matched by many tags or a hash found on several networks, grew the dropdown past the bottom of the screen and the page scrolled instead. The result list now scrolls inside the dropdown: it stops at half the viewport in the header and in dialogs, takes nearly the whole viewport on the Pathfinder, and on the landing page, whose search box sits lower, what is left of the viewport under it

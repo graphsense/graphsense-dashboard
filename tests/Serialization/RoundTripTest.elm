@@ -39,6 +39,7 @@ import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Network exposing (Network)
 import RecordSetter exposing (s_annotations, s_index, s_labelOffset, s_name, s_network, s_txs)
 import Set
+import Support.Env as Env
 import Test exposing (Test, describe, test)
 import Update.Pathfinder
 import Util.Annotations as Annotations
@@ -137,7 +138,7 @@ reopen : Model -> Result Json.Decode.Error ( Model, List Effect.Pathfinder.Effec
 reopen model =
     Encode.Pathfinder.encode model
         |> Update.Pathfinder.deserialize
-        |> Result.map (\d -> Update.Pathfinder.fromDeserialized d emptyModel)
+        |> Result.map (\d -> Update.Pathfinder.fromDeserialized Env.updateConfig d emptyModel)
 
 
 expectStableFile : Model -> Expect.Expectation

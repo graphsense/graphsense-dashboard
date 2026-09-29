@@ -19,6 +19,7 @@ import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
 import Model.Pathfinder.ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.ConversionDetails exposing (ConversionDetailsModel)
+import Model.Pathfinder.Deserialize exposing (DeserializedThing)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id, TxsFilterId)
 import Model.Pathfinder.Network exposing (Network, NetworkConditions)
@@ -68,6 +69,11 @@ type alias Model =
     -- address details fetched in the background for the counterparties of
     -- prefetched next-txs; consumed (and removed) by loadAddressWithPosition
     , prefetchedAddresses : Dict Id Api.Data.Address
+
+    -- txs of an opened graph on networks the backend does not serve (lite
+    -- networks switched off, or not granted to the account): never fetched,
+    -- so never on the graph, but written back out on save so the file keeps them
+    , unservedTxs : List DeserializedThing
     , colors : ScopedColorAssignment
     , annotations : AnnotationModel
     , dragging : Dragging Id

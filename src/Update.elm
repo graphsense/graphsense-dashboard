@@ -1231,13 +1231,21 @@ update uc msg model =
                     |> updateByPluginOutMsg uc outMsg
 
         BrowserGotDeserializedGS (( filename, data ) as payload) ->
-            if RD.isLoading model.capabilities || RD.isNotAsked model.capabilities then
+            if
+                RD.isLoading model.capabilities
+                    || RD.isNotAsked model.capabilities
+                    || RD.isLoading model.stats
+                    || RD.isNotAsked model.stats
+            then
                 -- A graph handed over to a fresh tab ("Open in new tab",
                 -- Ctrl+D) or a ?import= deep link arrives at boot, before
                 -- /capabilities has answered. Loading it decides per network
                 -- which optional requests it may fire (pair-edge discovery,
                 -- conversions), and without the answer every network counts
                 -- as fully enabled -- so it waits, exactly as a deep link does.
+                -- It waits for the statistics too: they say which networks the
+                -- backend serves, and until they arrive every network counts as
+                -- served, so the lite nodes of the file would be requested (403).
                 ( model, [ PostponeDeserializeEffect payload ] )
 
             else
@@ -2577,19 +2585,50 @@ clearSearch model =
 
 
 deserialize : Config -> String -> Value -> Model key -> ( Model key, List Effect )
-deserialize _ filename data model =
+deserialize uc filename data model =
     Pathfinder.deserialize data
         |> Result.map
             (\deser ->
                 let
                     ( pathfinder, pathfinderEffects ) =
-                        Pathfinder.fromDeserialized deser model.pathfinder
+                        Pathfinder.fromDeserialized uc deser model.pathfinder
+
+                    -- one notice naming the networks the load left unfetched,
+                    -- instead of a generic error toast per 403
+                    unservedNetworks =
+                        (deser.addresses ++ deser.txs)
+                            |> List.map (.id >> PathfinderId.network)
+                            |> List.Extra.unique
+                            |> List.filter (Config.Update.networkServed uc >> not)
+                            |> List.map String.toUpper
+
+                    ( notifications, notificationEffects ) =
+                        if List.isEmpty unservedNetworks then
+                            ( model.notifications, [] )
+
+                        else
+                            Notification.add
+                                ((if model.config.liteNetworks then
+                                    "gs-file-networks-not-on-account"
+
+                                  else
+                                    "gs-file-networks-lite-off"
+                                 )
+                                    |> Notification.infoDefault
+                                    |> Notification.map
+                                        (s_title (Just "gs-file-networks-title")
+                                            >> s_variables [ String.join ", " unservedNetworks ]
+                                        )
+                                )
+                                model.notifications
                 in
                 ( { model
                     | pathfinder = pathfinder
                     , page = Pathfinder
+                    , notifications = notifications
                   }
                 , List.map PathfinderEffect pathfinderEffects
+                    ++ List.map NotificationEffect notificationEffects
                 )
             )
         |> Result.Extra.unpack
