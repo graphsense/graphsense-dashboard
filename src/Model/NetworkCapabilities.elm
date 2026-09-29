@@ -2,6 +2,7 @@ module Model.NetworkCapabilities exposing
     ( Capability(..)
     , NetworkCapabilities
     , fromApi
+    , hasLiteNetwork
     , inactiveInRelationshipMode
     , isLiteNetwork
     , none
@@ -84,6 +85,21 @@ isLiteNetwork (NetworkCapabilities networks) network =
     Dict.get (String.toLower network) networks
         |> Maybe.map (Set.isEmpty >> not)
         |> Maybe.withDefault False
+
+
+{-| Whether the backend serves any lite network at all. Answers what the
+settings need to know: a deployment that only has core networks has nothing for
+the lite-networks switch to switch, so it does not get one.
+
+Note the switch reads this together with its own state. Turning it off makes
+every request carry the opt-out header, and the lite networks then leave the
+capabilities answer too — so this goes False, and only the switch's own state
+keeps it reachable.
+
+-}
+hasLiteNetwork : NetworkCapabilities -> Bool
+hasLiteNetwork (NetworkCapabilities networks) =
+    networks |> Dict.values |> List.any (Set.isEmpty >> not)
 
 
 {-| Relationship-based tracing grows no aggregate edges where the backend has

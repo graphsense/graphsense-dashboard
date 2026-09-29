@@ -8,9 +8,11 @@ import Html.Styled.Events exposing (onClick)
 import List.Extra
 import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), UserModel, requestLimitIntervalToString)
 import Model.Locale as Locale
+import Model.NetworkCapabilities as NetworkCapabilities
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin
 import RecordSetter as Rs
+import RemoteData
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsPage as Sp
 import Time
@@ -145,9 +147,26 @@ generalSettings vc m =
                 }
             }
 
+        -- Nothing to switch where the backend serves core networks only, so
+        -- such a deployment gets no switch. Once it is off the lite networks
+        -- are gone from the capabilities too (Effect.apiHeaders), which is why
+        -- the off state alone keeps the row -- otherwise there would be no way
+        -- back on.
+        showLiteNetworks =
+            not vc.liteNetworks
+                || (m.capabilities
+                        |> RemoteData.map NetworkCapabilities.hasLiteNetwork
+                        |> RemoteData.withDefault False
+                   )
+
         pluginProfiles =
-            ( Locale.string vc.locale "lite networks", liteNetworksSetting vc )
-                :: Plugin.profile m.plugins vc
+            (if showLiteNetworks then
+                [ ( Locale.string vc.locale "lite networks", liteNetworksSetting vc ) ]
+
+             else
+                []
+            )
+                ++ Plugin.profile m.plugins vc
     in
     Sp.settingsPageGeneralWithInstances
         (Sp.settingsPageGeneralAttributes
