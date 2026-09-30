@@ -3,60 +3,41 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [26.09.0] - Unreleased
+## [26.09.0] - 2026-09-30
 
 ### Added
-- With the lite networks switched off, the addresses and transactions of those networks already on the graph are drawn faded; the address tooltip says why.
-
-- A "Lite networks" switch on the settings page. Off means the app asks the API for its core networks only: every request carries `X-Ikn-Currency-Opt-Out: all-light`, the lite networks leave the statistics, the search, the network switch and the cross-chain rows, and no request reaches the lite data service. For the case that the service is congested or unavailable. On by default, remembered like the other settings
-- An account transaction and the internal or token transfers it triggers are separate edges on the graph. Hovering any of them now highlights all of them, so the transfers can be traced back to the transaction they belong to. Each is still selected on its own
-- Addresses on a blacklist or whitelist (the `black_list` and `white_list` concepts and their governmental `gov_` variants) show a black or white tag icon on the graph node and in the address details, instead of the usual yellow or grey one. Only the address's own tags count, not those inherited from its cluster or a shared pubkey. A blacklist wins when an address is on both. The legend lists the two new icons
-- BNB Smart Chain (`bnb`) and Arbitrum (`arb`) render like Ethereum: lowercased `0x` identifiers, 18-decimal units, names, icons and explorer links. Native amounts on Arbitrum are labelled ETH, the currency its fees are paid in
-- Base (`base`), Optimism (`opt`), Polygon (`pol`), Avalanche (`avax`) and Gnosis (`gnosis`) join them, each with its own explorer links; native amounts are labelled ETH on Base and Optimism, POL, AVAX and XDAI on the others
-- Robinhood Chain (`robinhood`) joins the EVM networks with Robinscan explorer links; its native amounts are labelled ETH
-- Base, Optimism, Polygon, Avalanche, Gnosis and Robinhood Chain get their own currency icons on address nodes and in the statistics, like the networks before them
-- The app asks the backend once at startup which features it serves per network (`GET /capabilities`) and hides what is missing: neighbor tables, automatic edge discovery, the cluster-addresses tab, bridge conversions and tag lookups stay off on a network whose backend has no relations, clusters, conversions or tags. A backend without the endpoint leaves everything enabled. A deep link that loads an address or transaction waits for that answer, so no request goes out before the app knows what the backend serves
-- Counts and totals the backend reports as lower bounds are shown with a trailing "+" (`500+`), taken from the response's `qualifiers` map; nothing is capped or guessed client-side. An address's transaction total adds exact incoming and outgoing counts; once either is a lower bound it shows the larger of the two with a "+" (`500+` in and `217` out reads `500+`)
-- The ledger-statistics card hides the pipeline rows (transactions, addresses, entities) on a network whose backend disables `exact_stats` — those backends serve placeholder zeros
-- The backend's `is_possible_service` verdict drives the "possible service" warning where present; the local degree/transaction-count rule remains the fallback
-- On lite networks, right after an address loads, the next transaction in both directions is fetched in the background, so clicking an expand handle inserts it instantly instead of waiting for the API
-- The graph sheds labels in steps as it is zoomed out, so a large graph reads as structure instead of noise: first edge values, timestamps, tx hashes and tag icons go, then address identifiers. Annotations, service labels and everything on a selected or hovered node stay at every zoom level, and all labels return when zooming in. Relationship mode already did this for its edge values; transaction mode now does the same
-- Ctrl+D (Cmd+D on macOS) duplicates the whole graph into a new tab, positions and notes included, through the same hand-over as "Open in new tab" on a multi-selection
-- "Open in new tab" on the right-click menu of a multi-selection opens the selected nodes as their own graph in a new tab, positions and notes included. The selection is handed over as a `.gs` payload, so it goes through the same import path as an opened file; a selected transaction whose addresses are not selected opens as a lone transaction
-- Holding Ctrl (Cmd on macOS) on the Pathfinder for a moment shows a small overlay listing the keyboard shortcuts, the way command-line tools show their key bindings; it disappears with the key. The toolbar tooltips now carry the shortcut too, e.g. "Save file (Ctrl+S)", so daily users can find them without reading the docs
-- The help menu behind the question mark on the Pathfinder gains a "Keyboard shortcuts" entry next to "Legend", opening a dialog with the same list the overlay shows, for anyone who never holds the key long enough to see it
-- Ctrl+K (Cmd+K on macOS) focuses the address search box on the Pathfinder, so more addresses can be added without reaching for the mouse; Ctrl+F remains the find-on-graph search
+- New EVM networks: BNB Smart Chain, Arbitrum, Base, Optimism, Polygon, Avalanche, Gnosis and Robinhood Chain, with currency icons and explorer links
+- Lite networks: networks with a reduced feature set are marked with a "Lite" badge, and features they do not support are hidden or greyed out
+- A "Lite networks" switch on the settings page (where lite networks exist); when off, their nodes on the graph are shown faded
+- The app asks the backend which features each network supports and hides the ones that are missing
+- Counts the backend reports as lower bounds are shown with a trailing "+" (e.g. `500+`)
+- Black and white tag icons for blacklisted and whitelisted addresses
+- Hovering a transaction also highlights its internal and token transfers
+- Swaps and bridges show per-leg assets and fiat values; a swap icon can be dragged to move its edge
+- Clicking an unknown currency copies its contract address
+- On lite networks, the next transaction in each direction is prefetched, so expanding is instant
+- Labels are hidden step by step when zooming out and return when zooming in
+- "Open in new tab" for a multi-selection, and Ctrl/Cmd+D to duplicate the whole graph into a new tab
+- Keyboard shortcuts: Ctrl/Cmd+K focuses the address search; holding Ctrl/Cmd shows a shortcut overlay; toolbar tooltips and a "Keyboard shortcuts" help entry list them
 
 ### Changed
-
-- The ledger-statistics card no longer lists the label and tagged-address counts; the API keeps serving them
-- An address's cross-chain row in the details header shows two networks and a "+N" counter for the rest; the counter and the three-dots button open the full public-key table
-- Address nodes on a network without relations are drawn faded in relationship-based tracing mode. The tooltip on such a node is a single hint that relationship mode is not supported there, without the usual figures, and the side panel shows no table for it at all: the transactions table it used to show in place of the relations tables read as counterparties
-- The transaction CSV exports complete without actor columns on a network whose backend serves no tags, instead of failing on the bulk tag request
+- The ledger statistics no longer show label and tagged-address counts
+- The cross-chain row in the address details shows two networks and a "+N" counter for the rest
+- Supported-token pills are capped at ten, with a "+N" pill for the rest
+- Cluster addresses are added below the selected address
+- Statistics and capability requests time out instead of waiting indefinitely
 
 ### Fixed
-- Opening a saved graph with nodes on a network the account does not get (lite networks switched off, or not granted) no longer fires requests that fail with one generic error each: those nodes are not fetched, one notice names their networks, their addresses stay on the graph faded, and saving the graph keeps them
-- Clicking a faded address or transaction of a network switched off with the lite-networks setting selects it in place instead of navigating to a URL the app can no longer resolve ("Unknown URL")
-
-- A search with many hits, such as a label matched by many tags or a hash found on several networks, grew the dropdown past the bottom of the screen and the page scrolled instead. The result list now scrolls inside the dropdown: it stops at half the viewport in the header and in dialogs, takes nearly the whole viewport on the Pathfinder, and on the landing page, whose search box sits lower, what is left of the viewport under it
-- An identifier the search matched nowhere, such as an XRP transaction hash on an instance that does not serve XRP, only ever produced "No results found", and enter did nothing with it. The dropdown now says which networks were searched ("Not found on BTC, BCH, LTC, ZEC, ETH, TRX"), and enter shows an address- or transaction-not-found toast, chosen by the shape of the identifier, naming those networks and the likely reasons: not on a supported network, not in the database yet, or a typo. The not-found dialogs a deep link shows gain the supported-network reason too
-- Pasting several addresses or transaction hashes into the search box added what it could and said nothing about the rest. Once every pasted item has been looked up, a notification now says how many were skipped and lists them by reason: no match, request failed, or too short to be an identifier. It is an error when nothing at all could be added, and there is no notification when everything was. While such a paste sits in the search box, the dropdown keeps saying that several terms were detected instead of briefly flipping to "no results": the box no longer looks the whole paste up as one string
-- "Open in new tab" on a multi-selection and Ctrl+D showed a request error on a lite network: the new tab loaded the handed-over graph before it knew which features the backend serves, so it asked for pair edges the backend declines. The graph now waits for that answer, as a deep link does; opening the same graph from a file was never affected
-- An address with no transactions of its own — one that only ever paid gas for a failed transaction, or whose whole history is in tokens the backend does not index — could not be opened at all: the response has no first and last transaction, and the client rejected the whole body. Such an address now renders with empty usage fields and no date-range filter
-- The cluster-addresses tab was hidden on a network whose backend serves no clusters, although it also carries the cross-chain table of the same address on other EVM networks, which such backends do serve. The tab now shows and lists those addresses
-- A deep link with a checksummed (mixed-case) address loaded the node but never selected it, so the side panel stayed closed
-- A deep link to a token transfer or internal call (`…_T2`, `…_I0`) answered 400: the address normaliser lowercased the whole identifier, including the case-sensitive marker
-- Opening a value-carrying account transaction from a deep link or the search never showed its details panel
-- The token list under "Balance" clipped after about five rows, hiding tokens without a fiat price
-- "Align horizontally" left a selected node off the row whenever an unselected node sat in the same column just above the target row: the overlap pass that follows the alignment pushed the aligned node away instead of the bystander. Aligned nodes now stay on the row and the other node moves
-- Plugin entries on an address's right-click menu were still active on a multi-selection although they act on the one address that was clicked. They are now greyed out there, like core's own per-address entries
-- A search with many hits, such as a label matched by many tags or a hash found on several networks, grew the dropdown past the bottom of the screen and the page scrolled instead. The result list now scrolls inside the dropdown: it stops at half the viewport in the header and in dialogs, takes nearly the whole viewport on the Pathfinder, and on the landing page, whose search box sits lower, what is left of the viewport under it
-- An identifier the search matched nowhere, such as an XRP transaction hash on an instance that does not serve XRP, only ever produced "No results found", and enter did nothing with it. The dropdown now says which networks were searched ("Not found on BTC, BCH, LTC, ZEC, ETH, TRX"), and enter shows an address- or transaction-not-found toast, chosen by the shape of the identifier, naming those networks and the likely reasons: not on a supported network, not in the database yet, or a typo. The not-found dialogs a deep link shows gain the supported-network reason too
-- Pasting several addresses or transaction hashes into the search box added what it could and said nothing about the rest. Once every pasted item has been looked up, a notification now says how many were skipped and lists them by reason: no match, request failed, or too short to be an identifier. It is an error when nothing at all could be added, and there is no notification when everything was. While such a paste sits in the search box, the dropdown keeps saying that several terms were detected instead of briefly flipping to "no results": the box no longer looks the whole paste up as one string
-- "Align horizontally" left a selected node off the row whenever an unselected node sat in the same column just above the target row: the overlap pass that follows the alignment pushed the aligned node away instead of the bystander. Aligned nodes now stay on the row and the other node moves
-- Opening a `.gs` file that contains a swap or bridge rearranged the saved graph once the conversion loaded: the addresses of both legs were moved next to their transactions, and the whole graph was snapped to the grid, moving unrelated nodes too. Nodes from the file now stay where the file put them. The conversion edge is still drawn, and only a leg the file lacks, with its addresses, is placed automatically
-- A swap or bridge leg with several input or output addresses on the graph put them all on the same spot when the conversion was laid out. They are now stacked one below the other
-- Plugin entries on an address's right-click menu were still active on a multi-selection although they act on the one address that was clicked. They are now greyed out there, like core's own per-address entries
+- The search dropdown scrolls instead of growing past the bottom of the screen
+- A search without results now names the networks that were searched, and Enter shows a not-found message
+- Pasting several identifiers reports which ones could not be added and why
+- Opening a saved graph no longer moves nodes when swaps or bridges load, and no longer fails on networks the account cannot access
+- Addresses without transactions of their own can be opened
+- Deep links with checksummed addresses or to token/internal transfers work again
+- The balance token list no longer clips after about five rows
+- "Align horizontally" keeps all selected nodes on the row
+- Plugin context-menu entries are greyed out on multi-selections
+- The statistics page scrolls instead of clipping content
 
 ## [26.08.1] - 2026-08-28
 
