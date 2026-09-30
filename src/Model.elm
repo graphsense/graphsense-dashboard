@@ -61,6 +61,7 @@ type alias Model navigationKey =
     , error : String
     , statusbar : Model.Statusbar.Model
     , dialog : Maybe (Model.Dialog.Model Msg)
+    , dialogDrag : Model.Dialog.Drag
     , supportedTokens : Dict String Api.Data.TokenConfigs
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
     , notifications : Model.Notification.Model
@@ -103,6 +104,11 @@ type Msg
     | UserClickedConfirm Msg
     | UserClickedOption Msg
     | UserClickedOutsideDialog Msg
+    | UserPressedDialogOverlay
+    | UserGrabbedDialog Float Float
+    | UserDraggedDialog Float Float
+    | UserReleasedDialog
+    | UserHoveredDialogHandle Bool
     | UserClickedLogout
     | UserClickedLightmode
     | TimeUpdateReset Time.Posix

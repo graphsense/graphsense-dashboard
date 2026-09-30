@@ -3,6 +3,7 @@ module Sub exposing (subscriptions)
 import Browser.Events
 import Browser.Navigation as Nav
 import Hovercard
+import Json.Decode
 import Model exposing (Model, Msg(..))
 import Msg.ExportDialog as ExportDialog
 import Plugin.Sub as Plugin
@@ -25,6 +26,19 @@ subscriptions model =
             Sub.none
     , Browser.Events.onResize
         BrowserChangedWindowSize
+    , case model.dialogDrag.grab of
+        Just _ ->
+            Sub.batch
+                [ Browser.Events.onMouseMove
+                    (Json.Decode.map2 UserDraggedDialog
+                        (Json.Decode.field "clientX" Json.Decode.float)
+                        (Json.Decode.field "clientY" Json.Decode.float)
+                    )
+                , Browser.Events.onMouseUp (Json.Decode.succeed UserReleasedDialog)
+                ]
+
+        Nothing ->
+            Sub.none
     , case model.user.auth of
         Model.Authorized auth ->
             case auth.requestLimit of

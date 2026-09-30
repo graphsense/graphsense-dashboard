@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Added
+- Dialogs can be moved by dragging their top strip, e.g. to read the graph behind them; the cursor turns into a hand there. Releasing a drag outside the dialog no longer closes it, and the next dialog opens in its usual place
+
+### Changed
+- The backdrop behind dialogs is lighter, especially in dark mode
+
 ## [26.09.0] - 2026-09-30
 
 ### Added

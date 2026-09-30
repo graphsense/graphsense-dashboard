@@ -6,7 +6,8 @@ import Css
 import Css.Reset
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (onClick)
+import Html.Styled.Events exposing (on, onClick, preventDefaultOn)
+import Json.Decode
 import Model exposing (Model, Msg(..), NavbarSubMenuType(..), Page(..))
 import Model.Dialog as Dialog exposing (Placement(..))
 import Plugin.View as Plugin
@@ -253,6 +254,9 @@ sidebar vc model =
 overlay : Config -> Model key -> List (Html Msg)
 overlay vc model =
     let
+        drag =
+            model.dialogDrag
+
         ov placement onClickOutside =
             let
                 placementStyles =
@@ -268,16 +272,67 @@ overlay vc model =
             in
             List.singleton
                 >> div
+                    -- inline styles, not `css`: elm-css mints a new class for
+                    -- every distinct value, i.e. one per pixel of a drag, and
+                    -- Firefox does not re-evaluate the cursor when only the
+                    -- element's class changes under a resting pointer
+                    [ "translate({{ }}px, {{ }}px)"
+                        |> String.Format.value (String.fromFloat drag.offsetX)
+                        |> String.Format.value (String.fromFloat drag.offsetY)
+                        |> style "transform"
+                    , style "cursor"
+                        -- grab/grabbing rather than move: Firefox on Linux
+                        -- takes cursors from the desktop theme, and common
+                        -- themes have no "move" image, so it showed the arrow
+                        (if drag.grab /= Nothing then
+                            "grabbing"
+
+                         else if drag.overHandle then
+                            "grab"
+
+                         else
+                            ""
+                        )
+                    , preventDefaultOn "mousedown" (grabDialogDecoder drag)
+                    , on "mousemove" (hoverDialogHandleDecoder drag)
+                    , on "mouseleave" (Json.Decode.succeed (UserHoveredDialogHandle False))
+                    ]
+                >> List.singleton
+                >> div
                     [ Css.position Css.absolute
                         :: Css.height (Css.vh 100)
                         :: Css.width (Css.vw 100)
                         :: Css.displayFlex
                         :: Css.justifyContent Css.center
                         :: Css.zIndex (Css.int 500)
-                        :: Css.property "background-color" Theme.Colors.overlayBg
+                        -- a lighter dim than the token itself, so the graph
+                        -- behind a dragged-aside dialog stays readable. The
+                        -- dark-mode token is a light grey at 70%, which washes
+                        -- a dark UI out far more than the light-mode one
+                        -- darkens a light UI, so it is thinned out further.
+                        --
+                        -- NOTE: this is a workaround for the Figma token, not
+                        -- a colour choice. Generated colours are the source of
+                        -- truth (CLAUDE.md), so the proper fix is a lighter
+                        -- `overlayBg` in Figma, dark mode especially. Once that
+                        -- lands via `make theme-refresh`, drop the mix and use
+                        -- `Theme.Colors.overlayBg` directly again, or the new
+                        -- token gets thinned out a second time.
+                        :: Css.property "background-color"
+                            ("color-mix(in srgb, "
+                                ++ Theme.Colors.overlayBg
+                                ++ (if vc.lightmode then
+                                        " 50%"
+
+                                    else
+                                        " 15%"
+                                   )
+                                ++ ", transparent)"
+                            )
                         :: placementStyles
                         |> css
                     , onClick (UserClickedOutsideDialog onClickOutside)
+                    , on "mousedown" (Json.Decode.succeed UserPressedDialogOverlay)
                     ]
                 >> List.singleton
     in
@@ -288,3 +343,84 @@ overlay vc model =
 
         Nothing ->
             []
+
+
+{-| Height of the strip at the top of a dialog that works as its drag handle.
+The dialogs are different Figma components without a common header node, so
+the handle is a region rather than an element.
+
+NOTE: 56 is an estimate of the dialog headers' height, not a value taken from
+the theme. A dialog whose header is taller has a strip that ends inside its
+header; a shorter one lets the drag start in the first row of its content.
+Tune it here if that bites. The proper fix is a common header (or drag-handle)
+node in the Figma dialog components, which would make the handle an element:
+attach the mousedown and the cursor to it and delete this constant together
+with the position arithmetic in `pointerOnDialogDecoder`.
+
+-}
+dialogDragHandleHeight : Float
+dialogDragHandleHeight =
+    56
+
+
+{-| Starts a drag when the mouse goes down on the handle. Fails otherwise, so
+the event keeps its default (focusing an input, selecting text).
+-}
+grabDialogDecoder : Dialog.Drag -> Json.Decode.Decoder ( Msg, Bool )
+grabDialogDecoder drag =
+    pointerOnDialogDecoder drag
+        |> Json.Decode.andThen
+            (\p ->
+                if p.onHandle then
+                    Json.Decode.succeed ( UserGrabbedDialog p.x p.y, True )
+
+                else
+                    Json.Decode.fail "not on the dialog's drag handle"
+            )
+
+
+{-| Reports the pointer entering or leaving the handle, and nothing while it
+stays on the same side, so moving the mouse over a dialog does not send a
+message per pixel.
+-}
+hoverDialogHandleDecoder : Dialog.Drag -> Json.Decode.Decoder Msg
+hoverDialogHandleDecoder drag =
+    pointerOnDialogDecoder drag
+        |> Json.Decode.andThen
+            (\p ->
+                if p.onHandle == drag.overHandle then
+                    Json.Decode.fail "unchanged"
+
+                else
+                    Json.Decode.succeed (UserHoveredDialogHandle p.onHandle)
+            )
+
+
+{-| Where a mouse event on the dialog wrapper happened, and whether that is on
+the drag handle: the top strip of the dialog, but not a control there.
+
+The pointer's position within the dialog is its `clientY` minus the wrapper's
+layout position (`offsetTop` within the overlay, plus the overlay's own) and
+the current drag offset, which `offsetTop` does not include because it is a
+transform.
+
+-}
+pointerOnDialogDecoder : Dialog.Drag -> Json.Decode.Decoder { x : Float, y : Float, onHandle : Bool }
+pointerOnDialogDecoder drag =
+    Json.Decode.map5
+        (\x y tag wrapperTop overlayTop ->
+            { x = x
+            , y = y
+            , onHandle =
+                (y - (wrapperTop + overlayTop + drag.offsetY) < dialogDragHandleHeight)
+                    && not (List.member (String.toUpper tag) [ "INPUT", "TEXTAREA", "SELECT", "BUTTON", "OPTION", "A" ])
+            }
+        )
+        (Json.Decode.field "clientX" Json.Decode.float)
+        (Json.Decode.field "clientY" Json.Decode.float)
+        (Json.Decode.at [ "target", "tagName" ] Json.Decode.string)
+        (Json.Decode.at [ "currentTarget", "offsetTop" ] Json.Decode.float)
+        (Json.Decode.at [ "currentTarget", "offsetParent", "offsetTop" ] Json.Decode.float
+            |> Json.Decode.maybe
+            |> Json.Decode.map (Maybe.withDefault 0)
+        )

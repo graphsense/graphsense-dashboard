@@ -52,6 +52,7 @@ import Init.Pathfinder
 import Init.Search
 import Init.Statusbar
 import Model exposing (Auth(..), Effect(..), Model, Msg, Page(..))
+import Model.Dialog
 import Model.Locale
 import Plugin.Model
 import RemoteData
@@ -139,6 +140,7 @@ initialModel url =
     , error = ""
     , statusbar = Init.Statusbar.init
     , dialog = Nothing
+    , dialogDrag = Model.Dialog.initDrag
     , supportedTokens = Dict.empty
     , plugins = Plugin.Model.emptyModelState
     , notifications = Init.Notification.init

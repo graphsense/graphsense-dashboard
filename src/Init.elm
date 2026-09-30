@@ -12,6 +12,7 @@ import Init.Search as Search
 import Init.Statusbar as Statusbar
 import Json.Decode
 import Model exposing (..)
+import Model.Dialog as Dialog
 import Model.Locale as Locale
 import Plugin.Update as Plugin
 import RemoteData exposing (RemoteData(..))
@@ -62,6 +63,7 @@ init uc flags url key =
       , statusbar = Statusbar.init
       , supportedTokens = Dict.empty
       , dialog = Nothing
+      , dialogDrag = Dialog.initDrag
       , plugins = pluginStates
       , dirty = False
       , notifications = Notification.init

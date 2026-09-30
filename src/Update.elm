@@ -136,6 +136,26 @@ isTransientHttpError err =
 
 update : Config -> Msg -> Model key -> ( Model key, List Effect )
 update uc msg model =
+    updateHelp uc msg model
+        |> Tuple.mapFirst resetDialogDragWhenClosed
+
+
+{-| A dialog opens at its default placement, wherever the previous one was
+dragged to. Resetting here, rather than at each of the many places that close
+a dialog, keeps that true however the dialog went away.
+-}
+resetDialogDragWhenClosed : Model key -> Model key
+resetDialogDragWhenClosed model =
+    case ( model.dialog, model.dialogDrag == Dialog.initDrag ) of
+        ( Nothing, False ) ->
+            { model | dialogDrag = Dialog.initDrag }
+
+        _ ->
+            model
+
+
+updateHelp : Config -> Msg -> Model key -> ( Model key, List Effect )
+updateHelp uc msg model =
     case Log.log "msg" msg of
         NoOp ->
             n model
@@ -1283,7 +1303,69 @@ update uc msg model =
             update uc ms model |> Tuple.mapFirst (s_dialog Nothing)
 
         UserClickedOutsideDialog ms ->
-            update uc ms model |> Tuple.mapFirst (s_dialog Nothing)
+            if model.dialogDrag.moved then
+                -- the click that ends a drag released outside the dialog
+                n { model | dialogDrag = model.dialogDrag |> s_moved False }
+
+            else
+                update uc ms model |> Tuple.mapFirst (s_dialog Nothing)
+
+        UserPressedDialogOverlay ->
+            n { model | dialogDrag = model.dialogDrag |> s_moved False }
+
+        UserGrabbedDialog x y ->
+            let
+                drag =
+                    model.dialogDrag
+            in
+            n
+                { model
+                    | dialogDrag =
+                        { drag
+                            | grab = Just { x = x, y = y, offsetX = drag.offsetX, offsetY = drag.offsetY }
+                            , moved = False
+                        }
+                }
+
+        UserDraggedDialog x y ->
+            case model.dialogDrag.grab of
+                Just grab ->
+                    let
+                        -- the grabbed header stays under the pointer, so
+                        -- keeping the pointer on screen keeps the header there
+                        clampedX =
+                            clamp 0 (toFloat model.width) x
+
+                        clampedY =
+                            clamp 0 (toFloat model.height) y
+                    in
+                    n
+                        { model
+                            | dialogDrag =
+                                { grab = Just grab
+                                , offsetX = grab.offsetX + clampedX - grab.x
+                                , offsetY = grab.offsetY + clampedY - grab.y
+                                , moved = True
+                                , overHandle = True
+                                }
+                        }
+
+                Nothing ->
+                    n model
+
+        UserHoveredDialogHandle over ->
+            let
+                drag =
+                    model.dialogDrag
+            in
+            n { model | dialogDrag = { drag | overHandle = over } }
+
+        UserReleasedDialog ->
+            let
+                drag =
+                    model.dialogDrag
+            in
+            n { model | dialogDrag = { drag | grab = Nothing } }
 
         PluginMsg msgValue ->
             updatePlugins uc msgValue model
