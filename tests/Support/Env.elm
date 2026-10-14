@@ -72,4 +72,5 @@ viewConfig =
     , isMac = False
     , networks = []
     , liteNetworks = True
+    , liteUnavailable = False
     }
