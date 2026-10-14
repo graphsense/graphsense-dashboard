@@ -7,9 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Dialogs can be moved by dragging their top strip, e.g. to read the graph behind them; the cursor turns into a hand there. Releasing a drag outside the dialog no longer closes it, and the next dialog opens in its usual place
+- Escape closes the open statusbar message list; on the Pathfinder it closes only the message list, the selection and on-graph search are left alone
 
 ### Changed
 - The backdrop behind dialogs is lighter, especially in dark mode
+- The collapsed statusbar is a small patch in the bottom-right corner (version and an up-chevron, highlighted on hover) instead of a full-width bar; while something is loading it spans the page right of the sidebar, with the message on the left. The open message list scrolls, has a top border, and its scrollbar no longer runs under the close button
 
 ### Fixed
 - When the lite networks' data service does not answer, the app keeps working on the core networks: a notice says that the lite blockchains are unavailable (once per outage), the search says that its results cover the core blockchains only, a failed request on a lite network is not retried, and the "Lite networks" switch stays visible in the settings. Before, a reload during such an outage left the app without any network. Needs a graphsense-lib with the external backend outage handling

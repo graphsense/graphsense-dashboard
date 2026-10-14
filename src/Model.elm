@@ -119,6 +119,7 @@ type Msg
     | BrowserGotSupportedTokens String Api.Data.TokenConfigs
     | BrowserGotUserInfo Effect.Api.UserInfo
     | UserClickedStatusbar
+    | UserReleasedEscapeOnStatusbar
     | UserClosesDialog
     | TagsListDialogAddressTableMsg InfiniteTable.Msg
     | TagsListDialogClusterTableMsg InfiniteTable.Msg

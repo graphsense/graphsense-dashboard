@@ -64,6 +64,11 @@ withStats f =
             Expect.fail ("the stats fixture did not decode: " ++ Json.Decode.errorToString error)
 
 
+statusbarVisible : App -> Bool
+statusbarVisible =
+    App.model >> .statusbar >> .visible
+
+
 isSaveSettings : Effect -> Bool
 isSaveSettings eff =
     case eff of
@@ -280,6 +285,45 @@ suite =
                         |> .config
                         |> .lightmode
                         |> Expect.notEqual (before |> App.model |> .config |> .lightmode)
+            ]
+        , describe "escape and the statusbar"
+            [ test "closes the open statusbar" <|
+                \_ ->
+                    App.initAt "/stats"
+                        |> App.steps [ UserClickedStatusbar, UserReleasedEscapeOnStatusbar ]
+                        |> statusbarVisible
+                        |> Expect.equal False
+            , test "closes the open statusbar on the pathfinder" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.steps [ UserClickedStatusbar, PathfinderMsg Msg.Pathfinder.UserReleasedEscape ]
+                        |> statusbarVisible
+                        |> Expect.equal False
+            , test "on the pathfinder, closes only the statusbar, not the on-graph search" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.steps
+                            [ PathfinderMsg Msg.Pathfinder.UserPressedSearchHotkey
+                            , UserClickedStatusbar
+                            , PathfinderMsg Msg.Pathfinder.UserReleasedEscape
+                            ]
+                        |> App.model
+                        |> .pathfinder
+                        |> .onGraphSearch
+                        |> .visible
+                        |> Expect.equal True
+            , test "with the statusbar closed, still reaches the pathfinder" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.steps
+                            [ PathfinderMsg Msg.Pathfinder.UserPressedSearchHotkey
+                            , PathfinderMsg Msg.Pathfinder.UserReleasedEscape
+                            ]
+                        |> App.model
+                        |> .pathfinder
+                        |> .onGraphSearch
+                        |> .visible
+                        |> Expect.equal False
             ]
         , describe "a response the client cannot decode"
             [ test "is logged in the statusbar rather than swallowed" <|

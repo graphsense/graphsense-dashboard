@@ -4,6 +4,7 @@ import Browser exposing (Document)
 import Config.View exposing (Config)
 import Css
 import Css.Reset
+import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (on, onClick, preventDefaultOn)
@@ -139,7 +140,21 @@ body vc model =
          , footer
             [ [ Css.position Css.absolute
               , Css.bottom (Css.px 0)
-              , Css.width (Css.pct 100)
+              , Css.right (Css.px 0)
+
+              -- open, the statusbar spans the whole width; collapsed with a
+              -- loading message it spans the page right of the sidebar, the
+              -- message on the left; idle it is a small patch in the corner
+              , if model.statusbar.visible then
+                    Css.width (Css.pct 100)
+
+                else if Dict.isEmpty model.statusbar.messages then
+                    Css.maxWidth (Css.pct 100)
+
+                else
+                    -- the sidebar's edge is its box-shadow (3px blur), not a
+                    -- border; keep clear of it so the edge stays visible
+                    Css.left (Css.px (Nb.navbarMenuNew_details.width + 3))
               , Util.Css.zIndexMain
               ]
                 |> css

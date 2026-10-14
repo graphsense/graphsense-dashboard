@@ -1,4 +1,4 @@
-module Update.Statusbar exposing (add, messagesFromEffects, setRetry, toggle, update, updateLastBlocks)
+module Update.Statusbar exposing (add, close, messagesFromEffects, setRetry, toggle, update, updateLastBlocks)
 
 import Api.Data
 import Api.Request.Clusters
@@ -228,6 +228,11 @@ updateLastBlocks stats model =
 toggle : Model -> Model
 toggle model =
     { model | visible = not model.visible }
+
+
+close : Model -> Model
+close model =
+    { model | visible = False }
 
 
 add : Model -> String -> List String -> Maybe Http.Error -> Model

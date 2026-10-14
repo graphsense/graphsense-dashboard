@@ -857,6 +857,12 @@ updateHelp uc msg model =
             }
                 |> n
 
+        UserReleasedEscapeOnStatusbar ->
+            { model
+                | statusbar = Statusbar.close model.statusbar
+            }
+                |> n
+
         UserClickedLayout ->
             let
                 ( new, outMsg, cmd ) =
@@ -1317,33 +1323,20 @@ updateHelp uc msg model =
                     , List.map (SearchEffect SearchMsg) searchEffects
                     )
 
-        PathfinderMsg m ->
-            let
-                pathfinderOld =
-                    model.pathfinder
-
-                ( pathfinder, pathfinderEffects, outMsgs ) =
-                    Pathfinder.update uc m model.pathfinder
-
-                ( newModel, newEffects ) =
-                    ( { model | pathfinder = pathfinder }
-                    , List.map PathfinderEffect pathfinderEffects
-                    )
-                        |> applyPathfinderOutMsgs uc outMsgs
-                        |> notifyPluginsOfPathfinderMsg uc m
-                        |> syncRecentSearches pathfinderOld
-            in
-            if newModel.pathfinder.network == pathfinderOld.network && newModel.pathfinder.annotations == pathfinderOld.annotations then
-                ( newModel, newEffects )
+        PathfinderMsg Pathfinder.UserReleasedEscape ->
+            if model.statusbar.visible then
+                -- Escape closes the open statusbar first; the Pathfinder
+                -- (deselect, cancel) only sees it once the statusbar is closed
+                { model
+                    | statusbar = Statusbar.close model.statusbar
+                }
+                    |> n
 
             else
-                let
-                    ( newPluginsState, outMsg, cmd ) =
-                        (PluginInterface.PathfinderGraphChanged |> PluginInterface.InMsgsPathfinder)
-                            |> Plugin.updateByCoreMsg uc model.plugins
-                in
-                ( { newModel | plugins = newPluginsState }, newEffects ++ [ PluginEffect cmd ] )
-                    |> updateByPluginOutMsg uc outMsg
+                updatePathfinderMsg uc Pathfinder.UserReleasedEscape model
+
+        PathfinderMsg m ->
+            updatePathfinderMsg uc m model
 
         BrowserGotDeserializedGS (( filename, data ) as payload) ->
             if
@@ -2086,6 +2079,36 @@ notifyPluginsOfPathfinderMsg uc msg ( model, effects ) =
 
         _ ->
             ( model, effects )
+
+
+updatePathfinderMsg : Config -> Pathfinder.Msg -> Model key -> ( Model key, List Effect )
+updatePathfinderMsg uc m model =
+    let
+        pathfinderOld =
+            model.pathfinder
+
+        ( pathfinder, pathfinderEffects, outMsgs ) =
+            Pathfinder.update uc m model.pathfinder
+
+        ( newModel, newEffects ) =
+            ( { model | pathfinder = pathfinder }
+            , List.map PathfinderEffect pathfinderEffects
+            )
+                |> applyPathfinderOutMsgs uc outMsgs
+                |> notifyPluginsOfPathfinderMsg uc m
+                |> syncRecentSearches pathfinderOld
+    in
+    if newModel.pathfinder.network == pathfinderOld.network && newModel.pathfinder.annotations == pathfinderOld.annotations then
+        ( newModel, newEffects )
+
+    else
+        let
+            ( newPluginsState, outMsg, cmd ) =
+                (PluginInterface.PathfinderGraphChanged |> PluginInterface.InMsgsPathfinder)
+                    |> Plugin.updateByCoreMsg uc model.plugins
+        in
+        ( { newModel | plugins = newPluginsState }, newEffects ++ [ PluginEffect cmd ] )
+            |> updateByPluginOutMsg uc outMsg
 
 
 {-| Mirror the Pathfinder's recent searches into the user settings.

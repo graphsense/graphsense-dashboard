@@ -26,6 +26,23 @@ subscriptions model =
             Sub.none
     , Browser.Events.onResize
         BrowserChangedWindowSize
+    , if model.statusbar.visible && model.page /= Model.Pathfinder then
+        -- on the Pathfinder its own Escape handler arrives first, and
+        -- Update closes the statusbar from there
+        Browser.Events.onKeyUp
+            (Json.Decode.field "key" Json.Decode.string
+                |> Json.Decode.andThen
+                    (\key ->
+                        if key == "Escape" then
+                            Json.Decode.succeed UserReleasedEscapeOnStatusbar
+
+                        else
+                            Json.Decode.fail "not Escape"
+                    )
+            )
+
+      else
+        Sub.none
     , case model.dialogDrag.grab of
         Just _ ->
             Sub.batch
