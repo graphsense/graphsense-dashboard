@@ -154,6 +154,9 @@ generalSettings vc m =
         -- back on.
         showLiteNetworks =
             not vc.liteNetworks
+                -- the lite blockchains are missing from the capabilities while
+                -- they do not answer, which is exactly when the switch helps
+                || vc.liteUnavailable
                 || (m.capabilities
                         |> RemoteData.map NetworkCapabilities.hasLiteNetwork
                         |> RemoteData.withDefault False

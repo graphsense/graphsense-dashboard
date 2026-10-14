@@ -118,6 +118,37 @@ apiRetryDelayMs attempt =
     500 * (3 ^ toFloat (attempt - 1))
 
 
+{-| Shown once per outage of the lite blockchains (BrowserGotResponseWithHeaders).
+-}
+liteUnavailableNotice : Notification
+liteUnavailableNotice =
+    Notification.infoDefault "lite-unavailable-message"
+        |> Notification.map (\data -> { data | title = Just "lite-unavailable-title" })
+
+
+{-| An answer the API always completes with the lite blockchains' part
+(/stats, /capabilities, /search): unless it names the lite service in
+x-ikn-backends-declined, the lite blockchains answered.
+-}
+isMergedAnswer : Msg -> Bool
+isMergedAnswer msg =
+    case msg of
+        BrowserGotStatistics _ ->
+            True
+
+        BrowserGotCapabilities _ ->
+            True
+
+        SearchMsg (Search.BrowserGotSearchResult _ _) ->
+            True
+
+        PathfinderMsg (Pathfinder.SearchMsg (Search.BrowserGotSearchResult _ _)) ->
+            True
+
+        _ ->
+            False
+
+
 isTransientHttpError : Http.Error -> Bool
 isTransientHttpError err =
     case err of
@@ -302,10 +333,44 @@ updateHelp uc msg model =
 
         BrowserGotResponseWithHeaders statusbarToken result ->
             let
+                -- The lite blockchains did not answer: the API left them out
+                -- of a merged answer (/stats, /capabilities, /search, twins)
+                -- and named the lite service in x-ikn-backends-declined, or
+                -- answered a request on a lite blockchain 503. The core
+                -- blockchains still work, so this is one notice, not an error
+                -- per request, and the 503 is not retried: it will not heal
+                -- within the retry delays.
+                liteDeclined =
+                    case result of
+                        Ok ( headers, _ ) ->
+                            Dict.member "x-ikn-backends-declined" headers
+
+                        Err ( Http.BadStatus 503, headers, _ ) ->
+                            Dict.get "x-served-by" headers == Just "external-backend"
+
+                        _ ->
+                            False
+
+                -- the lite blockchains answered again: a request on one of
+                -- them, or a merged answer without the declined header. A
+                -- later outage then gets its notice again.
+                liteAnswered =
+                    case result of
+                        Ok ( headers, answer ) ->
+                            Dict.get "x-served-by" headers
+                                == Just "external-backend"
+                                || isMergedAnswer answer
+
+                        _ ->
+                            False
+
+                liteUnavailable =
+                    liteDeclined || (model.config.liteUnavailable && not liteAnswered)
+
                 retryPlan =
                     case ( statusbarToken, result ) of
                         ( Just key, Err ( err, _, eff ) ) ->
-                            if isTransientHttpError err then
+                            if isTransientHttpError err && not liteDeclined then
                                 let
                                     current =
                                         Dict.get key model.statusbar.retries
@@ -436,6 +501,17 @@ updateHelp uc msg model =
                             isUnreconstructableLeg
 
                 ( notifications, notificationEffects ) =
+                    if liteDeclined then
+                        if model.config.liteUnavailable then
+                            n model.notifications
+
+                        else
+                            Notification.add liteUnavailableNotice model.notifications
+
+                    else
+                        otherNotifications
+
+                otherNotifications =
                     case ( isErrorDialogShown, isNonCriticalApiError, result ) of
                         ( False, False, Err ( httpErr, _, _ ) ) ->
                             case httpErr of
@@ -567,6 +643,12 @@ updateHelp uc msg model =
                         , notifications = notifications
                         , capabilities = capabilitiesAfterError
                         , stats = statsAfterError
+                        , config =
+                            let
+                                c =
+                                    model.config
+                            in
+                            { c | liteUnavailable = liteUnavailable }
                     }
                         |> handleResponse
                             uc

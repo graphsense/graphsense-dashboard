@@ -217,6 +217,15 @@ searchResult vc sc model =
                 >> div
                     [ css [ Css.paddingBottom <| Css.px 1 ] ]
                 >> List.singleton
+
+        -- the lite blockchains did not answer, so their hits are missing:
+        -- say so, or a lite address looks like it does not exist
+        liteUnavailableHint =
+            if vc.liteUnavailable then
+                msg (Locale.string vc.locale "search-lite-unavailable")
+
+            else
+                []
     in
     if String.isEmpty viewState.query && model.visible && not (List.isEmpty (filteredRecents model.searchType model.recentSearches)) then
         recentList vc sc model
@@ -243,7 +252,7 @@ searchResult vc sc model =
                 config2
 
     else if (viewState.query |> removeLeading0x |> String.length) > 0 && model.visible && noResults then
-        msg noResultsMessage
+        (msg noResultsMessage ++ liteUnavailableHint)
             |> Autocomplete.dropdownStyled
                 config1
                 vc
@@ -253,7 +262,7 @@ searchResult vc sc model =
                 }
 
     else if model.visible then
-        resultList vc sc model
+        (resultList vc sc model ++ liteUnavailableHint)
             |> Autocomplete.dropdownStyled
                 config1
                 vc
