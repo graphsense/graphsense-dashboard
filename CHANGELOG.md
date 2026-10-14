@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - The backdrop behind dialogs is lighter, especially in dark mode
 
+### Fixed
+- When the lite networks' data service does not answer, the app keeps working on the core networks: a notice says that the lite blockchains are unavailable (once per outage), the search says that its results cover the core blockchains only, a failed request on a lite network is not retried, and the "Lite networks" switch stays visible in the settings. Before, a reload during such an outage left the app without any network. Needs a graphsense-lib with the external backend outage handling
+
 ## [26.09.0] - 2026-09-30
 
 ### Added
