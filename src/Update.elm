@@ -118,6 +118,37 @@ apiRetryDelayMs attempt =
     500 * (3 ^ toFloat (attempt - 1))
 
 
+{-| Shown once per outage of the lite blockchains (BrowserGotResponseWithHeaders).
+-}
+liteUnavailableNotice : Notification
+liteUnavailableNotice =
+    Notification.infoDefault "lite-unavailable-message"
+        |> Notification.map (\data -> { data | title = Just "lite-unavailable-title" })
+
+
+{-| An answer the API always completes with the lite blockchains' part
+(/stats, /capabilities, /search): unless it names the lite service in
+x-ikn-backends-declined, the lite blockchains answered.
+-}
+isMergedAnswer : Msg -> Bool
+isMergedAnswer msg =
+    case msg of
+        BrowserGotStatistics _ ->
+            True
+
+        BrowserGotCapabilities _ ->
+            True
+
+        SearchMsg (Search.BrowserGotSearchResult _ _) ->
+            True
+
+        PathfinderMsg (Pathfinder.SearchMsg (Search.BrowserGotSearchResult _ _)) ->
+            True
+
+        _ ->
+            False
+
+
 isTransientHttpError : Http.Error -> Bool
 isTransientHttpError err =
     case err of
@@ -136,6 +167,26 @@ isTransientHttpError err =
 
 update : Config -> Msg -> Model key -> ( Model key, List Effect )
 update uc msg model =
+    updateHelp uc msg model
+        |> Tuple.mapFirst resetDialogDragWhenClosed
+
+
+{-| A dialog opens at its default placement, wherever the previous one was
+dragged to. Resetting here, rather than at each of the many places that close
+a dialog, keeps that true however the dialog went away.
+-}
+resetDialogDragWhenClosed : Model key -> Model key
+resetDialogDragWhenClosed model =
+    case ( model.dialog, model.dialogDrag == Dialog.initDrag ) of
+        ( Nothing, False ) ->
+            { model | dialogDrag = Dialog.initDrag }
+
+        _ ->
+            model
+
+
+updateHelp : Config -> Msg -> Model key -> ( Model key, List Effect )
+updateHelp uc msg model =
     case Log.log "msg" msg of
         NoOp ->
             n model
@@ -282,10 +333,44 @@ update uc msg model =
 
         BrowserGotResponseWithHeaders statusbarToken result ->
             let
+                -- The lite blockchains did not answer: the API left them out
+                -- of a merged answer (/stats, /capabilities, /search, twins)
+                -- and named the lite service in x-ikn-backends-declined, or
+                -- answered a request on a lite blockchain 503. The core
+                -- blockchains still work, so this is one notice, not an error
+                -- per request, and the 503 is not retried: it will not heal
+                -- within the retry delays.
+                liteDeclined =
+                    case result of
+                        Ok ( headers, _ ) ->
+                            Dict.member "x-ikn-backends-declined" headers
+
+                        Err ( Http.BadStatus 503, headers, _ ) ->
+                            Dict.get "x-served-by" headers == Just "external-backend"
+
+                        _ ->
+                            False
+
+                -- the lite blockchains answered again: a request on one of
+                -- them, or a merged answer without the declined header. A
+                -- later outage then gets its notice again.
+                liteAnswered =
+                    case result of
+                        Ok ( headers, answer ) ->
+                            Dict.get "x-served-by" headers
+                                == Just "external-backend"
+                                || isMergedAnswer answer
+
+                        _ ->
+                            False
+
+                liteUnavailable =
+                    liteDeclined || (model.config.liteUnavailable && not liteAnswered)
+
                 retryPlan =
                     case ( statusbarToken, result ) of
                         ( Just key, Err ( err, _, eff ) ) ->
-                            if isTransientHttpError err then
+                            if isTransientHttpError err && not liteDeclined then
                                 let
                                     current =
                                         Dict.get key model.statusbar.retries
@@ -416,6 +501,17 @@ update uc msg model =
                             isUnreconstructableLeg
 
                 ( notifications, notificationEffects ) =
+                    if liteDeclined then
+                        if model.config.liteUnavailable then
+                            n model.notifications
+
+                        else
+                            Notification.add liteUnavailableNotice model.notifications
+
+                    else
+                        otherNotifications
+
+                otherNotifications =
                     case ( isErrorDialogShown, isNonCriticalApiError, result ) of
                         ( False, False, Err ( httpErr, _, _ ) ) ->
                             case httpErr of
@@ -547,6 +643,12 @@ update uc msg model =
                         , notifications = notifications
                         , capabilities = capabilitiesAfterError
                         , stats = statsAfterError
+                        , config =
+                            let
+                                c =
+                                    model.config
+                            in
+                            { c | liteUnavailable = liteUnavailable }
                     }
                         |> handleResponse
                             uc
@@ -752,6 +854,12 @@ update uc msg model =
         UserClickedStatusbar ->
             { model
                 | statusbar = Statusbar.toggle model.statusbar
+            }
+                |> n
+
+        UserReleasedEscapeOnStatusbar ->
+            { model
+                | statusbar = Statusbar.close model.statusbar
             }
                 |> n
 
@@ -1215,33 +1323,20 @@ update uc msg model =
                     , List.map (SearchEffect SearchMsg) searchEffects
                     )
 
-        PathfinderMsg m ->
-            let
-                pathfinderOld =
-                    model.pathfinder
-
-                ( pathfinder, pathfinderEffects, outMsgs ) =
-                    Pathfinder.update uc m model.pathfinder
-
-                ( newModel, newEffects ) =
-                    ( { model | pathfinder = pathfinder }
-                    , List.map PathfinderEffect pathfinderEffects
-                    )
-                        |> applyPathfinderOutMsgs uc outMsgs
-                        |> notifyPluginsOfPathfinderMsg uc m
-                        |> syncRecentSearches pathfinderOld
-            in
-            if newModel.pathfinder.network == pathfinderOld.network && newModel.pathfinder.annotations == pathfinderOld.annotations then
-                ( newModel, newEffects )
+        PathfinderMsg Pathfinder.UserReleasedEscape ->
+            if model.statusbar.visible then
+                -- Escape closes the open statusbar first; the Pathfinder
+                -- (deselect, cancel) only sees it once the statusbar is closed
+                { model
+                    | statusbar = Statusbar.close model.statusbar
+                }
+                    |> n
 
             else
-                let
-                    ( newPluginsState, outMsg, cmd ) =
-                        (PluginInterface.PathfinderGraphChanged |> PluginInterface.InMsgsPathfinder)
-                            |> Plugin.updateByCoreMsg uc model.plugins
-                in
-                ( { newModel | plugins = newPluginsState }, newEffects ++ [ PluginEffect cmd ] )
-                    |> updateByPluginOutMsg uc outMsg
+                updatePathfinderMsg uc Pathfinder.UserReleasedEscape model
+
+        PathfinderMsg m ->
+            updatePathfinderMsg uc m model
 
         BrowserGotDeserializedGS (( filename, data ) as payload) ->
             if
@@ -1283,7 +1378,69 @@ update uc msg model =
             update uc ms model |> Tuple.mapFirst (s_dialog Nothing)
 
         UserClickedOutsideDialog ms ->
-            update uc ms model |> Tuple.mapFirst (s_dialog Nothing)
+            if model.dialogDrag.moved then
+                -- the click that ends a drag released outside the dialog
+                n { model | dialogDrag = model.dialogDrag |> s_moved False }
+
+            else
+                update uc ms model |> Tuple.mapFirst (s_dialog Nothing)
+
+        UserPressedDialogOverlay ->
+            n { model | dialogDrag = model.dialogDrag |> s_moved False }
+
+        UserGrabbedDialog x y ->
+            let
+                drag =
+                    model.dialogDrag
+            in
+            n
+                { model
+                    | dialogDrag =
+                        { drag
+                            | grab = Just { x = x, y = y, offsetX = drag.offsetX, offsetY = drag.offsetY }
+                            , moved = False
+                        }
+                }
+
+        UserDraggedDialog x y ->
+            case model.dialogDrag.grab of
+                Just grab ->
+                    let
+                        -- the grabbed header stays under the pointer, so
+                        -- keeping the pointer on screen keeps the header there
+                        clampedX =
+                            clamp 0 (toFloat model.width) x
+
+                        clampedY =
+                            clamp 0 (toFloat model.height) y
+                    in
+                    n
+                        { model
+                            | dialogDrag =
+                                { grab = Just grab
+                                , offsetX = grab.offsetX + clampedX - grab.x
+                                , offsetY = grab.offsetY + clampedY - grab.y
+                                , moved = True
+                                , overHandle = True
+                                }
+                        }
+
+                Nothing ->
+                    n model
+
+        UserHoveredDialogHandle over ->
+            let
+                drag =
+                    model.dialogDrag
+            in
+            n { model | dialogDrag = { drag | overHandle = over } }
+
+        UserReleasedDialog ->
+            let
+                drag =
+                    model.dialogDrag
+            in
+            n { model | dialogDrag = { drag | grab = Nothing } }
 
         PluginMsg msgValue ->
             updatePlugins uc msgValue model
@@ -1922,6 +2079,36 @@ notifyPluginsOfPathfinderMsg uc msg ( model, effects ) =
 
         _ ->
             ( model, effects )
+
+
+updatePathfinderMsg : Config -> Pathfinder.Msg -> Model key -> ( Model key, List Effect )
+updatePathfinderMsg uc m model =
+    let
+        pathfinderOld =
+            model.pathfinder
+
+        ( pathfinder, pathfinderEffects, outMsgs ) =
+            Pathfinder.update uc m model.pathfinder
+
+        ( newModel, newEffects ) =
+            ( { model | pathfinder = pathfinder }
+            , List.map PathfinderEffect pathfinderEffects
+            )
+                |> applyPathfinderOutMsgs uc outMsgs
+                |> notifyPluginsOfPathfinderMsg uc m
+                |> syncRecentSearches pathfinderOld
+    in
+    if newModel.pathfinder.network == pathfinderOld.network && newModel.pathfinder.annotations == pathfinderOld.annotations then
+        ( newModel, newEffects )
+
+    else
+        let
+            ( newPluginsState, outMsg, cmd ) =
+                (PluginInterface.PathfinderGraphChanged |> PluginInterface.InMsgsPathfinder)
+                    |> Plugin.updateByCoreMsg uc model.plugins
+        in
+        ( { newModel | plugins = newPluginsState }, newEffects ++ [ PluginEffect cmd ] )
+            |> updateByPluginOutMsg uc outMsg
 
 
 {-| Mirror the Pathfinder's recent searches into the user settings.

@@ -1,4 +1,4 @@
-module Model.Dialog exposing (AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initExportConfig, placement)
+module Model.Dialog exposing (AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initDrag, initExportConfig, placement)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -12,6 +12,26 @@ import Model.Pathfinder.Selection as Selection exposing (Selection(..))
 import Model.Search as Search
 import Time
 import View.Locale exposing (makeTimestampFilename)
+
+
+{-| How far the user has dragged the open dialog away from its placement.
+`grab` holds the pointer and offset where the current drag started. `moved`
+survives the release so that the click which ends a drag outside the dialog
+does not count as a click outside it (which would close the dialog).
+`overHandle` drives the move cursor while the pointer is over the handle.
+-}
+type alias Drag =
+    { offsetX : Float
+    , offsetY : Float
+    , grab : Maybe { x : Float, y : Float, offsetX : Float, offsetY : Float }
+    , moved : Bool
+    , overHandle : Bool
+    }
+
+
+initDrag : Drag
+initDrag =
+    { offsetX = 0, offsetY = 0, grab = Nothing, moved = False, overHandle = False }
 
 
 {-| Vertical placement of the dialog within the overlay. `PinnedToTop` keeps

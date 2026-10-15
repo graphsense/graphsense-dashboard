@@ -64,6 +64,11 @@ withStats f =
             Expect.fail ("the stats fixture did not decode: " ++ Json.Decode.errorToString error)
 
 
+statusbarVisible : App -> Bool
+statusbarVisible =
+    App.model >> .statusbar >> .visible
+
+
 isSaveSettings : Effect -> Bool
 isSaveSettings eff =
     case eff of
@@ -281,6 +286,45 @@ suite =
                         |> .lightmode
                         |> Expect.notEqual (before |> App.model |> .config |> .lightmode)
             ]
+        , describe "escape and the statusbar"
+            [ test "closes the open statusbar" <|
+                \_ ->
+                    App.initAt "/stats"
+                        |> App.steps [ UserClickedStatusbar, UserReleasedEscapeOnStatusbar ]
+                        |> statusbarVisible
+                        |> Expect.equal False
+            , test "closes the open statusbar on the pathfinder" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.steps [ UserClickedStatusbar, PathfinderMsg Msg.Pathfinder.UserReleasedEscape ]
+                        |> statusbarVisible
+                        |> Expect.equal False
+            , test "on the pathfinder, closes only the statusbar, not the on-graph search" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.steps
+                            [ PathfinderMsg Msg.Pathfinder.UserPressedSearchHotkey
+                            , UserClickedStatusbar
+                            , PathfinderMsg Msg.Pathfinder.UserReleasedEscape
+                            ]
+                        |> App.model
+                        |> .pathfinder
+                        |> .onGraphSearch
+                        |> .visible
+                        |> Expect.equal True
+            , test "with the statusbar closed, still reaches the pathfinder" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.steps
+                            [ PathfinderMsg Msg.Pathfinder.UserPressedSearchHotkey
+                            , PathfinderMsg Msg.Pathfinder.UserReleasedEscape
+                            ]
+                        |> App.model
+                        |> .pathfinder
+                        |> .onGraphSearch
+                        |> .visible
+                        |> Expect.equal False
+            ]
         , describe "a response the client cannot decode"
             [ test "is logged in the statusbar rather than swallowed" <|
                 \_ ->
@@ -395,6 +439,59 @@ suite =
                         |> App.html
                         |> Query.hasNot [ Selector.text "Popup-not-found-unsupported-network" ]
             ]
+        , describe "dragging a dialog"
+            (let
+                withDialog =
+                    App.initAt "/"
+                        |> App.mapModel (\m -> { m | dialog = Just (Update.Dialog.txNotFoundError xrpHash Nothing NoOp) })
+
+                offset app =
+                    App.model app |> .dialogDrag |> (\d -> ( d.offsetX, d.offsetY ))
+
+                isOpen app =
+                    App.model app |> .dialog |> Maybe.map (always ())
+             in
+             [ test "moves it by the pointer's movement" <|
+                \_ ->
+                    withDialog
+                        |> App.steps [ UserGrabbedDialog 100 100, UserDraggedDialog 150 130 ]
+                        |> offset
+                        |> Expect.equal ( 50, 30 )
+             , test "keeps the pointer, and so the grabbed header, inside the window" <|
+                \_ ->
+                    withDialog
+                        |> App.steps [ UserGrabbedDialog 100 100, UserDraggedDialog -500 5000 ]
+                        |> offset
+                        |> Expect.equal ( -100, 1080 - 100 )
+             , test "does not close it when the drag is released outside it" <|
+                \_ ->
+                    withDialog
+                        |> App.steps [ UserGrabbedDialog 100 100, UserDraggedDialog 400 400, UserReleasedDialog, UserClickedOutsideDialog NoOp ]
+                        |> isOpen
+                        |> Expect.equal (Just ())
+             , test "a real click outside afterwards still closes it, and the next dialog opens in place" <|
+                \_ ->
+                    withDialog
+                        |> App.steps
+                            [ UserGrabbedDialog 100 100
+                            , UserDraggedDialog 400 400
+                            , UserReleasedDialog
+                            , UserClickedOutsideDialog NoOp
+                            , UserPressedDialogOverlay
+                            , UserClickedOutsideDialog NoOp
+                            ]
+                        |> (\app -> ( isOpen app, offset app ))
+                        |> Expect.equal ( Nothing, ( 0, 0 ) )
+             , test "closing it while the pointer is on the handle drops the move cursor" <|
+                \_ ->
+                    withDialog
+                        |> App.steps [ UserHoveredDialogHandle True, UserPressedDialogOverlay, UserClickedOutsideDialog NoOp ]
+                        |> App.model
+                        |> .dialogDrag
+                        |> .overHandle
+                        |> Expect.equal False
+             ]
+            )
         , describe "the search dropdown with no match"
             [ test "names the networks it searched once the statistics are in" <|
                 \_ ->
