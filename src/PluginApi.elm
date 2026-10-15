@@ -1,4 +1,4 @@
-module PluginApi exposing (ComponentsInfiniteTableConfig, ComponentsInfiniteTableModel, ComponentsInfiniteTableMsg, ComponentsInfiniteTableTableConfig, ComponentsPagedTableMsg, ComponentsTableFilter, ComponentsTableTable, ComponentsTooltipConfig, ComponentsTooltipModel, ComponentsTooltipMsg, ConfigUpdateConfig, ConfigViewConfig, CssTableStyles, EffectApiEffect, ModelAddressAddress, ModelCurrencyAssetIdentifier, ModelDialogPlacement, ModelEntityEntity, ModelGraphCoordsCoords, ModelPathfinderAddressAddress, ModelPathfinderIdId, RoutePathfinderAddressHopType, RoutePathfinderPathHopType, UtilThemedSelectBoxModel, UtilThemedSelectBoxMsg, ViewPathfinderContextMenuItemContextMenuItem, surface)
+module PluginApi exposing (ComponentsInfiniteTableConfig, ComponentsInfiniteTableModel, ComponentsInfiniteTableMsg, ComponentsInfiniteTableTableConfig, ComponentsPagedTableMsg, ComponentsTableFilter, ComponentsTableTable, ComponentsTooltipConfig, ComponentsTooltipModel, ComponentsTooltipMsg, ConfigUpdateConfig, ConfigViewConfig, CssTableStyles, EffectApiEffect, ModelAddressAddress, ModelCurrencyAssetIdentifier, ModelDialogPlacement, ModelEntityEntity, ModelGraphCoordsCoords, ModelPathfinderAddressAddress, ModelPathfinderIdId, RoutePathfinderAddressHopType, RoutePathfinderPathHopType, UtilThemedSelectBoxModel, UtilThemedSelectBoxMsg, ViewButtonBtnConfig, ViewPathfinderContextMenuItemContextMenuItem, surface)
 
 {-| The core API that the dashboard plugins depend on.
 
@@ -181,6 +181,10 @@ type alias UtilThemedSelectBoxMsg a =
     Util.ThemedSelectBox.Msg a
 
 
+type alias ViewButtonBtnConfig a =
+    View.Button.BtnConfig a
+
+
 type alias ViewPathfinderContextMenuItemContextMenuItem a =
     View.Pathfinder.ContextMenuItem.ContextMenuItem a
 
@@ -268,6 +272,7 @@ surface =
 
     -- Model.Locale
     , ref Model.Locale.getFiatValue
+    , ref Model.Locale.getTokenTickers
 
     -- Model.Notification
     , ref Model.Notification.Error
@@ -305,6 +310,7 @@ surface =
     , ref Route.Pathfinder.VictimAddress
     , ref Route.Pathfinder.addressRoute
     , ref Route.Pathfinder.pathRoute
+    , ref Route.Pathfinder.txRoute
 
     -- Update.Dialog
     , ref Update.Dialog.confirm
@@ -392,7 +398,10 @@ surface =
     , ref View.Button.threeDots
 
     -- View.Controls
+    , ref View.Controls.Small
+    , ref View.Controls.radio
     , ref View.Controls.radioSmall
+    , ref View.Controls.toggleWithText
 
     -- View.CurrencyMeta
     , ref View.CurrencyMeta.getHumanReadableName
@@ -415,6 +424,7 @@ surface =
     , ref View.Locale.fiat
     , ref View.Locale.fiatWithoutCode
     , ref View.Locale.httpErrorToString
+    , ref View.Locale.int
     , ref View.Locale.intWithoutValueDetailFormatting
     , ref View.Locale.interpolated
     , ref View.Locale.interpolatedMarkdown
