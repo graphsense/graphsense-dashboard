@@ -447,6 +447,7 @@ surface =
     , ref View.Pathfinder.ContextMenuItem.initLink2
     , ref View.Pathfinder.ContextMenuItem.setAvailableOnLiteNetworks
     , ref View.Pathfinder.ContextMenuItem.setDisabled
+    , ref View.Pathfinder.ContextMenuItem.setTooltip
     , ref View.Pathfinder.ContextMenuItem.view
 
     -- View.Pathfinder.InfiniteTable
