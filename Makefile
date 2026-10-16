@@ -459,12 +459,15 @@ print-plugins:
 # package elm downloaded from the registry (the unpatched one) or an outdated
 # clone. elm-stuff caches compiled dependencies by package version, not by
 # content, so it has to go too or the build keeps the unpatched kernel.
+# Fetches the pinned commit itself: a shallow clone of the branch ($(2), the
+# branch the pin comes from) loses the pin as soon as upstream adds a commit.
 define clone-repo
 	if [ "$$(git -C $(4) rev-parse HEAD 2>/dev/null)" != "$(3)" ]; then \
 		rm -rf $(4) elm-stuff; \
-		git clone --depth=1 --branch=$(2) https://github.com/$(1) $(4) && \
+		git init -q $(4) && \
 		cd $(4) && \
-		git reset --hard $(3) && \
+		git fetch -q --depth=1 https://github.com/$(1) $(3) && \
+		git reset --hard FETCH_HEAD && \
 		git clean -df; \
 	fi
 endef
