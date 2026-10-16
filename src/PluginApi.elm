@@ -399,6 +399,7 @@ surface =
 
     -- View.Controls
     , ref View.Controls.Small
+    , ref View.Controls.checkboxWithLabelAndTitle
     , ref View.Controls.radio
     , ref View.Controls.radioSmall
     , ref View.Controls.toggleWithText
