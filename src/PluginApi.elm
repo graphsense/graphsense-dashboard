@@ -406,6 +406,7 @@ surface =
 
     -- View.CurrencyMeta
     , ref View.CurrencyMeta.getHumanReadableName
+    , ref View.CurrencyMeta.networks
 
     -- View.Graph.Table
     , ref View.Graph.Table.customizations
