@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Plugins can react to the user info from the user endpoint with the new `updateByUserInfo` update hook (username, expiration, and whether the account has an email address, from the portal's `has_email`)
+
 ### Changed
 - On a lite network the address side panel shows a plugin's buttons only if the plugin says they work there, like the right-click menu greys out its entries. Plugins opt in with `addressSidePanelHeaderOnLiteNetworks`; so far this hides the neighbor search ("Find services"), which needs address relations lite networks do not have
 

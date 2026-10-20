@@ -403,6 +403,7 @@ surface =
     , ref View.Controls.checkboxWithLabelAndTitle
     , ref View.Controls.radio
     , ref View.Controls.radioSmall
+    , ref View.Controls.toggle
     , ref View.Controls.toggleWithText
 
     -- View.CurrencyMeta

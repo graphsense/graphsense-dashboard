@@ -37,6 +37,10 @@ type alias SearchRequestConfig =
 type alias UserInfo =
     { expiration : Maybe Time.Posix
     , username : Maybe String
+
+    -- Whether mail can reach the user (the portal's has_email); Nothing when
+    -- the endpoint does not say.
+    , hasEmail : Maybe Bool
     }
 
 
@@ -1452,10 +1456,11 @@ isOutgoingToDirection isOutgoing =
 
 userInfoDecoder : Json.Decode.Decoder UserInfo
 userInfoDecoder =
-    Json.Decode.map2
-        (\expiration username ->
+    Json.Decode.map3
+        (\expiration username hasEmail ->
             { expiration = expiration
             , username = username
+            , hasEmail = hasEmail
             }
         )
         (Json.Decode.oneOf
@@ -1465,6 +1470,11 @@ userInfoDecoder =
         )
         (Json.Decode.oneOf
             [ Json.Decode.field "username" usernameDecoder
+            , Json.Decode.succeed Nothing
+            ]
+        )
+        (Json.Decode.oneOf
+            [ Json.Decode.field "has_email" (Json.Decode.nullable Json.Decode.bool)
             , Json.Decode.succeed Nothing
             ]
         )

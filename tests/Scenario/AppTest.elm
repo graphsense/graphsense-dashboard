@@ -228,11 +228,11 @@ suite =
             -- authorized; these cover what the page does with the response
             [ test "shows the username the user endpoint reported" <|
                 \_ ->
-                    settingsPageWith { expiration = Nothing, username = Just "alice" }
+                    settingsPageWith { expiration = Nothing, username = Just "alice", hasEmail = Nothing }
                         |> hasUsernameRow "alice"
             , test "shows no username row when the endpoint reported none" <|
                 \_ ->
-                    settingsPageWith { expiration = Nothing, username = Nothing }
+                    settingsPageWith { expiration = Nothing, username = Nothing, hasEmail = Nothing }
                         |> App.html
                         |> Query.hasNot
                             [ Selector.attribute (Attributes.attribute "data-testid" "gs-settings-username") ]
@@ -241,13 +241,13 @@ suite =
                     -- the label is capitalized by View.Locale.string from the
                     -- case of the key, so a lowercase "username" key rendered
                     -- a lowercase label next to "Expires on"
-                    settingsPageWith { expiration = Nothing, username = Just "alice" }
+                    settingsPageWith { expiration = Nothing, username = Just "alice", hasEmail = Nothing }
                         |> App.html
                         |> Query.find [ Selector.attribute (Attributes.attribute "data-testid" "gs-settings-username") ]
                         |> Query.has [ Selector.text "Username" ]
             , test "keeps the expiration row next to it" <|
                 \_ ->
-                    settingsPageWith { expiration = Nothing, username = Just "alice" }
+                    settingsPageWith { expiration = Nothing, username = Just "alice", hasEmail = Nothing }
                         |> App.html
                         -- untranslated in the test env, where a lookup falls
                         -- back to the key
@@ -257,7 +257,7 @@ suite =
                     -- updateRequestLimit rebuilds the whole Authorized record on
                     -- every response; dropping the username there made it
                     -- disappear again a moment after it showed up
-                    settingsPageWith { expiration = Nothing, username = Just "alice" }
+                    settingsPageWith { expiration = Nothing, username = Just "alice", hasEmail = Nothing }
                         |> App.step okResponse
                         |> hasUsernameRow "alice"
             ]
