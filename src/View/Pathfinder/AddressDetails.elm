@@ -114,7 +114,7 @@ utxo pluginStates vc model id viewState address =
             makeSidePanelData vc model id pluginTagsVisible crosschainVisible
 
         pluginList =
-            Plugin.addressSidePanelHeader pluginStates vc address
+            Plugin.addressSidePanelHeader pluginStates vc (Pathfinder.isLiteNetwork (Id.network id) model) address
 
         pluginTagsList =
             Plugin.addressSidePanelHeaderTags pluginStates vc address
@@ -922,7 +922,7 @@ account pluginStates vc model id viewState address =
             crosschainLedgerChips vc id Pathfinder.UserClickedAddress crosschainTargets
 
         pluginList =
-            Plugin.addressSidePanelHeader pluginStates vc address
+            Plugin.addressSidePanelHeader pluginStates vc (Pathfinder.isLiteNetwork (Id.network id) model) address
 
         pluginTagsList =
             Plugin.addressSidePanelHeaderTags pluginStates vc address

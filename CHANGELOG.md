@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Changed
+- On a lite network the address side panel shows a plugin's buttons only if the plugin says they work there, like the right-click menu greys out its entries. Plugins opt in with `addressSidePanelHeaderOnLiteNetworks`; so far this hides the neighbor search ("Find services"), which needs address relations lite networks do not have
+
 ## [26.09.1] - 2026-10-15
 
 ### Added

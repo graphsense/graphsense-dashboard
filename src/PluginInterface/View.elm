@@ -44,6 +44,11 @@ type alias View modelState addressState msg =
     , addressSidePanelHeader : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> Html msg)
     , addressSidePanelHeaderWithPriority : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> Maybe { priority : Int, content : Html msg })
 
+    -- whether the side panel header is shown on a lite network too. Most plugin
+    -- features need data a lite backend does not serve, so it is hidden there
+    -- unless the plugin opts in (like ContextMenuItem.setAvailableOnLiteNetworks)
+    , addressSidePanelHeaderOnLiteNetworks : Bool
+
     -- additional stuff for the new Pathfinder's address side panel header tags
     , addressSidePanelHeaderTags : Maybe (View.Config -> Pathfinder.Address -> modelState -> addressState -> Maybe (Html msg))
 
@@ -78,6 +83,7 @@ init =
     , login = Nothing
     , addressSidePanelHeader = Nothing
     , addressSidePanelHeaderWithPriority = Nothing
+    , addressSidePanelHeaderOnLiteNetworks = False
     , addressSidePanelHeaderTags = Nothing
     , dialog = Nothing
     , tooltip = Nothing

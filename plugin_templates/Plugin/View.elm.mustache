@@ -47,8 +47,8 @@ addressContextMenu states vc address =
 
 
 
-addressSidePanelHeader : Plugin.Model.ModelState -> View.Config -> Pathfinder.Address -> List (Html Pathfinder.Msg)
-addressSidePanelHeader states vc address =
+addressSidePanelHeader : Plugin.Model.ModelState -> View.Config -> Bool -> Pathfinder.Address -> List (Html Pathfinder.Msg)
+addressSidePanelHeader states vc onLiteNetwork address =
     [ {{#plugins}}
         Maybe.map3
             (\fun ->
@@ -69,6 +69,7 @@ addressSidePanelHeader states vc address =
                     address.plugins.{{name}}
                 |> Maybe.map (\x -> {priority = 0, content = x |> Html.map Plugin.Msg.{{package}}Msg})
         )
+        |> Maybe.Extra.filter (\_ -> not onLiteNetwork || {{package}}.Interface.View.plugin.addressSidePanelHeaderOnLiteNetworks)
     {{^last}}, {{/last}}{{/plugins}}
     ]
 
