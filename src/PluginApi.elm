@@ -352,6 +352,7 @@ surface =
     , ref Util.ThemedSelectBox.Selected
     , ref Util.ThemedSelectBox.defaultConfig
     , ref Util.ThemedSelectBox.defaultConfigHtml
+    , ref Util.ThemedSelectBox.getOptions
     , ref Util.ThemedSelectBox.init
     , ref Util.ThemedSelectBox.update
     , ref Util.ThemedSelectBox.updateOptions
