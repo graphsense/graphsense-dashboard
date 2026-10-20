@@ -295,8 +295,18 @@ updateHelp uc msg model =
                 |> n
 
         BrowserGotUserInfo userInfo ->
-            { model
-                | user =
+            let
+                ( plugins, outMsg, cmd ) =
+                    Plugin.updateByUserInfo
+                        { username = userInfo.username
+                        , expiration = userInfo.expiration
+                        , hasEmail = userInfo.hasEmail
+                        }
+                        model.plugins
+            in
+            ( { model
+                | plugins = plugins
+                , user =
                     model.user
                         |> s_auth
                             (case model.user.auth of
@@ -310,8 +320,10 @@ updateHelp uc msg model =
                                 _ ->
                                     model.user.auth
                             )
-            }
-                |> n
+              }
+            , [ PluginEffect cmd ]
+            )
+                |> updateByPluginOutMsg uc outMsg
 
         BrowserCancelledRequest statusbarToken ->
             n
