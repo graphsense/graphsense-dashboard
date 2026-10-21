@@ -25,7 +25,7 @@
     "setem": "^0.7.0",
     "terser": "^5.36.0",
     "ts-node": "^10.9.2",
-    "vite": "^8.0.16",
+    "vite": "^8.3.5",
     "vite-plugin-elm": "github:myrho/vite-plugin-elm#fix-hmr",
     "yaml": "^2.3.1",
     "yargs": "^17.0.0"
