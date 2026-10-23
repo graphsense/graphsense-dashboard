@@ -1,7 +1,8 @@
-module Util.Data exposing (absValues, addressCluster, isAccountLike, isEvmHexNetwork, looksLikeTxHash, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, normalizeTxIdentifier, parseMultiIdentifierInput, selfCluster, splitMultiIdentifierInput, subValues, sumValues, timestampToPosix)
+module Util.Data exposing (absValues, addressCluster, isAccountLike, isEvmHexNetwork, isMixedCaseBech32, looksLikeTxHash, mulValues, negateTxValue, negateValues, normalizeIdCasing, normalizeIdentifier, normalizeTxIdentifier, parseMultiIdentifierInput, selfCluster, splitMultiIdentifierInput, subValues, sumValues, timestampToPosix)
 
 import Api.Data
 import Basics.Extra exposing (flip)
+import Bitwise
 import Round
 import Time
 import Util exposing (removeLeading0x)
@@ -230,6 +231,79 @@ lowercaseUppercaseBech32 net address =
 
     else
         address
+
+
+{-| A valid bech32 address in mixed upper and lower case: only the case is
+wrong (BIP173 allows all lowercase or all uppercase, never both). The same
+rule as graphsenselib's `bech32_mixed_case`: a base58 address that starts
+like bech32 by chance (LTC: "L" + "TC1…") is never one, because in lowercase
+its checksum fails.
+-}
+isMixedCaseBech32 : String -> Bool
+isMixedCaseBech32 address =
+    let
+        lower =
+            String.toLower address
+    in
+    (address /= lower)
+        && (address /= String.toUpper address)
+        && List.any (\hrp -> String.startsWith (hrp ++ "1") lower) [ "bc", "tb", "bcrt", "ltc", "tltc", "rltc" ]
+        && bech32ChecksumOk lower
+
+
+{-| Only the checksum of a lowercase bech32 string: either constant counts
+(bech32 or bech32m), like graphsenselib's `_bech32_checksum_ok`.
+-}
+bech32ChecksumOk : String -> Bool
+bech32ChecksumOk s =
+    case String.indexes "1" s |> List.reverse |> List.head of
+        Just pos ->
+            let
+                dataPart =
+                    String.dropLeft (pos + 1) s
+
+                data =
+                    String.toList dataPart
+                        |> List.filterMap (\c -> String.indexes (String.fromChar c) "qpzry9x8gf2tvdw0s3jn54khce6mua7l" |> List.head)
+            in
+            (pos >= 1)
+                && (pos + 7 <= String.length s)
+                && (List.length data == String.length dataPart)
+                && List.member (bech32Polymod (bech32HrpExpand (String.left pos s) ++ data)) [ 1, 0x2BC830A3 ]
+
+        Nothing ->
+            False
+
+
+bech32HrpExpand : String -> List Int
+bech32HrpExpand hrp =
+    let
+        codes =
+            String.toList hrp |> List.map Char.toCode
+    in
+    List.map (Bitwise.shiftRightBy 5) codes ++ [ 0 ] ++ List.map (Bitwise.and 31) codes
+
+
+bech32Polymod : List Int -> Int
+bech32Polymod =
+    List.foldl
+        (\value chk ->
+            let
+                top =
+                    Bitwise.shiftRightZfBy 25 chk
+            in
+            List.foldl
+                (\( i, generator ) acc ->
+                    if Bitwise.and (Bitwise.shiftRightZfBy i top) 1 == 1 then
+                        Bitwise.xor acc generator
+
+                    else
+                        acc
+                )
+                (Bitwise.xor (Bitwise.shiftLeftBy 5 (Bitwise.and chk 0x01FFFFFF)) value)
+                (List.indexedMap Tuple.pair [ 0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3 ])
+        )
+        1
 
 
 {-| Whether an identifier has the shape of a transaction hash on any
