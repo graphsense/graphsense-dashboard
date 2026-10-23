@@ -483,8 +483,20 @@ resultLineToHtml query sc selectedValue choiceEvents resultLine =
                     , False
                     )
 
+        -- an address row shows the API's form of the address: an uppercase
+        -- bech32 query matches it only normalized, a base58 address that
+        -- starts the same way by chance (LTC: "L" + "TC1…") only as typed
         querycomp =
-            removeLeading0x query
+            case resultLine of
+                Address net a ->
+                    if String.startsWith (removeLeading0x query) (removeLeading0x a) then
+                        removeLeading0x query
+
+                    else
+                        removeLeading0x (Data.normalizeIdentifier net query)
+
+                _ ->
+                    removeLeading0x query
 
         ( regularText, boldText ) =
             if not (String.isEmpty querycomp) && String.startsWith querycomp (removeLeading0x label) && highlight_suffix then
