@@ -201,8 +201,35 @@ normalizeIdentifier net address =
                 String.toLower >> ensure0x
 
             else
-                identity
+                lowercaseUppercaseBech32 net
            )
+
+
+{-| BIP173 allows a bech32 address in all uppercase as well (QR codes use
+it). The API accepts that form but serves the lowercase one, so graph node
+ids must use the lowercase one too, or one address becomes two nodes. Mixed
+case is invalid bech32 and stays as it is. The prefixes are the ones the API
+accepts in uppercase.
+-}
+lowercaseUppercaseBech32 : String -> String -> String
+lowercaseUppercaseBech32 net address =
+    let
+        prefixes =
+            case String.toLower net of
+                "btc" ->
+                    [ "BC1", "TB1", "BCRT1" ]
+
+                "ltc" ->
+                    [ "LTC1", "TLTC1", "RLTC1" ]
+
+                _ ->
+                    []
+    in
+    if address == String.toUpper address && List.any (\p -> String.startsWith p address) prefixes then
+        String.toLower address
+
+    else
+        address
 
 
 {-| Whether an identifier has the shape of a transaction hash on any

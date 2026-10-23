@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - On a lite network the address side panel shows a plugin's buttons only if the plugin says they work there, like the right-click menu greys out its entries. Plugins opt in with `addressSidePanelHeaderOnLiteNetworks`; so far this hides the neighbor search ("Find services"), which needs address relations lite networks do not have
 
+### Fixed
+- A bech32 address written in all uppercase (`BC1Q…`, `LTC1Q…`, as QR codes show it) is the same node on the Pathfinder as its lowercase form. Opening it by link and then adding it from the search no longer puts the address on the graph twice
+
 ## [26.09.1] - 2026-10-15
 
 ### Added
