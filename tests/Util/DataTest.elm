@@ -11,6 +11,7 @@ suite =
         [ looksLikeTxHashSuite
         , normalizeIdentifierSuite
         , isMixedCaseBech32Suite
+        , normalizeIdCasingSuite
         ]
 
 
@@ -105,4 +106,23 @@ isMixedCaseBech32Suite =
             \_ ->
                 Data.isMixedCaseBech32 "Bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0"
                     |> Expect.equal True
+        ]
+
+
+normalizeIdCasingSuite : Test
+normalizeIdCasingSuite =
+    -- what ids from saved graph files go through
+    describe "Util.Data.normalizeIdCasing"
+        [ test "an uppercase bech32 address becomes lowercase" <|
+            \_ ->
+                Data.normalizeIdCasing "btc" "BC1QX8HYAG2NVJJKKHDGJRSLWLYKM86PFLQNGEXAXN"
+                    |> Expect.equal "bc1qx8hyag2nvjjkkhdgjrslwlykm86pflqngexaxn"
+        , test "a base58 address that starts like bech32 keeps its case" <|
+            \_ ->
+                Data.normalizeIdCasing "ltc" "LTC1A4GhnLkKbpfkaDyXHTeShP2YksUVgY"
+                    |> Expect.equal "LTC1A4GhnLkKbpfkaDyXHTeShP2YksUVgY"
+        , test "an eth sub-tx marker keeps its case" <|
+            \_ ->
+                Data.normalizeIdCasing "eth" "0xABCD_T1"
+                    |> Expect.equal "0xabcd_T1"
         ]

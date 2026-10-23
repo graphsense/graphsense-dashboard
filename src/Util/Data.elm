@@ -163,7 +163,9 @@ ensure0x s =
 whose identifiers are case-insensitive hex (eth, bnb). Only the segment
 before the first "\_" is lowercased: sub-tx markers like "\_T1"/"\_I1"
 are case-sensitive and must be preserved. Other networks (btc, trx)
-use case-sensitive encodings and are returned unchanged.
+use case-sensitive encodings and keep their case, except an all-uppercase
+bech32 address (BIP173, QR codes), which becomes the lowercase form the API
+serves, as in `normalizeIdentifier`.
 -}
 normalizeIdCasing : String -> String -> String
 normalizeIdCasing network identifier =
@@ -176,7 +178,7 @@ normalizeIdCasing network identifier =
                 identifier
 
     else
-        identifier
+        lowercaseUppercaseBech32 network identifier
 
 
 {-| Canonical form of a TX identifier for graph node ids and API requests:
