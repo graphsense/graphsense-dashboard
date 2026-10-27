@@ -1,4 +1,4 @@
-module PluginApi exposing (ComponentsInfiniteTableConfig, ComponentsInfiniteTableModel, ComponentsInfiniteTableMsg, ComponentsInfiniteTableTableConfig, ComponentsPagedTableMsg, ComponentsTableFilter, ComponentsTableTable, ComponentsTooltipConfig, ComponentsTooltipModel, ComponentsTooltipMsg, ConfigUpdateConfig, ConfigViewConfig, CssTableStyles, EffectApiEffect, ModelAddressAddress, ModelCurrencyAssetIdentifier, ModelDialogPlacement, ModelEntityEntity, ModelGraphCoordsCoords, ModelPathfinderAddressAddress, ModelPathfinderIdId, RoutePathfinderAddressHopType, RoutePathfinderPathHopType, UtilThemedSelectBoxModel, UtilThemedSelectBoxMsg, ViewButtonBtnConfig, ViewPathfinderContextMenuItemContextMenuItem, surface)
+module PluginApi exposing (ComponentsInfiniteTableConfig, ComponentsInfiniteTableModel, ComponentsInfiniteTableMsg, ComponentsInfiniteTableTableConfig, ComponentsPagedTableMsg, ComponentsTableFilter, ComponentsTableTable, ComponentsTooltipConfig, ComponentsTooltipModel, ComponentsTooltipMsg, ConfigUpdateConfig, ConfigViewConfig, CssTableStyles, EffectApiEffect, ModelAddressAddress, ModelCurrencyAssetIdentifier, ModelDialogPlacement, ModelEntityEntity, ModelGraphCoordsCoords, ModelLocaleModel, ModelPathfinderAddressAddress, ModelPathfinderIdId, RoutePathfinderAddressHopType, RoutePathfinderPathHopType, UtilThemedSelectBoxModel, UtilThemedSelectBoxMsg, ViewButtonBtnConfig, ViewPathfinderContextMenuItemContextMenuItem, surface)
 
 {-| The core API that the dashboard plugins depend on.
 
@@ -155,6 +155,10 @@ type alias ModelEntityEntity =
 
 type alias ModelGraphCoordsCoords =
     Model.Graph.Coords.Coords
+
+
+type alias ModelLocaleModel =
+    Model.Locale.Model
 
 
 type alias ModelPathfinderAddressAddress =
@@ -400,6 +404,7 @@ surface =
 
     -- View.Controls
     , ref View.Controls.Small
+    , ref View.Controls.checkboxWithLabel
     , ref View.Controls.checkboxWithLabelAndTitle
     , ref View.Controls.radio
     , ref View.Controls.radioSmall
