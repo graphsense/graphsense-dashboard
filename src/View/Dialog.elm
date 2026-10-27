@@ -25,6 +25,7 @@ import Theme.Html.ErrorMessagesAlerts
         , errorMessageComponentTypeErrorWithInstances
         )
 import Theme.Html.Icons as Icons
+import Util.Data
 import Util.View exposing (addDot, none, onClickWithStop)
 import View.Button as Button
 import View.Locale as Locale
@@ -182,15 +183,22 @@ error vc err =
                 AddressNotFound addrs ->
                     notFoundDetails vc
                         addrs
-                        (if List.length addrs > 1 then
-                            [ "Popup-addresses-not-found-no-txs"
-                            , "Popup-addresses-not-found-not-in-database"
-                            ]
+                        ((if List.any Util.Data.isMixedCaseBech32 addrs then
+                            [ "Popup-address-not-found-mixed-case" ]
 
-                         else
-                            [ "Popup-address-not-found-no-txs"
-                            , "Popup-address-not-found-not-in-database"
-                            ]
+                          else
+                            []
+                         )
+                            ++ (if List.length addrs > 1 then
+                                    [ "Popup-addresses-not-found-no-txs"
+                                    , "Popup-addresses-not-found-not-in-database"
+                                    ]
+
+                                else
+                                    [ "Popup-address-not-found-no-txs"
+                                    , "Popup-address-not-found-not-in-database"
+                                    ]
+                               )
                         )
 
                 TxNotFound txs ->

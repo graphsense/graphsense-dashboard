@@ -344,6 +344,7 @@ popup-addresses-not-found-no-txs: nu există tranzacții asociate cu aceste adre
 popup-address-not-found-no-txs: nu există tranzacții asociate cu această adresă și, prin urmare,
   nu este găsită în blockchain
 popup-address-not-found-typos: există greșeli de tastare
+popup-address-not-found-mixed-case: amestecă litere mari și mici; o adresă bech32 se scrie numai cu litere mici sau numai cu litere mari
 token-transactions-of: tranzacții cu token-uri ale {0} ({1})
 actor: Actor
 actors: Actori
@@ -648,6 +649,7 @@ no-results-found-on-networks: "Nu a fost găsit pe {0}."
 popup-not-found-unsupported-network: "se află pe o rețea pe care această instanță nu o acceptă (acceptate: {0})"
 identifier-not-found: "{0} nu a fost găsit. Este posibil să nu fie încă în baza de date sau să conțină o greșeală de tastare."
 identifier-not-found-on-networks: "{0} nu a fost găsit pe {1}. Este posibil să fie pe o rețea pe care această instanță nu o acceptă, să nu fie încă în baza de date sau să conțină o greșeală de tastare."
+identifier-mixed-case: "{0} amestecă litere mari și mici. O adresă bech32 se scrie numai cu litere mici sau numai cu litere mari."
 export-dialog-only-visible-inoutputs: exportă doar intrările/ieșirile vizibile
 export-dialog-only-visible-inoutputs-help: Când este activat, CSV-ul conține doar fluxurile
   dintre intrările și ieșirile vizibile în graf. Dezactivează pentru a exporta întreaga matrice

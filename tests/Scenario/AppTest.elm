@@ -368,6 +368,20 @@ suite =
                         |> App.step (SearchMsg Msg.Search.UserClicksResultLine)
                         |> latestNotification
                         |> Expect.equal (Just { title = Just "address not found", message = "identifier-not-found", variables = [ xrpAddress, "" ] })
+            , test "says so when only the case is wrong (mixed-case bech32)" <|
+                \_ ->
+                    App.initAt "/"
+                        |> App.mapModel (\m -> { m | search = m.search |> typedAndAnsweredWithNothing mixedCaseBech32 })
+                        |> App.step (SearchMsg Msg.Search.UserClicksResultLine)
+                        |> latestNotification
+                        |> Expect.equal (Just { title = Just "address not found", message = "identifier-mixed-case", variables = [ mixedCaseBech32, "" ] })
+            , test "but not for a base58 address that starts like bech32" <|
+                \_ ->
+                    App.initAt "/"
+                        |> App.mapModel (\m -> { m | search = m.search |> typedAndAnsweredWithNothing ltcBase58Lookalike })
+                        |> App.step (SearchMsg Msg.Search.UserClicksResultLine)
+                        |> latestNotification
+                        |> Expect.equal (Just { title = Just "address not found", message = "identifier-not-found", variables = [ ltcBase58Lookalike, "" ] })
             , test "names the searched networks once the statistics are in" <|
                 \_ ->
                     withStats <|
@@ -438,6 +452,18 @@ suite =
                         |> App.mapModel (\m -> { m | dialog = Just (Update.Dialog.txNotFoundError xrpHash Nothing NoOp) })
                         |> App.html
                         |> Query.hasNot [ Selector.text "Popup-not-found-unsupported-network" ]
+            , test "says so when only the case is wrong (mixed-case bech32)" <|
+                \_ ->
+                    App.initAt "/"
+                        |> App.mapModel (\m -> { m | dialog = Just (Update.Dialog.addressNotFoundError mixedCaseBech32 Nothing NoOp) })
+                        |> App.html
+                        |> Query.has [ Selector.text "Popup-address-not-found-mixed-case" ]
+            , test "but not for a base58 address that starts like bech32" <|
+                \_ ->
+                    App.initAt "/"
+                        |> App.mapModel (\m -> { m | dialog = Just (Update.Dialog.addressNotFoundError ltcBase58Lookalike Nothing NoOp) })
+                        |> App.html
+                        |> Query.hasNot [ Selector.text "Popup-address-not-found-mixed-case" ]
             ]
         , describe "dragging a dialog"
             (let
@@ -562,6 +588,22 @@ xrpHash =
 xrpAddress : String
 xrpAddress =
     "rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh"
+
+
+{-| A valid bech32 address with only its first letter in upper case. BIP173
+allows all lowercase or all uppercase, never both.
+-}
+mixedCaseBech32 : String
+mixedCaseBech32 =
+    "Bc1qx8hyag2nvjjkkhdgjrslwlykm86pflqngexaxn"
+
+
+{-| A base58 LTC address that starts with "LTC1" by chance (always "L", then
+random characters), so mixed case is normal for it.
+-}
+ltcBase58Lookalike : String
+ltcBase58Lookalike =
+    "LTC1A4GhnLkKbpfkaDyXHTeShP2YksUVgY"
 
 
 {-| A search box with `query` typed in and the search for it come back empty.

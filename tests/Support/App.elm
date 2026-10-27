@@ -10,6 +10,7 @@ module Support.App exposing
     , internalMsgs
     , mapModel
     , model
+    , navigate
     , outMsgs
     , respond
     , respondSearch
@@ -131,6 +132,18 @@ initAt route =
 
 
 -- DRIVING
+
+
+{-| Goes to `route` on the current graph — what picking a search result or
+following a link inside the app does.
+-}
+navigate : Route -> App -> App
+navigate route (App app) =
+    let
+        ( routed, produced ) =
+            Update.Pathfinder.updateByRoute Env.updateConfig route app.model_
+    in
+    App { model_ = routed, effects_ = produced, outMsgs_ = [] }
 
 
 {-| One `Update.Pathfinder.update`, replacing the recorded effects and out-messages

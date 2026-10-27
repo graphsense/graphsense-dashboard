@@ -2654,7 +2654,10 @@ notifyIdentifierNotFound identifier model =
                 |> String.join ", "
 
         message =
-            if String.isEmpty networks then
+            if Util.Data.isMixedCaseBech32 (String.trim identifier) then
+                "identifier-mixed-case"
+
+            else if String.isEmpty networks then
                 "identifier-not-found"
 
             else
