@@ -84,17 +84,21 @@ filterByPrefix input result =
             List.map
                 (\currency ->
                     let
-                        addr =
-                            String.trim
-                                (if Util.Data.isEvmHexNetwork currency.currency then
-                                    String.toLower input |> String.split "..." |> List.head |> Maybe.withDefault input
+                        -- an uppercase bech32 query finds the lowercase address;
+                        -- a base58 address can start the same way by chance
+                        -- (LTC: "L" + "TC1…") and is found as typed, so both count
+                        prefixes =
+                            if Util.Data.isEvmHexNetwork currency.currency then
+                                [ String.trim (String.toLower input |> String.split "..." |> List.head |> Maybe.withDefault input) ]
 
-                                 else
-                                    input
-                                )
+                            else
+                                [ String.trim input, Util.Data.normalizeIdentifier currency.currency input ]
+
+                        matches address =
+                            List.any (\prefix -> String.startsWith prefix address) prefixes
                     in
                     { currency
-                        | addresses = List.filter (String.startsWith addr) currency.addresses
+                        | addresses = List.filter matches currency.addresses
                         , txs = List.filter (\x -> String.startsWith (removeSubTxIndicators (removeLeading0x input) |> String.toLower) (removeLeading0x x |> String.toLower)) currency.txs
                     }
                 )

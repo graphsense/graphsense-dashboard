@@ -49,6 +49,14 @@ addressId =
     ( "btc", "1Archive1n2C579dMsAu3iC6tWzuQJz8dN" )
 
 
+{-| A bech32 address in the lowercase form the API serves. BIP173 allows the
+same address in all uppercase too (QR codes use it).
+-}
+bech32Address : String
+bech32Address =
+    "bc1qx8hyag2nvjjkkhdgjrslwlykm86pflqngexaxn"
+
+
 {-| Runs `f` with the decoded fixture, or fails with a clear message. Keeps the
 scenarios free of `Result` plumbing.
 -}
@@ -133,6 +141,29 @@ suite =
                             graphWithOneAddress address
                                 |> App.html
                                 |> Query.has [ Selector.text "1Archive…z8dN" ]
+            ]
+        , describe "an uppercase bech32 address"
+            [ test "opened by deep link is keyed by its lowercase form" <|
+                \_ ->
+                    withAddressFixture <|
+                        \address ->
+                            Route.addressRoute { network = "btc", address = String.toUpper bech32Address }
+                                |> App.initAt
+                                |> answerAddress { address | address = bech32Address }
+                                |> addressesOnGraph
+                                |> Expect.equal [ ( "btc", bech32Address ) ]
+            , test "and the lowercase form found by search does not add it again" <|
+                \_ ->
+                    withAddressFixture <|
+                        \address ->
+                            Route.addressRoute { network = "btc", address = String.toUpper bech32Address }
+                                |> App.initAt
+                                |> answerAddress { address | address = bech32Address }
+                                |> App.navigate
+                                    (Update.Pathfinder.resultLineToRoute (Search.Address "btc" bech32Address))
+                                |> answerAddress { address | address = bech32Address }
+                                |> addressesOnGraph
+                                |> Expect.equal [ ( "btc", bech32Address ) ]
             ]
         , describe "removing an address"
             [ test "takes it off the graph" <|

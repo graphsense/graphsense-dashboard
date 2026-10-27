@@ -13,6 +13,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Cluster neighbor lists read a neighbor's cluster from `cluster` instead of the deprecated `entity` field, so they keep loading once the API stops sending it
 - On a lite network the address side panel shows a plugin's buttons only if the plugin says they work there, like the right-click menu greys out its entries. Plugins opt in with `addressSidePanelHeaderOnLiteNetworks`; so far this hides the neighbor search ("Find services"), which needs address relations lite networks do not have
 
+### Fixed
+- A bech32 address written in all uppercase (`BC1Q…`, `LTC1Q…`, as QR codes show it) is the same node on the Pathfinder as its lowercase form. Opening it by link and then adding it from the search no longer puts the address on the graph twice
+- The search shows an address found for an uppercase bech32 query (needs the matching Web API fix), with the typed part marked like for a lowercase query. A base58 address that starts the same way by chance (LTC `L` + `TC1…`) still shows too
+- A saved graph with an uppercase bech32 address (possible since the API accepts that spelling) opens with the lowercase id the API serves, so the node gets its data and is not added a second time; a graph saved with both spellings opens with one node
+- A mixed-case bech32 address (`Bc1q…`) that is not found is named as such in the not-found dialog and the search message ("upper and lower case are mixed"), instead of only "there are typos"; base58 addresses that start like bech32 by chance (LTC `L` + `TC1…`) are not affected
+
 ## [26.09.1] - 2026-10-15
 
 ### Added
