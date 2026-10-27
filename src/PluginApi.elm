@@ -226,6 +226,8 @@ surface =
     , ref Components.InfiniteTable.withFetch
 
     -- Components.Tooltip
+    , ref Components.Tooltip.CloseTooltip
+    , ref Components.Tooltip.OpenTooltip
     , ref Components.Tooltip.attributes
     , ref Components.Tooltip.defaultConfig
     , ref Components.Tooltip.init
