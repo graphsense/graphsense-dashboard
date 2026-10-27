@@ -17,6 +17,7 @@ import Dict
 import Expect
 import Fixtures.Api as Fixture
 import Json.Decode exposing (Decoder)
+import Json.Encode
 import Test exposing (Test, describe, test)
 
 
@@ -102,6 +103,19 @@ suite =
                         |> Json.Decode.decodeString Api.Data.clusterDecoder
                         |> Result.toMaybe
                         |> Expect.equal Nothing
+            ]
+        , describe "a cluster neighbor without the deprecated entity field"
+            -- `entity` on neighbor_cluster is deprecated and optional, `cluster`
+            -- is required. The client used to require `entity`, so retiring it
+            -- server-side would have emptied every cluster neighbor list.
+            [ test "decodes from cluster alone" <|
+                \_ ->
+                    Fixture.neighborCluster
+                        |> Json.Decode.decodeString (Json.Decode.dict Json.Decode.value)
+                        |> Result.map (Dict.remove "entity" >> Json.Encode.dict identity identity)
+                        |> Result.andThen (Json.Decode.decodeValue Api.Data.neighborClusterDecoder)
+                        |> Result.map (.cluster >> .cluster)
+                        |> Expect.equal (Ok 264711)
             ]
         , describe "a dex swap leg's curated display metadata and fiat"
             -- The six optional per-leg keys are in neither the spec nor any

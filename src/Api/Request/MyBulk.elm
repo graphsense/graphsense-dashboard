@@ -12,14 +12,8 @@ type Operation
     | OperationListAddressTxs
     | OperationListTagsByAddress
     | OperationListAddressNeighbors
-    | OperationGetAddressEntity
+    | OperationGetAddressCluster
     | OperationListAddressLinks
-    | OperationGetEntity
-    | OperationListTagsByEntity
-    | OperationListEntityNeighbors
-    | OperationListEntityTxs
-    | OperationListEntityLinks
-    | OperationListEntityAddresses
     | OperationGetTx
     | OperationGetTxIo
     | OperationGetExchangeRates
@@ -47,29 +41,11 @@ stringFromOperation model =
         OperationListAddressNeighbors ->
             "list_address_neighbors"
 
-        OperationGetAddressEntity ->
-            "get_address_entity"
+        OperationGetAddressCluster ->
+            "get_address_cluster"
 
         OperationListAddressLinks ->
             "list_address_links"
-
-        OperationGetEntity ->
-            "get_entity"
-
-        OperationListTagsByEntity ->
-            "list_tags_by_entity"
-
-        OperationListEntityNeighbors ->
-            "list_entity_neighbors"
-
-        OperationListEntityTxs ->
-            "list_entity_txs"
-
-        OperationListEntityLinks ->
-            "list_entity_links"
-
-        OperationListEntityAddresses ->
-            "list_entity_addresses"
 
         OperationGetTx ->
             "get_tx"

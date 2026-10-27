@@ -246,7 +246,7 @@ surface =
     , ref Css.Table.styles
 
     -- Effect.Api
-    , ref Effect.Api.BulkGetAddressEntityEffect
+    , ref Effect.Api.BulkGetAddressClusterEffect
     , ref Effect.Api.GetAddressEffect
     , ref Effect.Api.GetAddressTagSummaryEffect
     , ref Effect.Api.GetAddressTxsEffect
