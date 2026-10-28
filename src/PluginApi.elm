@@ -69,6 +69,7 @@ import View.Controls
 import View.CurrencyMeta
 import View.Graph.Table
 import View.Locale
+import View.Page
 import View.Pathfinder.ContextMenuItem
 import View.Pathfinder.InfiniteTable
 import View.Sidebar
@@ -449,6 +450,9 @@ surface =
     , ref View.Locale.timestampTimeUniform
     , ref View.Locale.title
     , ref View.Locale.titleCase
+
+    -- View.Page
+    , ref View.Page.view
 
     -- View.Pathfinder.ContextMenuItem
     , ref View.Pathfinder.ContextMenuItem.init

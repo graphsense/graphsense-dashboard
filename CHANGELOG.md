@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Plugins can react to the user info from the user endpoint with the new `updateByUserInfo` update hook (username, expiration, and whether the account has an email address, from the portal's `has_email`)
+- `View.Page.view`, a shared frame for pages with a title (title, optional subtitle, an optional action such as a help button at the right of the title row), left-aligned and at most 1440px wide, so plugin pages stop styling the generated page component each in their own way
 
 ### Changed
 - Plugins look up the clusters of addresses with `BulkGetAddressClusterEffect` (bulk operation `get_address_cluster`), which replaces `BulkGetAddressEntityEffect`. The unused `BulkGetEntityEffect` and `BulkGetEntityNeighborsEffect` are gone, together with the entity-named bulk operations nothing called
