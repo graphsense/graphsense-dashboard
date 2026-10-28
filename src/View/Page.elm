@@ -33,15 +33,27 @@ type alias Config msg =
 on every page, and on a wide screen a table's columns do not drift so far apart that a
 row is hard to follow across. 1440px still fits a full bech32 address in a table row.
 -}
-maxWidth : Float
+maxWidth : Int
 maxWidth =
     1440
+
+
+{-| The generated root's own padding on every side.
+-}
+padding : Int
+padding =
+    16
 
 
 {-| The frame scrolls itself when its content is taller than the window: the generated
 root hides its overflow, which cut off a long page instead of scrolling it.
 `minHeight 0` is what lets it shrink to the window in the first place, and it also lets a page that wants only one part of itself to scroll
 (a table, a list) give that part `minHeight 0` and `overflow: auto` in turn.
+
+The cap is right padding, not `max-width`: the frame itself stays as wide as the window,
+so its scrollbar is at the window's edge rather than in the middle of a wide screen.
+The padding grows with whatever the window has beyond `maxWidth`.
+
 -}
 view : Config msg -> Html msg
 view config =
@@ -52,7 +64,14 @@ view config =
                     [ Css.flexGrow (Css.num 1)
                     , Css.minHeight (Css.px 0)
                     , Css.width (Css.pct 100)
-                    , Css.maxWidth (Css.px maxWidth)
+                    , Css.property "padding-right"
+                        ("max("
+                            ++ String.fromInt padding
+                            ++ "px, calc(100% - "
+                            ++ String.fromInt (maxWidth - padding)
+                            ++ "px))"
+                        )
+                        |> Css.important
                     , Css.overflowY Css.auto |> Css.important
                     ]
                 ]

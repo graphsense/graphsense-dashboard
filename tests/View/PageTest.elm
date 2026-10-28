@@ -1,6 +1,6 @@
 module View.PageTest exposing (suite)
 
-{-| The shared page frame: the width cap, the action in the title row, and no empty line
+{-| The shared page frame: the content's width cap, the action in the title row, and no empty line
 for a missing subtitle.
 
 elm-css renders its stylesheet as a hidden child of the root, which is how the width cap
@@ -59,11 +59,14 @@ suite =
                 render page
                     |> Query.children [ Selector.tag "div" ]
                     |> Query.count (Expect.equal 2)
-        , test "is capped in width, and not centred" <|
+        , test "caps its content at 1440px, not itself, and does not centre it" <|
             \_ ->
+                -- a `max-width` on the frame would put its scrollbar in the middle of a
+                -- wide screen
                 render page
                     |> Expect.all
-                        [ Query.has [ Selector.text "max-width:1440px" ]
+                        [ Query.has [ Selector.text "padding-right:max(16px, calc(100% - 1424px)) !important" ]
+                        , Query.hasNot [ Selector.text "max-width" ]
                         , Query.hasNot [ Selector.text "margin-left:auto" ]
                         ]
         ]
