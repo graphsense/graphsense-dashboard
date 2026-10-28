@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [26.10.0] - 2026-10-29
 
 ### Added
 - Plugins can react to the user info from the user endpoint with the new `updateByUserInfo` update hook (username, expiration, and whether the account has an email address, from the portal's `has_email`)
@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Plugins look up the clusters of addresses with `BulkGetAddressClusterEffect` (bulk operation `get_address_cluster`), which replaces `BulkGetAddressEntityEffect`. The unused `BulkGetEntityEffect` and `BulkGetEntityNeighborsEffect` are gone, together with the entity-named bulk operations nothing called
 - Cluster neighbor lists read a neighbor's cluster from `cluster` instead of the deprecated `entity` field, so they keep loading once the API stops sending it
 - On a lite network the address side panel shows a plugin's buttons only if the plugin says they work there, like the right-click menu greys out its entries. Plugins opt in with `addressSidePanelHeaderOnLiteNetworks`; so far this hides the neighbor search ("Find services"), which needs address relations lite networks do not have
+- In the address side panel, rows that plugins add to the tags section come after core's own (actor, tags, networks), whatever order the design has them in
+- The "Lite networks" switch on the settings page no longer has an explanatory text under it
 
 ### Fixed
 - A bech32 address written in all uppercase (`BC1Q…`, `LTC1Q…`, as QR codes show it) is the same node on the Pathfinder as its lowercase form. Opening it by link and then adding it from the search no longer puts the address on the graph twice
