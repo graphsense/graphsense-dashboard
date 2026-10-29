@@ -3,6 +3,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.10.0] - 2026-10-29
+
+### Added
+- Plugins can react to the user info from the user endpoint with the new `updateByUserInfo` update hook (username, expiration, and whether the account has an email address, from the portal's `has_email`)
+- `View.Page.view`, a shared frame for pages with a title (title, optional subtitle, an optional action such as a help button at the right of the title row), left-aligned with its content at most 1440px wide (the frame itself spans the window, so its scrollbar is at the window edge), so plugin pages stop styling the generated page component each in their own way
+
+### Changed
+- Plugins look up the clusters of addresses with `BulkGetAddressClusterEffect` (bulk operation `get_address_cluster`), which replaces `BulkGetAddressEntityEffect`. The unused `BulkGetEntityEffect` and `BulkGetEntityNeighborsEffect` are gone, together with the entity-named bulk operations nothing called
+- Cluster neighbor lists read a neighbor's cluster from `cluster` instead of the deprecated `entity` field, so they keep loading once the API stops sending it
+- On a lite network the address side panel shows a plugin's buttons only if the plugin says they work there, like the right-click menu greys out its entries. Plugins opt in with `addressSidePanelHeaderOnLiteNetworks`; so far this hides the neighbor search ("Find services"), which needs address relations lite networks do not have
+- In the address side panel, rows that plugins add to the tags section come after core's own (actor, tags, networks), whatever order the design has them in
+- The "Lite networks" switch on the settings page no longer has an explanatory text under it
+
+### Fixed
+- A bech32 address written in all uppercase (`BC1Q…`, `LTC1Q…`, as QR codes show it) is the same node on the Pathfinder as its lowercase form. Opening it by link and then adding it from the search no longer puts the address on the graph twice
+- The search shows an address found for an uppercase bech32 query (needs the matching Web API fix), with the typed part marked like for a lowercase query. A base58 address that starts the same way by chance (LTC `L` + `TC1…`) still shows too
+- A saved graph with an uppercase bech32 address (possible since the API accepts that spelling) opens with the lowercase id the API serves, so the node gets its data and is not added a second time; a graph saved with both spellings opens with one node
+- A mixed-case bech32 address (`Bc1q…`) that is not found is named as such in the not-found dialog and the search message ("upper and lower case are mixed"), instead of only "there are typos"; base58 addresses that start like bech32 by chance (LTC `L` + `TC1…`) are not affected
+
 ## [26.09.1] - 2026-10-15
 
 ### Added

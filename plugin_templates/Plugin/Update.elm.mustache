@@ -269,3 +269,35 @@ logout state =
         |> Cmd.batch
     )
 {{/plugins.length}} 
+
+
+updateByUserInfo : PluginInterface.Update.UserInfo -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+updateByUserInfo userInfo state =
+    {{^plugins}}n state{{/plugins}}{{#plugins.length}}let
+{{#plugins}}
+        {{name}} =
+            Maybe.map2
+                (\fun model ->
+                    fun userInfo model
+                        |> T3.mapSecond (List.map (PluginInterface.Msg.mapOutMsg "{{name}}" Plugin.Msg.{{package}}Msg Plugin.Msg.{{package}}AddressMsg Plugin.Msg.{{package}}EntityMsg))
+                        |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
+                )
+                {{package}}.Interface.Update.plugin.updateByUserInfo
+                state.{{name}}
+                |> Maybe.Extra.orElse (Maybe.map n state.{{name}})
+{{/plugins}} 
+    in
+    ( { state
+        | {{#plugins}}{{name}} = Maybe.map T3.first {{name}}
+        {{^last}}, {{/last}}{{/plugins}}
+      }
+    , [ {{#plugins}}Maybe.map T3.second {{name}} |> Maybe.withDefault [] 
+      {{^last}}, {{/last}}{{/plugins}}
+      ]
+        |> List.concat
+    , [ {{#plugins}}Maybe.map T3.third {{name}} |> Maybe.withDefault Cmd.none
+      {{^last}}, {{/last}}{{/plugins}}
+      ]
+        |> Cmd.batch
+    )
+{{/plugins.length}} 

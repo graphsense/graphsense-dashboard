@@ -114,7 +114,7 @@ utxo pluginStates vc model id viewState address =
             makeSidePanelData vc model id pluginTagsVisible crosschainVisible
 
         pluginList =
-            Plugin.addressSidePanelHeader pluginStates vc address
+            Plugin.addressSidePanelHeader pluginStates vc (Pathfinder.isLiteNetwork (Id.network id) model) address
 
         pluginTagsList =
             Plugin.addressSidePanelHeaderTags pluginStates vc address
@@ -173,6 +173,7 @@ utxo pluginStates vc model id viewState address =
             |> Rs.s_sidePanelHeaderText [ spread ]
             |> Rs.s_iconsCloseBlack (closeAttrs Pathfinder.UserClosedDetailsView)
             |> Rs.s_pluginList [ css [ Css.display Css.none ] ]
+            |> Rs.s_pluginTagsList pluginTagsLast
             |> Rs.s_categoriesList [ css [ Css.maxWidth <| Css.px categoriesMaxWidth ] ]
             |> Rs.s_tagsLayout
                 (if sidePanelData.actorVisible || sidePanelData.tagsVisible then
@@ -921,7 +922,7 @@ account pluginStates vc model id viewState address =
             crosschainLedgerChips vc id Pathfinder.UserClickedAddress crosschainTargets
 
         pluginList =
-            Plugin.addressSidePanelHeader pluginStates vc address
+            Plugin.addressSidePanelHeader pluginStates vc (Pathfinder.isLiteNetwork (Id.network id) model) address
 
         pluginTagsList =
             Plugin.addressSidePanelHeaderTags pluginStates vc address
@@ -1051,7 +1052,7 @@ account pluginStates vc model id viewState address =
                     [ css [ Css.display Css.none ] ]
 
                  else
-                    []
+                    pluginTagsLast
                 )
             |> Rs.s_crosschainLedgers
                 (if crosschainVisible then
@@ -1218,6 +1219,14 @@ tagsList vc model id =
                         )
                 )
                     ++ [ learnMoreButton vc id ]
+
+
+{-| Plugins' tag rows come after core's (actor, tags, networks), whatever
+order the Figma component has them in.
+-}
+pluginTagsLast : List (Html.Attribute msg)
+pluginTagsLast =
+    [ css [ Css.property "order" "1" ] ]
 
 
 {-| The "first usage"/"last usage" cell of a first\_tx/last\_tx that may be

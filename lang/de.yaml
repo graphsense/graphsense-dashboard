@@ -345,6 +345,7 @@ popup-addresses-not-found-no-txs: Sie haben bis jetzt noch keine Transaktionen e
 popup-address-not-found-no-txs: Sie hat bis jetzt noch keine Transaktionen erhalten
   und ist daher nicht in der Blockchain gespeichert
 popup-address-not-found-typos: Es gibt Tippfehler
+popup-address-not-found-mixed-case: Groß- und Kleinbuchstaben sind gemischt; eine Bech32-Adresse wird ganz klein oder ganz groß geschrieben
 token-transactions-of: Token-Transaktionen von {0} ({1})
 actor: Akteur
 actor / Category: Akteur / Kategorie
@@ -606,6 +607,7 @@ no-results-found-on-networks: "Nicht gefunden auf {0}."
 popup-not-found-unsupported-network: "es liegt auf einem Netzwerk, das diese Instanz nicht unterstützt (unterstützt: {0})"
 identifier-not-found: "{0} wurde nicht gefunden. Möglicherweise ist es noch nicht in der Datenbank oder enthält einen Tippfehler."
 identifier-not-found-on-networks: "{0} wurde auf {1} nicht gefunden. Möglicherweise liegt es auf einem Netzwerk, das diese Instanz nicht unterstützt, ist noch nicht in der Datenbank oder enthält einen Tippfehler."
+identifier-mixed-case: "{0} mischt Groß- und Kleinbuchstaben. Eine Bech32-Adresse wird ganz klein oder ganz groß geschrieben."
 export-dialog-only-visible-inoutputs: "nur sichtbare Ein-/Ausgänge exportieren"
 export-dialog-only-visible-inoutputs-help: "Wenn aktiviert, enthält die CSV nur Flüsse zwischen Ein- und Ausgängen, die im Graphen sichtbar sind. Deaktivieren, um die vollständige Ein-/Ausgangs-Matrix zu exportieren — bei Transaktionen mit vielen Ein- und Ausgängen kann dies eine sehr große Datei erzeugen."
 csv-note-capped: "Transaktion zu groß – nur Flüsse mit einer sichtbaren Adresse wurden exportiert, auf das Exportlimit gekürzt."
@@ -623,7 +625,6 @@ Close search or dialog: "Suche oder Dialog schließen"
 Find on graph: "Im Graphen suchen"
 Duplicate graph in new tab: "Graph in neuem Tab duplizieren"
 lite networks: "Lite-Netzwerke"
-lite-networks-setting-hint: "Netzwerke aus dem Lite-Datendienst (BNB Smart Chain, Arbitrum, Base und die weiteren EVM-Netzwerke). Aus: die App arbeitet nur mit den Kern-Netzwerken und schickt keine Anfrage an den Lite-Dienst, falls dieser überlastet oder nicht erreichbar ist."
 lite-badge-tooltip: "Das {0}-Netzwerk unterstützt nur eingeschränkte Funktionen."
 lite-unavailable-title: "Lite-Blockchains nicht verfügbar"
 lite-unavailable-message: "BNB Smart Chain, Arbitrum und die weiteren Lite-Blockchains können gerade nicht geladen werden. Bitcoin, Ethereum und die weiteren Kern-Blockchains funktionieren wie gewohnt. Versuche es in ein paar Minuten erneut."

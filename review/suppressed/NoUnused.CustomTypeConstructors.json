@@ -3,9 +3,9 @@
   "automatically created by": "elm-review suppress",
   "learn more": "elm-review suppress --help",
   "suppressions": [
-    { "count": 15, "filePath": "src/Effect/Api.elm" },
-    { "count": 10, "filePath": "src/Api/Request/MyBulk.elm" },
+    { "count": 13, "filePath": "src/Effect/Api.elm" },
     { "count": 8, "filePath": "src/Model/Graph/Tool.elm" },
+    { "count": 6, "filePath": "src/Api/Request/MyBulk.elm" },
     { "count": 6, "filePath": "src/Config/Graph.elm" },
     { "count": 5, "filePath": "src/Model/Pathfinder/Error.elm" },
     { "count": 4, "filePath": "src/Model/Node.elm" },

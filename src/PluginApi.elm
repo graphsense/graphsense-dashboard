@@ -1,4 +1,4 @@
-module PluginApi exposing (ComponentsInfiniteTableConfig, ComponentsInfiniteTableModel, ComponentsInfiniteTableMsg, ComponentsInfiniteTableTableConfig, ComponentsPagedTableMsg, ComponentsTableFilter, ComponentsTableTable, ComponentsTooltipConfig, ComponentsTooltipModel, ComponentsTooltipMsg, ConfigUpdateConfig, ConfigViewConfig, CssTableStyles, EffectApiEffect, ModelAddressAddress, ModelCurrencyAssetIdentifier, ModelDialogPlacement, ModelEntityEntity, ModelGraphCoordsCoords, ModelPathfinderAddressAddress, ModelPathfinderIdId, RoutePathfinderAddressHopType, RoutePathfinderPathHopType, UtilThemedSelectBoxModel, UtilThemedSelectBoxMsg, ViewPathfinderContextMenuItemContextMenuItem, surface)
+module PluginApi exposing (ComponentsInfiniteTableConfig, ComponentsInfiniteTableModel, ComponentsInfiniteTableMsg, ComponentsInfiniteTableTableConfig, ComponentsPagedTableMsg, ComponentsTableFilter, ComponentsTableTable, ComponentsTooltipConfig, ComponentsTooltipModel, ComponentsTooltipMsg, ConfigUpdateConfig, ConfigViewConfig, CssTableStyles, EffectApiEffect, ModelAddressAddress, ModelCurrencyAssetIdentifier, ModelDialogPlacement, ModelEntityEntity, ModelGraphCoordsCoords, ModelLocaleModel, ModelPathfinderAddressAddress, ModelPathfinderIdId, RoutePathfinderAddressHopType, RoutePathfinderPathHopType, UtilThemedSelectBoxModel, UtilThemedSelectBoxMsg, ViewButtonBtnConfig, ViewPathfinderContextMenuItemContextMenuItem, surface)
 
 {-| The core API that the dashboard plugins depend on.
 
@@ -69,6 +69,7 @@ import View.Controls
 import View.CurrencyMeta
 import View.Graph.Table
 import View.Locale
+import View.Page
 import View.Pathfinder.ContextMenuItem
 import View.Pathfinder.InfiniteTable
 import View.Sidebar
@@ -157,6 +158,10 @@ type alias ModelGraphCoordsCoords =
     Model.Graph.Coords.Coords
 
 
+type alias ModelLocaleModel =
+    Model.Locale.Model
+
+
 type alias ModelPathfinderAddressAddress =
     Model.Pathfinder.Address.Address
 
@@ -179,6 +184,10 @@ type alias UtilThemedSelectBoxModel a =
 
 type alias UtilThemedSelectBoxMsg a =
     Util.ThemedSelectBox.Msg a
+
+
+type alias ViewButtonBtnConfig a =
+    View.Button.BtnConfig a
 
 
 type alias ViewPathfinderContextMenuItemContextMenuItem a =
@@ -218,6 +227,8 @@ surface =
     , ref Components.InfiniteTable.withFetch
 
     -- Components.Tooltip
+    , ref Components.Tooltip.CloseTooltip
+    , ref Components.Tooltip.OpenTooltip
     , ref Components.Tooltip.attributes
     , ref Components.Tooltip.defaultConfig
     , ref Components.Tooltip.init
@@ -238,7 +249,7 @@ surface =
     , ref Css.Table.styles
 
     -- Effect.Api
-    , ref Effect.Api.BulkGetAddressEntityEffect
+    , ref Effect.Api.BulkGetAddressClusterEffect
     , ref Effect.Api.GetAddressEffect
     , ref Effect.Api.GetAddressTagSummaryEffect
     , ref Effect.Api.GetAddressTxsEffect
@@ -268,6 +279,7 @@ surface =
 
     -- Model.Locale
     , ref Model.Locale.getFiatValue
+    , ref Model.Locale.getTokenTickers
 
     -- Model.Notification
     , ref Model.Notification.Error
@@ -305,6 +317,7 @@ surface =
     , ref Route.Pathfinder.VictimAddress
     , ref Route.Pathfinder.addressRoute
     , ref Route.Pathfinder.pathRoute
+    , ref Route.Pathfinder.txRoute
 
     -- Update.Dialog
     , ref Update.Dialog.confirm
@@ -346,6 +359,7 @@ surface =
     , ref Util.ThemedSelectBox.Selected
     , ref Util.ThemedSelectBox.defaultConfig
     , ref Util.ThemedSelectBox.defaultConfigHtml
+    , ref Util.ThemedSelectBox.getOptions
     , ref Util.ThemedSelectBox.init
     , ref Util.ThemedSelectBox.update
     , ref Util.ThemedSelectBox.updateOptions
@@ -392,10 +406,17 @@ surface =
     , ref View.Button.threeDots
 
     -- View.Controls
+    , ref View.Controls.Small
+    , ref View.Controls.checkboxWithLabel
+    , ref View.Controls.checkboxWithLabelAndTitle
+    , ref View.Controls.radio
     , ref View.Controls.radioSmall
+    , ref View.Controls.toggle
+    , ref View.Controls.toggleWithText
 
     -- View.CurrencyMeta
     , ref View.CurrencyMeta.getHumanReadableName
+    , ref View.CurrencyMeta.networks
 
     -- View.Graph.Table
     , ref View.Graph.Table.customizations
@@ -415,6 +436,7 @@ surface =
     , ref View.Locale.fiat
     , ref View.Locale.fiatWithoutCode
     , ref View.Locale.httpErrorToString
+    , ref View.Locale.int
     , ref View.Locale.intWithoutValueDetailFormatting
     , ref View.Locale.interpolated
     , ref View.Locale.interpolatedMarkdown
@@ -429,12 +451,16 @@ surface =
     , ref View.Locale.title
     , ref View.Locale.titleCase
 
+    -- View.Page
+    , ref View.Page.view
+
     -- View.Pathfinder.ContextMenuItem
     , ref View.Pathfinder.ContextMenuItem.init
     , ref View.Pathfinder.ContextMenuItem.init2
     , ref View.Pathfinder.ContextMenuItem.initLink2
     , ref View.Pathfinder.ContextMenuItem.setAvailableOnLiteNetworks
     , ref View.Pathfinder.ContextMenuItem.setDisabled
+    , ref View.Pathfinder.ContextMenuItem.setTooltip
     , ref View.Pathfinder.ContextMenuItem.view
 
     -- View.Pathfinder.InfiniteTable

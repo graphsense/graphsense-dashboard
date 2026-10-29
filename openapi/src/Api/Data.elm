@@ -634,7 +634,7 @@ type alias NeighborClusters =
 
 
 type alias NeighborCluster =
-    { entity : Cluster
+    { cluster : Cluster
     , labels : Maybe (List (String))
     , noTxs : Int
     , tokenValues : Maybe (Dict.Dict String (Values))
@@ -1941,7 +1941,7 @@ encodeNeighborClusterPairs : NeighborCluster -> List EncodedField
 encodeNeighborClusterPairs model =
     let
         pairs =
-            [ encode "entity" encodeCluster model.entity
+            [ encode "cluster" encodeCluster model.cluster
             , maybeEncode "labels" (Json.Encode.list Json.Encode.string) model.labels
             , encode "no_txs" Json.Encode.int model.noTxs
             , maybeEncode "token_values" (Json.Encode.dict identity encodeValues) model.tokenValues
@@ -3112,7 +3112,7 @@ neighborClustersDecoder =
 neighborClusterDecoder : Json.Decode.Decoder NeighborCluster
 neighborClusterDecoder =
     Json.Decode.succeed NeighborCluster
-        |> decode "entity" clusterDecoder
+        |> decode "cluster" clusterDecoder
         |> maybeDecode "labels" (Json.Decode.list Json.Decode.string) Nothing
         |> decode "no_txs" Json.Decode.int 
         |> maybeDecode "token_values" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing

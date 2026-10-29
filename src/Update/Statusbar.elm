@@ -523,25 +523,9 @@ messageFromApiEffect model effect =
                 )
                     |> Just
 
-            Api.BulkGetEntityEffect e _ ->
-                ( "Statusbar-loading-entities"
-                , [ List.length e.entities |> String.fromInt
-                  , e.currency |> String.toUpper
-                  ]
-                )
-                    |> Just
-
-            Api.BulkGetAddressEntityEffect e _ ->
+            Api.BulkGetAddressClusterEffect e _ ->
                 ( "Statusbar-loading-entities-of-addresses"
                 , [ List.length e.addresses |> String.fromInt
-                  , e.currency |> String.toUpper
-                  ]
-                )
-                    |> Just
-
-            Api.BulkGetEntityNeighborsEffect e _ ->
-                ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of {0} entities"
-                , [ List.length e.entities |> String.fromInt
                   , e.currency |> String.toUpper
                   ]
                 )

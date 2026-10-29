@@ -2,7 +2,7 @@ module View.Settings exposing (view)
 
 import Config.View exposing (Config)
 import Css
-import Html.Styled exposing (Html, div, span, text)
+import Html.Styled exposing (Html, div)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import List.Extra
@@ -227,24 +227,12 @@ error messages.
 -}
 liteNetworksSetting : Config -> Html Model.Msg
 liteNetworksSetting vc =
-    div
-        [ css
-            [ Css.displayFlex
-            , Css.flexDirection Css.column
-            , Css.alignItems Css.flexStart
-            , Css.property "gap" "0.75rem"
-            , Css.width (Css.em 36)
-            , Css.maxWidth (Css.pct 100)
-            ]
-        ]
-        [ Vc.toggleWithText
-            { selectedA = vc.liteNetworks
-            , titleA = Locale.string vc.locale "on"
-            , titleB = Locale.string vc.locale "off"
-            , msg = SettingsMsg UserToggledLiteNetworks
-            }
-        , span [ css [ Css.width (Css.pct 100), Css.lineHeight (Css.num 1.4) ] ] [ text (Locale.string vc.locale "lite-networks-setting-hint") ]
-        ]
+    Vc.toggleWithText
+        { selectedA = vc.liteNetworks
+        , titleA = Locale.string vc.locale "on"
+        , titleB = Locale.string vc.locale "off"
+        , msg = SettingsMsg UserToggledLiteNetworks
+        }
 
 
 {-| The plan details as text: the expiration, the username if the user endpoint

@@ -37,6 +37,10 @@ type alias SearchRequestConfig =
 type alias UserInfo =
     { expiration : Maybe Time.Posix
     , username : Maybe String
+
+    -- Whether mail can reach the user (the portal's has_email); Nothing when
+    -- the endpoint does not say.
+    , hasEmail : Maybe Bool
     }
 
 
@@ -288,23 +292,11 @@ type Effect msg
         , includeBestClusterTag : Bool
         }
         (List ( ( String, String ), Maybe Api.Data.AddressTag ) -> msg)
-    | BulkGetEntityEffect
-        { currency : String
-        , entities : List Int
-        }
-        (List Api.Data.Cluster -> msg)
-    | BulkGetAddressEntityEffect
+    | BulkGetAddressClusterEffect
         { currency : String
         , addresses : List String
         }
         (List ( String, Api.Data.Cluster ) -> msg)
-    | BulkGetEntityNeighborsEffect
-        { currency : String
-        , isOutgoing : Bool
-        , entities : List Int
-        , onlyIds : Bool
-        }
-        (List ( Int, Api.Data.NeighborCluster ) -> msg)
     | BulkGetAddressNeighborsEffect
         { currency : String
         , isOutgoing : Bool
@@ -542,20 +534,10 @@ map mapMsg effect =
                 >> mapMsg
                 |> BulkGetAddressTagsEffect eff
 
-        BulkGetEntityEffect eff m ->
+        BulkGetAddressClusterEffect eff m ->
             m
                 >> mapMsg
-                |> BulkGetEntityEffect eff
-
-        BulkGetAddressEntityEffect eff m ->
-            m
-                >> mapMsg
-                |> BulkGetAddressEntityEffect eff
-
-        BulkGetEntityNeighborsEffect eff m ->
-            m
-                >> mapMsg
-                |> BulkGetEntityNeighborsEffect eff
+                |> BulkGetAddressClusterEffect eff
 
         BulkGetAddressNeighborsEffect eff m ->
             m
@@ -832,24 +814,7 @@ perform apiKey extraHeaders wrapMsg cancelMsg effect =
                         )
                     |> send apiKey extraHeaders wrapMsg effect toMsg
 
-        BulkGetEntityEffect e toMsg ->
-            if List.isEmpty e.entities then
-                []
-                    |> Task.succeed
-                    |> Task.perform toMsg
-
-            else
-                listWithMaybes Api.Data.clusterDecoder
-                    |> Api.Request.MyBulk.bulkJson
-                        e.currency
-                        Api.Request.MyBulk.OperationGetEntity
-                        (Json.Encode.object
-                            [ ( "entity", Json.Encode.list Json.Encode.int e.entities )
-                            ]
-                        )
-                    |> send apiKey extraHeaders wrapMsg effect toMsg
-
-        BulkGetAddressEntityEffect e toMsg ->
+        BulkGetAddressClusterEffect e toMsg ->
             if List.isEmpty e.addresses then
                 []
                     |> Task.succeed
@@ -861,57 +826,16 @@ perform apiKey extraHeaders wrapMsg cancelMsg effect =
                         |> Json.Decode.andThen
                             (\requestAddress ->
                                 Json.Decode.map
-                                    (\entity -> ( requestAddress, entity ))
+                                    (\cluster -> ( requestAddress, cluster ))
                                     Api.Data.clusterDecoder
                             )
                     )
                     |> Api.Request.MyBulk.bulkJson
                         e.currency
-                        Api.Request.MyBulk.OperationGetAddressEntity
+                        Api.Request.MyBulk.OperationGetAddressCluster
                         (Json.Encode.object
                             [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
                             ]
-                        )
-                    |> send apiKey extraHeaders wrapMsg effect toMsg
-
-        BulkGetEntityNeighborsEffect e toMsg ->
-            if List.isEmpty e.entities then
-                []
-                    |> Task.succeed
-                    |> Task.perform toMsg
-
-            else
-                listWithMaybes
-                    (Json.Decode.field "_request_entity" Json.Decode.int
-                        |> Json.Decode.andThen
-                            (\requestEntity ->
-                                Json.Decode.map
-                                    (\entity -> ( requestEntity, entity ))
-                                    Api.Data.neighborClusterDecoder
-                            )
-                    )
-                    |> Api.Request.MyBulk.bulkJson
-                        e.currency
-                        Api.Request.MyBulk.OperationListEntityNeighbors
-                        (Json.Encode.object <|
-                            [ ( "entity", Json.Encode.list Json.Encode.int e.entities )
-                            , ( "direction"
-                              , Json.Encode.string <|
-                                    Api.Request.Clusters.stringFromDirection <|
-                                        if e.isOutgoing then
-                                            Api.Request.Clusters.DirectionOut
-
-                                        else
-                                            Api.Request.Clusters.DirectionIn
-                              )
-                            ]
-                                ++ (if e.onlyIds then
-                                        [ ( "only_ids", Json.Encode.list Json.Encode.int e.entities )
-                                        ]
-
-                                    else
-                                        []
-                                   )
                         )
                     |> send apiKey extraHeaders wrapMsg effect toMsg
 
@@ -1355,22 +1279,8 @@ retryToken effect =
         BulkGetAddressTagsEffect { currency, addresses, pagesize, includeBestClusterTag } _ ->
             hash (join [ "BulkGetAddressTagsEffect", currency, String.join "," addresses, mbi pagesize, b includeBestClusterTag ])
 
-        BulkGetEntityEffect { currency, entities } _ ->
-            hash (join [ "BulkGetEntityEffect", currency, String.join "," (List.map String.fromInt entities) ])
-
-        BulkGetAddressEntityEffect { currency, addresses } _ ->
-            hash (join [ "BulkGetAddressEntityEffect", currency, String.join "," addresses ])
-
-        BulkGetEntityNeighborsEffect { currency, isOutgoing, entities, onlyIds } _ ->
-            hash
-                (join
-                    [ "BulkGetEntityNeighborsEffect"
-                    , currency
-                    , b isOutgoing
-                    , String.join "," (List.map String.fromInt entities)
-                    , b onlyIds
-                    ]
-                )
+        BulkGetAddressClusterEffect { currency, addresses } _ ->
+            hash (join [ "BulkGetAddressClusterEffect", currency, String.join "," addresses ])
 
         BulkGetAddressNeighborsEffect { currency, isOutgoing, addresses, onlyIds } _ ->
             hash
@@ -1452,10 +1362,11 @@ isOutgoingToDirection isOutgoing =
 
 userInfoDecoder : Json.Decode.Decoder UserInfo
 userInfoDecoder =
-    Json.Decode.map2
-        (\expiration username ->
+    Json.Decode.map3
+        (\expiration username hasEmail ->
             { expiration = expiration
             , username = username
+            , hasEmail = hasEmail
             }
         )
         (Json.Decode.oneOf
@@ -1465,6 +1376,11 @@ userInfoDecoder =
         )
         (Json.Decode.oneOf
             [ Json.Decode.field "username" usernameDecoder
+            , Json.Decode.succeed Nothing
+            ]
+        )
+        (Json.Decode.oneOf
+            [ Json.Decode.field "has_email" (Json.Decode.nullable Json.Decode.bool)
             , Json.Decode.succeed Nothing
             ]
         )

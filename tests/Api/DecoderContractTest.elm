@@ -17,6 +17,7 @@ import Dict
 import Expect
 import Fixtures.Api as Fixture
 import Json.Decode exposing (Decoder)
+import Json.Encode
 import Test exposing (Test, describe, test)
 
 
@@ -102,6 +103,27 @@ suite =
                         |> Json.Decode.decodeString Api.Data.clusterDecoder
                         |> Result.toMaybe
                         |> Expect.equal Nothing
+            ]
+        , describe "responses without the deprecated entity field"
+            -- `entity` is deprecated and optional on address, cluster and
+            -- neighbor_cluster; `cluster` is required. The client used to
+            -- require `entity` on neighbor_cluster, so retiring it server-side
+            -- would have emptied every cluster neighbor list.
+            [ test "an address decodes from cluster alone" <|
+                \_ ->
+                    withoutEntity Api.Data.addressDecoder Fixture.address
+                        |> Result.map .cluster
+                        |> Expect.equal (Ok 264711)
+            , test "a cluster decodes from cluster alone" <|
+                \_ ->
+                    withoutEntity Api.Data.clusterDecoder Fixture.cluster
+                        |> Result.map .cluster
+                        |> Expect.equal (Ok 264711)
+            , test "a cluster neighbor decodes from cluster alone" <|
+                \_ ->
+                    withoutEntity Api.Data.neighborClusterDecoder Fixture.neighborCluster
+                        |> Result.map (.cluster >> .cluster)
+                        |> Expect.equal (Ok 264711)
             ]
         , describe "a dex swap leg's curated display metadata and fiat"
             -- The six optional per-leg keys are in neither the spec nor any
@@ -263,6 +285,16 @@ suite =
                         |> Expect.equal (Ok True)
             ]
         ]
+
+
+{-| Decode a spec example with its top-level `entity` key removed.
+-}
+withoutEntity : Decoder a -> String -> Result Json.Decode.Error a
+withoutEntity decoder json =
+    json
+        |> Json.Decode.decodeString (Json.Decode.dict Json.Decode.value)
+        |> Result.map (Dict.remove "entity" >> Json.Encode.dict identity identity)
+        |> Result.andThen (Json.Decode.decodeValue decoder)
 
 
 {-| The all-zero body a backend serves for an address it can see on chain but

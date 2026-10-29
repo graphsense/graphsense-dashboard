@@ -1,12 +1,24 @@
-module PluginInterface.Update exposing (Return, Update, andThen, init)
+module PluginInterface.Update exposing (Return, Update, UserInfo, andThen, init)
 
 import Config.Update as Update
 import PluginInterface.Msg exposing (InMsg, OutMsg)
 import Set exposing (Set)
+import Time
 
 
 type alias Return modelState msg addressMsg entityMsg =
     ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg )
+
+
+{-| What the user endpoint (`VITE_GS_USER_ENDPOINT_URL`, the portal's
+`/user`) reported about the logged-in user. Each field is Nothing when the
+endpoint does not say.
+-}
+type alias UserInfo =
+    { username : Maybe String
+    , expiration : Maybe Time.Posix
+    , hasEmail : Maybe Bool
+    }
 
 
 type alias Update flags modelState addressState msg addressMsg entityMsg =
@@ -40,6 +52,10 @@ type alias Update flags modelState addressState msg addressMsg entityMsg =
     -- when the user logs out
     , logout : Maybe (modelState -> Return modelState msg addressMsg entityMsg)
 
+    -- when the user info arrived from the user endpoint (once per session,
+    -- after the first successful API response)
+    , updateByUserInfo : Maybe (UserInfo -> modelState -> Return modelState msg addressMsg entityMsg)
+
     -- plugin can decide when core should store a history entry, before a plugin action.
     , shallPushHistory : Maybe (msg -> Bool)
     }
@@ -57,6 +73,7 @@ init =
     , initAddress = Nothing
     , clearSearch = Nothing
     , logout = Nothing
+    , updateByUserInfo = Nothing
     , shallPushHistory = Nothing
     }
 
