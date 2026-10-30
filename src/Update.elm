@@ -2569,10 +2569,29 @@ unparseableUrl url model =
 
     else
         let
+            networks =
+                model.stats
+                    |> RD.map (.currencies >> List.map .name)
+                    |> RD.withDefault []
+
+            notification =
+                case Route.unavailableNetwork { pathfinder = { networks = networks } } url of
+                    Just network ->
+                        Notification.errorDefault
+                            (if model.config.liteNetworks then
+                                "network-not-available"
+
+                             else
+                                "network-not-available-lite-off"
+                            )
+                            |> Notification.map (s_variables [ String.toUpper network ])
+
+                    Nothing ->
+                        Notification.errorDefault "unknown url"
+                            |> Notification.map (s_variables [ url.path ])
+
             ( notifications, notificationEffects ) =
-                Notification.errorDefault "unknown url"
-                    |> Notification.map (s_variables [ url.path ])
-                    |> (\notification -> Notification.add notification model.notifications)
+                Notification.add notification model.notifications
         in
         ( { model | notifications = notifications }
         , List.map NotificationEffect notificationEffects

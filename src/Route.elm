@@ -7,6 +7,7 @@ module Route exposing
     , settingsRoute
     , statsRoute
     , toUrl
+    , unavailableNetwork
     )
 
 import Plugin.Model
@@ -54,6 +55,34 @@ settingsSegment =
 parse : Config -> Url -> Maybe Route
 parse c =
     P.parse (parser c)
+
+
+{-| The network of a Pathfinder URL that fails to `parse` only because its
+network is not among `c`'s networks — a link or a recent search from before
+the account lost access to it, or before lite networks were switched off.
+Answered by parsing again with that network allowed, so it agrees with the
+route grammar by construction.
+-}
+unavailableNetwork : Config -> Url -> Maybe String
+unavailableNetwork c url =
+    case String.split "/" url.path |> List.filter (not << String.isEmpty) of
+        segment :: network :: _ ->
+            if segment == pathfinderSegment && not (List.member network c.pathfinder.networks) then
+                case parse { pathfinder = { networks = [ network ] } } url of
+                    Just (Pathfinder (Pathfinder.Network _ _)) ->
+                        Just network
+
+                    Just (Pathfinder (Pathfinder.Path _ _)) ->
+                        Just network
+
+                    _ ->
+                        Nothing
+
+            else
+                Nothing
+
+        _ ->
+            Nothing
 
 
 parser : Config -> Parser (Route -> a) a

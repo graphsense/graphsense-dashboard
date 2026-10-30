@@ -13,11 +13,15 @@ in flight, stop once they have settled.
 
 -}
 
-import Expect
+import Api.Data
+import Expect exposing (Expectation)
+import Fixtures.Api as Fixture
 import Http
-import Model exposing (Effect(..))
+import Json.Decode
+import Model exposing (Effect(..), Msg(..))
+import Model.Notification as Notification exposing (Notification(..))
 import RemoteData
-import Support.MainApp as App
+import Support.MainApp as App exposing (App)
 import Test exposing (Test, describe, test)
 
 
@@ -49,6 +53,44 @@ settled =
     RemoteData.Failure Http.NetworkError
 
 
+{-| Statistics that serve `btc` only, as for an account without the lite networks.
+-}
+btcOnly : (RemoteData.WebData Api.Data.Stats -> Expectation) -> Expectation
+btcOnly f =
+    case Json.Decode.decodeString Api.Data.statsDecoder Fixture.stats of
+        Ok stats ->
+            f (RemoteData.Success stats)
+
+        Err error ->
+            Expect.fail ("the stats fixture did not decode: " ++ Json.Decode.errorToString error)
+
+
+{-| Message key and variables of the newest notification.
+-}
+notification : App -> Maybe ( String, List String )
+notification =
+    App.model
+        >> .notifications
+        >> Notification.peek
+        >> Maybe.map
+            (\n ->
+                case n of
+                    Error d ->
+                        ( d.message, d.variables )
+
+                    Info d ->
+                        ( d.message, d.variables )
+
+                    Success d ->
+                        ( d.message, d.variables )
+            )
+
+
+bnbAddress : String
+bnbAddress =
+    "/pathfinder/bnb/address/0x4838b106fce9647bdf1e7877bf73ce8b0bad5f97"
+
+
 suite : Test
 suite =
     describe "an unrecognised URL"
@@ -72,4 +114,48 @@ suite =
                     |> App.model
                     |> .page
                     |> Expect.equal Model.Home
+        , describe "on a network the account does not have"
+            -- a recent search or an old link for a network that is no longer
+            -- served used to say only "Unknown URL"
+            [ test "names the network" <|
+                \_ ->
+                    btcOnly <|
+                        \stats ->
+                            App.initAtWithStats stats bnbAddress
+                                |> notification
+                                |> Expect.equal (Just ( "network-not-available", [ "BNB" ] ))
+            , test "points at the setting when lite networks are switched off" <|
+                \_ ->
+                    btcOnly <|
+                        \stats ->
+                            App.initAtWithStats stats "/stats"
+                                |> App.mapModel (\m -> { m | config = (\c -> { c | liteNetworks = False }) m.config })
+                                |> App.step (BrowserChangedUrl (App.toUrl bnbAddress))
+                                |> notification
+                                |> Expect.equal (Just ( "network-not-available-lite-off", [ "BNB" ] ))
+            , test "covers transaction links too" <|
+                \_ ->
+                    btcOnly <|
+                        \stats ->
+                            App.initAtWithStats stats "/pathfinder/bnb/tx/0xabc"
+                                |> notification
+                                |> Expect.equal (Just ( "network-not-available", [ "BNB" ] ))
+            , test "a malformed path on a missing network is still an unknown URL" <|
+                \_ ->
+                    -- the network is not the only thing wrong with it, so
+                    -- blaming the account would mislead
+                    btcOnly <|
+                        \stats ->
+                            App.initAtWithStats stats "/pathfinder/bnb/adress/0xabc"
+                                |> notification
+                                |> Expect.equal (Just ( "unknown url", [ "/pathfinder/bnb/adress/0xabc" ] ))
+            , test "a malformed path on a served network is still an unknown URL" <|
+                \_ ->
+                    btcOnly <|
+                        \stats ->
+                            App.initAtWithStats stats "/pathfinder/btc/adress/1Archive1n2C579dMsAu3iC6tWzuQJz8dN"
+                                |> notification
+                                |> Maybe.map Tuple.first
+                                |> Expect.equal (Just "unknown url")
+            ]
         ]

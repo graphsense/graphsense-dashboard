@@ -620,6 +620,8 @@ export-dialog-only-visible-inoutputs-help: "Si está activado, el CSV solo conti
 csv-note-capped: "Transacción demasiado grande: solo se exportaron los flujos con una dirección visible, recortados al límite de exportación."
 csv-note-visible-only: "Solo se exportaron los flujos con una dirección visible."
 unknown url: "URL desconocida: {0}"
+network-not-available: "{0} no está disponible para su cuenta."
+network-not-available-lite-off: "{0} no está disponible mientras las redes lite estén desactivadas en la configuración."
 Keyboard shortcuts: "Atajos de teclado"
 Add address or tx: "Añadir dirección o tx"
 Select all: "Seleccionar todo"
