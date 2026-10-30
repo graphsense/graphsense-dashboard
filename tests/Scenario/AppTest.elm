@@ -16,7 +16,7 @@ import Fixtures.Api as Fixture
 import Html.Attributes as Attributes
 import Http
 import Json.Decode
-import Model exposing (Effect(..), Msg(..), Page(..))
+import Model exposing (Auth(..), Effect(..), Msg(..), Page(..), RequestLimit(..), RequestLimitInterval(..))
 import Model.Notification as Notification
 import Model.Search
 import Msg.Pathfinder
@@ -114,6 +114,33 @@ settingsPageWith : Effect.Api.UserInfo -> App
 settingsPageWith userInfo =
     App.initAt "/settings"
         |> App.steps [ okResponse, BrowserGotUserInfo userInfo ]
+
+
+{-| A successful response carrying rate-limit headers with the given reset.
+-}
+responseWithReset : String -> Msg
+responseWithReset reset =
+    BrowserGotResponseWithHeaders Nothing
+        (Ok
+            ( Dict.fromList
+                [ ( "ratelimit-limit", "1000" )
+                , ( "ratelimit-remaining", "998" )
+                , ( "ratelimit-reset", reset )
+                , ( "x-ratelimit-limit-day", "1000" )
+                ]
+            , NoOp
+            )
+        )
+
+
+requestLimit : App -> Maybe RequestLimit
+requestLimit app =
+    case (App.model app).user.auth of
+        Authorized auth ->
+            Just auth.requestLimit
+
+        _ ->
+            Nothing
 
 
 hasUsernameRow : String -> App -> Expectation
@@ -260,6 +287,28 @@ suite =
                     settingsPageWith { expiration = Nothing, username = Just "alice", hasEmail = Nothing }
                         |> App.step okResponse
                         |> hasUsernameRow "alice"
+            ]
+        , describe "request limit headers"
+            [ test "reads a whole-second reset" <|
+                \_ ->
+                    App.initAt "/stats"
+                        |> App.step (responseWithReset "43")
+                        |> requestLimit
+                        |> Expect.equal (Just (Limited { limit = 1000, remaining = 998, reset = 43, interval = Day }))
+            , test "rounds a fractional reset up instead of dropping the quota" <|
+                \_ ->
+                    -- a gateway sent the reset as a TTL ("43.53"); String.toInt
+                    -- rejected it and the whole quota fell back to Unlimited
+                    App.initAt "/stats"
+                        |> App.step (responseWithReset "43.53")
+                        |> requestLimit
+                        |> Expect.equal (Just (Limited { limit = 1000, remaining = 998, reset = 44, interval = Day }))
+            , test "tolerates whitespace around a value" <|
+                \_ ->
+                    App.initAt "/stats"
+                        |> App.step (responseWithReset " 43 ")
+                        |> requestLimit
+                        |> Expect.equal (Just (Limited { limit = 1000, remaining = 998, reset = 43, interval = Day }))
             ]
         , describe "user settings persist"
             [ test "switching the locale writes the settings" <|

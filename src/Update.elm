@@ -2576,12 +2576,31 @@ unparseableUrl url model =
         )
 
 
+{-| Rate-limit headers are whole numbers by convention, but gateways may send
+fractions (the reset as a TTL like "43.53"). Round up instead of failing:
+a failed parse made the whole quota fall back to Unlimited.
+-}
+parseHeaderInt : String -> Maybe Int
+parseHeaderInt s =
+    let
+        trimmed =
+            String.trim s
+    in
+    case String.toInt trimmed of
+        Just i ->
+            Just i
+
+        Nothing ->
+            String.toFloat trimmed
+                |> Maybe.map ceiling
+
+
 updateRequestLimit : Dict String String -> UserModel -> UserModel
 updateRequestLimit headers model =
     let
         get key =
             Dict.get key headers
-                |> Maybe.andThen String.toInt
+                |> Maybe.andThen parseHeaderInt
 
         ( expiration, username ) =
             case model.auth of

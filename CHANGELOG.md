@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Fixed
+- The request quota on the settings page no longer reads "unlimited" when the gateway sends the rate-limit reset as a fraction of seconds (`43.53`); fractions round up, so the reset countdown never shows less time than is left
+
 ## [26.10.0] - 2026-10-29
 
 ### Added
