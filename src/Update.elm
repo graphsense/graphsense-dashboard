@@ -1586,6 +1586,9 @@ apiRateExceededError locale auth =
                         Unlimited ->
                             Nothing
 
+                        UnknownLimit ->
+                            Nothing
+
                 _ ->
                     Nothing
     in
@@ -2602,13 +2605,32 @@ updateRequestLimit headers model =
             Dict.get key headers
                 |> Maybe.andThen parseHeaderInt
 
-        ( expiration, username ) =
+        ( expiration, username, previousLimit ) =
             case model.auth of
                 Authorized auth ->
-                    ( auth.expiration, auth.username )
+                    ( auth.expiration, auth.username, Just auth.requestLimit )
 
                 _ ->
-                    ( Nothing, Nothing )
+                    ( Nothing, Nothing, Nothing )
+
+        hasRateLimitHeaders =
+            Dict.keys headers
+                |> List.any
+                    (\key ->
+                        String.startsWith "ratelimit-" key
+                            || String.startsWith "x-ratelimit-" key
+                    )
+
+        {- Headers are there but broken: a quota exists, we just cannot read
+           it. Keep the last good value rather than flicker to "unknown".
+        -}
+        unreadable =
+            case previousLimit of
+                Just (Limited l) ->
+                    Limited l
+
+                _ ->
+                    UnknownLimit
 
         limitInterval =
             if Dict.member "x-ratelimit-limit-minute" headers then
@@ -2642,7 +2664,13 @@ updateRequestLimit headers model =
                     (get "ratelimit-remaining")
                     (get "ratelimit-reset")
                     limitInterval
-                    |> Maybe.withDefault Unlimited
+                    |> Maybe.withDefault
+                        (if hasRateLimitHeaders then
+                            unreadable
+
+                         else
+                            Unlimited
+                        )
             , expiration = expiration
             , username = username
             , loggingOut = False

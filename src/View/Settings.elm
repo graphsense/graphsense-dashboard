@@ -303,6 +303,9 @@ requestLimit vc rl =
         Unlimited ->
             ( Locale.string vc.locale "unlimited", Nothing )
 
+        UnknownLimit ->
+            ( Locale.string vc.locale "unknown", Nothing )
+
         Limited { remaining, limit, reset, interval } ->
             ( String.fromInt <|
                 if reset == 0 then
