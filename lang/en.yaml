@@ -596,6 +596,8 @@ export-dialog-only-visible-inoutputs-help: "When enabled, the CSV only contains 
 csv-note-capped: "Transaction too large — only flows touching a visible address were exported, truncated to the export size limit."
 csv-note-visible-only: "Only flows touching a visible address were exported."
 unknown url: "Unknown URL: {0}"
+network-not-available: "{0} is not available for your account."
+network-not-available-lite-off: "{0} is not available while lite networks are switched off in the settings."
 not supported on lite networks: not supported on lite networks
 Relationship mode not supported on lite networks: Relationship mode not supported on lite networks
 Network switched off in the settings (lite networks): Network switched off in the settings (lite networks)

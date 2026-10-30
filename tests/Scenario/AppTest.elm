@@ -16,7 +16,7 @@ import Fixtures.Api as Fixture
 import Html.Attributes as Attributes
 import Http
 import Json.Decode
-import Model exposing (Effect(..), Msg(..), Page(..))
+import Model exposing (Auth(..), Effect(..), Msg(..), Page(..), RequestLimit(..), RequestLimitInterval(..))
 import Model.Notification as Notification
 import Model.Search
 import Msg.Pathfinder
@@ -114,6 +114,33 @@ settingsPageWith : Effect.Api.UserInfo -> App
 settingsPageWith userInfo =
     App.initAt "/settings"
         |> App.steps [ okResponse, BrowserGotUserInfo userInfo ]
+
+
+{-| A successful response carrying rate-limit headers with the given reset.
+-}
+responseWithReset : String -> Msg
+responseWithReset reset =
+    responseWithHeaders
+        [ ( "ratelimit-limit", "1000" )
+        , ( "ratelimit-remaining", "998" )
+        , ( "ratelimit-reset", reset )
+        , ( "x-ratelimit-limit-day", "1000" )
+        ]
+
+
+responseWithHeaders : List ( String, String ) -> Msg
+responseWithHeaders headers =
+    BrowserGotResponseWithHeaders Nothing (Ok ( Dict.fromList headers, NoOp ))
+
+
+requestLimit : App -> Maybe RequestLimit
+requestLimit app =
+    case (App.model app).user.auth of
+        Authorized auth ->
+            Just auth.requestLimit
+
+        _ ->
+            Nothing
 
 
 hasUsernameRow : String -> App -> Expectation
@@ -260,6 +287,74 @@ suite =
                     settingsPageWith { expiration = Nothing, username = Just "alice", hasEmail = Nothing }
                         |> App.step okResponse
                         |> hasUsernameRow "alice"
+            ]
+        , describe "request limit headers"
+            [ test "reads a whole-second reset" <|
+                \_ ->
+                    App.initAt "/stats"
+                        |> App.step (responseWithReset "43")
+                        |> requestLimit
+                        |> Expect.equal (Just (Limited { limit = 1000, remaining = 998, reset = 43, interval = Day }))
+            , test "rounds a fractional reset up instead of dropping the quota" <|
+                \_ ->
+                    -- a gateway sent the reset as a TTL ("43.53"); String.toInt
+                    -- rejected it and the whole quota fell back to Unlimited
+                    App.initAt "/stats"
+                        |> App.step (responseWithReset "43.53")
+                        |> requestLimit
+                        |> Expect.equal (Just (Limited { limit = 1000, remaining = 998, reset = 44, interval = Day }))
+            , test "tolerates whitespace around a value" <|
+                \_ ->
+                    App.initAt "/stats"
+                        |> App.step (responseWithReset " 43 ")
+                        |> requestLimit
+                        |> Expect.equal (Just (Limited { limit = 1000, remaining = 998, reset = 43, interval = Day }))
+            , test "no rate-limit headers at all means unlimited" <|
+                \_ ->
+                    App.initAt "/stats"
+                        |> App.step okResponse
+                        |> requestLimit
+                        |> Expect.equal (Just Unlimited)
+            , test "unreadable headers are unknown, not unlimited" <|
+                \_ ->
+                    -- the headers say there is a quota; claiming "unlimited"
+                    -- because one of them did not parse is wrong
+                    App.initAt "/stats"
+                        |> App.step (responseWithReset "soon")
+                        |> requestLimit
+                        |> Expect.equal (Just UnknownLimit)
+            , test "an incomplete set of headers is unknown" <|
+                \_ ->
+                    App.initAt "/stats"
+                        |> App.step (responseWithHeaders [ ( "ratelimit-remaining", "998" ) ])
+                        |> requestLimit
+                        |> Expect.equal (Just UnknownLimit)
+            , test "unreadable headers keep the last known quota" <|
+                \_ ->
+                    App.initAt "/stats"
+                        |> App.steps [ responseWithReset "43", responseWithReset "soon" ]
+                        |> requestLimit
+                        |> Expect.equal (Just (Limited { limit = 1000, remaining = 998, reset = 43, interval = Day }))
+            , test "a later response without headers is unlimited again" <|
+                \_ ->
+                    App.initAt "/stats"
+                        |> App.steps [ responseWithReset "soon", okResponse ]
+                        |> requestLimit
+                        |> Expect.equal (Just Unlimited)
+            , test "the settings page does not call an unknown quota unlimited" <|
+                \_ ->
+                    App.initAt "/settings"
+                        |> App.step (responseWithReset "soon")
+                        |> App.html
+                        |> Query.hasNot [ Selector.text "unlimited" ]
+            , test "the settings page does show an unlimited quota" <|
+                \_ ->
+                    -- the control for the test above: the row is rendered and
+                    -- the text is findable, so its absence there means something
+                    App.initAt "/settings"
+                        |> App.step okResponse
+                        |> App.html
+                        |> Query.has [ Selector.text "unlimited" ]
             ]
         , describe "user settings persist"
             [ test "switching the locale writes the settings" <|

@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [26.10.1] - 2026-10-30
+
+### Fixed
+- The request quota on the settings page no longer reads "unlimited" when the gateway sends the rate-limit reset as a fraction of seconds (`43.53`); fractions round up, so the reset countdown never shows less time than is left
+- Rate-limit headers that are present but cannot be read (a value that is not a number, or an incomplete set) no longer make the quota read "unlimited": the last known quota stays, and before there is one it reads "unknown"
+- A link or recent search for a network the account no longer has (e.g. a lite network after losing access, or with lite networks switched off in the settings) says that the network is not available, instead of "Unknown URL"
+
 ## [26.10.0] - 2026-10-29
 
 ### Added

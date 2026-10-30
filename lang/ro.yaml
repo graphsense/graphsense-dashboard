@@ -659,6 +659,8 @@ csv-note-capped: Tranzacție prea mare – au fost exportate doar fluxurile cu o
   trunchiate la limita de export.
 csv-note-visible-only: Au fost exportate doar fluxurile cu o adresă vizibilă.
 unknown url: "URL necunoscut: {0}"
+network-not-available: "{0} nu este disponibil pentru contul dumneavoastră."
+network-not-available-lite-off: "{0} nu este disponibil cât timp rețelele lite sunt dezactivate în setări."
 Keyboard shortcuts: "Scurtături de tastatură"
 Add address or tx: "Adaugă adresă sau tx"
 Select all: "Selectează tot"

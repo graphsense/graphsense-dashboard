@@ -1586,6 +1586,9 @@ apiRateExceededError locale auth =
                         Unlimited ->
                             Nothing
 
+                        UnknownLimit ->
+                            Nothing
+
                 _ ->
                     Nothing
     in
@@ -2566,14 +2569,52 @@ unparseableUrl url model =
 
     else
         let
+            networks =
+                model.stats
+                    |> RD.map (.currencies >> List.map .name)
+                    |> RD.withDefault []
+
+            notification =
+                case Route.unavailableNetwork { pathfinder = { networks = networks } } url of
+                    Just network ->
+                        Notification.errorDefault
+                            (if model.config.liteNetworks then
+                                "network-not-available"
+
+                             else
+                                "network-not-available-lite-off"
+                            )
+                            |> Notification.map (s_variables [ String.toUpper network ])
+
+                    Nothing ->
+                        Notification.errorDefault "unknown url"
+                            |> Notification.map (s_variables [ url.path ])
+
             ( notifications, notificationEffects ) =
-                Notification.errorDefault "unknown url"
-                    |> Notification.map (s_variables [ url.path ])
-                    |> (\notification -> Notification.add notification model.notifications)
+                Notification.add notification model.notifications
         in
         ( { model | notifications = notifications }
         , List.map NotificationEffect notificationEffects
         )
+
+
+{-| Rate-limit headers are whole numbers by convention, but gateways may send
+fractions (the reset as a TTL like "43.53"). Round up instead of failing:
+a failed parse made the whole quota fall back to Unlimited.
+-}
+parseHeaderInt : String -> Maybe Int
+parseHeaderInt s =
+    let
+        trimmed =
+            String.trim s
+    in
+    case String.toInt trimmed of
+        Just i ->
+            Just i
+
+        Nothing ->
+            String.toFloat trimmed
+                |> Maybe.map ceiling
 
 
 updateRequestLimit : Dict String String -> UserModel -> UserModel
@@ -2581,15 +2622,34 @@ updateRequestLimit headers model =
     let
         get key =
             Dict.get key headers
-                |> Maybe.andThen String.toInt
+                |> Maybe.andThen parseHeaderInt
 
-        ( expiration, username ) =
+        ( expiration, username, previousLimit ) =
             case model.auth of
                 Authorized auth ->
-                    ( auth.expiration, auth.username )
+                    ( auth.expiration, auth.username, Just auth.requestLimit )
 
                 _ ->
-                    ( Nothing, Nothing )
+                    ( Nothing, Nothing, Nothing )
+
+        hasRateLimitHeaders =
+            Dict.keys headers
+                |> List.any
+                    (\key ->
+                        String.startsWith "ratelimit-" key
+                            || String.startsWith "x-ratelimit-" key
+                    )
+
+        {- Headers are there but broken: a quota exists, we just cannot read
+           it. Keep the last good value rather than flicker to "unknown".
+        -}
+        unreadable =
+            case previousLimit of
+                Just (Limited l) ->
+                    Limited l
+
+                _ ->
+                    UnknownLimit
 
         limitInterval =
             if Dict.member "x-ratelimit-limit-minute" headers then
@@ -2623,7 +2683,13 @@ updateRequestLimit headers model =
                     (get "ratelimit-remaining")
                     (get "ratelimit-reset")
                     limitInterval
-                    |> Maybe.withDefault Unlimited
+                    |> Maybe.withDefault
+                        (if hasRateLimitHeaders then
+                            unreadable
+
+                         else
+                            Unlimited
+                        )
             , expiration = expiration
             , username = username
             , loggingOut = False

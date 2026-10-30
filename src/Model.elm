@@ -167,8 +167,12 @@ type SettingsMsg
     | UserToggledLiteNetworks
 
 
+{-| `UnknownLimit`: the response carried rate-limit headers, but not a complete,
+parseable set, so the quota cannot be shown — but must not read as unlimited.
+-}
 type RequestLimit
     = Unlimited
+    | UnknownLimit
     | Limited { remaining : Int, limit : Int, reset : Int, interval : RequestLimitInterval }
 
 
