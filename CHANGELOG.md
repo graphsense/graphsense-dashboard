@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Security
+- `tools/proxy-iknaio-api.sh` answers CORS only for local origins (`localhost`, `127.0.0.1`); it used to allow every origin with credentials, so any website open in the browser could use the developer's API key through a running proxy
+
 ## [26.10.1] - 2026-10-30
 
 ### Fixed
