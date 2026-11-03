@@ -257,6 +257,11 @@ tags in one step.
 
 Notable changes go in `CHANGELOG.md` under the current unreleased heading.
 
+On a release, `master` is merged from `develop`, not fast-forwarded: `master` holds
+GitHub squash commits, so the merge conflicts on lines the squash duplicated. Resolve it
+to develop's tree (`git restore --source=develop .`) and check that both trees are equal.
+Pushing a tag publishes the GitHub release and the Docker image right away.
+
 ## Docker build
 
 ### Prerequisites
