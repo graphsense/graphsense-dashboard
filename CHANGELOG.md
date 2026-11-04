@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+- Downloaded graph files are named after the graph: "Save graph" writes `<timestamp> <graph name>.gs` (was the timestamp only), like the PDF and PNG export already did. A graph a plugin opens takes the name the plugin gives it (e.g. the reference of the record it belongs to) instead of the name stored in the graph data, so its downloads carry that name; a file the user opens keeps the name it was saved with. Characters not allowed in file names (`/ \ : * ? " < > |`) become `-`
+
 ### Security
 - `tools/proxy-iknaio-api.sh` answers CORS only for local origins (`localhost`, `127.0.0.1`); it used to allow every origin with credentials, so any website open in the browser could use the developer's API key through a running proxy
 

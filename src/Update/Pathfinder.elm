@@ -121,7 +121,7 @@ import Util.Pathfinder.ListTag as ListTag
 import Util.Pathfinder.Shortcuts as Shortcuts
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.TooltipType exposing (TooltipType)
-import View.Locale as Locale exposing (makeTimestampFilename)
+import View.Locale as Locale exposing (makeGraphFilename)
 import View.Pathfinder exposing (originShiftX)
 import Workflow
 
@@ -880,9 +880,7 @@ updateByMsg uc msg model =
                     Just t ->
                         Pathfinder.encode model
                             |> pair
-                                (makeTimestampFilename uc.locale t
-                                    |> (\tt -> tt ++ ".gs")
-                                )
+                                (makeGraphFilename uc.locale t model.name ++ ".gs")
                             |> Ports.serialize
                 )
                     |> Pathfinder.CmdEffect

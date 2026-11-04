@@ -1379,7 +1379,7 @@ updateHelp uc msg model =
                 )
                     |> updateByPluginOutMsg uc outMsg
                     |> (\( mdl, eff ) ->
-                            deserialize uc filename data mdl
+                            deserialize uc Nothing filename data mdl
                                 |> mapSecond ((++) eff)
                        )
 
@@ -2337,7 +2337,9 @@ updateByPluginOutMsg uc outMsgs ( mo, effects ) =
                             |> updateByPluginOutMsg uc outMsg
 
                     PluginInterface.Deserialize filename data ->
-                        deserialize uc filename data model
+                        -- The plugin names the graph it opens (e.g. after the
+                        -- record it belongs to), so downloads carry that name.
+                        deserialize uc (Just filename) filename data model
                             |> mapSecond ((++) eff)
 
                     PluginInterface.SendToPort value ->
@@ -2865,14 +2867,29 @@ clearSearch model =
         |> n
 
 
-deserialize : Config -> String -> Value -> Model key -> ( Model key, List Effect )
-deserialize uc filename data model =
+{-| `graphName`, if given and not blank, replaces the name stored in the graph
+data; a user-opened file keeps the name it was saved with.
+-}
+deserialize : Config -> Maybe String -> String -> Value -> Model key -> ( Model key, List Effect )
+deserialize uc graphName filename data model =
     Pathfinder.deserialize data
         |> Result.map
             (\deser ->
                 let
                     ( pathfinder, pathfinderEffects ) =
-                        Pathfinder.fromDeserialized uc deser model.pathfinder
+                        Pathfinder.fromDeserialized uc
+                            (case graphName |> Maybe.map String.trim of
+                                Just name ->
+                                    if String.isEmpty name then
+                                        deser
+
+                                    else
+                                        { deser | name = name }
+
+                                Nothing ->
+                                    deser
+                            )
+                            model.pathfinder
 
                     -- one notice naming the networks the load left unfetched,
                     -- instead of a generic error toast per 403
