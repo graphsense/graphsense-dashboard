@@ -1,7 +1,6 @@
 module Model.Dialog exposing (AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initDrag, initExportConfig, placement)
 
 import Api.Data
-import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Config.Update as Update
 import Config.View exposing (Config)
@@ -11,7 +10,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Selection as Selection exposing (Selection(..))
 import Model.Search as Search
 import Time
-import View.Locale exposing (makeTimestampFilename)
+import View.Locale exposing (makeGraphFilename)
 
 
 {-| How far the user has dragged the open dialog away from its placement.
@@ -260,8 +259,7 @@ initExportConfig uc { selection, filenameBase, closeMsg, time } =
     , keepSelectionHighlight = False
     , fileFormat = ExportFormatPDF
     , filename =
-        makeTimestampFilename uc.locale time
-            |> flip (++) (" " ++ filenameBase ++ ".pdf")
+        makeGraphFilename uc.locale time filenameBase ++ ".pdf"
     , time = time
     , exporting = False
     , transparentBackground = False

@@ -16,6 +16,7 @@ module View.Locale exposing
     , interpolatedMarkdown
     , isFirstSecondOfTheDay
     , isLastSecondOfTheDay
+    , makeGraphFilename
     , makeTimestampFilename
     , percentage
     , string
@@ -621,6 +622,39 @@ titleCase model =
 makeTimestampFilename : Model -> Time.Posix -> String
 makeTimestampFilename locale =
     timestampWithFormat "yyyy-MM-dd HH-mm-ss" locale
+
+
+{-| Timestamp plus the graph name, without extension, e.g.
+"2026-11-04 14-30-00 AB-123 - 2026". Characters that are not allowed in file
+names on common systems become "-", control characters (tabs, line breaks)
+spaces; a blank name leaves the timestamp alone.
+-}
+makeGraphFilename : Model -> Time.Posix -> String -> String
+makeGraphFilename locale t name =
+    let
+        safe =
+            name
+                |> String.map
+                    (\c ->
+                        if Char.toCode c < 32 then
+                            ' '
+
+                        else if String.contains (String.fromChar c) "/\\:*?\"<>|" then
+                            '-'
+
+                        else
+                            c
+                    )
+                |> String.words
+                |> String.join " "
+    in
+    makeTimestampFilename locale t
+        ++ (if String.isEmpty safe then
+                ""
+
+            else
+                " " ++ safe
+           )
 
 
 timestampNormal : Model -> Posix -> String
