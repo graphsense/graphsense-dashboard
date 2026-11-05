@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), DraggingOffset, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, MultiAdd, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary, getVisibleTxs, graphId, isLiteNetwork, supports, unit)
+module Model.Pathfinder exposing (Details(..), DraggingOffset, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, MultiAdd, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getTagSummary, getVisibleTxs, graphId, isLiteNetwork, supports, unit)
 
 import Api.Data exposing (Actor, Cluster)
 import AssocList
@@ -198,11 +198,6 @@ getHavingTags : Model -> Id -> HavingTags
 getHavingTags model id_ =
     Dict.get id_ model.tagSummaries
         |> Maybe.withDefault NoTags
-
-
-getSortedLabelSummariesByRelevance : Api.Data.TagSummary -> List ( String, Api.Data.LabelSummary )
-getSortedLabelSummariesByRelevance =
-    .labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .relevance) >> List.reverse
 
 
 getSortedConceptsByWeight : Api.Data.TagSummary -> List String
