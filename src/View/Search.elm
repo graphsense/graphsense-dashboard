@@ -135,7 +135,7 @@ searchWithMoreCss vc sc model =
                                     |> List.singleton
 
                             SearchAddressAndTx _ ->
-                                [ "Address", "transaction" ]
+                                [ "Address", "transaction", "actor" ]
                                     |> List.map (Locale.string vc.locale)
                                     |> (\st -> st ++ Plugin.searchPlaceholder vc)
                                     |> String.join ", "
@@ -342,7 +342,7 @@ groupBadges vc searchType choices =
             [ actorBadge ]
 
         SearchAddressAndTx _ ->
-            currencyBadges
+            currencyBadges ++ [ actorBadge ]
 
         SearchAll _ ->
             currencyBadges ++ [ actorBadge ]
