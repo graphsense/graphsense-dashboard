@@ -176,4 +176,15 @@ suite =
                         , Query.hasNot [ Selector.attribute (Html.Attributes.href "https://www.coingecko.com/en/coins/binancecoin") ]
                         , Query.hasNot [ Selector.text "CoinGecko" ]
                         ]
+        , test "social media links read X.com, not the handle" <|
+            \_ ->
+                App.initAt "/pathfinder"
+                    |> App.step (PathfinderMsg (Pathfinder.BrowserGotActorForDialog "binance" binance))
+                    |> dialog
+                    |> Expect.all
+                        [ Query.findAll [ Selector.attribute (Html.Attributes.href "https://x.com/BinanceUS") ]
+                            >> Query.first
+                            >> Query.has [ Selector.text "X.com" ]
+                        , Query.hasNot [ Selector.text "BinanceUS" ]
+                        ]
         ]

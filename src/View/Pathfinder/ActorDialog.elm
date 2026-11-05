@@ -133,7 +133,13 @@ rows vc actor =
             |> Maybe.map (Locale.int vc.locale >> text >> List.singleton >> valueText)
             |> Maybe.withDefault []
         )
-    , row (Locale.string vc.locale "Social media") (fromContextMaybe .twitterHandle |> List.map (handleOrUrl "https://x.com/") |> links)
+    , row (Locale.string vc.locale "Social media")
+        (fromContextMaybe .twitterHandle
+            -- named after the platform, not the handle; the link's title
+            -- has the full URL
+            |> List.map (handleOrUrl "https://x.com/" >> Tuple.mapFirst (always "X.com"))
+            |> links
+        )
     , row "GitHub" (fromContextMaybe .githubOrganisation |> List.map (handleOrUrl "https://github.com/") |> links)
     ]
         |> List.filterMap identity
