@@ -4,11 +4,17 @@ module View.Pathfinder.ActorDialog exposing (view)
 website, a few jurisdictions) and what it has no room for (all jurisdictions,
 categories, the number of tags, social media and GitHub). The context's
 references and CoinGecko/DefiLlama ids are left out on purpose: they are
-sources for the actor record, not something an analyst follows. Opened by a click on an actor, the "learn more" link in the actor
-tooltip, or an actor search result.
+sources for the actor record, not something an analyst follows.
 
-Built from the generic dialog and the existing chip and row text styles until
-the dialog has a design of its own in Figma.
+Opened by a click on an actor, the "learn more" link in the actor tooltip, or
+an actor search result.
+
+The layout is the Figma component `Dialog/Actor`. Each of its rows has one
+sample in its value area (`<field> value`); this module replaces the whole
+value area with the actor's chips or links, styled like the generated one, and
+hides a row the actor has no data for. Keep one sample per value area in
+Figma: with several, the generator numbers them (`categoryTag13`, …) and the
+numbers change with every edit.
 
 -}
 
@@ -19,9 +25,7 @@ import Html.Styled exposing (Html, a, div, img, text)
 import Html.Styled.Attributes exposing (css, href, src, target, title)
 import Html.Styled.Events exposing (onClick)
 import RecordSetter as Rs
-import Theme.Colors as Colors
 import Theme.Html.Dialogs as Dialogs
-import Theme.Html.GraphComponents as GraphComponents
 import Theme.Html.TagsComponents as TagsComponents
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.View exposing (none, pointer, testId)
@@ -30,69 +34,6 @@ import View.Locale as Locale
 
 view : msg -> Actor -> View.Config -> Html msg
 view closeMsg actor vc =
-    let
-        legalName =
-            actor.context |> Maybe.andThen .legalName
-
-        logo =
-            actor.context
-                |> Maybe.andThen (.images >> List.head)
-                |> Maybe.map
-                    (\image ->
-                        img
-                            [ src (addProtocolPrefx image)
-                            , css [ Css.width (Css.px 24), Css.height (Css.px 24), Css.property "object-fit" "contain" ]
-                            ]
-                            []
-                    )
-    in
-    Dialogs.dialogGenericWithAttributes
-        (Dialogs.dialogGenericAttributes
-            -- the generated dialog is 418px with a 386px header, too narrow for
-            -- two dozen jurisdictions and long reference URLs; overriding
-            -- generated properties needs `important` (see CLAUDE.md)
-            |> Rs.s_root
-                [ testId "gs-actor-dialog"
-                , css [ Css.width (Css.px 560) |> Css.important, Css.maxWidth (Css.vw 90) ]
-                ]
-            |> Rs.s_dialogHeader [ css [ Css.width (Css.pct 100) |> Css.important ] ]
-            |> Rs.s_iconsCloseNoPadding [ pointer, onClick closeMsg ]
-            |> Rs.s_descriptionFrame
-                (if legalName == Nothing then
-                    [ css [ Css.display Css.none ] ]
-
-                 else
-                    []
-                )
-            |> Rs.s_buttonsLayout [ css [ Css.display Css.none ] ]
-        )
-        { inputList =
-            [ div
-                [ css
-                    [ Css.displayFlex
-                    , Css.flexDirection Css.column
-                    , Css.property "gap" "12px"
-                    , Css.width (Css.pct 100)
-                    , Css.minWidth Css.zero
-                    ]
-                ]
-                (rows vc actor)
-            ]
-        }
-        { cancelButton = { variant = none }
-        , confirmButton = { variant = none }
-        , root = {}
-        , dialogHeader =
-            { showIconsFrame = logo /= Nothing
-            , header = actor.label
-            , description = legalName |> Maybe.withDefault ""
-            , icon = logo |> Maybe.withDefault none
-            }
-        }
-
-
-rows : View.Config -> Actor -> List (Html msg)
-rows vc actor =
     let
         context =
             actor.context
@@ -110,39 +51,119 @@ rows vc actor =
         fromContextMaybe field =
             fromContext (field >> Maybe.map List.singleton >> Maybe.withDefault [])
 
+        handleOrUrl base handle =
+            if String.startsWith "http" handle then
+                handle
+
+            else
+                base ++ handle
+
+        legalName =
+            context |> Maybe.andThen .legalName
+
+        logo =
+            context
+                |> Maybe.andThen (.images >> List.head)
+                |> Maybe.map
+                    (\image ->
+                        img
+                            [ src (addProtocolPrefx image)
+                            , css [ Css.width (Css.px 24), Css.height (Css.px 24), Css.property "object-fit" "contain" ]
+                            ]
+                            []
+                    )
+
         websites =
             (actor.uri :: fromContext .uris)
                 |> List.filter (String.isEmpty >> not)
                 |> List.map (\uri -> ( uri, addProtocolPrefx uri ))
                 |> uniqueByUrl
+                |> links
 
-        handleOrUrl base handle =
-            ( handle
-            , if String.startsWith "http" handle then
-                handle
+        socialMedia =
+            fromContextMaybe .twitterHandle
+                -- named after the platform, not the handle; the link's title
+                -- has the full URL
+                |> List.map (\handle -> ( "X.com", handleOrUrl "https://x.com/" handle ))
+                |> links
 
-              else
-                base ++ handle
-            )
+        github =
+            fromContextMaybe .githubOrganisation
+                |> List.map (\org -> ( org, handleOrUrl "https://github.com/" org ))
+                |> links
+
+        tagsCount =
+            actor.nrTags
+                |> Maybe.map
+                    (Locale.int vc.locale
+                        >> text
+                        >> List.singleton
+                        >> div [ css Dialogs.dialogActorTagsCount_details.styles ]
+                        >> List.singleton
+                    )
+                |> Maybe.withDefault []
+
+        label details key =
+            div [ css details.styles ] [ text (Locale.string vc.locale key) ]
+                |> Just
+
+        value details content =
+            div [ css details.styles ] content
+                |> Just
+
+        -- Nothing keeps the generated row; Just none drops it
+        rowUnless content =
+            if List.isEmpty content then
+                Just none
+
+            else
+                Nothing
     in
-    [ row (Locale.string vc.locale "Website") (links websites)
-    , row (Locale.string vc.locale "Categories") (chips vc actor.categories)
-    , row (Locale.string vc.locale "Jurisdictions") (chips vc actor.jurisdictions)
-    , row (Locale.string vc.locale "Tags")
-        (actor.nrTags
-            |> Maybe.map (Locale.int vc.locale >> text >> List.singleton >> valueText)
-            |> Maybe.withDefault []
+    Dialogs.dialogActorWithInstances
+        (Dialogs.dialogActorAttributes
+            |> Rs.s_root [ testId "gs-actor-dialog" ]
+            |> Rs.s_iconsCloseNoPadding [ pointer, onClick closeMsg ]
+            |> Rs.s_descriptionFrame
+                (if legalName == Nothing then
+                    [ css [ Css.display Css.none ] ]
+
+                 else
+                    []
+                )
         )
-    , row (Locale.string vc.locale "Social media")
-        (fromContextMaybe .twitterHandle
-            -- named after the platform, not the handle; the link's title
-            -- has the full URL
-            |> List.map (handleOrUrl "https://x.com/" >> Tuple.mapFirst (always "X.com"))
-            |> links
+        (Dialogs.dialogActorInstances
+            |> Rs.s_websiteRow (rowUnless websites)
+            |> Rs.s_websiteLabel (label Dialogs.dialogActorWebsiteLabel_details "Website")
+            |> Rs.s_websiteValue (value Dialogs.dialogActorWebsiteValue_details websites)
+            |> Rs.s_categoriesRow (rowUnless actor.categories)
+            |> Rs.s_categoriesLabel (label Dialogs.dialogActorCategoriesLabel_details "Categories")
+            |> Rs.s_categoriesValue (value Dialogs.dialogActorCategoriesValue_details (chips vc actor.categories))
+            |> Rs.s_jurisdictionsRow (rowUnless actor.jurisdictions)
+            |> Rs.s_jurisdictionsLabel (label Dialogs.dialogActorJurisdictionsLabel_details "Jurisdictions")
+            |> Rs.s_jurisdictionsValue (value Dialogs.dialogActorJurisdictionsValue_details (chips vc actor.jurisdictions))
+            |> Rs.s_tagsRow (rowUnless tagsCount)
+            |> Rs.s_tagsLabel (label Dialogs.dialogActorTagsLabel_details "Tags")
+            |> Rs.s_tagsValue (value Dialogs.dialogActorTagsValue_details tagsCount)
+            |> Rs.s_socialMediaRow (rowUnless socialMedia)
+            |> Rs.s_socialMediaLabel (label Dialogs.dialogActorSocialMediaLabel_details "Social media")
+            |> Rs.s_socialMediaValue (value Dialogs.dialogActorSocialMediaValue_details socialMedia)
+            |> Rs.s_githubRow (rowUnless github)
+            |> Rs.s_githubValue (value Dialogs.dialogActorGithubValue_details github)
         )
-    , row "GitHub" (fromContextMaybe .githubOrganisation |> List.map (handleOrUrl "https://github.com/") |> links)
-    ]
-        |> List.filterMap identity
+        { dialogHeader =
+            { showIconsFrame = logo /= Nothing
+            , header = actor.label
+            , description = legalName |> Maybe.withDefault ""
+            , icon = logo |> Maybe.withDefault none
+            }
+
+        -- the samples' own properties; their value areas are replaced above
+        , categoryTagOfCategoriesValue = { tagLabel = "", closeVisible = False }
+        , categoryTagOfJurisdictionsValue = { tagLabel = "", closeVisible = False }
+        , dialogLinkOfGithubValue = { linkText = "" }
+        , dialogLinkOfSocialMediaValue = { linkText = "" }
+        , dialogLinkOfWebsiteValue = { linkText = "" }
+        }
 
 
 uniqueByUrl : List ( String, String ) -> List ( String, String )
@@ -158,55 +179,6 @@ uniqueByUrl =
         []
 
 
-{-| A row titled `label` (already translated); Nothing (left out) when there
-is nothing to show.
--}
-row : String -> List (Html msg) -> Maybe (Html msg)
-row label content =
-    if List.isEmpty content then
-        Nothing
-
-    else
-        div
-            [ css
-                [ Css.displayFlex
-                , Css.property "gap" "16px"
-                , Css.alignItems Css.flexStart
-                ]
-            ]
-            [ div
-                [ css
-                    (GraphComponents.tooltipRowLabelTheLabel_details.styles
-                        ++ [ Css.minWidth (Css.px 110), Css.flexShrink (Css.num 0) ]
-                    )
-                ]
-                [ text label ]
-            , div
-                [ css
-                    [ Css.displayFlex
-                    , Css.flexWrap Css.wrap
-                    , Css.property "gap" "4px 8px"
-                    , Css.minWidth Css.zero
-                    , Css.flexGrow (Css.num 1)
-                    ]
-                ]
-                content
-            ]
-            |> Just
-
-
-valueText : List (Html msg) -> List (Html msg)
-valueText content =
-    [ div
-        [ css
-            (GraphComponents.tooltipRowValueFirstValue_details.styles
-                ++ [ Css.whiteSpace Css.normal ]
-            )
-        ]
-        content
-    ]
-
-
 chips : View.Config -> List LabeledItemRef -> List (Html msg)
 chips vc =
     List.map
@@ -220,6 +192,10 @@ chips vc =
         )
 
 
+{-| `Dialog/Link` from Figma, made a link: the component draws the text, the
+anchor around it carries the URL (also its title, as the text may be a
+platform name such as "X.com").
+-}
 links : List ( String, String ) -> List (Html msg)
 links =
     List.map
@@ -229,19 +205,10 @@ links =
                 , target "_blank"
                 , title url
                 , css
-                    (GraphComponents.tooltipRowValueFirstValue_details.styles
-                        ++ [ Css.property "color" Colors.blue600
-                           , Css.textDecoration Css.none
-                           , Css.hover [ Css.textDecoration Css.underline ]
-
-                           -- one line, cut with an ellipsis; the full URL is the title
-                           , Css.display Css.block
-                           , Css.maxWidth (Css.pct 100)
-                           , Css.overflow Css.hidden
-                           , Css.textOverflow Css.ellipsis
-                           , Css.flexShrink (Css.num 0)
-                           ]
-                    )
+                    [ Css.textDecoration Css.none
+                    , Css.hover [ Css.textDecoration Css.underline ]
+                    , Css.property "color" "inherit"
+                    ]
                 ]
-                [ text lbl ]
+                [ Dialogs.dialogLink { root = { linkText = lbl } } ]
         )
