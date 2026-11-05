@@ -23,7 +23,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.Locale as Locale
 import Model.NetworkCapabilities as NetworkCapabilities
-import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getSortedLabelSummariesByRelevance, getTagSummary)
+import Model.Pathfinder as Pathfinder exposing (getHavingTags, getSortedConceptsByWeight, getTagSummary)
 import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Colors as Colors
@@ -54,7 +54,7 @@ import Util.Data as Data exposing (isAccountLike)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph exposing (decodeCoords)
 import Util.Pathfinder.ListTag as ListTag
-import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
+import Util.Pathfinder.TagSummary as TagSummary exposing (hasOnlyExchangeTags)
 import Util.Tag as Tag
 import Util.ThemedSelectBox as ThemedSelectBox
 import Util.Tooltip
@@ -1174,7 +1174,7 @@ tagsList vc model id =
 
     else if vc.showLabelsInTaggingOverview then
         let
-            showTag ( tid, t ) =
+            showTag ( tid, lbl ) =
                 Html.div
                     ([ HA.css SidePanelComponents.sidePanelAddressSidePanelHeaderTags_details.styles
                      , css [ Css.cursor Css.pointer ]
@@ -1184,7 +1184,7 @@ tagsList vc model id =
                                 |> Tooltip.attributes tid (Util.Tooltip.tooltipConfig vc Pathfinder.TooltipMsg)
                            )
                     )
-                    [ Html.text t.label
+                    [ Html.text lbl
                     ]
 
             tagLabels =
@@ -1195,7 +1195,7 @@ tagsList vc model id =
                                 []
 
                             else
-                                getSortedLabelSummariesByRelevance x
+                                TagSummary.rankedLabels Nothing x
                         )
                     |> Maybe.withDefault []
         in
