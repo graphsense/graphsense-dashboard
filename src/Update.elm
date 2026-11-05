@@ -66,6 +66,7 @@ import Util.Data
 import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
 import View.Locale as Locale
+import View.Pathfinder.ActorDialog as ActorDialog
 import View.Pathfinder.Legend exposing (legendView)
 import View.Pathfinder.ShortcutsDialog as ShortcutsDialog
 
@@ -1667,6 +1668,18 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
                              , defaultMsg = closemsg
                              }
                                 |> Dialog.Custom
+                            )
+                }
+
+        Pathfinder.ShowActorDialog actor ->
+            n
+                { model
+                    | dialog =
+                        Just
+                            ({ html = ActorDialog.view UserClosesDialog actor
+                             , defaultMsg = UserClosesDialog
+                             }
+                                |> Dialog.CustomWithVc
                             )
                 }
 

@@ -5,8 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- An actor dialog with everything the API has on an actor: logo, legal name, websites, categories, all jurisdictions, the number of tags, and its Twitter, GitHub, CoinGecko and DefiLlama links and references. It opens on a click on the actor's name in the side panel or an actor chip in the address tables, from "Learn more" in the actor tooltip, and from an actor search result, which until now did nothing in the Pathfinder
+
 ### Changed
 - Downloaded graph files are named after the graph: "Save graph" writes `<timestamp> <graph name>.gs` (was the timestamp only), like the PDF and PNG export already did. A graph a plugin opens takes the name the plugin gives it (e.g. the reference of the record it belongs to) instead of the name stored in the graph data, so its downloads carry that name; a file the user opens keeps the name it was saved with. Characters not allowed in file names (`/ \ : * ? " < > |`) become `-`
+- The actor tooltip shows three jurisdictions and "... and N more" instead of all of them (Binance has 21)
 - Tag tooltips no longer join all labels into one comma list. The address tooltip shows the best label with "... and N more", a category's tooltip its three best labels one per line, a label's tooltip its categories one per line. Labels rank actor first (the label the tag summary picks for its actor), then by confidence and relevance, instead of alphabetically (category tooltip) or by relevance alone; the side panel's label chips use the same order. Blank labels are dropped and labels differing only in case or spacing count once
 
 ### Security

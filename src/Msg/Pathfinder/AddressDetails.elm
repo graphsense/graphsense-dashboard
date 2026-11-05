@@ -64,3 +64,5 @@ type Msg
     | BrowserGotBulkTagsForExport TransactionTable.Model ( List Api.Data.TxAccount, Maybe String ) Bool (List ( Id, Api.Data.TagSummary ))
     | WorkflowNextUtxoTx WorkflowNextUtxoTx.Config WorkflowNextUtxoTx.Msg
     | UserClickedContinueChangeTracing
+      -- handled by the Pathfinder, which owns the actors; see UserClickedActor there
+    | UserClickedActor String

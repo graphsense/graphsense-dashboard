@@ -93,7 +93,7 @@ config styles vc ratc _ =
                     withTagSummary ts =
                         case ts.bestActor |> Maybe.andThen (\aid -> ratc.actorLabel aid |> Maybe.map (\label -> ( aid, label ))) of
                             Just ( aid, label ) ->
-                                [ Tag.actorItem vc (toId data) AddressDetails.TooltipMsg aid label ]
+                                [ Tag.actorItem vc (toId data) AddressDetails.TooltipMsg AddressDetails.UserClickedActor aid label ]
 
                             Nothing ->
                                 getSortedConceptsByWeight ts

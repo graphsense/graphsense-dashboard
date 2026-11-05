@@ -249,10 +249,21 @@ updateInternally uc msg model =
     ( updated, effects )
 
 
+{-| The actor dialog right away when the actor is loaded; otherwise
+`UserClickedActor` fetches it and `BrowserGotActorForDialog` opens it.
+-}
+actorDialog : String -> Model -> List OutMsg
+actorDialog actorId model =
+    Dict.get actorId model.actors
+        |> Maybe.map (ShowActorDialog >> List.singleton)
+        |> Maybe.withDefault []
+
+
 {-| The one place that decides which messages also need the application shell.
 
-Read on the _incoming_ model, deliberately: the only decision that inspects state
-is `UserClickedRestart`, which asks whether there is unsaved work to warn about.
+Read on the _incoming_ model, deliberately: the only decisions that inspect state
+are `UserClickedRestart`, which asks whether there is unsaved work to warn about,
+and `UserClickedActor`, which opens the dialog at once if the actor is loaded.
 Everything else is a classification of the message itself, and the shell reads the
 already-updated model when it handles the result -- `OpenTagsListDialog` in
 particular depends on the tag summaries `updateByMsg` just stored.
@@ -270,6 +281,15 @@ appLevelOutMsgs msg model =
 
         UserClickedShowShortcuts ->
             [ ShowShortcutsDialog ]
+
+        UserClickedActor actorId ->
+            actorDialog actorId model
+
+        AddressDetailsMsg _ (AddressDetails.UserClickedActor actorId) ->
+            actorDialog actorId model
+
+        BrowserGotActorForDialog _ actor ->
+            [ ShowActorDialog actor ]
 
         UserClickedRestart ->
             if model.isDirty then
@@ -956,6 +976,18 @@ updateByMsg uc msg model =
             ( { model | onGraphSearch = newSearch }, focusEff )
                 |> and (panToCurrentMatch uc prevForPan)
 
+        UserClickedActor actorId ->
+            -- a loaded actor opens at once (appLevelOutMsgs); any other is
+            -- fetched first
+            if Dict.member actorId model.actors then
+                n model
+
+            else
+                ( model, [ fetchActorForDialog actorId ] )
+
+        BrowserGotActorForDialog actorId data ->
+            updateByMsg uc (BrowserGotActor actorId data) model
+
         BrowserGotActor id data ->
             let
                 isMatchingActor ( aid, a ) =
@@ -1504,6 +1536,9 @@ updateByMsg uc msg model =
                     n model
             )
                 |> and (updateRelationDetails uc id submsg)
+
+        AddressDetailsMsg _ (AddressDetails.UserClickedActor actorId) ->
+            updateByMsg uc (UserClickedActor actorId) model
 
         AddressDetailsMsg addressId subm ->
             let
@@ -5123,6 +5158,11 @@ updateByRoute_ uc route model =
         Route.Path net list ->
             addPathToGraph uc model net { outgoing = True, autolinkInTraceMode = True } list
 
+        Route.Actor actorId ->
+            -- where an actor search result leads. Always fetched, even if
+            -- loaded: only a message reaches the shell that opens the dialog
+            ( model, [ fetchActorForDialog actorId ] )
+
         _ ->
             n model
 
@@ -5720,6 +5760,11 @@ undoRedo fun model =
             [ Route.Root
                 |> NavPushRouteEffect
             ]
+
+
+fetchActorForDialog : String -> Effect
+fetchActorForDialog id =
+    BrowserGotActorForDialog id |> Api.GetActorEffect { actorId = id } |> ApiEffect
 
 
 fetchActor : String -> Effect

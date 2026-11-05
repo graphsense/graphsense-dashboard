@@ -9,7 +9,7 @@ import Css
 import Css.Pathfinder as Css
 import Dict
 import Html.Styled as Html exposing (Html, div, text)
-import Html.Styled.Attributes exposing (css, href, target, title)
+import Html.Styled.Attributes exposing (css, href, target)
 import Model.Currency exposing (assetFromBase)
 import Model.NetworkCapabilities as NetworkCapabilities exposing (NetworkCapabilities)
 import Model.Pathfinder as Pathfinder exposing (getTagSummary)
@@ -24,6 +24,7 @@ import Theme.Html.TagsComponents as TagsComponents
 import Tuple exposing (pair)
 import Util.Css as Css
 import Util.Data as Data
+import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.TooltipType exposing (TooltipType(..))
@@ -176,51 +177,26 @@ linkRow vc txt msg =
         )
 
 
-showActor : View.Config -> Actor -> List (Html msg)
+showActor : View.Config -> Actor -> List (Html Msg)
 showActor vc a =
     let
-        mainUri =
-            if not (String.startsWith "http://" a.uri) && not (String.startsWith "https://" a.uri) then
-                "https://" ++ a.uri
-
-            else
-                a.uri
+        jurisdictions =
+            a.jurisdictions |> List.map (.label >> Locale.string vc.locale)
     in
     [ tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "actor" }
         , tooltipRowValue = a.label |> val vc
         }
-    , tooltipRowCustomValue (Locale.string vc.locale "Url") (Html.a [ Css.plainLinkStyle vc |> css, href mainUri, target "blank" ] [ text a.uri ])
-    , tooltipRowCustomValue
-        (Locale.string vc.locale "jurisdictions")
-        (let
-            jl =
-                List.length a.jurisdictions
-         in
-         a.jurisdictions
-            |> List.indexedMap
-                (\i z ->
-                    div
-                        [ title (Locale.string vc.locale z.label)
-                        , Css.mGap
-                            |> Css.paddingRight
-                            |> List.singleton
-                            |> css
-                        ]
-                        [ text
-                            (Locale.string vc.locale z.label
-                                ++ (if i /= (jl - 1) then
-                                        ", "
-
-                                    else
-                                        ""
-                                   )
-                            )
-                        ]
-                )
-            |> div [ [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
-        )
+    , tooltipRowCustomValue (Locale.string vc.locale "Url") (Html.a [ Css.plainLinkStyle vc |> css, href (addProtocolPrefx a.uri), target "blank" ] [ text a.uri ])
     ]
+        -- Binance alone lists dozens of jurisdictions: three, then a count;
+        -- the actor dialog has them all
+        ++ labelRows vc
+            (Locale.string vc.locale "jurisdictions")
+            { labels = List.take maxStackedLines jurisdictions
+            , more = max 0 (List.length jurisdictions - maxStackedLines)
+            }
+        ++ [ UserClickedActor a.id |> linkRow vc "learn more" ]
 
 
 tagConcept : View.Config -> Id -> String -> TagSummary -> List (Html Msg)

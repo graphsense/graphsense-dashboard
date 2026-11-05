@@ -5,6 +5,7 @@ import Config.View as View
 import Css
 import Html.Styled as Html exposing (Html)
 import Html.Styled.Attributes as HA exposing (css)
+import Html.Styled.Events exposing (onClick)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
@@ -14,8 +15,10 @@ import Util.TooltipType exposing (TooltipType(..))
 import Util.View
 
 
-actorItem : View.Config -> Id -> (Tooltip.Msg TooltipType -> msg) -> String -> String -> Html msg
-actorItem vc id tag actorId label =
+{-| An actor chip: its tooltip on hover, `clickMsg` (the actor dialog) on click.
+-}
+actorItem : View.Config -> Id -> (Tooltip.Msg TooltipType -> msg) -> (String -> msg) -> String -> String -> Html msg
+actorItem vc id tag clickMsg actorId label =
     let
         domId =
             Id.id id ++ "_" ++ actorId ++ "_tags_actor"
@@ -36,11 +39,13 @@ actorItem vc id tag actorId label =
     Html.div
         (css
             (SidePanelComponents.sidePanelEthAddressActor_details.styles
-                ++ [ Css.cursor Css.default
+                ++ [ Css.cursor Css.pointer
                    , Css.property "gap" "2px"
                    , Css.justifyContent Css.flexStart
                    ]
             )
+            :: onClick (clickMsg actorId)
+            :: Util.View.testId "gs-actor-chip"
             :: (if String.length label > maxLblLength then
                     [ HA.title label ]
 
