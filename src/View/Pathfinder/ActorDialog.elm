@@ -58,6 +58,19 @@ view closeMsg actor vc =
             else
                 base ++ handle
 
+        -- "binance", or the last path segment if the API sends a URL
+        handleOf handle =
+            if String.startsWith "http" handle then
+                handle
+                    |> String.split "/"
+                    |> List.filter (String.isEmpty >> not)
+                    |> List.reverse
+                    |> List.head
+                    |> Maybe.withDefault handle
+
+            else
+                handle
+
         legalName =
             context |> Maybe.andThen .legalName
 
@@ -82,9 +95,9 @@ view closeMsg actor vc =
 
         socialMedia =
             fromContextMaybe .twitterHandle
-                -- named after the platform, not the handle; the link's title
-                -- has the full URL
-                |> List.map (\handle -> ( "X.com", handleOrUrl "https://x.com/" handle ))
+                -- the platform, then the account: an actor can have several
+                -- (Binance: BinanceUS, binance, binancezh)
+                |> List.map (\handle -> ( "X.com (" ++ handleOf handle ++ ")", handleOrUrl "https://x.com/" handle ))
                 |> links
 
         github =
