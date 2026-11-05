@@ -1,9 +1,10 @@
 module View.Pathfinder.ActorDialog exposing (view)
 
-{-| Everything the API knows about an actor: what the actor tooltip shows
-(name, website, a few jurisdictions) and what it has no room for (all
-jurisdictions, categories, the number of tags, and the links in the actor's
-context). Opened by a click on an actor, the "learn more" link in the actor
+{-| What the API knows about an actor: what the actor tooltip shows (name,
+website, a few jurisdictions) and what it has no room for (all jurisdictions,
+categories, the number of tags, social media and GitHub). The context's
+references and CoinGecko/DefiLlama ids are left out on purpose: they are
+sources for the actor record, not something an analyst follows. Opened by a click on an actor, the "learn more" link in the actor
 tooltip, or an actor search result.
 
 Built from the generic dialog and the existing chip and row text styles until
@@ -132,30 +133,8 @@ rows vc actor =
             |> Maybe.map (Locale.int vc.locale >> text >> List.singleton >> valueText)
             |> Maybe.withDefault []
         )
-    , row "Twitter" (fromContextMaybe .twitterHandle |> List.map (handleOrUrl "https://x.com/") |> links)
+    , row (Locale.string vc.locale "Social media") (fromContextMaybe .twitterHandle |> List.map (handleOrUrl "https://x.com/") |> links)
     , row "GitHub" (fromContextMaybe .githubOrganisation |> List.map (handleOrUrl "https://github.com/") |> links)
-    , row "CoinGecko" (fromContext .coingeckoIds |> List.map (handleOrUrl "https://www.coingecko.com/en/coins/") |> links)
-    , row "DefiLlama" (fromContext .defilamaIds |> List.map (handleOrUrl "https://defillama.com/protocol/") |> links)
-    , row (Locale.string vc.locale "References")
-        (case fromContext .refs |> List.map (\ref -> ( ref, addProtocolPrefx ref )) |> uniqueByUrl of
-            [] ->
-                []
-
-            refs ->
-                -- Binance has two dozen: one per line, scrolling past a few
-                [ div
-                    [ css
-                        [ Css.displayFlex
-                        , Css.flexDirection Css.column
-                        , Css.property "gap" "4px"
-                        , Css.maxHeight (Css.px 140)
-                        , Css.overflowY Css.auto
-                        , Css.width (Css.pct 100)
-                        ]
-                    ]
-                    (links refs)
-                ]
-        )
     ]
         |> List.filterMap identity
 

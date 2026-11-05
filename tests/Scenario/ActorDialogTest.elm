@@ -113,7 +113,6 @@ suite =
                         , Selector.attribute (Html.Attributes.href "https://www.binance.com")
                         , Selector.attribute (Html.Attributes.href "https://x.com/BinanceUS")
                         , Selector.attribute (Html.Attributes.href "https://x.com/binance")
-                        , Selector.attribute (Html.Attributes.href "https://www.coingecko.com/en/coins/binancecoin")
                         , Selector.text (Locale.int Env.viewConfig.locale 1234)
                         ]
         , test "a click on a loaded actor opens the dialog at once, without a request" <|
@@ -167,4 +166,14 @@ suite =
                     |> App.step (PathfinderMsg (Pathfinder.BrowserGotActorForDialog "binance" binance))
                     |> dialog
                     |> Query.hasNot [ Selector.text "GitHub" ]
+        , test "references, CoinGecko and DefiLlama are not shown" <|
+            \_ ->
+                App.initAt "/pathfinder"
+                    |> App.step (PathfinderMsg (Pathfinder.BrowserGotActorForDialog "binance" binance))
+                    |> dialog
+                    |> Expect.all
+                        [ Query.hasNot [ Selector.text "https://en.wikipedia.org/wiki/Binance" ]
+                        , Query.hasNot [ Selector.attribute (Html.Attributes.href "https://www.coingecko.com/en/coins/binancecoin") ]
+                        , Query.hasNot [ Selector.text "CoinGecko" ]
+                        ]
         ]
