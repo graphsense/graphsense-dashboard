@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.TagsTable exposing (config)
+module View.Pathfinder.Table.TagsTable exposing (actorConfig, config)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -10,6 +10,7 @@ import Css.Pathfinder exposing (fullWidth)
 import Css.Table
 import Html.Styled exposing (a, span, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
+import Html.Styled.Events exposing (onClick)
 import Model exposing (Msg(..))
 import Msg.Pathfinder
 import RecordSetter as Rs
@@ -74,6 +75,7 @@ type Cell
     | IconCell TagIcon
     | LabelCell CellConfig TagIcon
     | TypeCell ConfidenceCellConfig
+    | AddressCell { address : String, network : String, onClick : Msg }
 
 
 linkCellStyle : List Css.Style
@@ -258,6 +260,27 @@ cell vc c =
                 )
                 (defaultData cc Nothing linkBodyIcon)
 
+        AddressCell ac ->
+            let
+                cellConfig =
+                    { label = ac.address, subLabel = Just (String.toUpper ac.network) }
+
+                link =
+                    span
+                        [ css (linkCellStyle ++ [ Css.cursor Css.pointer ])
+                        , onClick ac.onClick
+                        , title ac.address
+                        , Util.View.testId "gs-actor-tag-address"
+                        ]
+                        [ text (Util.View.truncateLongIdentifierWithLengths 8 6 ac.address) ]
+            in
+            TagsComponents.tagRowCellWithInstances
+                (attrs False cellConfig |> Rs.s_root (cellWMinWidth |> css |> List.singleton))
+                (TagsComponents.tagRowCellInstances
+                    |> Rs.s_label (Just link)
+                )
+                (defaultData cellConfig Nothing Nothing)
+
         TypeCell cc ->
             let
                 lbl =
@@ -318,6 +341,43 @@ cell vc c =
         |> List.singleton
         |> Table.HtmlDetails
             [ css [ Css.verticalAlign Css.top ] ]
+
+
+{-| The tags of an actor: they belong to many addresses, so an address column
+(network below it) comes first; a click on the address adds it to the graph.
+-}
+actorConfig : View.Config -> (InfiniteTable.Msg -> Msg) -> (String -> String -> Msg) -> InfiniteTable.TableConfig Api.Data.AddressTag Msg
+actorConfig vc tag onAddress =
+    let
+        base =
+            config vc tag
+    in
+    { base
+        | columns =
+            [ addressColumn vc onAddress
+            , labelColumn vc
+            , typeColumn vc
+            , sourceColumn vc
+            , lastModColumn vc
+            ]
+    }
+
+
+addressColumn : View.Config -> (String -> String -> Msg) -> Table.Column Api.Data.AddressTag Msg
+addressColumn vc onAddress =
+    Table.veryCustomColumn
+        { name = Locale.string vc.locale "Address"
+        , viewData =
+            \data ->
+                cell vc
+                    (AddressCell
+                        { address = data.address
+                        , network = data.currency
+                        , onClick = onAddress data.currency data.address
+                        }
+                    )
+        , sorter = Table.unsortable
+        }
 
 
 iconColumn : View.Config -> Table.Column Api.Data.AddressTag Msg

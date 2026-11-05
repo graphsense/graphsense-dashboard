@@ -138,6 +138,14 @@ mapMsg map model =
             }
                 |> TagsList
 
+        ActorTags conf ->
+            { actorId = conf.actorId
+            , actorLabel = conf.actorLabel
+            , table = conf.table
+            , closeMsg = map conf.closeMsg
+            }
+                |> ActorTags
+
         AddTag conf ->
             { closeMsg = map conf.closeMsg
             , addTagMsg = map conf.addTagMsg

@@ -10,8 +10,10 @@ import Dict
 import Effect.Api
 import Effect.Pathfinder
 import Expect
+import Fixtures.Api as Fixture
 import Html.Attributes
 import Html.Styled
+import Json.Decode
 import Model exposing (Effect(..), Msg(..))
 import Msg.Pathfinder as Pathfinder
 import Support.Env as Env
@@ -187,4 +189,67 @@ suite =
                             >> Query.has [ Selector.text "X.com (BinanceUS)" ]
                         , Query.has [ Selector.text "X.com (binance)" ]
                         ]
+        , test "Show tags fetches the actor's tags" <|
+            \_ ->
+                App.initAt "/pathfinder"
+                    |> App.step (PathfinderMsg (Pathfinder.BrowserGotActorForDialog "binance" binance))
+                    |> App.step (UserClickedShowActorTags "binance" "Binance")
+                    |> App.expectEffect "the actor tags request" isActorTagsFetch
+        , test "a page of tags lists their addresses and labels" <|
+            \_ ->
+                actorTagsDialogWithPage
+                    |> App.html
+                    |> Query.find [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-actor-tags-dialog") ]
+                    |> Query.has
+                        [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-actor-tag-address")
+                        , Selector.attribute (Html.Attributes.title "1Archive1n2C579dMsAu3iC6tWzuQJz8dN")
+                        ]
+        , test "a click on a tag's address closes the dialog and opens the address" <|
+            \_ ->
+                actorTagsDialogWithPage
+                    |> App.step (UserClickedActorTagAddress "BTC" "1Archive1n2C579dMsAu3iC6tWzuQJz8dN")
+                    |> Expect.all
+                        [ App.expectEffect "the address route"
+                            (\eff -> eff == NavPushUrlEffect "/pathfinder/btc/address/1Archive1n2C579dMsAu3iC6tWzuQJz8dN")
+                        , App.html
+                            >> Query.findAll [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-actor-tags-dialog") ]
+                            >> Query.count (Expect.equal 0)
+                        ]
+        , test "a late page for another actor is ignored" <|
+            \_ ->
+                actorTagsDialogWithPage
+                    |> App.step
+                        (BrowserGotActorTagsForDialog "kraken"
+                            { tagsPage | addressTags = List.map (\t -> { t | address = "1KrakenAddressOfAnotherActor" }) tagsPage.addressTags }
+                        )
+                    |> App.html
+                    |> Query.findAll [ Selector.attribute (Html.Attributes.title "1KrakenAddressOfAnotherActor") ]
+                    |> Query.count (Expect.equal 0)
         ]
+
+
+isActorTagsFetch : Effect -> Bool
+isActorTagsFetch eff =
+    case eff of
+        ApiEffect (Effect.Api.GetActorTagsEffect e _) ->
+            e.actorId == "binance"
+
+        _ ->
+            False
+
+
+tagsPage : Api.Data.AddressTags
+tagsPage =
+    case Json.Decode.decodeString Api.Data.addressTagsDecoder Fixture.addressTags of
+        Ok tags ->
+            tags
+
+        Err _ ->
+            { addressTags = [], nextPage = Nothing }
+
+
+actorTagsDialogWithPage : App
+actorTagsDialogWithPage =
+    App.initAt "/pathfinder"
+        |> App.step (UserClickedShowActorTags "binance" "Binance")
+        |> App.step (BrowserGotActorTagsForDialog "binance" tagsPage)

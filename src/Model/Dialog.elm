@@ -1,4 +1,4 @@
-module Model.Dialog exposing (AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initDrag, initExportConfig, placement)
+module Model.Dialog exposing (ActorTagsConfig, AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initDrag, initExportConfig, placement)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
@@ -48,6 +48,7 @@ type Model msg
     | Error (ErrorConfig msg)
     | Info (InfoConfig msg)
     | TagsList (TagListConfig msg)
+    | ActorTags (ActorTagsConfig msg)
     | AddTag (AddTagConfig msg)
     | Export (ExportConfig msg)
     | Custom (CustomConfig msg)
@@ -117,6 +118,16 @@ type alias TagListConfig msg =
     , showAddressTab : Bool
     , showClusterTab : Bool
     , hasAddressTags : Bool
+    , closeMsg : msg
+    }
+
+
+{-| The tags of an actor, across all its addresses, loaded page by page.
+-}
+type alias ActorTagsConfig msg =
+    { actorId : String
+    , actorLabel : String
+    , table : InfiniteTable.Model String Api.Data.AddressTag
     , closeMsg : msg
     }
 
@@ -226,6 +237,9 @@ defaultMsg model =
             c.defaultMsg
 
         TagsList c ->
+            c.closeMsg
+
+        ActorTags c ->
             c.closeMsg
 
         Export c ->

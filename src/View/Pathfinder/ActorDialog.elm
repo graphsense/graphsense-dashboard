@@ -24,6 +24,7 @@ import Css
 import Html.Styled exposing (Html, a, div, img, text)
 import Html.Styled.Attributes exposing (css, href, src, target, title)
 import Html.Styled.Events exposing (onClick)
+import Maybe.Extra
 import RecordSetter as Rs
 import Theme.Html.Dialogs as Dialogs
 import Theme.Html.TagsComponents as TagsComponents
@@ -32,8 +33,8 @@ import Util.View exposing (none, pointer, testId)
 import View.Locale as Locale
 
 
-view : msg -> Actor -> View.Config -> Html msg
-view closeMsg actor vc =
+view : { closeMsg : msg, showTagsMsg : msg } -> Actor -> View.Config -> Html msg
+view { closeMsg, showTagsMsg } actor vc =
     let
         context =
             actor.context
@@ -107,14 +108,7 @@ view closeMsg actor vc =
 
         tagsCount =
             actor.nrTags
-                |> Maybe.map
-                    (Locale.int vc.locale
-                        >> text
-                        >> List.singleton
-                        >> div [ css Dialogs.dialogActorTagsCount_details.styles ]
-                        >> List.singleton
-                    )
-                |> Maybe.withDefault []
+                |> Maybe.map (Locale.int vc.locale >> text >> List.singleton >> div [ css Dialogs.dialogActorTagsCount_details.styles ])
 
         label details key =
             div [ css details.styles ] [ text (Locale.string vc.locale key) ]
@@ -136,6 +130,13 @@ view closeMsg actor vc =
         (Dialogs.dialogActorAttributes
             |> Rs.s_root [ testId "gs-actor-dialog" ]
             |> Rs.s_iconsCloseNoPadding [ pointer, onClick closeMsg ]
+            -- "Show tags": the actor's tags list
+            |> Rs.s_dialogLinkOfTagsValue
+                [ onClick showTagsMsg
+                , pointer
+                , css [ Css.hover [ Css.textDecoration Css.underline ] ]
+                , testId "gs-actor-show-tags"
+                ]
             |> Rs.s_descriptionFrame
                 (if legalName == Nothing then
                     [ css [ Css.display Css.none ] ]
@@ -154,9 +155,9 @@ view closeMsg actor vc =
             |> Rs.s_jurisdictionsRow (rowUnless actor.jurisdictions)
             |> Rs.s_jurisdictionsLabel (label Dialogs.dialogActorJurisdictionsLabel_details "Jurisdictions")
             |> Rs.s_jurisdictionsValue (value Dialogs.dialogActorJurisdictionsValue_details (chips vc actor.jurisdictions))
-            |> Rs.s_tagsRow (rowUnless tagsCount)
+            |> Rs.s_tagsRow (rowUnless (Maybe.Extra.toList tagsCount))
             |> Rs.s_tagsLabel (label Dialogs.dialogActorTagsLabel_details "Tags")
-            |> Rs.s_tagsValue (value Dialogs.dialogActorTagsValue_details tagsCount)
+            |> Rs.s_tagsCount tagsCount
             |> Rs.s_socialMediaRow (rowUnless socialMedia)
             |> Rs.s_socialMediaLabel (label Dialogs.dialogActorSocialMediaLabel_details "Social media")
             |> Rs.s_socialMediaValue (value Dialogs.dialogActorSocialMediaValue_details socialMedia)
@@ -176,6 +177,7 @@ view closeMsg actor vc =
         , dialogLinkOfGithubValue = { linkText = "" }
         , dialogLinkOfSocialMediaValue = { linkText = "" }
         , dialogLinkOfWebsiteValue = { linkText = "" }
+        , dialogLinkOfTagsValue = { linkText = Locale.string vc.locale "Show tags" }
         }
 
 
