@@ -75,6 +75,7 @@ type Msg
     | UserPressedModKey
     | UserReleasedModKey
     | RuntimeModKeyHeld Int
+    | RuntimeModKeyHeldBriefly Int
     | UserReleasedEscape
     | UserPressedHotkey String
     | UserPressedArrowKey Direction

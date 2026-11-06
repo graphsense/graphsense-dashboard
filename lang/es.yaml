@@ -629,6 +629,7 @@ network-not-available-lite-off: "{0} no está disponible mientras las redes lite
 Keyboard shortcuts: "Atajos de teclado"
 Add address or tx: "Añadir dirección o tx"
 Select all: "Seleccionar todo"
+Click for multi-select: "Clic para selección múltiple"
 Delete selection: "Eliminar la selección"
 Move the selection along the graph: "Mover la selección por el gráfico"
 Close search or dialog: "Cerrar la búsqueda o el diálogo"

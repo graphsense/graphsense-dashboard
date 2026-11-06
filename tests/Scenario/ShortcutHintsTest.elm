@@ -10,12 +10,21 @@ import Data.Pathfinder.Network as Network
 import Effect.Pathfinder exposing (Effect(..))
 import Expect
 import Html.Attributes
+import Json.Decode
+import Model.Pathfinder as Pathfinder
+import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (Msg(..))
+import Sub.Pathfinder
 import Support.App as App exposing (App)
 import Test exposing (Test, describe, test)
 import Test.Html.Query as Query
 import Test.Html.Selector as Selector exposing (Selector)
 import Util.Pathfinder.Shortcuts as Shortcuts
+
+
+toolShown : App -> PointerTool
+toolShown =
+    App.model >> Pathfinder.shownPointerTool
 
 
 hintsShown : App -> Bool
@@ -127,6 +136,65 @@ suite =
                     App.init
                         |> App.html
                         |> Query.hasNot [ Selector.text "Keyboard shortcuts" ]
+            ]
+        , describe "multi-select with Ctrl/Cmd"
+            [ test "the toolbar does not change on the press, so a chord does not flash it" <|
+                \_ ->
+                    App.init
+                        |> App.step UserPressedModKey
+                        |> toolShown
+                        |> Expect.equal Drag
+            , test "held for a moment, the toolbar shows the selection tool" <|
+                \_ ->
+                    App.init
+                        |> App.steps [ UserPressedModKey, RuntimeModKeyHeldBriefly 1 ]
+                        |> toolShown
+                        |> Expect.equal Select
+            , test "the delay is shorter than the hint overlay's" <|
+                \_ ->
+                    Shortcuts.modSelectingDelayMs
+                        |> Expect.lessThan Shortcuts.hintDelayMs
+            , test "releasing the key restores the tool" <|
+                \_ ->
+                    App.init
+                        |> App.steps [ UserPressedModKey, RuntimeModKeyHeldBriefly 1, UserReleasedModKey ]
+                        |> toolShown
+                        |> Expect.equal Drag
+            , test "a timer from an earlier press shows nothing" <|
+                \_ ->
+                    App.init
+                        |> App.steps [ UserPressedModKey, UserReleasedModKey, UserPressedModKey, RuntimeModKeyHeldBriefly 1 ]
+                        |> toolShown
+                        |> Expect.equal Drag
+            , test "a timer that fires after the release shows nothing" <|
+                \_ ->
+                    App.init
+                        |> App.steps [ UserPressedModKey, UserReleasedModKey, RuntimeModKeyHeldBriefly 1 ]
+                        |> toolShown
+                        |> Expect.equal Drag
+            , test "does not touch the tool the user picked" <|
+                \_ ->
+                    App.init
+                        |> App.mapModel (\m -> { m | pointerTool = Select })
+                        |> App.steps [ UserPressedModKey, RuntimeModKeyHeldBriefly 1, UserReleasedModKey ]
+                        |> toolShown
+                        |> Expect.equal Select
+            , test "a mouse event without Ctrl or Cmd ends the mode" <|
+                \_ ->
+                    """{"ctrlKey":false,"metaKey":false}"""
+                        |> Json.Decode.decodeString Sub.Pathfinder.modLiftedDecoder
+                        |> Expect.equal (Ok UserReleasedModKey)
+            , test "a mouse event with Ctrl or Cmd keeps it" <|
+                \_ ->
+                    [ """{"ctrlKey":true,"metaKey":false}""", """{"ctrlKey":false,"metaKey":true}""" ]
+                        |> List.map (Json.Decode.decodeString Sub.Pathfinder.modLiftedDecoder >> Result.toMaybe)
+                        |> Expect.equal [ Nothing, Nothing ]
+            , test "the overlay names it, with the mod key" <|
+                \_ ->
+                    App.init
+                        |> App.steps [ UserPressedModKey, RuntimeModKeyHeld 1 ]
+                        |> App.html
+                        |> Query.has (Selector.text "Click for multi-select" :: overlay)
             ]
         , describe "toolbar tooltips"
             [ test "carry the chord" <|

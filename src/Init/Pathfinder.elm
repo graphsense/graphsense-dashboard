@@ -58,6 +58,7 @@ init us =
       , modPressed = False
       , modKeyPressCount = 0
       , showShortcutHints = False
+      , showModSelecting = False
       , isDirty = False
       , helpDropdownOpen = False
       , toolbarHovercard = Nothing

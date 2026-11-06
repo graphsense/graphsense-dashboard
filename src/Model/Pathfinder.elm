@@ -1,4 +1,4 @@
-module Model.Pathfinder exposing (Details(..), DraggingOffset, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, MultiAdd, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getTagSummary, getVisibleTxs, graphId, isLiteNetwork, supports, unit)
+module Model.Pathfinder exposing (Details(..), DraggingOffset, ExportImage(..), HavingTags(..), Hovered(..), ImageExport, Model, MultiAdd, coordsWithUnit, getHavingTags, getImageExport, getSelectedTxs, getSortedConceptsByWeight, getTagSummary, getVisibleTxs, graphId, isLiteNetwork, shownPointerTool, supports, unit)
 
 import Api.Data exposing (Actor, Cluster)
 import AssocList
@@ -26,7 +26,7 @@ import Model.Pathfinder.Network exposing (Network, NetworkConditions)
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.SearchBox as SearchBox
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
-import Model.Pathfinder.Tools exposing (PointerTool, ToolbarHovercardModel)
+import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
@@ -92,6 +92,7 @@ type alias Model =
     , modPressed : Bool
     , modKeyPressCount : Int -- see RuntimeModKeyHeld
     , showShortcutHints : Bool
+    , showModSelecting : Bool -- see shownPointerTool
     , isDirty : Bool
     , helpDropdownOpen : Bool
     , toolbarHovercard : Maybe ToolbarHovercardModel
@@ -198,6 +199,19 @@ getHavingTags : Model -> Id -> HavingTags
 getHavingTags model id_ =
     Dict.get id_ model.tagSummaries
         |> Maybe.withDefault NoTags
+
+
+{-| The tool the toolbar shows as active. Holding Ctrl/Cmd makes a click select
+like the selection tool does, so the toolbar says so: nothing else tells the
+user the mode is on, or that it is stuck.
+-}
+shownPointerTool : Model -> PointerTool
+shownPointerTool model =
+    if model.modPressed && model.showModSelecting then
+        Select
+
+    else
+        model.pointerTool
 
 
 getSortedConceptsByWeight : Api.Data.TagSummary -> List String

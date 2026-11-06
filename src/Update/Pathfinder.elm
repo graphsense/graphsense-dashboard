@@ -1024,9 +1024,12 @@ updateByMsg uc msg model =
                     pressCount =
                         model.modKeyPressCount + 1
                 in
-                ( { model | modPressed = True, modKeyPressCount = pressCount }
+                ( { model | modPressed = True, modKeyPressCount = pressCount, showModSelecting = False }
                 , [ Process.sleep Shortcuts.hintDelayMs
                         |> Task.perform (\_ -> RuntimeModKeyHeld pressCount)
+                        |> CmdEffect
+                  , Process.sleep Shortcuts.modSelectingDelayMs
+                        |> Task.perform (\_ -> RuntimeModKeyHeldBriefly pressCount)
                         |> CmdEffect
                   ]
                 )
@@ -1037,8 +1040,11 @@ updateByMsg uc msg model =
             -- for the old press.
             n { model | showShortcutHints = model.modPressed && pressCount == model.modKeyPressCount }
 
+        RuntimeModKeyHeldBriefly pressCount ->
+            n { model | showModSelecting = model.modPressed && pressCount == model.modKeyPressCount }
+
         UserReleasedModKey ->
-            n { model | modPressed = False, showShortcutHints = False }
+            n { model | modPressed = False, showShortcutHints = False, showModSelecting = False }
 
         UserReleasedEscape ->
             if model.onGraphSearch.visible then

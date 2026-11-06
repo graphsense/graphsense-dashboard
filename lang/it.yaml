@@ -650,6 +650,7 @@ network-not-available-lite-off: "{0} non è disponibile finché le reti lite son
 Keyboard shortcuts: "Scorciatoie da tastiera"
 Add address or tx: "Aggiungi indirizzo o tx"
 Select all: "Seleziona tutto"
+Click for multi-select: "Clic per selezione multipla"
 Delete selection: "Elimina la selezione"
 Move the selection along the graph: "Sposta la selezione nel grafico"
 Close search or dialog: "Chiudi la ricerca o la finestra"

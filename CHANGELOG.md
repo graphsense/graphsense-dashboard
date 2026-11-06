@@ -15,7 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The actor tooltip shows three jurisdictions and "... and N more" instead of all of them (Binance has 16)
 - Tag tooltips no longer join all labels into one comma list. The address tooltip shows the best label with "... and N more", a category's tooltip its three best labels one per line, a label's tooltip its categories one per line. Labels rank actor first (the label the tag summary picks for its actor), then by confidence and relevance, instead of alphabetically (category tooltip) or by relevance alone; the side panel's label chips use the same order. Blank labels are dropped and labels differing only in case or spacing count once. Where the API sends the new optional `actors` and `tag_types` of a label, only the best kind is shown and the rest counted: labels of an actor, else labels of other tags, else mentions. An actor label inherited from the cluster only counts as an actor label if the address has no label of its own
 
+- While Ctrl/Cmd is held, the toolbar shows the selection tool as active, so multi-select no longer works unseen, and the shortcut list names it
+
 ### Fixed
+- Multi-select stuck on when the browser missed the release of Ctrl/Cmd: the next mouse move or click now ends it
 - Tooltip rows keep a gap between label and value; a long label such as the German "Schlagwörter" ran into the value
 
 ### Security
