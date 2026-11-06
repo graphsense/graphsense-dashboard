@@ -1158,16 +1158,16 @@ tagsList vc model id =
         nMaxTags =
             2
 
+        moreItems more =
+            if more > 0 then
+                [ TagsComponents.moreItemsInfo { root = { number = String.fromInt more } } ]
+
+            else
+                []
+
         tagsTruncated renderItem items =
             (items |> List.take nMaxTags |> List.map renderItem)
-                ++ (if List.length items > nMaxTags then
-                        [ TagsComponents.moreItemsInfo
-                            { root = { number = String.fromInt (List.length items - nMaxTags) } }
-                        ]
-
-                    else
-                        []
-                   )
+                ++ moreItems (List.length items - nMaxTags)
     in
     if clusterOnlyTagsVisible then
         [ learnMoreButton vc id ]
@@ -1192,15 +1192,14 @@ tagsList vc model id =
                     |> Maybe.map
                         (\x ->
                             if hasOnlyExchangeTags x then
-                                []
+                                { entries = [], more = 0 }
 
                             else
-                                TagSummary.rankedLabels Nothing x
+                                TagSummary.labelEntries nMaxTags Nothing x
                         )
-                    |> Maybe.withDefault []
+                    |> Maybe.withDefault { entries = [], more = 0 }
         in
-        tagLabels
-            |> tagsTruncated showTag
+        List.map showTag tagLabels.entries ++ moreItems tagLabels.more
 
     else
         case ts of

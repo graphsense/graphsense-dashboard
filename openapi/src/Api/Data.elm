@@ -557,7 +557,8 @@ externalConversionConversionTypeVariants =
 
 
 type alias LabelSummary =
-    { concepts : List (String)
+    { actors : Maybe (List (String))
+    , concepts : List (String)
     , confidence : Float
     , count : Int
     , creators : List (String)
@@ -566,6 +567,7 @@ type alias LabelSummary =
     , lastmod : Int
     , relevance : Float
     , sources : List (String)
+    , tagTypes : Maybe (List (String))
     }
 
 
@@ -1732,7 +1734,8 @@ encodeLabelSummaryPairs : LabelSummary -> List EncodedField
 encodeLabelSummaryPairs model =
     let
         pairs =
-            [ encode "concepts" (Json.Encode.list Json.Encode.string) model.concepts
+            [ maybeEncode "actors" (Json.Encode.list Json.Encode.string) model.actors
+            , encode "concepts" (Json.Encode.list Json.Encode.string) model.concepts
             , encode "confidence" Json.Encode.float model.confidence
             , encode "count" Json.Encode.int model.count
             , encode "creators" (Json.Encode.list Json.Encode.string) model.creators
@@ -1741,6 +1744,7 @@ encodeLabelSummaryPairs model =
             , encode "lastmod" Json.Encode.int model.lastmod
             , encode "relevance" Json.Encode.float model.relevance
             , encode "sources" (Json.Encode.list Json.Encode.string) model.sources
+            , maybeEncode "tag_types" (Json.Encode.list Json.Encode.string) model.tagTypes
             ]
     in
     pairs
@@ -3007,6 +3011,7 @@ externalConversionConversionTypeDecoder =
 labelSummaryDecoder : Json.Decode.Decoder LabelSummary
 labelSummaryDecoder =
     Json.Decode.succeed LabelSummary
+        |> maybeDecode "actors" (Json.Decode.list Json.Decode.string) Nothing
         |> decode "concepts" (Json.Decode.list Json.Decode.string) 
         |> decode "confidence" Json.Decode.float 
         |> decode "count" Json.Decode.int 
@@ -3016,6 +3021,7 @@ labelSummaryDecoder =
         |> decode "lastmod" Json.Decode.int 
         |> decode "relevance" Json.Decode.float 
         |> decode "sources" (Json.Decode.list Json.Decode.string) 
+        |> maybeDecode "tag_types" (Json.Decode.list Json.Decode.string) Nothing
 
 
 labelSummaryInheritedFromDecoder : Json.Decode.Decoder LabelSummaryInheritedFrom
