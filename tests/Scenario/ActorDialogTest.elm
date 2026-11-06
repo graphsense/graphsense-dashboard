@@ -25,6 +25,7 @@ import Test.Html.Selector as Selector
 import Util.Tooltip
 import Util.TooltipType exposing (TooltipType(..))
 import View.Locale as Locale
+import View.Pathfinder.ActorDialog as ActorDialog
 
 
 {-| An exchange with many jurisdictions, as Binance has.
@@ -225,6 +226,12 @@ suite =
                     |> App.html
                     |> Query.findAll [ Selector.attribute (Html.Attributes.title "1KrakenAddressOfAnotherActor") ]
                     |> Query.count (Expect.equal 0)
+        , test "the labels keep their width next to the 100% wide values" <|
+            \_ ->
+                ActorDialog.view { closeMsg = UserClosesDialog, showTagsMsg = UserClosesDialog } binance Env.viewConfig
+                    |> Html.Styled.toUnstyled
+                    |> Query.fromHtml
+                    |> Query.has [ Selector.containing [ Selector.text "flex-shrink:0" ] ]
         ]
 
 

@@ -111,7 +111,7 @@ view { closeMsg, showTagsMsg } actor vc =
                 |> Maybe.map (Locale.int vc.locale >> text >> List.singleton >> div [ css Dialogs.dialogActorTagsCount_details.styles ])
 
         label details key =
-            div [ css details.styles ] [ text (Locale.string vc.locale key) ]
+            div [ css (details.styles ++ keepLabelWidth) ] [ text (Locale.string vc.locale key) ]
                 |> Just
 
         value details content =
@@ -130,6 +130,7 @@ view { closeMsg, showTagsMsg } actor vc =
         (Dialogs.dialogActorAttributes
             |> Rs.s_root [ testId "gs-actor-dialog" ]
             |> Rs.s_iconsCloseNoPadding [ pointer, onClick closeMsg ]
+            |> Rs.s_githubLabel [ css keepLabelWidth ]
             -- "Show tags": the actor's tags list
             |> Rs.s_dialogLinkOfTagsValue
                 [ onClick showTagsMsg
@@ -179,6 +180,14 @@ view { closeMsg, showTagsMsg } actor vc =
         , dialogLinkOfWebsiteValue = { linkText = "" }
         , dialogLinkOfTagsValue = { linkText = Locale.string vc.locale "Show tags" }
         }
+
+
+{-| The value next to a label is 100% wide, which would squeeze the label below
+its 110px and break a word like the German "Gerichtsbarkeit" in two.
+-}
+keepLabelWidth : List Css.Style
+keepLabelWidth =
+    [ Css.flexShrink (Css.num 0) ]
 
 
 uniqueByUrl : List ( String, String ) -> List ( String, String )
