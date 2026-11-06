@@ -500,6 +500,7 @@ tag-dialog-additional-info-example: Por ejemplo, vinculado a un informe de estaf
 report a tag: informar de una etiqueta
 report tag: informar de una etiqueta
 Wallet type: "Tipo de wallet"
+Other: "Otro"
 create new actor: Crear un nuevo actor
 Added tag: Etiqueta añadida
 num-more-assets: '{0} activos más'

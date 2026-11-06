@@ -1,8 +1,8 @@
 module Scenario.ReportTagDialogTest exposing (suite)
 
 {-| The report tag dialog sends an optional wallet type as a concept. The field
-has to stay out of the request when nothing is picked, and a second click takes
-a pick back.
+has to stay out of the request when nothing is picked or the pick is "Other",
+which has no concept, and a second click takes a pick back.
 -}
 
 import Api.Data
@@ -53,7 +53,7 @@ dialog =
                             , addTagMsg = AddTagDialog (UserClickedAddTag id)
                             , search = Search.init Model.Search.SearchActorsOnly
                             , selectedActor = Just ( "binance", "Binance" )
-                            , walletConcept = Nothing
+                            , walletType = Nothing
                             , description = ""
                             }
                             |> Just
@@ -63,7 +63,12 @@ dialog =
 
 pick : String -> Msg
 pick =
-    UserClickedWalletConcept >> AddTagDialog
+    Dialog.WalletConcept >> pickType
+
+
+pickType : Dialog.WalletType -> Msg
+pickType =
+    UserClickedWalletType >> AddTagDialog
 
 
 send : Msg
@@ -86,8 +91,8 @@ suite =
                 dialog
                     |> App.html
                     |> Expect.all
-                        (Dialog.walletConcepts
-                            |> List.map (\concept -> Query.has [ Selector.text concept ])
+                        ([ "hot_wallet", "cold_wallet", "deposit_wallet", "Other" ]
+                            |> List.map (\label -> Query.has [ Selector.text label ])
                         )
         , test "sends the picked wallet type as a concept" <|
             \_ ->
@@ -105,6 +110,18 @@ suite =
             \_ ->
                 dialog
                     |> App.steps [ pick "cold_wallet", pick "cold_wallet", send ]
+                    |> reportedConcepts
+                    |> Expect.equal [ Nothing ]
+        , test "other has no concept to send" <|
+            \_ ->
+                dialog
+                    |> App.steps [ pickType Dialog.OtherWallet, send ]
+                    |> reportedConcepts
+                    |> Expect.equal [ Nothing ]
+        , test "other replaces a wallet type picked before" <|
+            \_ ->
+                dialog
+                    |> App.steps [ pick "hot_wallet", pickType Dialog.OtherWallet, send ]
                     |> reportedConcepts
                     |> Expect.equal [ Nothing ]
         , test "without a pick the request has no concepts" <|

@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Tag tooltips no longer join all labels into one comma list. The address tooltip shows the best label with "... and N more", a category's tooltip its three best labels one per line, a label's tooltip its categories one per line. Labels rank actor first (the label the tag summary picks for its actor), then by confidence and relevance, instead of alphabetically (category tooltip) or by relevance alone; the side panel's label chips use the same order. Blank labels are dropped and labels differing only in case or spacing count once. Where the API sends the new optional `actors` and `tag_types` of a label, only the best kind is shown and the rest counted: labels of an actor, else labels of other tags, else mentions. An actor label inherited from the cluster only counts as an actor label if the address has no label of its own
 
 - While Ctrl/Cmd is held, the toolbar shows the selection tool as active, so multi-select no longer works unseen, and the shortcut list names it
-- "Report a tag" can state the wallet type of the address: hot, cold or deposit
+- "Report a tag" can state the wallet type of the address: hot, cold, deposit or other
 
 ### Fixed
 - Multi-select stuck on when the browser missed the release of Ctrl/Cmd: the next mouse move or click now ends it

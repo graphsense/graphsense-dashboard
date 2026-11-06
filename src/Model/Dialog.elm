@@ -1,4 +1,4 @@
-module Model.Dialog exposing (ActorTagsConfig, AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initDrag, initExportConfig, placement, walletConcepts)
+module Model.Dialog exposing (ActorTagsConfig, AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), WalletType(..), defaultMsg, exportFormatToString, initDrag, initExportConfig, placement, walletTypes)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
@@ -138,17 +138,26 @@ type alias AddTagConfig msg =
     , addTagMsg : msg
     , search : Search.Model
     , selectedActor : Maybe ( String, String )
-    , walletConcept : Maybe String
+    , walletType : Maybe WalletType
     , description : String
     }
 
 
-{-| The concept ids a reported tag can give as its wallet type. The concept
-taxonomy has more wallets; these are the ones analysts report.
+{-| `WalletConcept` holds a concept id of the taxonomy. The taxonomy has no
+"other" concept and the API rejects ids it does not know, so `OtherWallet` is
+not sent: the reporter says what it is in the additional info.
 -}
-walletConcepts : List String
-walletConcepts =
-    [ "hot_wallet", "cold_wallet", "deposit_wallet" ]
+type WalletType
+    = WalletConcept String
+    | OtherWallet
+
+
+{-| The wallet types a reported tag can state. The concept taxonomy has more
+wallets; these are the ones analysts report.
+-}
+walletTypes : List WalletType
+walletTypes =
+    [ WalletConcept "hot_wallet", WalletConcept "cold_wallet", WalletConcept "deposit_wallet", OtherWallet ]
 
 
 type alias ExportConfig msg =

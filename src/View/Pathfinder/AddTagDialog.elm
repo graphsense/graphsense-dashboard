@@ -39,6 +39,13 @@ willBePublishedAlertView vc =
         ]
 
 
+{-| The generated text field is 280px wide, which leaves it short of the dialog.
+-}
+fullWidth : Css.Style
+fullWidth =
+    Css.width (Css.pct 100) |> Css.important
+
+
 view : View.Config -> Dialog.AddTagConfig Msg -> Html Msg
 view vc model =
     let
@@ -60,6 +67,7 @@ view vc model =
                             [ Css.displayFlex
                             , Css.flexDirection Css.row
                             , Css.property "gap" "5px"
+                            , fullWidth
                             ]
                         ]
                         [ View.Search.searchWithMoreCss
@@ -70,6 +78,7 @@ view vc model =
                                 |> Rs.s_inputAttributes
                                     [ placeholder (Locale.interpolated vc.locale "e.g." [ "Binance" ])
                                     , css (Util.View.inputFieldStyles False)
+                                    , css [ fullWidth ]
                                     ]
                             )
                             model.search
@@ -79,7 +88,7 @@ view vc model =
         textFieldAttributes =
             F.textFieldWithHelpAttributes
                 |> Rs.s_root
-                    [ [ Css.width <| Css.pct 90 ] |> css
+                    [ css [ fullWidth ]
                     , alignItemsStretch
                     ]
                 |> Rs.s_helperText
@@ -108,18 +117,24 @@ view vc model =
         walletType =
             F.radioOptionsWithTitleWithAttributes
                 (F.radioOptionsWithTitleAttributes
-                    |> Rs.s_root [ [ Css.width <| Css.pct 90 ] |> css, alignItemsStretch ]
+                    |> Rs.s_root [ css [ fullWidth ], alignItemsStretch ]
                 )
                 { radioItemsList =
-                    Dialog.walletConcepts
+                    Dialog.walletTypes
                         |> List.map
-                            (\concept ->
+                            (\wt ->
                                 Controls.radio
-                                    { label = View.getConceptName vc concept |> Maybe.withDefault concept
-                                    , selected = model.walletConcept == Just concept
+                                    { label =
+                                        case wt of
+                                            Dialog.WalletConcept concept ->
+                                                View.getConceptName vc concept |> Maybe.withDefault concept
+
+                                            Dialog.OtherWallet ->
+                                                Locale.string vc.locale "Other"
+                                    , selected = model.walletType == Just wt
                                     , disabled = False
                                     , size = Controls.Small
-                                    , msg = UserClickedWalletConcept concept |> AddTagDialog
+                                    , msg = UserClickedWalletType wt |> AddTagDialog
                                     }
                             )
                 }
@@ -137,7 +152,8 @@ view vc model =
                     { variant =
                         textarea
                             [ Util.View.inputFieldStyles False |> css
-                            , [ Css.resize Css.none
+                            , [ fullWidth
+                              , Css.resize Css.none
                               , Css.height (Css.em 5) |> Css.important
                               , Css.focus [ Css.height (Css.em 5) |> Css.important ]
                               , Css.whiteSpace Css.preLine

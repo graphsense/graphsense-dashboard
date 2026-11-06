@@ -152,7 +152,7 @@ mapMsg map model =
             , id = conf.id
             , search = conf.search
             , selectedActor = conf.selectedActor
-            , walletConcept = conf.walletConcept
+            , walletType = conf.walletType
             , description = conf.description
             }
                 |> AddTag

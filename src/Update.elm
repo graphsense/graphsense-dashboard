@@ -2074,7 +2074,7 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
                                 , addTagMsg = AddTagDialog (UserClickedAddTag id)
                                 , search = Search.init Search.SearchActorsOnly
                                 , selectedActor = Nothing
-                                , walletConcept = Nothing
+                                , walletType = Nothing
                                 , description = ""
                                 }
                             )

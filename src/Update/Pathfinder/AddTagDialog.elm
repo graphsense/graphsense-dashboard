@@ -6,7 +6,7 @@ import Effect.Api as Api
 import Effect.Pathfinder as PFEffect
 import Maybe.Extra
 import Model exposing (AddTagDialogMsgs(..), Effect(..), Msg(..))
-import Model.Dialog exposing (AddTagConfig)
+import Model.Dialog exposing (AddTagConfig, WalletType(..))
 import Model.Notification as Notification
 import Model.Pathfinder.Id as Id
 import Model.Search as Search
@@ -38,7 +38,13 @@ update uc msg model =
                         tag =
                             { actor = sa |> Tuple.first
                             , address = Id.id id
-                            , concepts = model.walletConcept |> Maybe.map List.singleton
+                            , concepts =
+                                case model.walletType of
+                                    Just (WalletConcept concept) ->
+                                        Just [ concept ]
+
+                                    _ ->
+                                        Nothing
                             , description = model.description
                             , label = sa |> Tuple.second
                             , network = Id.network id
@@ -114,13 +120,13 @@ update uc msg model =
             , []
             )
 
-        UserClickedWalletConcept concept ->
+        UserClickedWalletType walletType ->
             -- The wallet type is optional, so a second click takes it back.
-            ( if model.walletConcept == Just concept then
-                model |> Rs.s_walletConcept Nothing
+            ( if model.walletType == Just walletType then
+                model |> Rs.s_walletType Nothing
 
               else
-                model |> Rs.s_walletConcept (Just concept)
+                model |> Rs.s_walletType (Just walletType)
             , []
             )
 

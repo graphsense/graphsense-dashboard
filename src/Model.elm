@@ -160,7 +160,7 @@ type Msg
 type AddTagDialogMsgs
     = SearchMsgAddTagDialog Msg.Search.Msg
     | UserInputsDescription String
-    | UserClickedWalletConcept String
+    | UserClickedWalletType Model.Dialog.WalletType
     | UserClickedAddTag Id
     | BrowserAddedTag Id
     | RemoveActorTag
