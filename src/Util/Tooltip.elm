@@ -143,11 +143,19 @@ baseRowStyle =
     [ Css.width (Css.pct 100) ]
 
 
+{-| The generated row only spreads label and value apart, so a label longer
+than its minimum width (German "Schlagwörter") would touch the value.
+-}
+labelValueRowStyle : List Css.Style
+labelValueRowStyle =
+    baseRowStyle ++ [ Css.property "gap" "16px" ]
+
+
 tooltipRow : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRowText : String, secondRowVisible : Bool, secondRowText : String } } -> Html msg
 tooltipRow =
     GraphComponents.tooltipRowWithAttributes
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_root [ css baseRowStyle ]
+            |> Rs.s_root [ css labelValueRowStyle ]
             |> Rs.s_tooltipRowLabel [ css [ Css.minWidth (Css.px 90) ] ]
             |> Rs.s_firstValue [ css [ Css.property "white-space" "wrap", Css.textAlign Css.right ] ]
         )
@@ -157,7 +165,7 @@ tooltipRowCustomValue : String -> Html msg -> Html msg
 tooltipRowCustomValue title rowValue =
     GraphComponents.tooltipRowWithInstances
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_root [ css baseRowStyle ]
+            |> Rs.s_root [ css labelValueRowStyle ]
         )
         (GraphComponents.tooltipRowInstances |> Rs.s_tooltipRowValue (Just rowValue))
         { tooltipRowLabel = { title = title }
