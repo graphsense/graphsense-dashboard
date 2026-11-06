@@ -38,6 +38,7 @@ update uc msg model =
                         tag =
                             { actor = sa |> Tuple.first
                             , address = Id.id id
+                            , concepts = model.walletConcept |> Maybe.map List.singleton
                             , description = model.description
                             , label = sa |> Tuple.second
                             , network = Id.network id
@@ -110,6 +111,16 @@ update uc msg model =
 
         UserInputsDescription ns ->
             ( model |> Rs.s_description ns
+            , []
+            )
+
+        UserClickedWalletConcept concept ->
+            -- The wallet type is optional, so a second click takes it back.
+            ( if model.walletConcept == Just concept then
+                model |> Rs.s_walletConcept Nothing
+
+              else
+                model |> Rs.s_walletConcept (Just concept)
             , []
             )
 

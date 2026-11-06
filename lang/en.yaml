@@ -476,6 +476,7 @@ tag-dialog-additional-info: Additional Information (optional)
 tag-dialog-additional-info-example: e.g. Linked to scam report on xyz.com
 report a tag: Report a tag
 report tag: Report tag
+Wallet type: "Wallet type"
 create new actor: Create new actor
 Added tag: Added Tag
 num-more-assets: '{0} more assets'

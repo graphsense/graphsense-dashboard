@@ -904,6 +904,7 @@ type alias Txs =
 type alias UserReportedTag =
     { actor : String
     , address : String
+    , concepts : Maybe (List (String))
     , description : String
     , label : String
     , network : String
@@ -2675,6 +2676,7 @@ encodeUserReportedTagPairs model =
         pairs =
             [ encode "actor" Json.Encode.string model.actor
             , encode "address" Json.Encode.string model.address
+            , maybeEncode "concepts" (Json.Encode.list Json.Encode.string) model.concepts
             , encode "description" Json.Encode.string model.description
             , encode "label" Json.Encode.string model.label
             , encode "network" Json.Encode.string model.network
@@ -3546,6 +3548,7 @@ userReportedTagDecoder =
     Json.Decode.succeed UserReportedTag
         |> decode "actor" Json.Decode.string 
         |> decode "address" Json.Decode.string 
+        |> maybeDecode "concepts" (Json.Decode.list Json.Decode.string) Nothing
         |> decode "description" Json.Decode.string 
         |> decode "label" Json.Decode.string 
         |> decode "network" Json.Decode.string 

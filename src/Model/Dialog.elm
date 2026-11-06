@@ -1,4 +1,4 @@
-module Model.Dialog exposing (ActorTagsConfig, AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initDrag, initExportConfig, placement)
+module Model.Dialog exposing (ActorTagsConfig, AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initDrag, initExportConfig, placement, walletConcepts)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
@@ -138,8 +138,17 @@ type alias AddTagConfig msg =
     , addTagMsg : msg
     , search : Search.Model
     , selectedActor : Maybe ( String, String )
+    , walletConcept : Maybe String
     , description : String
     }
+
+
+{-| The concept ids a reported tag can give as its wallet type. The concept
+taxonomy has more wallets; these are the ones analysts report.
+-}
+walletConcepts : List String
+walletConcepts =
+    [ "hot_wallet", "cold_wallet", "deposit_wallet" ]
 
 
 type alias ExportConfig msg =

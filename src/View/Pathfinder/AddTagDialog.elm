@@ -16,6 +16,7 @@ import Tuple exposing (second)
 import Util.Css exposing (alignItemsStretch)
 import Util.View
 import View.Button as Button
+import View.Controls as Controls
 import View.Locale as Locale
 import View.Search
 
@@ -104,6 +105,26 @@ view vc model =
                 , textField = { variant = actorField }
                 }
 
+        walletType =
+            F.radioOptionsWithTitleWithAttributes
+                (F.radioOptionsWithTitleAttributes
+                    |> Rs.s_root [ [ Css.width <| Css.pct 90 ] |> css, alignItemsStretch ]
+                )
+                { radioItemsList =
+                    Dialog.walletConcepts
+                        |> List.map
+                            (\concept ->
+                                Controls.radio
+                                    { label = View.getConceptName vc concept |> Maybe.withDefault concept
+                                    , selected = model.walletConcept == Just concept
+                                    , disabled = False
+                                    , size = Controls.Small
+                                    , msg = UserClickedWalletConcept concept |> AddTagDialog
+                                    }
+                            )
+                }
+                { root = { title = Locale.string vc.locale "Wallet type" } }
+
         additionalInfo =
             F.textFieldWithHelpWithAttributes
                 textFieldAttributes
@@ -136,6 +157,7 @@ view vc model =
         )
         { inputList =
             [ actorText
+            , walletType
             , additionalInfo
             ]
                 ++ (if model.selectedActor /= Nothing then

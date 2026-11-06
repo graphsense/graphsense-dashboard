@@ -494,6 +494,7 @@ tag-dialog-additional-info: Zusätzliche Informationen (optional)
 tag-dialog-additional-info-example: z.B. Verknüpft mit einem Betrugsbericht auf xyz.com
 report a tag: Ein Tag melden
 report tag: Tag melden
+Wallet type: "Wallet-Typ"
 create new actor: Neuen Akteur erstellen
 Added tag: Tag hinzugefügt
 num-more-assets: '{0} weitere Vermögenswerte'
