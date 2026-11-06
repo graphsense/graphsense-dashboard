@@ -472,6 +472,11 @@ bridge transaction: Transazione di Bridge
 swap transaction: Transazione di Swap
 swap transactions: Swap Transazione
 Bridge transactions: Bridge Transazione
+protocol: Protocollo
+transfer ID: ID trasferimento
+source tx: Tx di origine
+destination tx: Tx di destinazione
+bridge explorer: Explorer del bridge
 hint-minimum-input: Fornire almeno {0} caratteri
 no-results-found: Nessun risultato trovato.
 deprecation notice: Avviso di deprecazione

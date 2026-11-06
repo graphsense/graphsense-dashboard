@@ -72,6 +72,9 @@ swap { toAsset, toAssetSymbol } =
         , toAssetDecimals = Nothing
         , fromAmountFiatValues = Nothing
         , toAmountFiatValues = Nothing
+        , protocol = Nothing
+        , protocolApp = Nothing
+        , transferId = Nothing
         }
         ( Id.init "arb" "aaa_I0", Id.init "arb" "aaa_T1" )
         ( Id.init "arb" swapper, Id.init "arb" swapper )
