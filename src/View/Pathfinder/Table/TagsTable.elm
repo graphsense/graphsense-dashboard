@@ -291,7 +291,7 @@ cell vc c =
                 (TagsComponents.tagRowCellInstances
                     |> Rs.s_label (Just link)
                 )
-                (defaultData cellConfig Nothing Nothing)
+                (defaultData cellConfig Nothing (Just (Util.View.copyIconPathfinderFixed vc ac.address)))
 
         TypeCell cc ->
             let
@@ -358,7 +358,8 @@ cell vc c =
 {-| The tags of an actor: they belong to many addresses, so an address column
 (network below it) comes first; a click on the address adds it to the graph.
 Tags also exist on networks this instance does not serve (see `isListedNetwork`):
-those addresses are plain text, as there is nothing to open.
+those addresses are plain text, as there is nothing to open. Every address can be
+copied, so the unlinked ones can still be looked up elsewhere.
 -}
 actorConfig : View.Config -> (InfiniteTable.Msg -> Msg) -> (String -> String -> Msg) -> InfiniteTable.TableConfig Api.Data.AddressTag Msg
 actorConfig vc tag onAddress =

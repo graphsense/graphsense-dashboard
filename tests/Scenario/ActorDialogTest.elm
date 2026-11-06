@@ -215,6 +215,10 @@ suite =
                         , Query.findAll [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-actor-tag-address") ]
                             >> Query.count (Expect.equal 0)
                         ]
+        , test "a linked address can be copied" <|
+            \_ -> expectCopyable [ "btc" ]
+        , test "an address without a link can be copied" <|
+            \_ -> expectCopyable [ "eth" ]
         , test "before the statistics arrive no address is a link" <|
             \_ ->
                 actorTagsDialogServing []
@@ -249,6 +253,14 @@ suite =
                     |> Query.fromHtml
                     |> Query.has [ Selector.containing [ Selector.text "flex-shrink:0" ] ]
         ]
+
+
+expectCopyable : List String -> Expect.Expectation
+expectCopyable networks =
+    actorTagsDialogServing networks
+        |> App.html
+        |> Query.findAll [ Selector.attribute (Html.Attributes.attribute "data-value" "1Archive1n2C579dMsAu3iC6tWzuQJz8dN") ]
+        |> Query.count (Expect.equal 1)
 
 
 isActorTagsFetch : Effect -> Bool
