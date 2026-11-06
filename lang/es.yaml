@@ -516,6 +516,11 @@ bridge transaction: Transacción puente
 swap transaction: Transacción de intercambio
 swap transactions: Transacciones de intercambio
 Bridge transactions: Transacciones puente
+protocol: Protocolo
+transfer ID: ID de transferencia
+source tx: Tx de origen
+destination tx: Tx de destino
+bridge explorer: Explorador del puente
 hint-minimum-input: Proporcione al menos {0} caracteres
 no-results-found: No se han encontrado resultados.
 deprecation notice: Aviso de obsolescencia

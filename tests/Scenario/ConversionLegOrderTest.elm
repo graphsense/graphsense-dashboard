@@ -39,6 +39,9 @@ tokenBridge =
     , toAssetDecimals = Nothing
     , fromAmountFiatValues = Nothing
     , toAmountFiatValues = Nothing
+    , protocol = Nothing
+    , protocolApp = Nothing
+    , transferId = Nothing
     }
 
 
