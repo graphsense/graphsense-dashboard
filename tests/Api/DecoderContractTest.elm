@@ -274,6 +274,11 @@ suite =
                                 )
                             )
                         |> Expect.equal (Ok ( True, True, False ))
+            , test "a label says which actors and tag types it merges, which ranks it" <|
+                \_ ->
+                    Json.Decode.decodeString Api.Data.tagSummaryDecoder Fixture.tagSummary
+                        |> Result.map (.labelSummary >> Dict.values >> List.map (\ls -> ( ls.actors, ls.tagTypes )))
+                        |> Expect.equal (Ok [ ( Just [ "internet_archive" ], Just [ "actor" ] ) ])
             , test "token configs carry ticker and decimals, which drive every token amount" <|
                 \_ ->
                     Json.Decode.decodeString Api.Data.tokenConfigsDecoder Fixture.tokenConfigs
