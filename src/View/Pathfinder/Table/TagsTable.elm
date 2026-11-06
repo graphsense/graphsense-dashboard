@@ -75,7 +75,7 @@ type Cell
     | IconCell TagIcon
     | LabelCell CellConfig TagIcon
     | TypeCell ConfidenceCellConfig
-    | AddressCell { address : String, network : String, onClick : Msg }
+    | AddressCell { address : String, network : String, onClick : Maybe Msg }
 
 
 linkCellStyle : List Css.Style
@@ -265,14 +265,26 @@ cell vc c =
                 cellConfig =
                     { label = ac.address, subLabel = Just (String.toUpper ac.network) }
 
+                addressText =
+                    text (Util.View.truncateLongIdentifierWithLengths 8 6 ac.address)
+
                 link =
-                    span
-                        [ css (linkCellStyle ++ [ Css.cursor Css.pointer ])
-                        , onClick ac.onClick
-                        , title ac.address
-                        , Util.View.testId "gs-actor-tag-address"
-                        ]
-                        [ text (Util.View.truncateLongIdentifierWithLengths 8 6 ac.address) ]
+                    case ac.onClick of
+                        Just msg ->
+                            span
+                                [ css (linkCellStyle ++ [ Css.cursor Css.pointer ])
+                                , onClick msg
+                                , title ac.address
+                                , Util.View.testId "gs-actor-tag-address"
+                                ]
+                                [ addressText ]
+
+                        Nothing ->
+                            span
+                                [ css TagsComponents.tagRowCellLabel_details.styles
+                                , title ac.address
+                                ]
+                                [ addressText ]
             in
             TagsComponents.tagRowCellWithInstances
                 (attrs False cellConfig |> Rs.s_root (cellWMinWidth |> css |> List.singleton))
@@ -345,6 +357,8 @@ cell vc c =
 
 {-| The tags of an actor: they belong to many addresses, so an address column
 (network below it) comes first; a click on the address adds it to the graph.
+Tags also exist on networks this instance does not serve (see `isListedNetwork`):
+those addresses are plain text, as there is nothing to open.
 -}
 actorConfig : View.Config -> (InfiniteTable.Msg -> Msg) -> (String -> String -> Msg) -> InfiniteTable.TableConfig Api.Data.AddressTag Msg
 actorConfig vc tag onAddress =
@@ -373,11 +387,25 @@ addressColumn vc onAddress =
                     (AddressCell
                         { address = data.address
                         , network = data.currency
-                        , onClick = onAddress data.currency data.address
+                        , onClick =
+                            if isListedNetwork vc data.currency then
+                                Just (onAddress data.currency data.address)
+
+                            else
+                                Nothing
                         }
                     )
         , sorter = Table.unsortable
         }
+
+
+{-| Whether the statistics list the network. Not `View.networkServed`, which
+counts every network as served until the statistics arrive: a link is only
+offered for a network known to work.
+-}
+isListedNetwork : View.Config -> String -> Bool
+isListedNetwork vc network =
+    List.any (.name >> String.toLower >> (==) (String.toLower network)) vc.networks
 
 
 iconColumn : View.Config -> Table.Column Api.Data.AddressTag Msg

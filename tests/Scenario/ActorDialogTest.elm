@@ -205,6 +205,22 @@ suite =
                         [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-actor-tag-address")
                         , Selector.attribute (Html.Attributes.title "1Archive1n2C579dMsAu3iC6tWzuQJz8dN")
                         ]
+        , test "an address on a network the statistics do not list is not a link" <|
+            \_ ->
+                actorTagsDialogServing [ "eth" ]
+                    |> App.html
+                    |> Query.find [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-actor-tags-dialog") ]
+                    |> Expect.all
+                        [ Query.has [ Selector.attribute (Html.Attributes.title "1Archive1n2C579dMsAu3iC6tWzuQJz8dN") ]
+                        , Query.findAll [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-actor-tag-address") ]
+                            >> Query.count (Expect.equal 0)
+                        ]
+        , test "before the statistics arrive no address is a link" <|
+            \_ ->
+                actorTagsDialogServing []
+                    |> App.html
+                    |> Query.findAll [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-actor-tag-address") ]
+                    |> Query.count (Expect.equal 0)
         , test "a click on a tag's address closes the dialog and opens the address" <|
             \_ ->
                 actorTagsDialogWithPage
@@ -255,8 +271,29 @@ tagsPage =
             { addressTags = [], nextPage = Nothing }
 
 
-actorTagsDialogWithPage : App
-actorTagsDialogWithPage =
+{-| The statistics list `networks`; the fixture's tag is on BTC.
+-}
+actorTagsDialogServing : List String -> App
+actorTagsDialogServing networks =
     App.initAt "/pathfinder"
+        |> App.mapModel
+            (\m ->
+                let
+                    config =
+                        m.config
+
+                    stats =
+                        Json.Decode.decodeString Api.Data.currencyStatsDecoder Fixture.currencyStats
+                            |> Result.toMaybe
+                            |> Maybe.map (\s -> List.map (\n -> { s | name = n }) networks)
+                            |> Maybe.withDefault []
+                in
+                { m | config = { config | networks = stats } }
+            )
         |> App.step (UserClickedShowActorTags "binance" "Binance")
         |> App.step (BrowserGotActorTagsForDialog "binance" tagsPage)
+
+
+actorTagsDialogWithPage : App
+actorTagsDialogWithPage =
+    actorTagsDialogServing [ "btc", "eth" ]
