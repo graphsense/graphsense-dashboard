@@ -43,6 +43,11 @@ tagged actors tagTypes lbl confidence relevance =
         |> Tuple.mapSecond (\ls -> { ls | actors = actors, tagTypes = tagTypes })
 
 
+inherited : Api.Data.LabelSummaryInheritedFrom -> ( String, Api.Data.LabelSummary ) -> ( String, Api.Data.LabelSummary )
+inherited from =
+    Tuple.mapSecond (\ls -> { ls | inheritedFrom = Just from })
+
+
 {-| The two optional fields of a label the API sends with `extra` added.
 -}
 decodedFields : String -> Result Json.Decode.Error ( Maybe (List String), Maybe (List String) )
@@ -196,6 +201,75 @@ suite =
                     ]
                     |> TagSummary.labelPreview 3 (Just "drugs")
                     |> Expect.equal (Just { labels = [ "dark web" ], more = 0 })
+        , test "an actor label from the cluster does not hide the address's own actor labels" <|
+            \_ ->
+                summary (Just "binance")
+                    (Just "Binance")
+                    [ tagged (Just [ "binance" ]) (Just [ "actor" ]) "Binance" 0.9 0.9
+                        |> inherited Api.Data.LabelSummaryInheritedFromCluster
+                    , tagged (Just [ "circle" ]) (Just [ "actor" ]) "Circle: USDC" 0.2 0.1
+                    ]
+                    |> TagSummary.labelPreview 3 Nothing
+                    |> Expect.equal (Just { labels = [ "Circle: USDC" ], more = 1 })
+        , test "an actor label from the cluster does not lead the address's other labels" <|
+            -- bestLabel would pull it to the front of its tier
+            \_ ->
+                summary (Just "binance")
+                    (Just "Binance")
+                    [ tagged (Just [ "binance" ]) (Just [ "actor" ]) "Binance" 0.2 0.1
+                        |> inherited Api.Data.LabelSummaryInheritedFromCluster
+                    , tagged Nothing (Just [ "attribute" ]) "Hot wallet" 0.9 0.9
+                    ]
+                    |> TagSummary.labelPreview 1 Nothing
+                    |> Expect.equal (Just { labels = [ "Hot wallet" ], more = 1 })
+        , test "an actor label from the cluster is shown when the address has nothing else" <|
+            \_ ->
+                summary (Just "binance")
+                    (Just "Binance")
+                    [ tagged (Just [ "binance" ]) (Just [ "actor" ]) "Binance" 0.9 0.9
+                        |> inherited Api.Data.LabelSummaryInheritedFromCluster
+                    , tagged (Just []) (Just [ "mention" ]) "dark web" 0.9 0.9
+                    ]
+                    |> TagSummary.labelPreview 3 Nothing
+                    |> Expect.equal (Just { labels = [ "Binance" ], more = 1 })
+        , test "with only labels from the cluster, its actor labels win and bestLabel leads" <|
+            \_ ->
+                summary (Just "binance")
+                    (Just "Binance")
+                    [ tagged (Just [ "binance" ]) (Just [ "actor" ]) "Binance 14" 0.9 0.9
+                        |> inherited Api.Data.LabelSummaryInheritedFromCluster
+                    , tagged (Just [ "binance" ]) (Just [ "actor" ]) "Binance" 0.2 0.1
+                        |> inherited Api.Data.LabelSummaryInheritedFromCluster
+                    , tagged Nothing (Just [ "attribute" ]) "Hot wallet" 0.9 0.9
+                        |> inherited Api.Data.LabelSummaryInheritedFromCluster
+                    ]
+                    |> TagSummary.labelPreview 3 Nothing
+                    |> Expect.equal (Just { labels = [ "Binance", "Binance 14" ], more = 1 })
+        , test "a blank label is not the address's own label" <|
+            \_ ->
+                summary (Just "binance")
+                    (Just "Binance")
+                    [ tagged (Just [ "binance" ]) (Just [ "actor" ]) "Binance" 0.2 0.1
+                        |> inherited Api.Data.LabelSummaryInheritedFromCluster
+                    , tagged Nothing (Just [ "attribute" ]) "Hot wallet" 0.9 0.9
+                        |> inherited Api.Data.LabelSummaryInheritedFromCluster
+                    , tagged Nothing (Just [ "attribute" ]) " " 0.9 0.9
+                    ]
+                    |> TagSummary.labelPreview 3 Nothing
+                    |> Expect.equal (Just { labels = [ "Binance" ], more = 1 })
+        , test "an actor label from a shared pubkey stays an actor label" <|
+            -- the same key is the same owner; a cluster is only a heuristic
+            \_ ->
+                summary (Just "circle")
+                    (Just "Circle")
+                    [ tagged (Just [ "circle" ]) (Just [ "actor" ]) "Circle" 0.5 0.5
+                        |> inherited Api.Data.LabelSummaryInheritedFromPubkey
+                    , tagged (Just [ "tether" ]) (Just [ "actor" ]) "Tether" 0.4 0.4
+                        |> inherited Api.Data.LabelSummaryInheritedFromPubkeyAndCluster
+                    , tagged Nothing (Just [ "attribute" ]) "Hot wallet" 0.9 0.9
+                    ]
+                    |> TagSummary.labelPreview 3 Nothing
+                    |> Expect.equal (Just { labels = [ "Circle", "Tether" ], more = 1 })
         , test "the fields are optional in the API" <|
             \_ ->
                 [ decodedFields ""
