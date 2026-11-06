@@ -1,4 +1,4 @@
-module Sub.Pathfinder exposing (subscriptions)
+module Sub.Pathfinder exposing (modLiftedDecoder, subscriptions)
 
 import Browser.Events
 import Components.Tooltip as Tooltip
@@ -155,6 +155,26 @@ toKeyUp { key } =
             Decode.fail "not handled"
 
 
+{-| Fires when a mouse event says neither Ctrl nor Cmd is down. A browser can
+lose the keyup (keyboard shortcuts of the OS, focus moving elsewhere), which
+would leave `modPressed` set and every click adding to the selection; the mouse
+events report the real state.
+-}
+modLiftedDecoder : Decode.Decoder Msg
+modLiftedDecoder =
+    Decode.map2 (||)
+        (Decode.field "ctrlKey" Decode.bool)
+        (Decode.field "metaKey" Decode.bool)
+        |> Decode.andThen
+            (\held ->
+                if held then
+                    Decode.fail "still held"
+
+                else
+                    Decode.succeed UserReleasedModKey
+            )
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     [ case ( model.dragging, model.draggingAggEdgeLabel, model.draggingConversionNode ) of
@@ -171,6 +191,14 @@ subscriptions model =
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedModKey)
     , Ports.windowBlurred (\_ -> UserReleasedModKey)
+    , if model.modPressed then
+        Sub.batch
+            [ Browser.Events.onMouseMove modLiftedDecoder
+            , Browser.Events.onMouseDown modLiftedDecoder
+            ]
+
+      else
+        Sub.none
 
     -- , Time.every 60000 Tick
     , if Set.isEmpty model.network.animatedAddresses && Set.isEmpty model.network.animatedTxs then

@@ -6,6 +6,7 @@ module Util.Pathfinder.Shortcuts exposing
     , export
     , hintDelayMs
     , modKeyLabel
+    , modSelectingDelayMs
     , open
     , redo
     , save
@@ -34,6 +35,14 @@ that an ordinary chord (Ctrl+S) or a Ctrl+click never sees it.
 hintDelayMs : Float
 hintDelayMs =
     600
+
+
+{-| How long Ctrl/Cmd has to be held before the toolbar shows the selection tool
+as active. Just long enough that an ordinary chord (Ctrl+S) does not flash it.
+-}
+modSelectingDelayMs : Float
+modSelectingDelayMs =
+    200
 
 
 addAddress : Shortcut
@@ -81,6 +90,14 @@ selectAll =
     Shortcut [ "A" ] True "Select all"
 
 
+{-| A pointer gesture, not a key: the overlay's row reads "Ctrl Click for
+multi-select", and it has no chord of its own.
+-}
+multiSelect : Shortcut
+multiSelect =
+    Shortcut [] True "Click for multi-select"
+
+
 deleteSelection : Shortcut
 deleteSelection =
     Shortcut [ "Del" ] False "Delete selection"
@@ -109,6 +126,7 @@ all =
     , undo
     , redo
     , selectAll
+    , multiSelect
     , deleteSelection
     , navigate
     , escape

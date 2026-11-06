@@ -664,6 +664,7 @@ network-not-available-lite-off: "{0} nu este disponibil cât timp rețelele lite
 Keyboard shortcuts: "Scurtături de tastatură"
 Add address or tx: "Adaugă adresă sau tx"
 Select all: "Selectează tot"
+Click for multi-select: "Clic pentru selecție multiplă"
 Delete selection: "Șterge selecția"
 Move the selection along the graph: "Mută selecția în graf"
 Close search or dialog: "Închide căutarea sau dialogul"

@@ -494,7 +494,7 @@ topCenterPanel pluginStates vc gc model =
 
                         _ ->
                             True
-                , pointerTool = model.pointerTool
+                , pointerTool = Pathfinder.shownPointerTool model
                 , exportName = model.name
                 , export =
                     ExportCSV.isDownloading model.exportCSVGraph
