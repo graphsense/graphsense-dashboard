@@ -96,6 +96,13 @@ suite =
             \_ ->
                 App.initAt "/pathfinder/actor/binance"
                     |> App.expectEffect "the actor request" (isActorFetch "binance")
+        , test "picking the same actor again after closing the dialog opens it again" <|
+            \_ ->
+                App.initAt "/pathfinder/actor/binance"
+                    |> App.step (PathfinderMsg (Pathfinder.BrowserGotActorForDialog "binance" binance))
+                    |> App.step UserClosesDialog
+                    |> App.step (BrowserChangedUrl (App.toUrl "/pathfinder/actor/binance"))
+                    |> App.expectEffect "the actor request" (isActorFetch "binance")
         , test "the fetched actor opens the dialog with every jurisdiction" <|
             \_ ->
                 App.initAt "/pathfinder/actor/binance"
