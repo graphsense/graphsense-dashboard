@@ -9,6 +9,7 @@ buried under scraped mentions, some blank or differing only in spacing.
 import Api.Data
 import Dict
 import Expect
+import Json.Decode
 import Test exposing (Test, describe, test)
 import Util.Pathfinder.TagSummary as TagSummary
 
@@ -21,7 +22,8 @@ label =
 labelWith : List String -> Float -> String -> Float -> ( String, Api.Data.LabelSummary )
 labelWith concepts confidence lbl relevance =
     ( String.toLower lbl
-    , { concepts = concepts
+    , { actors = Nothing
+      , concepts = concepts
       , confidence = confidence
       , count = 1
       , creators = []
@@ -30,8 +32,25 @@ labelWith concepts confidence lbl relevance =
       , lastmod = 0
       , relevance = relevance
       , sources = []
+      , tagTypes = Nothing
       }
     )
+
+
+tagged : Maybe (List String) -> Maybe (List String) -> String -> Float -> Float -> ( String, Api.Data.LabelSummary )
+tagged actors tagTypes lbl confidence relevance =
+    labelWith [] confidence lbl relevance
+        |> Tuple.mapSecond (\ls -> { ls | actors = actors, tagTypes = tagTypes })
+
+
+{-| The two optional fields of a label the API sends with `extra` added.
+-}
+decodedFields : String -> Result Json.Decode.Error ( Maybe (List String), Maybe (List String) )
+decodedFields extra =
+    """{"concepts":[],"confidence":0.5,"count":1,"creators":[],"label":"l","lastmod":0,"relevance":1,"sources":[]"""
+        ++ extra
+        ++ "}"
+        |> Json.Decode.decodeString (Json.Decode.map (\ls -> ( ls.actors, ls.tagTypes )) Api.Data.labelSummaryDecoder)
 
 
 summary : Maybe String -> Maybe String -> List ( String, Api.Data.LabelSummary ) -> Api.Data.TagSummary
@@ -128,14 +147,62 @@ suite =
                     |> TagSummary.labelPreview 3 (Just "defi_token")
                     |> Maybe.map .labels
                     |> Expect.equal (Just [ "Circle: USDC", "eth.verifyvault.eth" ])
-        , test "ranked labels keep their labelSummary key, so a chip's tooltip finds its entry" <|
+        , test "entries keep their labelSummary key, so a chip's tooltip finds its entry" <|
             \_ ->
                 summary (Just "circle") (Just "Circle: USDC") usdcLabels
-                    |> TagSummary.rankedLabels Nothing
-                    |> List.take 3
+                    |> TagSummary.labelEntries 3 Nothing
+                    |> .entries
                     |> Expect.equal
                         [ ( "circle: usdc", "Circle: USDC" )
                         , ( "usdc token", "USDC Token" )
                         , ( "dark web", "dark web" )
+                        ]
+        , test "actor labels win, and the others are only counted" <|
+            \_ ->
+                summary (Just "circle")
+                    (Just "USDC Token")
+                    [ tagged (Just [ "circle" ]) (Just [ "actor" ]) "USDC Token" 0.5 0.15
+                    , tagged (Just [ "circle" ]) (Just [ "actor" ]) "Circle: USDC" 0.5 0.03
+                    , tagged Nothing (Just [ "actor" ]) "usdc.tkn.eth" 0.9 0.5
+                    , tagged Nothing (Just [ "mention" ]) "dark web" 0.9 0.5
+                    ]
+                    |> TagSummary.labelPreview 3 Nothing
+                    |> Expect.equal (Just { labels = [ "USDC Token", "Circle: USDC" ], more = 2 })
+        , test "without actor labels, other tags win over mentions" <|
+            \_ ->
+                summary Nothing
+                    Nothing
+                    [ tagged (Just []) (Just [ "mention" ]) "dark web" 0.9 0.9
+                    , tagged (Just []) (Just [ "attribute" ]) "Fiat-backed stablecoin" 0.5 0.02
+                    , tagged (Just []) (Just [ "actor", "mention" ]) "usdc.eth" 0.2 0.01
+                    ]
+                    |> TagSummary.labelPreview 3 Nothing
+                    |> Expect.equal (Just { labels = [ "Fiat-backed stablecoin", "usdc.eth" ], more = 1 })
+        , test "mentions are shown when there is nothing else" <|
+            \_ ->
+                summary Nothing
+                    Nothing
+                    [ tagged (Just []) (Just [ "mention" ]) "dark web" 0.2 0.9
+                    , tagged (Just []) (Just [ "mention" ]) "telegram mention" 0.2 0.1
+                    ]
+                    |> TagSummary.labelPreview 3 Nothing
+                    |> Expect.equal (Just { labels = [ "dark web", "telegram mention" ], more = 0 })
+        , test "a concept is ranked among its own labels" <|
+            \_ ->
+                summary (Just "circle")
+                    (Just "USDC Token")
+                    [ tagged (Just [ "circle" ]) (Just [ "actor" ]) "USDC Token" 0.5 0.15
+                    , labelWith [ "drugs" ] 0.2 "dark web" 0.9
+                    ]
+                    |> TagSummary.labelPreview 3 (Just "drugs")
+                    |> Expect.equal (Just { labels = [ "dark web" ], more = 0 })
+        , test "the fields are optional in the API" <|
+            \_ ->
+                [ decodedFields ""
+                , decodedFields ""","actors":["circle"],"tag_types":["actor"]"""
+                ]
+                    |> Expect.equal
+                        [ Ok ( Nothing, Nothing )
+                        , Ok ( Just [ "circle" ], Just [ "actor" ] )
                         ]
         ]
