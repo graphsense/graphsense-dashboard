@@ -2,7 +2,8 @@ module View.Pathfinder.Table.ConversionTransactionTableTest exposing (suite)
 
 {-| The Bridge transactions section lists a conversion's two legs. Each leg's
 hash can be copied and opened in its chain's explorer, so the panel above does
-not repeat the legs.
+not repeat the legs. Swap panels share the table but keep it as it was: for
+now the explorer links are a bridge feature only.
 -}
 
 import Api.Data
@@ -82,22 +83,27 @@ usdt0 =
 
 legTable : Query.Single ()
 legTable =
+    legTableOf usdt0
+
+
+legTableOf : Api.Data.ExternalConversion -> Query.Single ()
+legTableOf conversion =
     let
         legIds =
             ( Id.init "arb" usdt0.fromAssetTransfer, Id.init "eth" usdt0.toAssetTransfer )
 
         model =
-            ConversionEdge.init usdt0
+            ConversionEdge.init conversion
                 legIds
-                ( Id.init "arb" usdt0.fromAddress, Id.init "eth" usdt0.toAddress )
-                (leg "arb" sendHash usdt0.fromAssetTransfer)
-                (leg "eth" payoutHash usdt0.toAssetTransfer)
+                ( Id.init "arb" conversion.fromAddress, Id.init "eth" conversion.toAddress )
+                (leg "arb" sendHash conversion.fromAssetTransfer)
+                (leg "eth" payoutHash conversion.toAssetTransfer)
                 |> ConversionDetails.init
     in
     View.Graph.Table.table Css.Table.styles
         Env.viewConfig
         []
-        (ConversionTransactionTable.config Css.Table.styles Env.viewConfig legIds (always False))
+        (ConversionTransactionTable.config Css.Table.styles Env.viewConfig conversion.conversionType legIds (always False))
         model.table
         |> Html.Styled.map (always ())
         |> Html.Styled.toUnstyled
@@ -106,7 +112,12 @@ legTable =
 
 explorerLinks : Query.Multiple ()
 explorerLinks =
-    legTable
+    explorerLinksOf usdt0
+
+
+explorerLinksOf : Api.Data.ExternalConversion -> Query.Multiple ()
+explorerLinksOf conversion =
+    legTableOf conversion
         |> Query.findAll [ Selector.attribute (Html.Attributes.attribute "data-testid" "leg-explorer-link") ]
 
 
@@ -135,6 +146,10 @@ suite =
                         , Query.each (Query.has [ Selector.attribute (Html.Attributes.target "_blank") ])
                         , Query.each (Query.has [ Selector.attribute (Html.Attributes.rel "noopener noreferrer") ])
                         ]
+        , test "a swap's legs table stays as it was, without explorer links" <|
+            \_ ->
+                explorerLinksOf { usdt0 | conversionType = Api.Data.ExternalConversionConversionTypeDexSwap }
+                    |> Query.count (Expect.equal 0)
         , test "each leg's hash is still copyable in full" <|
             \_ ->
                 legTable

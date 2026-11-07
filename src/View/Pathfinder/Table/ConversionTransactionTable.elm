@@ -53,8 +53,11 @@ getId { network, id } =
     Id.init network id
 
 
-config : Styles -> View.Config -> ( Id, Id ) -> (Id -> Bool) -> Table.Config Api.Data.Tx Msg
-config styles vc tId isCheckedFn =
+{-| A bridge's legs link their chains' explorers; a swap's legs table stays as
+it was (the links are a bridge feature for now).
+-}
+config : Styles -> View.Config -> Api.Data.ExternalConversionConversionType -> ( Id, Id ) -> (Id -> Bool) -> Table.Config Api.Data.Tx Msg
+config styles vc conversionType tId isCheckedFn =
     let
         rowBaseAttrs =
             [ Css.height (Css.px 52)
@@ -85,6 +88,7 @@ config styles vc tId isCheckedFn =
                 "Timestamp"
                 (toGerneric >> .timestamp)
             , txColumn vc
+                (conversionType == Api.Data.ExternalConversionConversionTypeBridgeTx)
                 { label = "Hash"
                 , accessor = toGerneric >> .txHash
                 , onClick = Nothing
@@ -114,8 +118,8 @@ config styles vc tId isCheckedFn =
         }
 
 
-txColumn : View.Config -> ColumnConfig Api.Data.Tx msg -> Table.Column Api.Data.Tx msg
-txColumn vc { label, accessor, onClick } =
+txColumn : View.Config -> Bool -> ColumnConfig Api.Data.Tx msg -> Table.Column Api.Data.Tx msg
+txColumn vc linkExplorer { label, accessor, onClick } =
     Table.veryCustomColumn
         { name = label
         , viewData =
@@ -124,10 +128,14 @@ txColumn vc { label, accessor, onClick } =
                     SidePanelComponents.sidePanelListIdentifierCellAttributes
                     { root =
                         { copyIconInstance =
-                            span [ css [ Css.displayFlex, Css.alignItems Css.center ] ]
-                                [ accessor data |> copyIconPathfinder vc
-                                , toGerneric data |> legExplorerLink
-                                ]
+                            if linkExplorer then
+                                span [ css [ Css.displayFlex, Css.alignItems Css.center ] ]
+                                    [ accessor data |> copyIconPathfinder vc
+                                    , toGerneric data |> legExplorerLink
+                                    ]
+
+                            else
+                                accessor data |> copyIconPathfinder vc
                         , identifier =
                             accessor data
                                 |> truncateLongIdentifierWithLengths 8 4
