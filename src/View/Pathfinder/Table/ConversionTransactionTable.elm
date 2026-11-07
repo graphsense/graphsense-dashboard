@@ -5,7 +5,8 @@ import Basics.Extra exposing (flip)
 import Config.View as View
 import Css
 import Css.Table exposing (Styles)
-import Html.Styled.Attributes exposing (css)
+import Html.Styled exposing (Html, a, span)
+import Html.Styled.Attributes exposing (css, href, rel, target, title)
 import Init.Pathfinder.Id as Id
 import Model.Currency as Currency
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -14,8 +15,10 @@ import Msg.Pathfinder.ConversionDetails as ConversionDetails
 import RecordSetter as Rs
 import Table
 import Theme.Colors as Colors
+import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
-import Util.View exposing (copyIconPathfinder, truncateLongIdentifierWithLengths)
+import Util.ExternalLinks exposing (getBlockExplorerTransactionLinks)
+import Util.View exposing (copyIconPathfinder, none, testId, truncateLongIdentifierWithLengths)
 import View.Pathfinder.PagedTable exposing (customizations)
 import View.Pathfinder.Table.Columns as PT exposing (ColumnConfig, addHeaderAttributes, applyHeaderCustomizations, initCustomHeaders, wrapCell)
 
@@ -121,7 +124,10 @@ txColumn vc { label, accessor, onClick } =
                     SidePanelComponents.sidePanelListIdentifierCellAttributes
                     { root =
                         { copyIconInstance =
-                            accessor data |> copyIconPathfinder vc
+                            span [ css [ Css.displayFlex, Css.alignItems Css.center ] ]
+                                [ accessor data |> copyIconPathfinder vc
+                                , toGerneric data |> legExplorerLink
+                                ]
                         , identifier =
                             accessor data
                                 |> truncateLongIdentifierWithLengths 8 4
@@ -131,3 +137,34 @@ txColumn vc { label, accessor, onClick } =
                     |> wrapCell onClick data
         , sorter = Table.unsortable
         }
+
+
+{-| The leg in its chain's first explorer, as in the tx id's chevron menu. It
+opens in a new tab, only on click, and the explorer is not told where the click
+came from.
+-}
+legExplorerLink : GenericTx -> Html msg
+legExplorerLink { network, id } =
+    case getBlockExplorerTransactionLinks network id |> List.head of
+        Just ( url, name ) ->
+            a
+                [ href url
+                , target "_blank"
+                , rel "noopener noreferrer"
+                , title name
+                , testId "leg-explorer-link"
+                , css
+                    [ Css.displayFlex
+                    , Css.alignItems Css.center
+
+                    -- into the copy icon's own padding, and as much again
+                    -- after: the legs table already fills the panel, so the
+                    -- icon must not widen the cell, nor touch a long value
+                    , Css.marginLeft (Css.px -3)
+                    , Css.marginRight (Css.px 3)
+                    ]
+                ]
+                [ HIcons.iconsGoToSnoPadding {} ]
+
+        Nothing ->
+            none
