@@ -74,7 +74,7 @@ txTab vc isTxOnGraph viewState =
         tableStyles
         vc
         []
-        (CTable.config tableStyles vc viewState.raw.id isTxOnGraph)
+        (CTable.config tableStyles vc viewState.raw.raw.conversionType viewState.raw.id isTxOnGraph)
         viewState.table
     ]
         |> div []
