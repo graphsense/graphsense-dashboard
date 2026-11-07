@@ -11,6 +11,7 @@ explorers and the protocol's own explorer.
 -}
 
 import Api.Data
+import Basics.Extra exposing (flip)
 import Expect
 import Html.Attributes
 import Html.Styled
@@ -21,7 +22,6 @@ import Support.Env as Env
 import Test exposing (Test, describe, test)
 import Test.Html.Query as Query
 import Test.Html.Selector as Selector
-import Util.View exposing (truncateLongIdentifierWithLengths)
 import View.Pathfinder.ConversionDetails as ConversionDetails
 import View.Pathfinder.Details exposing (valuesToCell)
 
@@ -172,83 +172,52 @@ suite =
                     [ usdt0, bridge ]
                         |> List.map (ConversionDetails.title Env.viewConfig)
                         |> Expect.equal [ "Bridge transaction", "Bridge transaction" ]
-            , test "the protocol gets its own line below the title" <|
+            , test "the protocol, and the app on top of it, get their own line below the title" <|
                 -- a line of its own, so a long protocol name cannot crowd the
                 -- fixed-width title
                 \_ ->
                     [ usdt0
-                    , { usdt0 | protocol = Just "debridge" }
+                    , { usdt0 | protocolApp = Nothing }
+                    , { usdt0 | protocol = Just "debridge", protocolApp = Nothing }
+                    , { usdt0 | protocol = Nothing }
                     , bridge
                     , { usdt0 | conversionType = Api.Data.ExternalConversionConversionTypeDexSwap }
                     ]
                         |> List.map ConversionDetails.subtitle
-                        |> Expect.equal [ Just "LayerZero", Just "deBridge", Nothing, Nothing ]
-            , test "both legs' hashes can be copied in full" <|
+                        |> Expect.equal [ Just "LayerZero · USDT0", Just "LayerZero", Just "deBridge", Nothing, Nothing, Nothing ]
+            , test "the bridge explorer is the panel's only addition" <|
+                -- the legs are listed, copyable and linked in the Bridge
+                -- transactions section below; the panel does not repeat them
                 \_ ->
                     rows usdt0
                         |> Expect.all
-                            [ Query.has [ Selector.attribute (Html.Attributes.attribute "data-value" "507fa26239c34aefcefcb660457a73065383f284ca4673e436ea168e5519b2b0") ]
-                            , Query.has [ Selector.attribute (Html.Attributes.attribute "data-value" "cfa572bc24099007fdcef331b17d30e83673b7c6972ec1c04419afba9b58a720") ]
-                            ]
-            , test "a LayerZero row names its app and its guid" <|
-                \_ ->
-                    rows usdt0
-                        |> Expect.all
-                            [ Query.has [ Selector.text "Protocol" ]
-                            , Query.has [ Selector.text "LayerZero · USDT0" ]
-                            , Query.has [ Selector.text "Transfer ID" ]
-                            , Query.has [ Selector.text (truncateLongIdentifierWithLengths 8 4 usdt0Guid) ]
-                            ]
-            , test "it links the source tx, the destination tx and LayerZero Scan" <|
-                \_ ->
-                    rows usdt0
-                        |> Expect.all
-                            [ Query.has [ Selector.attribute (Html.Attributes.href "https://arbiscan.io/tx/0x507fa26239c34aefcefcb660457a73065383f284ca4673e436ea168e5519b2b0") ]
-                            , Query.has [ Selector.attribute (Html.Attributes.href "https://etherscan.io/tx/0xcfa572bc24099007fdcef331b17d30e83673b7c6972ec1c04419afba9b58a720/advanced#eventlog#658") ]
+                            [ Query.has [ Selector.text "Bridge explorer", Selector.text "LayerZero Scan" ]
                             , Query.has [ Selector.attribute (Html.Attributes.href "https://layerzeroscan.com/tx/0x507fa26239c34aefcefcb660457a73065383f284ca4673e436ea168e5519b2b0") ]
-                            , Query.has [ Selector.text "Source tx", Selector.text "Destination tx", Selector.text "Bridge explorer" ]
-                            , Query.has [ Selector.text "Arbiscan", Selector.text "Etherscan", Selector.text "LayerZero Scan" ]
+                            , Query.hasNot [ Selector.text "Source tx" ]
+                            , Query.hasNot [ Selector.text "Destination tx" ]
+                            , Query.hasNot [ Selector.text "Protocol" ]
+                            , Query.hasNot [ Selector.text "Transfer ID" ]
                             ]
-            , test "every explorer link opens a new tab and sends no referrer" <|
+            , test "the bridge explorer opens a new tab and sends no referrer" <|
                 \_ ->
                     explorerLinks usdt0
                         |> Expect.all
-                            [ Query.count (Expect.equal 3)
+                            [ Query.count (Expect.equal 1)
                             , Query.each (Query.has [ Selector.attribute (Html.Attributes.target "_blank") ])
                             , Query.each (Query.has [ Selector.attribute (Html.Attributes.rel "noopener noreferrer") ])
                             ]
-            , test "an app the API does not name leaves out the Protocol row" <|
+            , test "a protocol without an explorer, or a row without a protocol, adds nothing" <|
+                -- not even an empty block: CCTP has no documented deep link
                 \_ ->
-                    rows { usdt0 | protocolApp = Nothing }
-                        |> Query.hasNot [ Selector.text "Protocol" ]
-            , test "a CCTP row shows its nonce but links only the two chains" <|
-                \_ ->
-                    let
-                        cctp =
-                            { usdt0 | protocol = Just "cctp", protocolApp = Nothing, transferId = Just "506370" }
-                    in
-                    Expect.all
-                        [ \_ -> rows cctp |> Query.has [ Selector.text "506370" ]
-                        , \_ -> rows cctp |> Query.hasNot [ Selector.text "Bridge explorer" ]
-                        , \_ -> explorerLinks cctp |> Query.count (Expect.equal 2)
-                        ]
-                        ()
-            , test "a row from an API without the fields still links both chains" <|
-                \_ ->
-                    let
-                        plain =
-                            { usdt0 | protocol = Nothing, protocolApp = Nothing, transferId = Nothing }
-                    in
-                    Expect.all
-                        [ \_ -> rows plain |> Query.hasNot [ Selector.text "Transfer ID" ]
-                        , \_ -> rows plain |> Query.hasNot [ Selector.text "Bridge explorer" ]
-                        , \_ -> explorerLinks plain |> Query.count (Expect.equal 2)
-                        ]
-                        ()
+                    [ { usdt0 | protocol = Just "cctp", protocolApp = Nothing, transferId = Just "506370" }
+                    , { usdt0 | protocol = Nothing, protocolApp = Nothing, transferId = Nothing }
+                    ]
+                        |> List.map (\c -> \_ -> rows c |> Query.hasNot [ Selector.tag "div" ])
+                        |> flip Expect.all ()
             , test "a swap shows none of it" <|
                 \_ ->
                     rows { usdt0 | conversionType = Api.Data.ExternalConversionConversionTypeDexSwap }
-                        |> Query.hasNot [ Selector.text "Source tx" ]
+                        |> Query.hasNot [ Selector.text "Bridge explorer" ]
             ]
         , test "a bridge's output leg is valued on the destination network" <|
             \_ ->
