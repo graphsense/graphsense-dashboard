@@ -69,8 +69,15 @@ legTxHash identifier =
 {-| The protocol's explorer page for a transfer: LayerZero Scan finds a message
 by its source tx, THORChain Explorer (thorchain.net) a swap by its inbound tx
 (the source leg), deExplorer an order by its id. Each was opened on a real
-transfer on 2026-11-06. CCTP has no documented deep link: Range's explorer
-answers `usdc.range.org/status?id=` with an undocumented encoding, left out.
+transfer on 2026-11-06.
+
+Circle runs no CCTP explorer. Range's (usdc.range.org, a third party listed
+in Circle's partner directory) searches a tx hash, which must start with 0x,
+and opens the transfer with both legs, or lists the matches when there are
+several. Its `status?id=` pages take an undocumented id, so we link the search.
+Checked on 2026-11-09 on V1 and V2 transfers from all seven CCTP networks we
+serve; V1 transfers from 2023/24 were not found.
+
 -}
 explorerLink : { protocol : String, sourceLeg : String, transferId : Maybe String } -> Maybe ExplorerLink
 explorerLink { protocol, sourceLeg, transferId } =
@@ -105,6 +112,15 @@ explorerLink { protocol, sourceLeg, transferId } =
                     (\id ->
                         { url = "https://app.debridge.com/order?orderId=" ++ id
                         , label = "deExplorer"
+                        }
+                    )
+
+        "cctp" ->
+            source
+                |> Maybe.map
+                    (\hash ->
+                        { url = "https://usdc.range.org/transactions?s=0x" ++ String.toLower hash
+                        , label = "Range CCTP Explorer"
                         }
                     )
 
