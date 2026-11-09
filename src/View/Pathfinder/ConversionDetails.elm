@@ -235,7 +235,7 @@ titleWithSubtitle main sub =
 laid out like the rows above it (label left, value right), from the same
 generated styles. The legs are not repeated here: the Bridge transactions
 section below lists both, copyable and linked to their chains' explorers.
-Swaps, and protocols without an explorer (CCTP), add nothing.
+Swaps, and protocols without an explorer (Symbiosis), add nothing.
 -}
 bridgeRows : View.Config -> ConversionEdge -> Html msg
 bridgeRows vc edge =

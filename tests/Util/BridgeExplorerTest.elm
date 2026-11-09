@@ -27,6 +27,13 @@ thorchainDeposit =
     "42d529a72cecd6ece546d5ac0d2a6c2a9407876b66478a33917d8928833433f8_I0"
 
 
+{-| The source leg of the CCTP V2 transfer eth 0xe8c9cfb2… → arb 0xaf516e4c….
+-}
+cctpBurn : String
+cctpBurn =
+    "e8c9cfb2ee4a139c45173e27784b669e9741fb04418475cd7f8dfbf0124202af_T693"
+
+
 link : String -> Maybe String -> Maybe ( String, String )
 link protocol transferId =
     BridgeExplorer.explorerLink { protocol = protocol, sourceLeg = usdt0Send, transferId = transferId }
@@ -105,9 +112,24 @@ suite =
                 \_ ->
                     BridgeExplorer.explorerLink { protocol = "layerzero", sourceLeg = "/../evil_T1", transferId = Nothing }
                         |> Expect.equal Nothing
-            , test "CCTP and unknown protocols have no explorer link" <|
+            , test "Range's CCTP explorer finds the transfer by its source tx, as lowercase hex after 0x" <|
+                -- without the 0x Range answers "No results found" (checked 2026-11-09)
                 \_ ->
-                    [ link "cctp" (Just "506370"), link "symbiosis" Nothing, link "wormhole" Nothing ]
-                        |> Expect.equal [ Nothing, Nothing, Nothing ]
+                    BridgeExplorer.explorerLink { protocol = "cctp", sourceLeg = String.toUpper cctpBurn, transferId = Just "0x33e1" }
+                        |> Maybe.map (\l -> ( l.url, l.label ))
+                        |> Expect.equal
+                            (Just
+                                ( "https://usdc.range.org/transactions?s=0xe8c9cfb2ee4a139c45173e27784b669e9741fb04418475cd7f8dfbf0124202af"
+                                , "Range CCTP Explorer"
+                                )
+                            )
+            , test "a CCTP source leg that is not a tx hash never becomes a URL" <|
+                \_ ->
+                    BridgeExplorer.explorerLink { protocol = "cctp", sourceLeg = "abc&s=x_T1", transferId = Nothing }
+                        |> Expect.equal Nothing
+            , test "unknown protocols have no explorer link" <|
+                \_ ->
+                    [ link "symbiosis" Nothing, link "wormhole" Nothing ]
+                        |> Expect.equal [ Nothing, Nothing ]
             ]
         ]

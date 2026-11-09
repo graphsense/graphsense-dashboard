@@ -206,10 +206,19 @@ suite =
                             , Query.each (Query.has [ Selector.attribute (Html.Attributes.target "_blank") ])
                             , Query.each (Query.has [ Selector.attribute (Html.Attributes.rel "noopener noreferrer") ])
                             ]
-            , test "a protocol without an explorer, or a row without a protocol, adds nothing" <|
-                -- not even an empty block: CCTP has no documented deep link
+            , test "a CCTP transfer links Range's explorer, which shows both legs" <|
+                -- Circle runs no explorer; Range's search finds a transfer by its
+                -- source tx (agent/notes/cctp-range-linking in the adapter repo)
                 \_ ->
-                    [ { usdt0 | protocol = Just "cctp", protocolApp = Nothing, transferId = Just "506370" }
+                    rows { usdt0 | protocol = Just "cctp", protocolApp = Nothing, transferId = Just "506370" }
+                        |> Expect.all
+                            [ Query.has [ Selector.text "Bridge explorer", Selector.text "Range CCTP Explorer" ]
+                            , Query.has [ Selector.attribute (Html.Attributes.href "https://usdc.range.org/transactions?s=0x507fa26239c34aefcefcb660457a73065383f284ca4673e436ea168e5519b2b0") ]
+                            ]
+            , test "a protocol without an explorer, or a row without a protocol, adds nothing" <|
+                -- not even an empty block
+                \_ ->
+                    [ { usdt0 | protocol = Just "symbiosis", protocolApp = Nothing, transferId = Nothing }
                     , { usdt0 | protocol = Nothing, protocolApp = Nothing, transferId = Nothing }
                     ]
                         |> List.map (\c -> \_ -> rows c |> Query.hasNot [ Selector.tag "div" ])
