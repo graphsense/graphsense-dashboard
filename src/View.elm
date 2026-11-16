@@ -55,12 +55,37 @@ view vc model =
             |> String.join " | "
     , body =
         [ Css.Reset.meyerV2 |> toUnstyled
+
+        -- The light palette is always in the page, marked so the PNG/PDF export
+        -- in main.js can read it: exports are light whatever the UI shows. In
+        -- dark mode the dark palette follows it and wins the cascade (both are
+        -- plain `:root` rules, so the later one counts).
+        , span
+            [ attribute "data-gs-palette" "light"
+            , hidden True
+            ]
+            [ Theme.Colors.style ]
+            |> toUnstyled
         , (if vc.lightmode then
-            Theme.Colors.style
+            text ""
 
            else
             Theme.ColorsDark.style
           )
+            |> toUnstyled
+        , node "style"
+            []
+            [ text
+                (":root { color-scheme: "
+                    ++ (if vc.lightmode then
+                            "light"
+
+                        else
+                            "dark"
+                       )
+                    ++ "; }"
+                )
+            ]
             |> toUnstyled
         , node "style"
             []

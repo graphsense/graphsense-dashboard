@@ -9,6 +9,7 @@ import List.Extra
 import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), SettingsMsg(..), UserModel, requestLimitIntervalToString)
 import Model.Locale as Locale
 import Model.NetworkCapabilities as NetworkCapabilities
+import Model.ThemeMode as ThemeMode exposing (ThemeMode)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin
 import RecordSetter as Rs
@@ -91,10 +92,19 @@ generalSettings vc m =
                 }
 
         modeToggle =
-            Vc.lightModeToggle
-                { selectedA = vc.lightmode
-                , msg = Model.UserClickedLightmode
-                }
+            ThemeMode.all
+                |> List.map
+                    (\mode ->
+                        { title = themeModeLabel vc mode
+                        , selected = mode == vc.themeMode
+                        , msg = Model.UserSelectedThemeMode mode
+                        , attributes =
+                            [ Util.View.testId "gs-theme-mode"
+                            , Util.View.testKey (ThemeMode.toString mode)
+                            ]
+                        }
+                    )
+                |> Vc.segmentedToggle
 
         conf =
             TSelectBox.defaultConfig
@@ -338,3 +348,16 @@ requestLimit vc rl =
 expiration : Config -> Time.Posix -> String
 expiration vc =
     Locale.timestamp vc.locale
+
+
+themeModeLabel : Config -> ThemeMode -> String
+themeModeLabel vc mode =
+    case mode of
+        ThemeMode.System ->
+            Locale.string vc.locale "System"
+
+        ThemeMode.Light ->
+            Locale.string vc.locale "Light"
+
+        ThemeMode.Dark ->
+            Locale.string vc.locale "Dark"

@@ -9,11 +9,12 @@ import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 import Model.Locale exposing (ValueDetail(..))
 import Model.Search exposing (ResultLine(..), persistRecentSearches)
+import Model.ThemeMode as ThemeMode exposing (ThemeMode(..))
 
 
 type alias UserSettings =
     { selectedLanguage : String
-    , lightMode : Maybe Bool
+    , themeMode : Maybe ThemeMode
     , valueDetail : Maybe Model.Locale.ValueDetail
     , preferredFiatCurrency : Maybe String
     , showValuesInFiat : Maybe Bool
@@ -70,7 +71,7 @@ decoder : Decoder UserSettings
 decoder =
     Decode.succeed UserSettings
         |> required "selectedLanguage" string
-        |> optional "lightMode" (nullable bool |> fromString) Nothing
+        |> Json.Decode.Pipeline.custom themeModeDecoder
         |> optional "valueDetail" (Decode.string |> Decode.map stringToValueDetail |> nullable) Nothing
         |> optional "preferredFiatCurrency" (Decode.string |> nullable) Nothing
         |> optional "showValuesInFiat" (nullable bool |> fromString) Nothing
@@ -97,6 +98,38 @@ decoder =
             []
 
 
+{-| `themeMode` replaced the boolean `lightMode` in 2026-11. Light used to be the
+default and the settings are saved on every change, so a stored `lightMode: true`
+says nothing about what the user wanted; those users move to `System`. A stored
+`false` was an explicit choice of dark and stays `Dark`. `index.html` applies the
+same rule before Elm starts, to avoid a white flash.
+-}
+themeModeDecoder : Decoder (Maybe ThemeMode)
+themeModeDecoder =
+    Decode.oneOf
+        [ Decode.field "themeMode" Decode.string
+            |> Decode.andThen
+                (\s ->
+                    case ThemeMode.fromString s of
+                        Just mode ->
+                            Decode.succeed (Just mode)
+
+                        Nothing ->
+                            Decode.fail ("unknown themeMode " ++ s)
+                )
+        , Decode.field "lightMode" (nullable bool |> fromString)
+            |> Decode.map
+                (\lightMode ->
+                    if lightMode == Just False then
+                        Just Dark
+
+                    else
+                        Nothing
+                )
+        , Decode.succeed Nothing
+        ]
+
+
 stringToTracingMode : String -> TracingMode
 stringToTracingMode arg1 =
     case arg1 of
@@ -118,7 +151,7 @@ encoder : UserSettings -> Json.Encode.Value
 encoder settings =
     Json.Encode.object
         [ ( "selectedLanguage", Json.Encode.string settings.selectedLanguage )
-        , ( "lightMode", settings.lightMode |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+        , ( "themeMode", settings.themeMode |> Maybe.withDefault System |> ThemeMode.toString |> Json.Encode.string )
         , ( "valueDetail", settings.valueDetail |> Maybe.map valueDetailToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
         , ( "preferredFiatCurrency", settings.preferredFiatCurrency |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
         , ( "showValuesInFiat", settings.showValuesInFiat |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
@@ -246,7 +279,7 @@ tracingModeToString arg1 =
 default : String -> UserSettings
 default locale =
     { selectedLanguage = locale
-    , lightMode = Nothing
+    , themeMode = Nothing
     , valueDetail = Nothing
     , preferredFiatCurrency = Nothing
     , showValuesInFiat = Nothing

@@ -1,4 +1,4 @@
-module View.Controls exposing (Size(..), ToggleConfig, checkboxWithLabel, checkboxWithLabelAndTitle, lightModeToggle, radio, radioSmall, toggle, toggleWithText)
+module View.Controls exposing (Size(..), ToggleConfig, checkboxWithLabel, checkboxWithLabelAndTitle, radio, radioSmall, segmentedToggle, toggle, toggleWithText)
 
 import Css
 import Html.Styled exposing (Html)
@@ -185,13 +185,19 @@ toggleWithText { selectedA, titleA, titleB, msg } =
 
 
 toggleCell : { title : String, selected : Bool, msg : msg } -> Html msg
-toggleCell { selected, title, msg } =
+toggleCell =
+    toggleCellWith []
+
+
+toggleCellWith : List (Html.Styled.Attribute msg) -> { a | title : String, selected : Bool, msg : msg } -> Html msg
+toggleCellWith attrs { selected, title, msg } =
     Sc.toggleCellWithTextWithAttributes
         (Sc.toggleCellWithTextAttributes
             |> Rs.s_root
-                [ Util.View.pointer
-                , Util.View.onClickWithStop msg
-                ]
+                (Util.View.pointer
+                    :: Util.View.onClickWithStop msg
+                    :: attrs
+                )
         )
         { root =
             { state =
@@ -205,82 +211,12 @@ toggleCell { selected, title, msg } =
         }
 
 
-lightModeToggle : { selectedA : Bool, msg : msg } -> Html msg
-lightModeToggle { selectedA, msg } =
-    toggleWithIconsInternal { selectedA = selectedA, iconA = Nothing, iconB = Nothing, msg = msg }
-
-
-toggleWithIconsInternal : { selectedA : Bool, iconA : Maybe (Html msg), iconB : Maybe (Html msg), msg : msg } -> Html msg
-toggleWithIconsInternal { selectedA, iconA, iconB, msg } =
-    let
-        ( a, b ) =
-            if selectedA then
-                ( iconA
-                    |> Maybe.map
-                        (\i ->
-                            Sc.toggleCellWithTextStateSelectedWithInstances
-                                Sc.toggleCellWithTextStateSelectedAttributes
-                                (Sc.toggleCellWithTextStateSelectedInstances
-                                    |> Rs.s_placeholder (Just i)
-                                )
-                                { root = { toggleText = "" } }
-                        )
-                , iconB
-                    |> Maybe.map
-                        (\i ->
-                            Sc.toggleCellWithTextStateDeselectedWithInstances
-                                Sc.toggleCellWithTextStateDeselectedAttributes
-                                (Sc.toggleCellWithTextStateDeselectedInstances
-                                    |> Rs.s_placeholder (Just i)
-                                )
-                                { root = { toggleText = "" } }
-                        )
-                )
-
-            else
-                ( iconA
-                    |> Maybe.map
-                        (\i ->
-                            Sc.toggleCellWithTextStateDeselectedWithInstances
-                                Sc.toggleCellWithTextStateDeselectedAttributes
-                                (Sc.toggleCellWithTextStateDeselectedInstances
-                                    |> Rs.s_placeholder (Just i)
-                                )
-                                { root = { toggleText = "" } }
-                        )
-                , iconB
-                    |> Maybe.map
-                        (\i ->
-                            Sc.toggleCellWithTextStateSelectedWithInstances
-                                Sc.toggleCellWithTextStateSelectedAttributes
-                                (Sc.toggleCellWithTextStateSelectedInstances
-                                    |> Rs.s_placeholder (Just i)
-                                )
-                                { root = { toggleText = "" } }
-                        )
-                )
-
-        shapeAttrs =
-            [ css [ Css.cursor Css.pointer ], Util.View.onClickWithStop msg ]
-    in
-    if selectedA then
-        Sc.modeToggleModeLightWithInstances
-            (Sc.modeToggleModeLightAttributes
-                |> Rs.s_root shapeAttrs
-            )
-            (Sc.modeToggleModeLightInstances
-                |> Rs.s_iconsDarkMode b
-                |> Rs.s_iconsLightMode a
-            )
-            {}
-
-    else
-        Sc.modeToggleModeDarkWithInstances
-            (Sc.modeToggleModeDarkAttributes
-                |> Rs.s_root shapeAttrs
-            )
-            (Sc.modeToggleModeDarkInstances
-                |> Rs.s_iconsLightMode a
-                |> Rs.s_iconsDarkMode b
-            )
-            {}
+{-| A row of text cells, one selected: the two-cell `toggleWithText` with any
+number of cells. Uses the generated switch's container styles; the container
+itself has only the two fixed cell slots.
+-}
+segmentedToggle : List { title : String, selected : Bool, msg : msg, attributes : List (Html.Styled.Attribute msg) } -> Html msg
+segmentedToggle cells =
+    Html.Styled.div
+        [ css Sc.toggleSwitchText_details.styles ]
+        (List.map (\cell -> toggleCellWith cell.attributes cell) cells)

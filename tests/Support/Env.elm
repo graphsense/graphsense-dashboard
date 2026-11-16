@@ -20,6 +20,7 @@ import Dict
 import Init.Locale
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale
+import Model.ThemeMode
 
 
 {-| `Init.Locale.init` leaves `mapping` empty — translations are fetched over
@@ -56,6 +57,8 @@ viewConfig : Config.View.Config
 viewConfig =
     { locale = locale
     , lightmode = True
+    , themeMode = Model.ThemeMode.System
+    , systemDark = False
     , size = Just viewport
     , showDatesInUserLocale = True
     , showTimeZoneOffset = False
