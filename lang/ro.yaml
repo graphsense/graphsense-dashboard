@@ -687,3 +687,6 @@ gs-file-networks-not-on-account: "Acest graf conține noduri pe {0}, care nu sun
 Not available on your account: "Indisponibil pentru contul tău"
 on: "Pornit"
 off: "Oprit"
+system: "Sistem"
+light: "Luminos"
+dark: "Întunecat"

@@ -8,6 +8,7 @@ import Browser.Dom
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Config.Update exposing (Config)
+import Config.View
 import Dict exposing (Dict)
 import Effect.Api
 import Effect.Locale as Locale
@@ -884,16 +885,16 @@ updateHelp uc msg model =
         UserSwitchesLocale loc ->
             switchLocale loc model
 
-        UserClickedLightmode ->
+        UserSelectedThemeMode mode ->
             let
                 newModel =
-                    { model
-                        | config =
-                            model.config
-                                |> s_lightmode (not model.config.lightmode)
-                    }
+                    { model | config = Config.View.setThemeMode mode model.config }
             in
             ( newModel, [ saveUserSettings newModel ] )
+
+        BrowserChangedColorScheme systemDark ->
+            -- only the resolved lightmode changes, and it is not a setting: nothing to save
+            n { model | config = Config.View.setSystemDark systemDark model.config }
 
         UserInputsApiKeyForm input ->
             { model

@@ -14,6 +14,7 @@ import Json.Decode
 import Model exposing (..)
 import Model.Dialog as Dialog
 import Model.Locale as Locale
+import Model.ThemeMode as ThemeMode
 import Plugin.Update as Plugin
 import RemoteData exposing (RemoteData(..))
 import Tuple exposing (first)
@@ -46,7 +47,7 @@ init uc flags url key =
     in
     ( { url = url
       , key = key
-      , config = viewConfigFromSettings flags.isMac locale cd settings
+      , config = viewConfigFromSettings flags.isMac flags.prefersDark locale cd settings
       , page = Home
       , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) settings.recentSearches
       , pathfinder = pathfinderState
@@ -109,10 +110,16 @@ Worth keeping honest -- a field that is persisted by
 then silently dropped at the next boot, which is what `showBothValues` did.
 
 -}
-viewConfigFromSettings : Bool -> Locale.Model -> Dict String Config.View.CharacterDimension -> Config.UserSettings.UserSettings -> Config.View.Config
-viewConfigFromSettings isMac locale characterDimensions settings =
+viewConfigFromSettings : Bool -> Bool -> Locale.Model -> Dict String Config.View.CharacterDimension -> Config.UserSettings.UserSettings -> Config.View.Config
+viewConfigFromSettings isMac prefersDark locale characterDimensions settings =
+    let
+        themeMode =
+            settings.themeMode |> Maybe.withDefault ThemeMode.System
+    in
     { locale = locale
-    , lightmode = settings.lightMode |> Maybe.withDefault True
+    , lightmode = ThemeMode.isLight prefersDark themeMode
+    , themeMode = themeMode
+    , systemDark = prefersDark
     , size = Nothing
     , showDatesInUserLocale = settings.showDatesInUserLocale |> Maybe.withDefault True
     , showTimeZoneOffset = settings.showTimeZoneOffset |> Maybe.withDefault False

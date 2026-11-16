@@ -1,4 +1,4 @@
-module Config.View exposing (CharacterDimension, Config, characterDimensionsDecoder, getConceptName, networkServed, toCurrency)
+module Config.View exposing (CharacterDimension, Config, characterDimensionsDecoder, getConceptName, networkServed, setSystemDark, setThemeMode, toCurrency)
 
 import Api.Data
 import Dict exposing (Dict)
@@ -7,11 +7,14 @@ import List.Extra
 import Model.Currency exposing (Currency(..))
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale as Locale
+import Model.ThemeMode as ThemeMode exposing (ThemeMode)
 
 
 type alias Config =
     { locale : Locale.Model
-    , lightmode : Bool
+    , lightmode : Bool -- resolved from themeMode and systemDark; set both through setThemeMode / setSystemDark
+    , themeMode : ThemeMode
+    , systemDark : Bool -- the browser's prefers-color-scheme: dark, kept live by a port
     , size : Maybe BBox -- position and size of the main pane
     , showDatesInUserLocale : Bool
     , showTimeZoneOffset : Bool
@@ -30,6 +33,16 @@ type alias Config =
     , liteNetworks : Bool -- off: every request carries X-Ikn-Currency-Opt-Out: all-light, so the gateway drops the lite roles, the API serves the core networks only and nothing reaches the lite data service
     , liteUnavailable : Bool -- runtime state, never saved: the lite blockchains did not answer (the API named the lite service in X-Ikn-Backends-Declined, or a lite request got its 503); the next successful lite answer clears it
     }
+
+
+setThemeMode : ThemeMode -> Config -> Config
+setThemeMode mode config =
+    { config | themeMode = mode, lightmode = ThemeMode.isLight config.systemDark mode }
+
+
+setSystemDark : Bool -> Config -> Config
+setSystemDark systemDark config =
+    { config | systemDark = systemDark, lightmode = ThemeMode.isLight systemDark config.themeMode }
 
 
 

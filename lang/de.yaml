@@ -644,3 +644,6 @@ gs-file-networks-not-on-account: "Dieser Graph enthält Knoten auf {0}, die für
 Not available on your account: "Für dein Konto nicht verfügbar"
 on: "Ein"
 off: "Aus"
+system: "System"
+light: "Hell"
+dark: "Dunkel"

@@ -1,4 +1,4 @@
-port module Ports exposing (blur, console, deserialize, deserializeFile, deserialized, exportGraph, exportGraphResult, getBBox, newTab, openGraphInNewTab, pluginsIn, pluginsOut, renderedImageForExport, saveToLocalStorage, sendBBox, serialize, setDirty, toClipboard, uncaughtError, windowBlurred)
+port module Ports exposing (blur, console, deserialize, deserializeFile, deserialized, exportGraph, exportGraphResult, getBBox, newTab, openGraphInNewTab, pluginsIn, pluginsOut, renderedImageForExport, saveToLocalStorage, sendBBox, serialize, setDirty, systemColorSchemeChanged, toClipboard, uncaughtError, windowBlurred)
 
 import Json.Encode exposing (Value)
 import Model.Graph.Coords as Coords
@@ -74,3 +74,8 @@ port blur : String -> Cmd msg
 
 
 port windowBlurred : (() -> msg) -> Sub msg
+
+
+{-| The browser's `prefers-color-scheme: dark` changed (OS setting, or DevTools emulation).
+-}
+port systemColorSchemeChanged : (Bool -> msg) -> Sub msg

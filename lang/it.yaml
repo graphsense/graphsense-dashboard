@@ -669,3 +669,6 @@ gs-file-networks-not-on-account: "Questo grafo contiene nodi su {0} che non sono
 Not available on your account: "Non disponibile per il tuo account"
 on: "Attivo"
 off: "Disattivo"
+system: "Sistema"
+light: "Chiaro"
+dark: "Scuro"
