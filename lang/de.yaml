@@ -512,6 +512,13 @@ swap transaction: Swap Transaktion
 swap transactions: Swap Transaktionen
 Bridge transactions: Bridge Transaktionen
 bridge explorer: Bridge-Explorer
+unsupported token: "Nicht unterstützter Token"
+unsupported tokens: "Nicht unterstützte Token"
+input token: "Eingangs-Token"
+output token: "Ausgangs-Token"
+source tx: "Quell-Tx"
+destination tx: "Ziel-Tx"
+unsupported-bridge-token-hint: "Ein nicht unterstützter Token steht nicht im Token-Register: Es wird kein Betrag und kein Wert angezeigt, und seine Identität ist nicht geprüft."
 hint-minimum-input: Bitte mindestens {0} Zeichen eingeben
 no-results-found: Keine Ergebnisse gefunden.
 deprecation notice: Ende des Supports

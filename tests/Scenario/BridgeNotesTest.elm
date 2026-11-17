@@ -1,7 +1,9 @@
 module Scenario.BridgeNotesTest exposing (suite)
 
-{-| A conversion the graph cannot draw (an unsupported asset on either leg)
-becomes a note in the tx's side panel. Every such row gets its own note naming
+{-| A conversion the graph cannot draw (an unsupported swap or a half bridge)
+becomes a note in the tx's side panel. A complete bridge row is drawn even with
+a token outside the registry (Scenario.BridgeUnsupportedAssetsTest), so the
+bridge rows here are made halves, their payout still pending. Every such row gets its own note naming
 its own target, and the bridge when the row names its `protocol`; only
 identical notes are shown once.
 
@@ -262,6 +264,21 @@ expectNotes expected app =
         ()
 
 
+{-| The rows with their bridge payouts pending, as a half row names them.
+-}
+halfRows : List String -> List Api.Data.ExternalConversion
+halfRows =
+    decode
+        >> List.map
+            (\c ->
+                if c.conversionType == Api.Data.ExternalConversionConversionTypeBridgeTx then
+                    { c | toAssetTransfer = "pending" }
+
+                else
+                    c
+            )
+
+
 suite : Test
 suite =
     describe "one note per undrawable conversion"
@@ -272,30 +289,30 @@ suite =
                     |> Expect.equal 4
         , test "a redeem and a re-send in one tx get a note each (wh-base-redeem-resend)" <|
             \_ ->
-                withConversions baseTx [ decode [ redeem, resend ] ]
+                withConversions baseTx [ halfRows [ redeem, resend ] ]
                     |> expectNotes
                         [ "Note: Unsupported Wormhole bridge transaction detected, target 0x346ec0fadbf97cc3a5e2fbdaa7e4d10503f1052e (BASE)"
                         , "Note: Unsupported Wormhole bridge transaction detected, target 0x346ec0fadbf97cc3a5e2fbdaa7e4d10503f1052e (BNB)"
                         ]
         , test "a swap note no longer hides the bridge's (wh-eth-send-arb)" <|
             \_ ->
-                withConversions ethTx [ decode [ swap, send ] ]
+                withConversions ethTx [ halfRows [ swap, send ] ]
                     |> expectNotes
                         [ "Note: Unsupported swap transaction detected, target 0x000000000004444c5dc75cb358380d2e3de08a90 (ETH)"
                         , "Note: Unsupported Wormhole bridge transaction detected, target 0xd7ca08ec1aee9cce8a8eda9365343ef197674e1a (ARB)"
                         ]
         , test "the same answer twice shows each note once" <|
             \_ ->
-                withConversions baseTx [ decode [ redeem, resend ], decode [ redeem, resend ] ]
+                withConversions baseTx [ halfRows [ redeem, resend ], halfRows [ redeem, resend ] ]
                     |> notes
                     |> Query.count (Expect.equal 2)
         , test "rows arriving in separate answers keep the earlier notes" <|
             \_ ->
-                withConversions ethTx [ decode [ swap ], decode [ send ] ]
+                withConversions ethTx [ halfRows [ swap ], halfRows [ send ] ]
                     |> notes
                     |> Query.count (Expect.equal 2)
         , test "a bridge row without a protocol keeps the plain note" <|
             \_ ->
-                withConversions ethTx [ decode [ send ] |> List.map (\c -> { c | protocol = Nothing }) ]
+                withConversions ethTx [ halfRows [ send ] |> List.map (\c -> { c | protocol = Nothing }) ]
                     |> expectNotes [ "Note: Unsupported bridge transaction detected, target 0xd7ca08ec1aee9cce8a8eda9365343ef197674e1a (ARB)" ]
         ]

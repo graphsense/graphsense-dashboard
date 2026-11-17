@@ -352,9 +352,18 @@ conversionAssetRegistrations c =
 
                     _ ->
                         []
+
+        -- a bridge drawn from its row names a token outside the registry by
+        -- its contract, never by a symbol the row may carry
+        regLeg supported network asset symbol decimals =
+            if ConversionEdge.drawsFromRow c && not supported then
+                []
+
+            else
+                reg network asset symbol decimals
     in
-    reg c.fromNetwork c.fromAsset c.fromAssetSymbol c.fromAssetDecimals
-        ++ reg c.toNetwork c.toAsset c.toAssetSymbol c.toAssetDecimals
+    regLeg c.fromIsSupportedAsset c.fromNetwork c.fromAsset c.fromAssetSymbol c.fromAssetDecimals
+        ++ regLeg c.toIsSupportedAsset c.toNetwork c.toAsset c.toAssetSymbol c.toAssetDecimals
 
 
 refreshSearchMatches : Model -> ( Model, List Effect )
@@ -2491,9 +2500,16 @@ updateByMsg uc msg model =
                 txid =
                     Tx.getTxIdForTx tx
 
+                -- a bridge whose token is not in the registry is drawn from its
+                -- row, if the graph can show both of its networks
+                drawnFromRow c =
+                    ConversionEdge.drawsFromRow c
+                        && Update.networkServed uc c.fromNetwork
+                        && Update.networkServed uc c.toNetwork
+
                 unsupported =
                     conversions
-                        |> List.filter (\c -> not c.toIsSupportedAsset || not c.fromIsSupportedAsset)
+                        |> List.filter (\c -> (not c.toIsSupportedAsset || not c.fromIsSupportedAsset) && not (drawnFromRow c))
                         |> List.map
                             (\c ->
                                 { toAddress = c.toAddress
@@ -2556,6 +2572,7 @@ updateByMsg uc msg model =
                         ( nextModel, effects ++ eff )
                     )
                     ( modelWithFlag, [] )
+                |> drawConversionsFromRows keepPositionOf tx (List.filter drawnFromRow conversions)
 
         BrowserGotConversionInputLeg keepPositionOf anchor conversion tx ->
             let
@@ -6542,6 +6559,110 @@ autoLoadConversions keepPositionOf tx model =
             |> ApiEffect
             |> List.singleton
         )
+
+
+{-| Draws the bridge rows `ConversionEdge.drawsFromRow` picks from the rows
+alone: an edge between each row's payer and payee (`Network.addRowConversion`)
+and a load of whichever end is missing. No leg tx is fetched or added: the
+backends serve none for a token outside the registry, and the txs containing
+the legs would show their own counterparties and native values as if they were
+the bridge's.
+
+`tx` is the tx the rows were asked for; one end of each row is on its network.
+An end this loads is placed next to it, the end on the tx's side right of the
+tx and the other end below that end, as the two sides of a bridge are stacked
+elsewhere, each on the first free row. The tx's own sender and receiver are not
+loaded here: they are on the graph or on their way with the tx, and asking again
+would double an expensive request. Ends a loaded file positions (`keepPositionOf`)
+are the file's to load.
+
+-}
+drawConversionsFromRows : Set Id -> Tx -> List Api.Data.ExternalConversion -> ( Model, List Effect ) -> ( Model, List Effect )
+drawConversionsFromRows keepPositionOf tx rows start =
+    rows
+        |> List.foldl (drawConversionFromRow keepPositionOf tx) ( start, Dict.empty )
+        |> Tuple.first
+
+
+drawConversionFromRow : Set Id -> Tx -> Api.Data.ExternalConversion -> ( ( Model, List Effect ), Dict Id { x : Float, y : Float } ) -> ( ( Model, List Effect ), Dict Id { x : Float, y : Float } )
+drawConversionFromRow keepPositionOf tx conversion ( ( model, effects ), reserved ) =
+    let
+        txCoords =
+            Tx.toFinalCoords tx
+
+        hash =
+            Tx.getRawBaseTxHashForTx tx |> ConversionEdge.legTxHash
+
+        onTxSide legNetwork transfer =
+            String.toLower legNetwork == String.toLower (Tx.getNetwork tx) && ConversionEdge.legTxHash transfer == hash
+
+        ( near, far ) =
+            if onTxSide conversion.toNetwork conversion.toAssetTransfer && not (onTxSide conversion.fromNetwork conversion.fromAssetTransfer) then
+                ( ConversionEdge.payeeId conversion, ConversionEdge.payerId conversion )
+
+            else
+                ( ConversionEdge.payerId conversion, ConversionEdge.payeeId conversion )
+
+        network =
+            Network.addRowConversion conversion model.network
+
+        onGraph id =
+            Dict.get id network.addresses
+                |> Maybe.map (\a -> { x = a.x, y = A.getTo a.y })
+
+        -- where the tx's own sender and receiver go (findAddressCoordsNextToTx)
+        besideTx id =
+            if List.member id (Tx.getInputAddressIds tx) then
+                Just { txCoords | x = txCoords.x - nodeXOffset }
+
+            else if List.member id (Tx.getOutputAddressIds tx) then
+                Just { txCoords | x = txCoords.x + nodeXOffset }
+
+            else
+                Nothing
+
+        taken =
+            (network.addresses |> Dict.values |> List.map (\a -> { x = a.x, y = A.getTo a.y }))
+                ++ (network.txs |> Dict.values |> List.map Tx.toFinalCoords)
+                ++ Dict.values reserved
+
+        isFree c =
+            not (List.any (\o -> abs (o.x - c.x) < 1 && abs (o.y - c.y) < 1) taken)
+
+        freeBelow c =
+            List.range 1 100
+                |> List.map (\i -> { c | y = c.y + toFloat i * nodeYOffset })
+                |> List.Extra.find isFree
+                |> Maybe.withDefault { c | y = c.y + nodeYOffset }
+
+        known id =
+            onGraph id
+                |> Maybe.Extra.orElse (Dict.get id reserved)
+                |> Maybe.Extra.orElse (besideTx id)
+
+        mustLoad id =
+            known id == Nothing && not (Set.member id keepPositionOf)
+
+        nearCoords =
+            known near
+                |> Maybe.withDefault (freeBelow { txCoords | x = txCoords.x + nodeXOffset })
+
+        farCoords =
+            known far
+                |> Maybe.withDefault (freeBelow nearCoords)
+
+        toLoad =
+            [ ( near, nearCoords ), ( far, farCoords ) ]
+                |> List.filter (first >> mustLoad)
+    in
+    toLoad
+        |> List.foldl
+            (\( id, c ) ( acc, res ) ->
+                ( acc |> and (loadAddressWithPosition False (Fixed c.x c.y) id)
+                , Dict.insert id c res
+                )
+            )
+            ( ( { model | network = network }, effects ), reserved )
 
 
 autoLoadAddresses : Bool -> Tx -> Model -> ( Model, List Effect )

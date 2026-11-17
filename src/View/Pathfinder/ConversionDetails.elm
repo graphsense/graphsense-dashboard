@@ -12,7 +12,6 @@ import Model.Currency exposing (AssetIdentifier, asset)
 import Model.Pathfinder.ConversionDetails exposing (ConversionDetailsModel)
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Tx as Tx
 import Msg.Pathfinder as Pathfinder
 import Msg.Pathfinder.ConversionDetails exposing (ConversionDetailsMsgs(..))
 import RecordSetter as Rs
@@ -24,7 +23,8 @@ import Util.Css exposing (spread)
 import Util.View exposing (copyIconPathfinder, copyIconPathfinderAbove, none, testId, timeToCell, truncateLongIdentifierWithLengths)
 import View.Graph.Table
 import View.Locale as Locale
-import View.Pathfinder.Details exposing (closeAttrs, dataTab, valuesToCell)
+import View.Pathfinder.ConversionEdge as ConversionEdgeView
+import View.Pathfinder.Details exposing (closeAttrs, dataTab, emptyCell, valuesToCell)
 import View.Pathfinder.Table.ConversionTransactionTable as CTable
 
 
@@ -81,28 +81,50 @@ txTab vc isTxOnGraph viewState =
         |> subTxsTab
 
 
-inputAsset : ConversionEdge -> AssetIdentifier
-inputAsset c =
-    asset c.raw.fromNetwork (c.rawInputTransaction |> Tx.getAssetFromRawTx)
-
-
 {-| On the destination network: a bridge's output leg is not on the input's network.
 -}
 outputAsset : ConversionEdge -> AssetIdentifier
 outputAsset c =
-    asset c.raw.toNetwork (c.rawOutputTransaction |> Tx.getAssetFromRawTx)
+    case ConversionEdge.outputAmount c of
+        ConversionEdge.Amount a _ ->
+            a
+
+        ConversionEdge.NotInRegistry ->
+            asset c.raw.toNetwork c.raw.toAsset
+
+
+{-| A leg's amount as today, or for a token outside the registry the marker in
+its place: neither its raw base units nor a guessed scale could be told apart
+from the bridged amount.
+-}
+amountCell : View.Config -> ConversionEdge.LegAmount -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
+amountCell vc amount =
+    case amount of
+        ConversionEdge.Amount a values ->
+            valuesToCell vc a values
+
+        ConversionEdge.NotInRegistry ->
+            { firstRowText = Locale.string vc.locale "Unsupported token"
+            , secondRowText = ""
+            , secondRowVisible = False
+            }
 
 
 view : View.Config -> ( Id, Id ) -> (Id -> Bool) -> ConversionDetailsModel -> Html Pathfinder.Msg
 view vc _ isTxOnGraph viewState =
     let
         baseTxIdString =
-            case viewState.raw.rawInputTransaction of
-                Api.Data.TxTxAccount { txHash } ->
-                    txHash
+            case viewState.raw.legTxs of
+                Just { input } ->
+                    case input of
+                        Api.Data.TxTxAccount { txHash } ->
+                            txHash
 
-                Api.Data.TxTxUtxo { txHash } ->
-                    txHash
+                        Api.Data.TxTxUtxo { txHash } ->
+                            txHash
+
+                Nothing ->
+                    ConversionEdge.legTxHash cr.fromAssetTransfer
 
         getTimestamp x =
             case x of
@@ -132,6 +154,14 @@ view vc _ isTxOnGraph viewState =
         { instances
             | swapTransaction =
                 subtitle cr |> Maybe.map (titleWithSubtitle (title vc cr))
+
+            -- a row names no time; the timestamp is the output leg tx's
+            , block3 =
+                if ConversionEdge.isRowOnly viewState.raw then
+                    Just none
+
+                else
+                    Nothing
         }
         { identifierWithCopyIcon =
             { identifier = baseTxIdString |> truncateLongIdentifierWithLengths 8 4
@@ -145,7 +175,11 @@ view vc _ isTxOnGraph viewState =
             { subTxListInstance =
                 div []
                     [ bridgeRows vc viewState.raw
-                    , txTab vc isTxOnGraph viewState
+                    , if ConversionEdge.isRowOnly viewState.raw then
+                        none
+
+                      else
+                        txTab vc isTxOnGraph viewState
                     ]
             , tabsVisible = False
             }
@@ -155,15 +189,14 @@ view vc _ isTxOnGraph viewState =
         , titleOfReceiver = { infoLabel = Locale.string vc.locale "receiver" }
         , titleOfSender = { infoLabel = Locale.string vc.locale "sender" }
         , titleOfTimestamp = { infoLabel = Locale.string vc.locale "Timestamp" }
-        , valueOfInputValue =
-            ConversionEdge.inputValues viewState.raw
-                |> valuesToCell vc (inputAsset viewState.raw)
-        , valueOfOutputValue =
-            ConversionEdge.outputValues viewState.raw
-                |> valuesToCell vc (outputAsset viewState.raw)
+        , valueOfInputValue = ConversionEdge.inputAmount viewState.raw |> amountCell vc
+        , valueOfOutputValue = ConversionEdge.outputAmount viewState.raw |> amountCell vc
         , valueOfReceiver = { copyIconInstance = copyIconPathfinderAbove vc cr.toAddress, firstRowText = cr.toAddress |> truncateLongIdentifierWithLengths 8 4 }
         , valueOfSender = { copyIconInstance = copyIconPathfinderAbove vc cr.fromAddress, firstRowText = cr.fromAddress |> truncateLongIdentifierWithLengths 8 4 }
-        , valueOfTimestamp = viewState.raw.rawOutputTransaction |> getTimestamp |> timeToCell vc
+        , valueOfTimestamp =
+            viewState.raw.legTxs
+                |> Maybe.map (.output >> getTimestamp >> timeToCell vc)
+                |> Maybe.withDefault emptyCell
         }
 
 
@@ -236,6 +269,11 @@ laid out like the rows above it (label left, value right), from the same
 generated styles. The legs are not repeated here: the Bridge transactions
 section below lists both, copyable and linked to their chains' explorers.
 Swaps, and protocols without an explorer (Symbiosis), add nothing.
+
+A bridge drawn from its row (a token outside the registry) has no leg txs to
+list. It names both tokens instead, as the edge does and with the full contract
+to copy, and both txs, followed by why an amount is missing.
+
 -}
 bridgeRows : View.Config -> ConversionEdge -> Html msg
 bridgeRows vc edge =
@@ -253,18 +291,108 @@ bridgeRows vc edge =
                             , transferId = c.transferId
                             }
                     )
+
+        explorerRows =
+            protocolExplorer
+                |> Maybe.map (\link -> [ row (Locale.string vc.locale "Bridge explorer") [ explorerAnchor link ] ])
+                |> Maybe.withDefault []
+
+        rowOnly =
+            ConversionEdge.isRowOnly edge
     in
-    case ( c.conversionType, protocolExplorer ) of
-        ( Api.Data.ExternalConversionConversionTypeBridgeTx, Just link ) ->
+    case ( c.conversionType, explorerRows, rowOnly ) of
+        ( Api.Data.ExternalConversionConversionTypeBridgeTx, [], False ) ->
+            none
+
+        ( Api.Data.ExternalConversionConversionTypeBridgeTx, _, _ ) ->
             div
                 [ SidePanelComponents.sidePanelSwapTransactionSidePanelEthTxDetails_details.styles
                     ++ [ Css.paddingTop Css.zero ]
                     |> css
                 ]
-                [ block [ row (Locale.string vc.locale "Bridge explorer") [ explorerAnchor link ] ] ]
+                (if rowOnly then
+                    [ if List.isEmpty explorerRows then
+                        none
+
+                      else
+                        block explorerRows
+                    , block
+                        [ tokenRow vc (Locale.string vc.locale "Input token") c.fromNetwork c.fromAsset c.fromIsSupportedAsset
+                        , tokenRow vc (Locale.string vc.locale "Output token") c.toNetwork c.toAsset c.toIsSupportedAsset
+                        , txRow vc (Locale.string vc.locale "Source tx") c.fromAssetTransfer
+                        , txRow vc (Locale.string vc.locale "Destination tx") c.toAssetTransfer
+                        ]
+                    , unsupportedHint vc
+                    ]
+
+                 else
+                    [ block explorerRows ]
+                )
 
         _ ->
             none
+
+
+{-| A token as the edge names it, the full contract to copy.
+-}
+tokenRow : View.Config -> String -> String -> String -> Bool -> Html msg
+tokenRow vc label network asset supported =
+    let
+        copy =
+            if asset == ConversionEdge.nativeAsset then
+                []
+
+            else
+                [ copyIconPathfinder vc asset ]
+    in
+    rowWith [ testId "gs-bridge-token" ]
+        label
+        (truncatedValue (ConversionEdgeView.rowLegLabel vc.locale network asset supported) :: copy)
+
+
+{-| A leg's tx, by its hash, to copy.
+-}
+txRow : View.Config -> String -> String -> Html msg
+txRow vc label transfer =
+    let
+        hash =
+            ConversionEdge.legTxHash transfer
+    in
+    row label
+        [ truncatedValue (truncateLongIdentifierWithLengths 8 4 hash)
+        , copyIconPathfinder vc hash
+        ]
+
+
+{-| One line, cut with an ellipsis: the value column has a fixed width.
+-}
+truncatedValue : String -> Html msg
+truncatedValue value =
+    span
+        [ css
+            [ Css.overflow Css.hidden
+            , Css.textOverflow Css.ellipsis
+            , Css.whiteSpace Css.noWrap
+            , Css.minWidth Css.zero
+            ]
+        ]
+        [ text value ]
+
+
+{-| Full width below the rows, wrapping, in the subtitle's colour.
+-}
+unsupportedHint : View.Config -> Html msg
+unsupportedHint vc =
+    div
+        [ SidePanelComponents.sidePanelSwapTransactionSidePanelSwapHeaderExchangeLabel_details.styles
+            ++ [ Css.property "color" "var(--c-greyBlue500)"
+               , Css.whiteSpace Css.normal
+               , Css.paddingTop (Css.px 8)
+               ]
+            |> css
+        , testId "gs-bridge-unsupported-hint"
+        ]
+        [ text (Locale.string vc.locale "unsupported-bridge-token-hint") ]
 
 
 block : List (Html msg) -> Html msg
@@ -273,8 +401,13 @@ block =
 
 
 row : String -> List (Html msg) -> Html msg
-row label value =
-    div [ css SidePanelComponents.sidePanelSwapTransactionSenderSender_details.styles ]
+row =
+    rowWith []
+
+
+rowWith : List (Html.Styled.Attribute msg) -> String -> List (Html msg) -> Html msg
+rowWith attrs label value =
+    div (css SidePanelComponents.sidePanelSwapTransactionSenderSender_details.styles :: attrs)
         [ div [ css SidePanelComponents.sidePanelSwapTransactionSenderTitleOfSender_details.styles ]
             [ div [ css SidePanelComponents.sidePanelSwapTransactionSenderLastUsageOfSender_details.styles ]
                 [ text label ]
