@@ -8,14 +8,30 @@ tx deep link with a sub-tx suffix.
 -}
 
 import Expect
+import Model.Tx as Tx
 import Test exposing (Test, describe, test)
 import Util.Data as Data
+import Util.ExternalLinks as ExternalLinks
 
 
 suite : Test
 suite =
     describe "normalizeTxIdentifier"
-        [ test "strips 0x and preserves the case-sensitive sub-tx marker" <|
+        [ test "explorer identifiers reject non-hex first characters and empty hashes" <|
+            \_ ->
+                [ "", "0x", "0X", "?abc", "/abc", "#abc", "_T2", "abc?x=1" ]
+                    |> List.map Tx.parseTxIdentifier
+                    |> Expect.equal (List.repeat 8 Nothing)
+        , test "explorer identifiers accept either hex prefix without changing the leg suffix" <|
+            \_ ->
+                [ "ABC_T2", "0xABC_T2", "0XABC_T2" ]
+                    |> List.map (ExternalLinks.getBlockExplorerTransactionLinks "eth" >> List.head)
+                    |> Expect.equal (List.repeat 3 (Just ( "https://etherscan.io/tx/0xABC/advanced#eventlog#2", "Etherscan" )))
+        , test "a network without an explorer produces no links" <|
+            \_ ->
+                ExternalLinks.getBlockExplorerTransactionLinks "unknown" "abc_T2"
+                    |> Expect.equal []
+        , test "strips 0x and preserves the case-sensitive sub-tx marker" <|
             \_ ->
                 Data.normalizeTxIdentifier "arb" "0xE9EF1D038D150059C4CA9BDCD4A460772571BFFD142B5AF8FBC30776FA2789BC_T2"
                     |> Expect.equal "e9ef1d038d150059c4ca9bdcd4a460772571bffd142b5af8fbc30776fa2789bc_T2"
