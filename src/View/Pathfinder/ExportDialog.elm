@@ -21,6 +21,24 @@ import View.Locale as Locale
 view : View.Config -> ExportConfig Model.Msg -> Html Model.Msg
 view vc model =
     let
+        isImage =
+            model.fileFormat == ExportFormatPDF || model.fileFormat == ExportFormatPNG
+
+        isGraphML =
+            model.fileFormat == ExportFormatGraphML
+
+        -- the backend converts at most this many nodes (addresses plus txs)
+        tooManyNodes =
+            isGraphML
+                && (case model.area of
+                        ExportAreaSelected ->
+                            model.nodeCounts.selected
+
+                        _ ->
+                            model.nodeCounts.whole
+                   )
+                > maxGraphMLNodes
+
         textFieldAttributes =
             F.textFieldWithHelpAttributes
                 |> Rs.s_root
@@ -46,7 +64,7 @@ view vc model =
                     , Controls.radio
                         { label = Locale.string vc.locale "Export-dialog-area-visible"
                         , selected = model.area == ExportAreaVisible
-                        , disabled = False
+                        , disabled = isGraphML
                         , size = Controls.Small
                         , msg = UserClickedAreaOption ExportAreaVisible
                         }
@@ -68,14 +86,14 @@ view vc model =
                     [ Controls.checkboxWithLabel
                         { label = Locale.string vc.locale "Export-dialog-display-keephighlight"
                         , checked = model.keepSelectionHighlight
-                        , disabled = model.fileFormat == ExportFormatCSV
+                        , disabled = not isImage
                         , size = Controls.Small
                         , msg = UserClickedKeepSelected
                         }
                     , Controls.checkboxWithLabel
                         { label = Locale.string vc.locale "Export-dialog-transparent-background"
                         , checked = model.transparentBackground
-                        , disabled = model.fileFormat == ExportFormatCSV
+                        , disabled = not isImage
                         , size = Controls.Small
                         , msg = UserClickedTransparentBackground
                         }
@@ -86,6 +104,22 @@ view vc model =
                         , disabled = model.fileFormat /= ExportFormatCSV
                         , size = Controls.Small
                         , msg = UserClickedOnlyVisibleInOutputs
+                        }
+                    , Controls.checkboxWithLabelAndTitle
+                        { label = Locale.string vc.locale "Export-dialog-graphml-aggregate"
+                        , title = Locale.string vc.locale "Export-dialog-graphml-aggregate-help"
+                        , checked = model.graphmlAggregate
+                        , disabled = not isGraphML
+                        , size = Controls.Small
+                        , msg = UserClickedGraphMLAggregate
+                        }
+                    , Controls.checkboxWithLabelAndTitle
+                        { label = Locale.string vc.locale "Export-dialog-graphml-include-tags"
+                        , title = Locale.string vc.locale "Export-dialog-graphml-include-tags-help"
+                        , checked = model.graphmlIncludeTags
+                        , disabled = not isGraphML
+                        , size = Controls.Small
+                        , msg = UserClickedGraphMLIncludeTags
                         }
                     ]
                 }
@@ -107,6 +141,10 @@ view vc model =
                         "CSV"
                         (model.fileFormat == ExportFormatCSV)
                         (UserClickedFormatOption ExportFormatCSV)
+                    , Controls.radioSmall
+                        "GraphML"
+                        isGraphML
+                        (UserClickedFormatOption ExportFormatGraphML)
                     ]
                 }
                 { root = { title = Locale.string vc.locale "Export-dialog-format-title" |> Locale.titleCase vc.locale }
@@ -116,8 +154,18 @@ view vc model =
             F.textFieldWithHelpWithAttributes
                 textFieldAttributes
                 { root =
-                    { helpText = Locale.string vc.locale "Export-dialog-filename-help"
-                    , state = F.TextFieldWithHelpStateDefault
+                    { helpText =
+                        if tooManyNodes then
+                            Locale.interpolated vc.locale "Export-dialog-graphml-too-many-nodes" [ String.fromInt maxGraphMLNodes ]
+
+                        else
+                            Locale.string vc.locale "Export-dialog-filename-help"
+                    , state =
+                        if tooManyNodes then
+                            F.TextFieldWithHelpStateError
+
+                        else
+                            F.TextFieldWithHelpStateDefault
                     , title = (Locale.string vc.locale "Export-dialog-filename-label" |> Locale.titleCase vc.locale) ++ " *"
                     }
                 , textField =
@@ -139,6 +187,7 @@ view vc model =
             -- TODO move to central validation function
             String.isEmpty model.filename
                 || model.exporting
+                || tooManyNodes
 
         buttonText =
             Locale.string vc.locale <|
@@ -185,3 +234,8 @@ view vc model =
             , icon = Util.View.none
             }
         }
+
+
+maxGraphMLNodes : Int
+maxGraphMLNodes =
+    500

@@ -3,7 +3,7 @@ module Update.Pathfinder.ExportDialog exposing (update)
 import Basics.Extra exposing (flip)
 import Config.Update as Update
 import Model exposing (Effect)
-import Model.Dialog exposing (ExportConfig, ExportFormat, exportFormatToString)
+import Model.Dialog exposing (ExportArea(..), ExportConfig, ExportFormat(..), exportFormatToString)
 import Msg.ExportDialog as ExportDialog exposing (Msg(..))
 import Regex
 import Util exposing (n)
@@ -24,6 +24,14 @@ update uc msg model =
                 { model
                     | fileFormat = format
                     , filename = normalizeFilename uc format model.filename
+
+                    -- a graph format has no "visible area"
+                    , area =
+                        if format == ExportFormatGraphML && model.area == ExportAreaVisible then
+                            ExportAreaWhole
+
+                        else
+                            model.area
                 }
 
         UserClickedKeepSelected ->
@@ -34,6 +42,12 @@ update uc msg model =
 
         UserClickedOnlyVisibleInOutputs ->
             n { model | onlyVisibleIos = not model.onlyVisibleIos }
+
+        UserClickedGraphMLAggregate ->
+            n { model | graphmlAggregate = not model.graphmlAggregate }
+
+        UserClickedGraphMLIncludeTags ->
+            n { model | graphmlIncludeTags = not model.graphmlIncludeTags }
 
         BrowserSentBBox _ ->
             -- handled in Update/Pathfinder.elm
@@ -60,16 +74,13 @@ update uc msg model =
 normalizeFilename : Update.Config -> ExportFormat -> String -> String
 normalizeFilename uc format filename =
     let
-        match =
-            Regex.contains (Regex.fromString "\\.\\w{3}$" |> Maybe.withDefault Regex.never) filename
+        -- three-letter extensions, and ours longer than that
+        extension =
+            Regex.fromString "\\.(\\w{3}|graphml)$"
+                |> Maybe.withDefault Regex.never
     in
     filename
-        |> (if match then
-                String.dropRight 4
-
-            else
-                identity
-           )
+        |> Regex.replace extension (always "")
         |> (\fn ->
                 if String.isEmpty fn then
                     Locale.string uc.locale "Export-dialog-unknown-filename"

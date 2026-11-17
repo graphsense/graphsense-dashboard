@@ -172,6 +172,7 @@ type Msg
     | InternalConversionLoopAddressesLoaded (Set Id) Api.Data.ExternalConversion
     | BrowserGotTxFlow AddingTxConfig Api.Data.Tx Api.Data.Txs
     | InternalExportGraphTxsCompleted
+    | BrowserGotGraphML String String
     | InternalChangedTxFilter TxsFilterId TransactionFilter.Settings
     | InternalHoveredQuickFilter (Maybe TransactionFilter.QuickFilter)
     | TransactionFilterMsg TransactionFilter.Msg

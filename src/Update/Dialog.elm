@@ -167,6 +167,9 @@ mapMsg map model =
             , exporting = conf.exporting
             , transparentBackground = conf.transparentBackground
             , onlyVisibleIos = conf.onlyVisibleIos
+            , graphmlAggregate = conf.graphmlAggregate
+            , graphmlIncludeTags = conf.graphmlIncludeTags
+            , nodeCounts = conf.nodeCounts
             , hasSelections = conf.hasSelections
             }
                 |> Export

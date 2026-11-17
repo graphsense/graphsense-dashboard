@@ -494,6 +494,9 @@ shallPushHistory msg _ =
         InternalExportGraphTxsCompleted ->
             False
 
+        BrowserGotGraphML _ _ ->
+            False
+
         InternalChangedTxFilter _ _ ->
             False
 
