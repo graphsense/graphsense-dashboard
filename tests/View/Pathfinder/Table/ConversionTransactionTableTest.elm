@@ -118,7 +118,7 @@ explorerLinks =
 explorerLinksOf : Api.Data.ExternalConversion -> Query.Multiple ()
 explorerLinksOf conversion =
     legTableOf conversion
-        |> Query.findAll [ Selector.attribute (Html.Attributes.attribute "data-testid" "leg-explorer-link") ]
+        |> Query.findAll [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-leg-explorer-link") ]
 
 
 suite : Test
