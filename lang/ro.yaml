@@ -504,6 +504,13 @@ swap transactions: Tranzacții Swap
 Bridge transactions: Tranzacții Bridge
 protocol: Protocol
 bridge explorer: Explorer bridge
+unsupported token: "Token nesuportat"
+unsupported tokens: "Tokenuri nesuportate"
+input token: "Token de intrare"
+output token: "Token de ieșire"
+source tx: "Tx sursă"
+destination tx: "Tx destinație"
+unsupported-bridge-token-hint: "Un token nesuportat nu este în registrul de tokenuri: nu se afișează nicio sumă și nicio valoare, iar identitatea sa nu este verificată."
 hint-minimum-input: Vă rugăm să introduceți cel puțin {0} caractere
 no-results-found: Nu s-au găsit rezultate.
 deprecation notice: Notificare de învechire

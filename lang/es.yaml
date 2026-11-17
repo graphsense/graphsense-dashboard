@@ -518,6 +518,13 @@ swap transactions: Transacciones de intercambio
 Bridge transactions: Transacciones puente
 protocol: Protocolo
 bridge explorer: Explorador del puente
+unsupported token: "Token no soportado"
+unsupported tokens: "Tokens no soportados"
+input token: "Token de entrada"
+output token: "Token de salida"
+source tx: "Tx de origen"
+destination tx: "Tx de destino"
+unsupported-bridge-token-hint: "Un token no soportado no figura en el registro de tokens: no se muestra ningún importe ni valor, y su identidad no está verificada."
 hint-minimum-input: Proporcione al menos {0} caracteres
 no-results-found: No se han encontrado resultados.
 deprecation notice: Aviso de obsolescencia
