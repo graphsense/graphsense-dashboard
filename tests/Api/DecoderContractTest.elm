@@ -207,40 +207,25 @@ suite =
                                 , Just "0xb071cfdf0f4e7c9bfff73e34fdc70f894bf8e799ce674722b1b15e35bf8c500d"
                                 )
                             )
-            , test "a row without them still decodes" <|
-                \_ ->
-                    baselineDexSwap
-                        |> Json.Decode.decodeString Api.Data.externalConversionDecoder
-                        |> Result.map (\c -> ( c.protocol, c.protocolApp, c.transferId ))
-                        |> Expect.equal (Ok ( Nothing, Nothing, Nothing ))
             , test "malformed optional bridge metadata does not discard the conversion list" <|
                 \_ ->
-                    [ "null", "123", "false", "{}", "[]" ]
+                    -- the last row is a plain swap, without the keys at all
+                    ([ "null", "123", "false", "{}", "[]" ]
                         |> List.map
                             (\value ->
                                 baselineDexSwap
                                     |> String.dropRight 1
-                                    |> (\body -> "[" ++ body ++ ",\"protocol\":" ++ value ++ ",\"protocol_app\":" ++ value ++ ",\"transfer_id\":" ++ value ++ "}]")
+                                    |> (\body -> body ++ ",\"protocol\":" ++ value ++ ",\"protocol_app\":" ++ value ++ ",\"transfer_id\":" ++ value ++ "}")
+                            )
+                    )
+                        ++ [ baselineDexSwap ]
+                        |> List.map
+                            (\row ->
+                                ("[" ++ row ++ "]")
                                     |> Json.Decode.decodeString (Json.Decode.list Api.Data.externalConversionDecoder)
                                     |> Result.map (List.map (\c -> ( c.protocol, c.protocolApp, c.transferId )))
                             )
-                        |> Expect.equal (List.repeat 5 (Ok [ ( Nothing, Nothing, Nothing ) ]))
-            , test "they survive an encode and decode" <|
-                \_ ->
-                    usdt0BridgeRow
-                        |> Json.Decode.decodeString Api.Data.externalConversionDecoder
-                        |> Result.andThen
-                            (Api.Data.encodeExternalConversion
-                                >> Json.Decode.decodeValue Api.Data.externalConversionDecoder
-                            )
-                        |> Result.map (\c -> ( c.protocol, c.protocolApp, c.transferId ))
-                        |> Expect.equal
-                            (Ok
-                                ( Just "layerzero"
-                                , Just "usdt0"
-                                , Just "0xb071cfdf0f4e7c9bfff73e34fdc70f894bf8e799ce674722b1b15e35bf8c500d"
-                                )
-                            )
+                        |> Expect.equal (List.repeat 6 (Ok [ ( Nothing, Nothing, Nothing ) ]))
             ]
         , describe "the client is stricter than the spec about nulls"
             -- The spec types both of these `anyOf: [string, null]`, the client

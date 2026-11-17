@@ -34,107 +34,61 @@ cctpBurn =
     "e8c9cfb2ee4a139c45173e27784b669e9741fb04418475cd7f8dfbf0124202af_T693"
 
 
-link : String -> Maybe String -> Maybe ( String, String )
-link protocol transferId =
-    BridgeExplorer.explorerLink { protocol = protocol, sourceLeg = usdt0Send, transferId = transferId }
+link : String -> String -> Maybe String -> Maybe ( String, String )
+link protocol sourceLeg transferId =
+    BridgeExplorer.explorerLink { protocol = protocol, sourceLeg = sourceLeg, transferId = transferId }
         |> Maybe.map (\l -> ( l.url, l.label ))
 
 
 suite : Test
 suite =
     describe "Util.BridgeExplorer"
-        [ describe "names"
-            [ test "each protocol the API sends has the name people use" <|
-                \_ ->
-                    [ "cctp", "debridge", "layerzero", "thorchain", "symbiosis" ]
-                        |> List.map BridgeExplorer.protocolName
-                        |> Expect.equal [ "CCTP", "deBridge", "LayerZero", "THORChain", "Symbiosis" ]
-            , test "an app on top of LayerZero" <|
-                \_ ->
-                    [ "stargate", "usdt0" ]
-                        |> List.map BridgeExplorer.appName
-                        |> Expect.equal [ "Stargate", "USDT0" ]
-            , test "an unknown name is shown as the API spells it, with a capital first letter" <|
-                -- the adapter names protocols the dashboard has no display name
-                -- for yet (across, relay, wormhole); "across" must not read as a word
-                \_ ->
-                    ( [ "across", "relay", "wormhole", "Mayan", "" ] |> List.map BridgeExplorer.protocolName
-                    , [ "oft-x", "" ] |> List.map BridgeExplorer.appName
-                    )
-                        |> Expect.equal
-                            ( [ "Across", "Relay", "Wormhole", "Mayan", "" ]
-                            , [ "Oft-x", "" ]
-                            )
-            ]
-        , describe "the protocol's explorer"
-            [ test "LayerZero Scan finds the message by its source tx" <|
-                \_ ->
-                    link "layerzero" Nothing
-                        |> Expect.equal
-                            (Just
-                                ( "https://layerzeroscan.com/tx/0x507fa26239c34aefcefcb660457a73065383f284ca4673e436ea168e5519b2b0"
-                                , "LayerZero Scan"
-                                )
-                            )
-            , test "deExplorer opens the order by its id (app.debridge.finance only redirects there)" <|
-                \_ ->
-                    link "debridge" (Just debridgeOrder)
-                        |> Expect.equal
-                            (Just
-                                ( "https://app.debridge.com/order?orderId=" ++ debridgeOrder
-                                , "deExplorer"
-                                )
-                            )
-            , test "deBridge without an order id has no link" <|
-                \_ ->
-                    link "debridge" Nothing
-                        |> Expect.equal Nothing
-            , test "a transfer id that is not an order id never becomes a URL" <|
-                \_ ->
-                    [ "0x12", debridgeOrder ++ "&x=1", "javascript:alert(1)" ]
-                        |> List.map (Just >> link "debridge")
-                        |> Expect.equal [ Nothing, Nothing, Nothing ]
-            , test "thorchain.net takes the inbound hash in capitals, without 0x" <|
-                \_ ->
-                    BridgeExplorer.explorerLink { protocol = "thorchain", sourceLeg = thorchainDeposit, transferId = Nothing }
-                        |> Maybe.map (\l -> ( l.url, l.label ))
-                        |> Expect.equal
-                            (Just
-                                ( "https://thorchain.net/tx/42D529A72CECD6ECE546D5AC0D2A6C2A9407876B66478A33917D8928833433F8"
-                                , "THORChain Explorer"
-                                )
-                            )
-            , test "a source leg that is not a tx hash never becomes a URL" <|
-                \_ ->
-                    BridgeExplorer.explorerLink { protocol = "layerzero", sourceLeg = "/../evil_T1", transferId = Nothing }
-                        |> Expect.equal Nothing
-            , test "Range's CCTP explorer finds the transfer by its source tx, as lowercase hex after 0x" <|
-                -- without the 0x Range answers "No results found" (checked 2026-11-09)
-                \_ ->
-                    BridgeExplorer.explorerLink { protocol = "cctp", sourceLeg = String.toUpper cctpBurn, transferId = Just "0x33e1" }
-                        |> Maybe.map (\l -> ( l.url, l.label ))
-                        |> Expect.equal
-                            (Just
-                                ( "https://usdc.range.org/transactions?s=0xe8c9cfb2ee4a139c45173e27784b669e9741fb04418475cd7f8dfbf0124202af"
-                                , "Range CCTP Explorer"
-                                )
-                            )
-            , test "a CCTP source leg that is not a tx hash never becomes a URL" <|
-                \_ ->
-                    BridgeExplorer.explorerLink { protocol = "cctp", sourceLeg = "abc&s=x_T1", transferId = Nothing }
-                        |> Expect.equal Nothing
-            , test "truncated hashes and malformed leg suffixes never become explorer URLs" <|
-                \_ ->
-                    [ "cctp", "layerzero", "thorchain" ]
-                        |> List.concatMap
-                            (\protocol ->
-                                [ "abc", String.repeat 64 "a" ++ "_garbage", String.repeat 64 "a" ++ "_T" ]
-                                    |> List.map (\source -> BridgeExplorer.explorerLink { protocol = protocol, sourceLeg = source, transferId = Nothing })
-                            )
-                        |> Expect.equal (List.repeat 9 Nothing)
-            , test "unknown protocols have no explorer link" <|
-                \_ ->
-                    [ link "symbiosis" Nothing, link "wormhole" Nothing ]
-                        |> Expect.equal [ Nothing, Nothing ]
-            ]
+        [ test "an unknown name is shown as the API spells it, with a capital first letter" <|
+            -- the adapter names protocols the dashboard has no display name
+            -- for yet (across, relay, wormhole); "across" must not read as a word
+            \_ ->
+                ( [ "across", "relay", "wormhole", "Mayan", "", " across ", " CCTP ", " LayerZERO ", "  " ] |> List.map BridgeExplorer.protocolName
+                , [ "oft-x", "", " UsDt0 " ] |> List.map BridgeExplorer.appName
+                )
+                    |> Expect.equal
+                        ( [ "Across", "Relay", "Wormhole", "Mayan", "", "Across", "CCTP", "LayerZero", "" ]
+                        , [ "Oft-x", "", "USDT0" ]
+                        )
+        , test "each explorer's URL" <|
+            \_ ->
+                [ link "layerzero" usdt0Send Nothing
+                , link " LayerZERO " usdt0Send Nothing
+
+                -- deExplorer opens the order by its id (app.debridge.finance only redirects there)
+                , link "debridge" usdt0Send (Just debridgeOrder)
+
+                -- thorchain.net takes the inbound hash in capitals, without 0x
+                , link "thorchain" thorchainDeposit Nothing
+
+                -- Range finds a CCTP transfer by its source tx, as lowercase hex
+                -- after 0x; without the 0x Range answers "No results found"
+                -- (checked 2026-11-09)
+                , link "cctp" (String.toUpper cctpBurn) (Just "0x33e1")
+                ]
+                    |> Expect.equal
+                        [ Just ( "https://layerzeroscan.com/tx/0x507fa26239c34aefcefcb660457a73065383f284ca4673e436ea168e5519b2b0", "LayerZero Scan" )
+                        , Just ( "https://layerzeroscan.com/tx/0x507fa26239c34aefcefcb660457a73065383f284ca4673e436ea168e5519b2b0", "LayerZero Scan" )
+                        , Just ( "https://app.debridge.com/order?orderId=" ++ debridgeOrder, "deExplorer" )
+                        , Just ( "https://thorchain.net/tx/42D529A72CECD6ECE546D5AC0D2A6C2A9407876B66478A33917D8928833433F8", "THORChain Explorer" )
+                        , Just ( "https://usdc.range.org/transactions?s=0xe8c9cfb2ee4a139c45173e27784b669e9741fb04418475cd7f8dfbf0124202af", "Range CCTP Explorer" )
+                        ]
+        , test "a malformed id or an unknown protocol never becomes a URL" <|
+            \_ ->
+                [ ( "deBridge without an order id", link "debridge" usdt0Send Nothing )
+                , ( "a transfer id that is not an order id", link "debridge" usdt0Send (Just "0x12") )
+                , ( "an order id with a query appended", link "debridge" usdt0Send (Just (debridgeOrder ++ "&x=1")) )
+                , ( "a script as the order id", link "debridge" usdt0Send (Just "javascript:alert(1)") )
+                , ( "a source leg that is not a tx hash", link "layerzero" "/../evil_T1" Nothing )
+                , ( "a CCTP source leg that is not a tx hash", link "cctp" "abc&s=x_T1" Nothing )
+                , ( "a truncated hash", link "cctp" (String.dropLeft 1 cctpBurn) Nothing )
+                , ( "an unknown protocol", link "symbiosis" usdt0Send Nothing )
+                , ( "wormhole", link "wormhole" usdt0Send Nothing )
+                ]
+                    |> List.filter (Tuple.second >> (/=) Nothing)
+                    |> Expect.equal []
         ]

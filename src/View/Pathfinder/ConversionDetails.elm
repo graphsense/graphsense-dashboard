@@ -1,4 +1,4 @@
-module View.Pathfinder.ConversionDetails exposing (bridgeRows, outputAsset, protocolLabel, title, view)
+module View.Pathfinder.ConversionDetails exposing (bridgeRows, outputAsset, view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
