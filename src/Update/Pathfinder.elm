@@ -2435,7 +2435,7 @@ updateByMsg uc msg model =
                 -- native deposits name `_I<root trace>`, which IS the base tx
                 -- id, so the old comparison happened to hold.
                 ( inputTx, outputTx ) =
-                    if isOutputLegOf conversion txA.id then
+                    if isOutputLegOf conversion (Tx.getRawTx txA) then
                         ( ntx, txA )
 
                     else
@@ -2520,7 +2520,7 @@ updateByMsg uc msg model =
                     { model | network = networkWithFlag }
 
                 isLeg =
-                    ConversionEdge.isLeg txid
+                    ConversionEdge.isLegTx (Tx.getRawTx tx)
 
                 fetch id continuation =
                     continuation
@@ -2565,7 +2565,7 @@ updateByMsg uc msg model =
                 -- only the input leg we asked for may continue; any other answer
                 -- would re-request forever or pair a leg with itself
                 isInputLeg =
-                    ConversionEdge.isLeg (Tx.getTxId tx) conversion.fromNetwork conversion.fromAssetTransfer
+                    ConversionEdge.isLegTx tx conversion.fromNetwork conversion.fromAssetTransfer
 
                 ( ( legTx, nn ), newTx ) =
                     case Dict.get (Tx.getTxId tx) model.network.txs of
@@ -7195,9 +7195,9 @@ becomes the answer. Assuming "input leg" there is right far more often: it is
 the tx the graph already held, and the output leg is the one being fetched.
 
 A native bridge leg names the bare hash (D-37), and then the whole tx, served
-as `<hash>_I0`, is that leg (`ConversionEdge.isLeg`).
+as its root transfer `<hash>_I<root trace>`, is that leg (`ConversionEdge.isLegTx`).
 
 -}
-isOutputLegOf : Api.Data.ExternalConversion -> Id -> Bool
-isOutputLegOf conversion txId =
-    ConversionEdge.isLeg txId conversion.toNetwork conversion.toAssetTransfer
+isOutputLegOf : Api.Data.ExternalConversion -> Api.Data.Tx -> Bool
+isOutputLegOf conversion tx =
+    ConversionEdge.isLegTx tx conversion.toNetwork conversion.toAssetTransfer

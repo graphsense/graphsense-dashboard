@@ -11,8 +11,32 @@ renders as "BNB-USDT / ETH-BNB".
 
 import Api.Data
 import Expect
+import Model.Pathfinder.Id exposing (Id)
 import Test exposing (Test, describe, test)
-import Update.Pathfinder exposing (isOutputLegOf)
+import Update.Pathfinder
+
+
+{-| Asked of a tx known by its id only, as no root transfer.
+-}
+isOutputLegOf : Api.Data.ExternalConversion -> Id -> Bool
+isOutputLegOf conversion ( network, identifier ) =
+    Api.Data.TxTxAccount
+        { contractCreation = Nothing
+        , currency = network
+        , fee = Nothing
+        , fromAddress = "0x" ++ String.repeat 40 "1"
+        , height = 1
+        , identifier = identifier
+        , isExternal = Nothing
+        , network = network
+        , timestamp = 1
+        , toAddress = "0x" ++ String.repeat 40 "2"
+        , tokenTxId = Nothing
+        , txHash = String.split "_" identifier |> List.head |> Maybe.withDefault identifier
+        , txType = "account"
+        , value = { fiatValues = [], value = 1 }
+        }
+        |> Update.Pathfinder.isOutputLegOf conversion
 
 
 {-| A real Stargate leg pair: bnb USDT -> eth USDT, both legs ERC20, so each
