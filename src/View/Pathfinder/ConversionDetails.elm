@@ -379,15 +379,18 @@ truncatedValue value =
         [ text value ]
 
 
-{-| Full width below the rows, wrapping, in the subtitle's colour.
+{-| Below the rows, styled like the notes in a tx's panel. The panel is as
+wide as its content, so a text of width 100% still widens it to the text's
+single-line length; width 0 with min-width 100% fills the panel and wraps
+within it instead.
 -}
 unsupportedHint : View.Config -> Html msg
 unsupportedHint vc =
     div
-        [ SidePanelComponents.sidePanelSwapTransactionSidePanelSwapHeaderExchangeLabel_details.styles
-            ++ [ Css.property "color" "var(--c-greyBlue500)"
-               , Css.whiteSpace Css.normal
-               , Css.paddingTop (Css.px 8)
+        [ SidePanelComponents.sidePanelEthTransactionSidePanelEthTxDetailsText_details.styles
+            ++ [ Css.paddingTop (Css.px 8)
+               , Css.width Css.zero |> Css.important
+               , Css.minWidth (Css.pct 100)
                ]
             |> css
         , testId "gs-bridge-unsupported-hint"
