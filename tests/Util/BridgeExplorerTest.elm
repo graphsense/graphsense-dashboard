@@ -129,7 +129,85 @@ suite =
                         |> Expect.equal Nothing
             , test "unknown protocols have no explorer link" <|
                 \_ ->
-                    [ link "symbiosis" Nothing, link "wormhole" Nothing ]
+                    [ link "symbiosis" Nothing, link "hop" Nothing ]
                         |> Expect.equal [ Nothing, Nothing ]
+            , test "Across opens the transfer by its origin tx (checked 2026-11-17)" <|
+                \_ ->
+                    BridgeExplorer.explorerLink { protocol = "across", sourceLeg = acrossDeposit, transferId = Just "1108583" }
+                        |> Maybe.map (\l -> ( l.url, l.label ))
+                        |> Expect.equal
+                            (Just
+                                ( "https://across.to/transfer/0x3376c148afedae87af4cbe699cefc42ae3d9371347f879b25e06a4cdbdf795a3"
+                                , "Across Explorer"
+                                )
+                            )
+            , test "Relay opens the request by its deposit tx" <|
+                \_ ->
+                    BridgeExplorer.explorerLink { protocol = "relay", sourceLeg = relayDeposit, transferId = Just relayOrder }
+                        |> Maybe.map (\l -> ( l.url, l.label ))
+                        |> Expect.equal
+                            (Just
+                                ( "https://relay.link/transaction/0x79c7f1ee54d0736783955845f829606b8ef0852e887e811ece4ed8994f966391"
+                                , "Relay Explorer"
+                                )
+                            )
+            , test "a half row whose source is not known links no Across or Relay page" <|
+                \_ ->
+                    [ "unknown", "pending", "", "abc" ]
+                        |> List.concatMap
+                            (\leg ->
+                                [ BridgeExplorer.explorerLink { protocol = "across", sourceLeg = leg, transferId = Just "1" }
+                                , BridgeExplorer.explorerLink { protocol = "relay", sourceLeg = leg, transferId = Just relayOrder }
+                                ]
+                            )
+                        |> List.filterMap identity
+                        |> Expect.equal []
+            , test "Wormholescan opens the VAA by its id, from either end (checked 2026-11-17)" <|
+                \_ ->
+                    [ acrossDeposit, "unknown" ]
+                        |> List.map
+                            (\leg ->
+                                BridgeExplorer.explorerLink { protocol = "wormhole", sourceLeg = leg, transferId = Just wormholeVaa }
+                                    |> Maybe.map (\l -> ( l.url, l.label ))
+                            )
+                        |> Expect.equal
+                            (List.repeat 2
+                                (Just
+                                    ( "https://wormholescan.io/#/tx/2/0000000000000000000000003ee18b2214aff97000d974cf647e7c347e8fa585/704561"
+                                    , "Wormholescan"
+                                    )
+                                )
+                            )
+            , test "a VAA id of any other shape never becomes a URL" <|
+                \_ ->
+                    [ "2/0x3ee18b22/704561"
+                    , "2/" ++ String.repeat 63 "0" ++ "/1"
+                    , "x/" ++ String.repeat 64 "0" ++ "/1"
+                    , "2/" ++ String.repeat 64 "0" ++ "/1/9"
+                    , "2/" ++ String.repeat 64 "0" ++ "/1?a=b"
+                    , "2/" ++ String.repeat 64 "0" ++ "/"
+                    ]
+                        |> List.map (Just >> link "wormhole")
+                        |> Expect.equal (List.repeat 6 Nothing)
             ]
         ]
+
+
+acrossDeposit : String
+acrossDeposit =
+    "3376c148afedae87af4cbe699cefc42ae3d9371347f879b25e06a4cdbdf795a3_T367"
+
+
+relayDeposit : String
+relayDeposit =
+    "79c7f1ee54d0736783955845f829606b8ef0852e887e811ece4ed8994f966391_T24"
+
+
+relayOrder : String
+relayOrder =
+    "0x21eb06dc1d3c35a302e1cc3ed83d9a35de60d017f0a3c44abfe5a1114e3688a6"
+
+
+wormholeVaa : String
+wormholeVaa =
+    "2/0000000000000000000000003ee18b2214aff97000d974cf647e7c347e8fa585/704561"
