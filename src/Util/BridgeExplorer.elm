@@ -36,6 +36,15 @@ protocolName protocol =
         "thorchain" ->
             "THORChain"
 
+        "across" ->
+            "Across"
+
+        "relay" ->
+            "Relay"
+
+        "wormhole" ->
+            "Wormhole"
+
         "symbiosis" ->
             "Symbiosis"
 
