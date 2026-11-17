@@ -213,6 +213,18 @@ suite =
                         |> Json.Decode.decodeString Api.Data.externalConversionDecoder
                         |> Result.map (\c -> ( c.protocol, c.protocolApp, c.transferId ))
                         |> Expect.equal (Ok ( Nothing, Nothing, Nothing ))
+            , test "malformed optional bridge metadata does not discard the conversion list" <|
+                \_ ->
+                    [ "null", "123", "false", "{}", "[]" ]
+                        |> List.map
+                            (\value ->
+                                baselineDexSwap
+                                    |> String.dropRight 1
+                                    |> (\body -> "[" ++ body ++ ",\"protocol\":" ++ value ++ ",\"protocol_app\":" ++ value ++ ",\"transfer_id\":" ++ value ++ "}]")
+                                    |> Json.Decode.decodeString (Json.Decode.list Api.Data.externalConversionDecoder)
+                                    |> Result.map (List.map (\c -> ( c.protocol, c.protocolApp, c.transferId )))
+                            )
+                        |> Expect.equal (List.repeat 5 (Ok [ ( Nothing, Nothing, Nothing ) ]))
             , test "they survive an encode and decode" <|
                 \_ ->
                     usdt0BridgeRow

@@ -2997,9 +2997,9 @@ externalConversionDecoder =
         |> maybeDecode "to_asset_decimals" Json.Decode.int Nothing
         |> maybeDecode "from_amount_fiat_values" (Json.Decode.list rateDecoder) Nothing
         |> maybeDecode "to_amount_fiat_values" (Json.Decode.list rateDecoder) Nothing
-        |> maybeDecode "protocol" Json.Decode.string Nothing
-        |> maybeDecode "protocol_app" Json.Decode.string Nothing
-        |> maybeDecode "transfer_id" Json.Decode.string Nothing
+        |> decodeChain (Json.Decode.maybe (Json.Decode.field "protocol" Json.Decode.string))
+        |> decodeChain (Json.Decode.maybe (Json.Decode.field "protocol_app" Json.Decode.string))
+        |> decodeChain (Json.Decode.maybe (Json.Decode.field "transfer_id" Json.Decode.string))
 
 
 externalConversionConversionTypeDecoder : Json.Decode.Decoder ExternalConversionConversionType
