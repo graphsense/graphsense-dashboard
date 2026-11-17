@@ -38,7 +38,7 @@ protocolName protocol =
             "Symbiosis"
 
         other ->
-            other
+            capitalized other
 
 
 appName : String -> String
@@ -51,7 +51,15 @@ appName app =
             "USDT0"
 
         other ->
-            other
+            capitalized other
+
+
+{-| A name the dashboard has no display form for yet ("across"), as the API
+spells it but with a capital first letter, so it reads as a name.
+-}
+capitalized : String -> String
+capitalized name =
+    String.toUpper (String.left 1 name) ++ String.dropLeft 1 name
 
 
 {-| The tx hash of a leg identifier (`<hash>_T<n>`, `<hash>_I<n>` or a bare

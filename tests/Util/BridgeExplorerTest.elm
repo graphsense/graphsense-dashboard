@@ -54,10 +54,17 @@ suite =
                     [ "stargate", "usdt0" ]
                         |> List.map BridgeExplorer.appName
                         |> Expect.equal [ "Stargate", "USDT0" ]
-            , test "an unknown name is shown as the API spells it" <|
+            , test "an unknown name is shown as the API spells it, with a capital first letter" <|
+                -- the adapter names protocols the dashboard has no display name
+                -- for yet (across, relay, wormhole); "across" must not read as a word
                 \_ ->
-                    ( BridgeExplorer.protocolName "wormhole", BridgeExplorer.appName "oft-x" )
-                        |> Expect.equal ( "wormhole", "oft-x" )
+                    ( [ "across", "relay", "wormhole", "Mayan", "" ] |> List.map BridgeExplorer.protocolName
+                    , [ "oft-x", "" ] |> List.map BridgeExplorer.appName
+                    )
+                        |> Expect.equal
+                            ( [ "Across", "Relay", "Wormhole", "Mayan", "" ]
+                            , [ "Oft-x", "" ]
+                            )
             ]
         , describe "the leg's transaction hash"
             [ test "drops the leg suffix" <|
