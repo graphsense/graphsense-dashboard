@@ -46,9 +46,9 @@ suite =
         [ describe "names"
             [ test "each protocol the API sends has the name people use" <|
                 \_ ->
-                    [ "cctp", "debridge", "layerzero", "thorchain", "symbiosis" ]
+                    [ "cctp", "debridge", "layerzero", "thorchain", "symbiosis", "across", "relay", "wormhole" ]
                         |> List.map BridgeExplorer.protocolName
-                        |> Expect.equal [ "CCTP", "deBridge", "LayerZero", "THORChain", "Symbiosis" ]
+                        |> Expect.equal [ "CCTP", "deBridge", "LayerZero", "THORChain", "Symbiosis", "Across", "Relay", "Wormhole" ]
             , test "an app on top of LayerZero" <|
                 \_ ->
                     [ "stargate", "usdt0" ]
@@ -56,8 +56,8 @@ suite =
                         |> Expect.equal [ "Stargate", "USDT0" ]
             , test "an unknown name is shown as the API spells it" <|
                 \_ ->
-                    ( BridgeExplorer.protocolName "wormhole", BridgeExplorer.appName "oft-x" )
-                        |> Expect.equal ( "wormhole", "oft-x" )
+                    ( BridgeExplorer.protocolName "hop", BridgeExplorer.appName "oft-x" )
+                        |> Expect.equal ( "hop", "oft-x" )
             ]
         , describe "the leg's transaction hash"
             [ test "drops the leg suffix" <|

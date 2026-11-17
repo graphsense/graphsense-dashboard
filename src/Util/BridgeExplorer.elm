@@ -4,7 +4,7 @@ module Util.BridgeExplorer exposing (ExplorerLink, appName, explorerLink, legTxH
 the protocol's own explorer shows the transfer.
 
 The API names the protocol of a bridge row (`protocol`, `protocol_app`,
-`transfer_id`; adapter DASHBOARD\_CHANGES D-38). The links are built here,
+`transfer_id`; adapter DASHBOARD\_CHANGES D-42). The links are built here,
 like the chain explorers in `Util.ExternalLinks`. Each opens only when clicked,
 and that click tells the explorer's operator which transfer was looked at.
 
@@ -33,6 +33,15 @@ protocolName protocol =
 
         "thorchain" ->
             "THORChain"
+
+        "across" ->
+            "Across"
+
+        "relay" ->
+            "Relay"
+
+        "wormhole" ->
+            "Wormhole"
 
         "symbiosis" ->
             "Symbiosis"
