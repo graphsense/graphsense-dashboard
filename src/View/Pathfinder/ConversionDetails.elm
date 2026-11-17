@@ -1,4 +1,4 @@
-module View.Pathfinder.ConversionDetails exposing (bridgeRows, outputAsset, subtitle, title, view)
+module View.Pathfinder.ConversionDetails exposing (bridgeRows, outputAsset, protocolLabel, title, view)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -114,25 +114,16 @@ view vc _ isTxOnGraph viewState =
 
         cr =
             viewState.raw.raw
-
-        instances =
-            SidePanelComponents.sidePanelSwapTransactionInstances
     in
-    SidePanelComponents.sidePanelSwapTransactionWithInstances
+    SidePanelComponents.sidePanelSwapTransactionWithAttributes
         (SidePanelComponents.sidePanelSwapTransactionAttributes
             |> Rs.s_root
                 [ sidePanelCss
                     |> css
                 ]
             |> Rs.s_sidePanelHeaderText [ spread ]
-            -- a two-line title keeps the close icon level with its first line
-            |> Rs.s_titleEsc [ css [ Css.alignItems Css.flexStart ] ]
             |> Rs.s_iconsCloseBlack (closeAttrs Pathfinder.UserClosedDetailsView)
         )
-        { instances
-            | swapTransaction =
-                subtitle cr |> Maybe.map (titleWithSubtitle (title vc cr))
-        }
         { identifierWithCopyIcon =
             { identifier = baseTxIdString |> truncateLongIdentifierWithLengths 8 4
             , copyIconInstance = baseTxIdString |> copyIconPathfinder vc
@@ -178,12 +169,11 @@ title vc c =
 
 
 {-| The protocol the API says proves a bridge row, and the app on top of it
-when the API names one ("LayerZero · USDT0"), shown on a line of its own below
-the title: the title box has a fixed width, and a protocol name beside the
-title would crowd it.
+when the API names one ("LayerZero · USDT0"). Swaps, and bridge rows the API
+names no protocol for, have none.
 -}
-subtitle : Api.Data.ExternalConversion -> Maybe String
-subtitle c =
+protocolLabel : Api.Data.ExternalConversion -> Maybe String
+protocolLabel c =
     case c.conversionType of
         Api.Data.ExternalConversionConversionTypeDexSwap ->
             Nothing
@@ -201,41 +191,12 @@ subtitle c =
                     )
 
 
-{-| The generated title, with the protocol below it in the timestamp's second
-row colour, cut with an ellipsis rather than widening the panel.
--}
-titleWithSubtitle : String -> String -> Html msg
-titleWithSubtitle main sub =
-    div
-        [ css
-            [ Css.displayFlex
-            , Css.flexDirection Css.column
-            , Css.property "gap" "2px"
-            , Css.minWidth Css.zero
-            ]
-        ]
-        [ div [ css SidePanelComponents.sidePanelSwapTransactionSidePanelSwapHeaderSwapTransaction_details.styles ]
-            [ text main ]
-        , div
-            [ SidePanelComponents.sidePanelSwapTransactionSidePanelSwapHeaderExchangeLabel_details.styles
-                ++ [ Css.property "color" "var(--c-greyBlue500)"
-                   , Css.display Css.block
-                   , Css.overflow Css.hidden
-                   , Css.textOverflow Css.ellipsis
-                   , Css.maxWidth (Css.pct 100)
-                   ]
-                |> css
-            , testId "gs-bridge-protocol"
-            ]
-            [ text sub ]
-        ]
-
-
-{-| What a bridge row adds below the timestamp: the protocol's own explorer,
-laid out like the rows above it (label left, value right), from the same
-generated styles. The legs are not repeated here: the Bridge transactions
-section below lists both, copyable and linked to their chains' explorers.
-Swaps, and protocols without an explorer (Symbiosis), add nothing.
+{-| What a bridge row adds below the timestamp, laid out like the rows above
+it (label left, value right) from the same generated styles: the protocol, and
+the protocol's own explorer when it has one (Symbiosis has none). The legs are
+not repeated here: the Bridge transactions section below lists both, copyable
+and linked to their chains' explorers. Swaps, and bridge rows without a
+protocol, add nothing, so the panel looks as it did before.
 -}
 bridgeRows : View.Config -> ConversionEdge -> Html msg
 bridgeRows vc edge =
@@ -243,7 +204,16 @@ bridgeRows vc edge =
         c =
             edge.raw
 
-        protocolExplorer =
+        protocolRow label =
+            row (Locale.string vc.locale "Protocol")
+                [ span
+                    [ css SidePanelComponents.sidePanelSwapTransactionSenderAug052024OfSender_details.styles
+                    , testId "gs-bridge-protocol"
+                    ]
+                    [ text label ]
+                ]
+
+        explorerRow =
             c.protocol
                 |> Maybe.andThen
                     (\protocol ->
@@ -253,17 +223,18 @@ bridgeRows vc edge =
                             , transferId = c.transferId
                             }
                     )
+                |> Maybe.map (\link -> row (Locale.string vc.locale "Bridge explorer") [ explorerAnchor link ])
     in
-    case ( c.conversionType, protocolExplorer ) of
-        ( Api.Data.ExternalConversionConversionTypeBridgeTx, Just link ) ->
+    case protocolLabel c of
+        Just label ->
             div
                 [ SidePanelComponents.sidePanelSwapTransactionSidePanelEthTxDetails_details.styles
                     ++ [ Css.paddingTop Css.zero ]
                     |> css
                 ]
-                [ block [ row (Locale.string vc.locale "Bridge explorer") [ explorerAnchor link ] ] ]
+                [ block (protocolRow label :: List.filterMap identity [ explorerRow ]) ]
 
-        _ ->
+        Nothing ->
             none
 
 

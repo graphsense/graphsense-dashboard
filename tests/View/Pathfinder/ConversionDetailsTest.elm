@@ -11,7 +11,6 @@ explorers and the protocol's own explorer.
 -}
 
 import Api.Data
-import Basics.Extra exposing (flip)
 import Expect
 import Html.Attributes
 import Html.Styled
@@ -172,9 +171,7 @@ suite =
                     [ usdt0, bridge ]
                         |> List.map (ConversionDetails.title Env.viewConfig)
                         |> Expect.equal [ "Bridge transaction", "Bridge transaction" ]
-            , test "the protocol, and the app on top of it, get their own line below the title" <|
-                -- a line of its own, so a long protocol name cannot crowd the
-                -- fixed-width title
+            , test "the protocol, and the app on top of it, are named as people know them" <|
                 \_ ->
                     [ usdt0
                     , { usdt0 | protocolApp = Nothing }
@@ -183,19 +180,22 @@ suite =
                     , bridge
                     , { usdt0 | conversionType = Api.Data.ExternalConversionConversionTypeDexSwap }
                     ]
-                        |> List.map ConversionDetails.subtitle
+                        |> List.map ConversionDetails.protocolLabel
                         |> Expect.equal [ Just "LayerZero · USDT0", Just "LayerZero", Just "deBridge", Nothing, Nothing, Nothing ]
-            , test "the bridge explorer is the panel's only addition" <|
+            , test "the protocol is a row of the details table, above its explorer" <|
+                -- a row like Sender or Timestamp, not a line under the title;
                 -- the legs are listed, copyable and linked in the Bridge
-                -- transactions section below; the panel does not repeat them
+                -- transactions section below, so the panel does not repeat them
                 \_ ->
                     rows usdt0
                         |> Expect.all
-                            [ Query.has [ Selector.text "Bridge explorer", Selector.text "LayerZero Scan" ]
+                            [ Query.has [ Selector.text "Protocol", Selector.text "LayerZero · USDT0" ]
+                            , Query.find [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-bridge-protocol") ]
+                                >> Query.has [ Selector.text "LayerZero · USDT0" ]
+                            , Query.has [ Selector.text "Bridge explorer", Selector.text "LayerZero Scan" ]
                             , Query.has [ Selector.attribute (Html.Attributes.href "https://layerzeroscan.com/tx/0x507fa26239c34aefcefcb660457a73065383f284ca4673e436ea168e5519b2b0") ]
                             , Query.hasNot [ Selector.text "Source tx" ]
                             , Query.hasNot [ Selector.text "Destination tx" ]
-                            , Query.hasNot [ Selector.text "Protocol" ]
                             , Query.hasNot [ Selector.text "Transfer ID" ]
                             ]
             , test "the bridge explorer opens a new tab and sends no referrer" <|
@@ -215,18 +215,25 @@ suite =
                             [ Query.has [ Selector.text "Bridge explorer", Selector.text "Range CCTP Explorer" ]
                             , Query.has [ Selector.attribute (Html.Attributes.href "https://usdc.range.org/transactions?s=0x507fa26239c34aefcefcb660457a73065383f284ca4673e436ea168e5519b2b0") ]
                             ]
-            , test "a protocol without an explorer, or a row without a protocol, adds nothing" <|
-                -- not even an empty block
+            , test "a protocol without an explorer still names the protocol" <|
                 \_ ->
-                    [ { usdt0 | protocol = Just "symbiosis", protocolApp = Nothing, transferId = Nothing }
-                    , { usdt0 | protocol = Nothing, protocolApp = Nothing, transferId = Nothing }
-                    ]
-                        |> List.map (\c -> \_ -> rows c |> Query.hasNot [ Selector.tag "div" ])
-                        |> flip Expect.all ()
+                    rows { usdt0 | protocol = Just "symbiosis", protocolApp = Nothing, transferId = Nothing }
+                        |> Expect.all
+                            [ Query.has [ Selector.text "Protocol", Selector.text "Symbiosis" ]
+                            , Query.hasNot [ Selector.text "Bridge explorer" ]
+                            ]
+            , test "a row without a protocol adds nothing" <|
+                -- not even an empty block: the panel looks as it did before
+                \_ ->
+                    rows { usdt0 | protocol = Nothing, protocolApp = Nothing, transferId = Nothing }
+                        |> Query.hasNot [ Selector.tag "div" ]
             , test "a swap shows none of it" <|
                 \_ ->
                     rows { usdt0 | conversionType = Api.Data.ExternalConversionConversionTypeDexSwap }
-                        |> Query.hasNot [ Selector.text "Bridge explorer" ]
+                        |> Expect.all
+                            [ Query.hasNot [ Selector.text "Bridge explorer" ]
+                            , Query.hasNot [ Selector.text "Protocol" ]
+                            ]
             ]
         , test "a bridge's output leg is valued on the destination network" <|
             \_ ->

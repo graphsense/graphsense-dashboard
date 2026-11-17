@@ -511,6 +511,7 @@ bridge transaction: Bridge Transaktion
 swap transaction: Swap Transaktion
 swap transactions: Swap Transaktionen
 Bridge transactions: Bridge Transaktionen
+protocol: Protokoll
 bridge explorer: Bridge-Explorer
 hint-minimum-input: Bitte mindestens {0} Zeichen eingeben
 no-results-found: Keine Ergebnisse gefunden.

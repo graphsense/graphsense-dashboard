@@ -472,6 +472,7 @@ bridge transaction: Transazione di Bridge
 swap transaction: Transazione di Swap
 swap transactions: Swap Transazione
 Bridge transactions: Bridge Transazione
+protocol: Protocollo
 bridge explorer: Explorer del bridge
 hint-minimum-input: Fornire almeno {0} caratteri
 no-results-found: Nessun risultato trovato.
