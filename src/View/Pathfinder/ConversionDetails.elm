@@ -225,7 +225,7 @@ titleWithSubtitle main sub =
                    , Css.maxWidth (Css.pct 100)
                    ]
                 |> css
-            , testId "bridge-protocol"
+            , testId "gs-bridge-protocol"
             ]
             [ text sub ]
         ]
@@ -292,7 +292,7 @@ explorerAnchor link =
         [ href link.url
         , target "_blank"
         , rel "noopener noreferrer"
-        , testId "bridge-explorer-link"
+        , testId "gs-bridge-explorer-link"
         , css
             [ Css.displayFlex
             , Css.alignItems Css.center

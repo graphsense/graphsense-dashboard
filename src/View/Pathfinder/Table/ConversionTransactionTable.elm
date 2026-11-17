@@ -160,7 +160,7 @@ legExplorerLink { network, id } =
                 , target "_blank"
                 , rel "noopener noreferrer"
                 , title name
-                , testId "leg-explorer-link"
+                , testId "gs-leg-explorer-link"
                 , css
                     [ Css.displayFlex
                     , Css.alignItems Css.center

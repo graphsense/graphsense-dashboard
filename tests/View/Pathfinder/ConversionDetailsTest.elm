@@ -160,7 +160,7 @@ rows =
 
 explorerLinks : Api.Data.ExternalConversion -> Query.Multiple ()
 explorerLinks =
-    rows >> Query.findAll [ Selector.attribute (Html.Attributes.attribute "data-testid" "bridge-explorer-link") ]
+    rows >> Query.findAll [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-bridge-explorer-link") ]
 
 
 suite : Test
