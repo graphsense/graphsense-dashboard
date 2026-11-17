@@ -35,6 +35,7 @@ import Svg.Styled.Attributes exposing (css)
 import Theme.Html.Icons as HIcons
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Html.TagsComponents as TagsComponents
+import Util.BridgeExplorer as BridgeExplorer
 import Util.Css exposing (spread)
 import Util.Data
 import Util.Graph exposing (decodeCoords)
@@ -153,9 +154,12 @@ account vc viewState model id txExistsFn =
 
         baseTxIdString =
             (txHashPrefix ++ Id.id id) |> String.split "_" |> List.head |> Maybe.withDefault ""
+
+        notices =
+            unsupportedConversionNotices vc viewState.tx.unsupportedConversions
     in
     div []
-        [ SidePanelComponents.sidePanelEthTransactionWithAttributes
+        [ SidePanelComponents.sidePanelEthTransactionWithInstances
             (SidePanelComponents.sidePanelEthTransactionAttributes
                 |> Rs.s_root
                     [ sidePanelCss
@@ -169,6 +173,9 @@ account vc viewState model id txExistsFn =
                                 |> Tooltip.attributes "tx-lite-badge" (Util.Tooltip.tooltipConfig vc (\tooltipMsg -> Pathfinder.TxDetailsMsg (TooltipMsg tooltipMsg)))
                            )
                     )
+            )
+            (SidePanelComponents.sidePanelEthTransactionInstances
+                |> Rs.s_text (Just (noticesView SidePanelComponents.sidePanelEthTransactionSidePanelEthTxDetailsText_details.styles notices))
             )
             { identifierWithCopyIcon =
                 { identifier = baseTxIdString |> truncateLongIdentifierWithLengths 8 4
@@ -202,7 +209,7 @@ account vc viewState model id txExistsFn =
                 , showNotice = not (List.isEmpty viewState.tx.unsupportedConversions)
                 }
             , sidePanelNotice =
-                { text = unsupportedConversionNotice vc viewState.tx.unsupportedConversions
+                { text = String.join " " notices
                 }
             , sidePanelTxHeader =
                 { headerText = (Id.network id |> String.toUpper) ++ " " ++ Locale.string vc.locale "Transaction"
@@ -278,9 +285,13 @@ utxo vc model id viewState tx =
         sidePanelTxInstancesBase =
             SidePanelComponents.sidePanelTransactionInstances
 
+        notices =
+            unsupportedConversionNotices vc viewState.tx.unsupportedConversions
+
         sidePanelTxInstances =
             { sidePanelTxInstancesBase
                 | secondRowTextOfMix = mixingConfidenceBadge
+                , text = Just (noticesView SidePanelComponents.sidePanelTransactionSidePanelTxDetailsText_details.styles notices)
             }
 
         checkIndex refsDict =
@@ -332,10 +343,10 @@ utxo vc model id viewState tx =
             { showMixingRow = mixingDetails |> Maybe.map (always True) |> Maybe.withDefault False
             , showNotice = False
             , showNotice2 = not (List.isEmpty viewState.tx.unsupportedConversions)
-            , noticeText = unsupportedConversionNotice vc viewState.tx.unsupportedConversions
+            , noticeText = String.join " " notices
             }
         , sidePanelNotice =
-            { text = unsupportedConversionNotice vc viewState.tx.unsupportedConversions
+            { text = String.join " " notices
             }
         , titleOfMix = { infoLabel = Locale.string vc.locale "mixing type" }
         , valueOfMix = mixingCell
@@ -675,29 +686,45 @@ consensusChangeInfoForOutput consensusEntries output =
             )
 
 
-unsupportedConversionNotice : View.Config -> List Tx.UnsupportedConversion -> String
-unsupportedConversionNotice vc conversions =
-    case conversions of
-        [] ->
-            ""
+{-| One note per conversion the graph cannot draw, each naming its own target
+(and the bridge, when the row names it); identical notes once.
+-}
+unsupportedConversionNotices : View.Config -> List Tx.UnsupportedConversion -> List String
+unsupportedConversionNotices vc =
+    List.map (unsupportedConversionNotice vc) >> List.Extra.unique
 
-        conv :: _ ->
-            let
-                key =
-                    case conv.conversionType of
-                        Api.Data.ExternalConversionConversionTypeDexSwap ->
-                            "unsupported-swap-notice"
 
-                        Api.Data.ExternalConversionConversionTypeBridgeTx ->
-                            "unsupported-bridge-notice"
+unsupportedConversionNotice : View.Config -> Tx.UnsupportedConversion -> String
+unsupportedConversionNotice vc conv =
+    let
+        address =
+            conv.toAddress
 
-                address =
-                    conv.toAddress
+        network =
+            String.toUpper conv.toNetwork
+    in
+    case ( conv.conversionType, conv.protocol ) of
+        ( Api.Data.ExternalConversionConversionTypeDexSwap, _ ) ->
+            Locale.interpolated vc.locale "unsupported-swap-notice" [ address, network ]
 
-                network =
-                    String.toUpper conv.toNetwork
-            in
-            Locale.interpolated vc.locale key [ address, network ]
+        ( Api.Data.ExternalConversionConversionTypeBridgeTx, Just protocol ) ->
+            Locale.interpolated vc.locale "unsupported-protocol-bridge-notice" [ address, network, BridgeExplorer.protocolName protocol ]
+
+        ( Api.Data.ExternalConversionConversionTypeBridgeTx, Nothing ) ->
+            Locale.interpolated vc.locale "unsupported-bridge-notice" [ address, network ]
+
+
+{-| The notes in place of the notice's one text, stacked, each with the text's
+own generated styles.
+-}
+noticesView : List Css.Style -> List String -> Html msg
+noticesView textStyles notes =
+    div
+        [ textStyles
+            ++ [ Css.displayFlex, Css.flexDirection Css.column, Css.property "gap" "4px" ]
+            |> css
+        ]
+        (List.map (\note -> div [ Util.View.testId "gs-conversion-notice" ] [ Html.Styled.text note ]) notes)
 
 
 ioTableView : View.Config -> IoDirection -> Network -> ComponentsInfiniteTable.Model String Api.Data.TxValue -> IoColumnConfig -> Html Pathfinder.Msg

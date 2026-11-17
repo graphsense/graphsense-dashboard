@@ -82,6 +82,7 @@ type alias UnsupportedConversion =
     { toAddress : String
     , toNetwork : String
     , conversionType : Api.Data.ExternalConversionConversionType
+    , protocol : Maybe String
     }
 
 

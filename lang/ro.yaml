@@ -564,6 +564,7 @@ export-dialog-transparent-background: fundal transparent
 unsupported-swap-notice: 'Notă: S-a detectat o tranzacție swap neacceptată, țintă {0} ({1})'
 unsupported-bridge-notice: 'Notă: S-a detectat o tranzacție bridge neacceptată, țintă {0}
   ({1})'
+unsupported-protocol-bridge-notice: 'Notă: S-a detectat o tranzacție bridge {2} neacceptată, țintă {0} ({1})'
 cluster tags: Etichete derivate din cluster
 cluster tags list: Listă de etichete derivate din cluster
 cluster tags disclaimer: Aceste etichete nu sunt atribuite direct acestei adrese, ci sunt
