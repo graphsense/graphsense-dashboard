@@ -182,6 +182,33 @@ suite =
                     ]
                         |> List.map ConversionDetails.protocolLabel
                         |> Expect.equal [ Just "LayerZero · USDT0", Just "LayerZero", Just "deBridge", Nothing, Nothing, Nothing ]
+            , test "blank protocols add no rows, and blank apps add no separator" <|
+                \_ ->
+                    Expect.all
+                        [ \_ ->
+                            [ "", "  " ]
+                                |> List.map (\name -> ConversionDetails.protocolLabel { usdt0 | protocol = Just name })
+                                |> Expect.equal [ Nothing, Nothing ]
+                        , \_ ->
+                            [ "", "  " ]
+                                |> List.map (\name -> ConversionDetails.protocolLabel { usdt0 | protocolApp = Just name })
+                                |> Expect.equal [ Just "LayerZero", Just "LayerZero" ]
+                        ]
+                        ()
+            , test "known metadata tolerates whitespace and casing in names and explorer lookup" <|
+                \_ ->
+                    rows { usdt0 | protocol = Just " LayerZERO ", protocolApp = Just " UsDt0 " }
+                        |> Expect.all
+                            [ Query.has [ Selector.text "LayerZero · USDT0" ]
+                            , Query.has [ Selector.text "LayerZero Scan" ]
+                            ]
+            , test "a malformed explorer id preserves the protocol row" <|
+                \_ ->
+                    rows { usdt0 | protocol = Just "debridge", protocolApp = Nothing, transferId = Just "0x12" }
+                        |> Expect.all
+                            [ Query.has [ Selector.text "deBridge" ]
+                            , Query.hasNot [ Selector.text "Bridge explorer" ]
+                            ]
             , test "the protocol is a row of the details table, above its explorer" <|
                 -- a row like Sender or Timestamp, not a line under the title;
                 -- the legs are listed, copyable and linked in the Bridge

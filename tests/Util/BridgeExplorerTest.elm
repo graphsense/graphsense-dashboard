@@ -66,17 +66,6 @@ suite =
                             , [ "Oft-x", "" ]
                             )
             ]
-        , describe "the leg's transaction hash"
-            [ test "drops the leg suffix" <|
-                \_ ->
-                    BridgeExplorer.legTxHash usdt0Send
-                        |> Expect.equal "507fa26239c34aefcefcb660457a73065383f284ca4673e436ea168e5519b2b0"
-            , test "drops a 0x prefix and keeps a bare hash" <|
-                \_ ->
-                    [ "0xABCDEF_I2", "abcdef" ]
-                        |> List.map BridgeExplorer.legTxHash
-                        |> Expect.equal [ "ABCDEF", "abcdef" ]
-            ]
         , describe "the protocol's explorer"
             [ test "LayerZero Scan finds the message by its source tx" <|
                 \_ ->
@@ -134,6 +123,15 @@ suite =
                 \_ ->
                     BridgeExplorer.explorerLink { protocol = "cctp", sourceLeg = "abc&s=x_T1", transferId = Nothing }
                         |> Expect.equal Nothing
+            , test "truncated hashes and malformed leg suffixes never become explorer URLs" <|
+                \_ ->
+                    [ "cctp", "layerzero", "thorchain" ]
+                        |> List.concatMap
+                            (\protocol ->
+                                [ "abc", String.repeat 64 "a" ++ "_garbage", String.repeat 64 "a" ++ "_T" ]
+                                    |> List.map (\source -> BridgeExplorer.explorerLink { protocol = protocol, sourceLeg = source, transferId = Nothing })
+                            )
+                        |> Expect.equal (List.repeat 9 Nothing)
             , test "unknown protocols have no explorer link" <|
                 \_ ->
                     [ link "symbiosis" Nothing, link "wormhole" Nothing ]

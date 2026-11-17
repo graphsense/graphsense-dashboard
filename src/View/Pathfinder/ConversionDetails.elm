@@ -180,15 +180,25 @@ protocolLabel c =
 
         Api.Data.ExternalConversionConversionTypeBridgeTx ->
             c.protocol
+                |> Maybe.andThen nonBlank
                 |> Maybe.map
                     (\protocol ->
-                        case c.protocolApp of
+                        case c.protocolApp |> Maybe.andThen nonBlank of
                             Just app ->
                                 BridgeExplorer.protocolName protocol ++ " · " ++ BridgeExplorer.appName app
 
                             Nothing ->
                                 BridgeExplorer.protocolName protocol
                     )
+
+
+nonBlank : String -> Maybe String
+nonBlank value =
+    if String.isEmpty (String.trim value) then
+        Nothing
+
+    else
+        Just (String.trim value)
 
 
 {-| What a bridge row adds below the timestamp, laid out like the rows above

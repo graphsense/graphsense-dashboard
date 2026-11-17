@@ -1,4 +1,4 @@
-module Util.BridgeExplorer exposing (ExplorerLink, appName, explorerLink, legTxHash, protocolName)
+module Util.BridgeExplorer exposing (ExplorerLink, appName, explorerLink, protocolName)
 
 {-| Which bridge a conversion went through, named as people know it, and where
 the protocol's own explorer shows the transfer.
@@ -12,6 +12,8 @@ A hash or id that is not plain hex never becomes a URL.
 
 -}
 
+import Model.Tx as Tx
+
 
 type alias ExplorerLink =
     { url : String
@@ -21,7 +23,7 @@ type alias ExplorerLink =
 
 protocolName : String -> String
 protocolName protocol =
-    case protocol of
+    case String.toLower (String.trim protocol) of
         "cctp" ->
             "CCTP"
 
@@ -37,21 +39,21 @@ protocolName protocol =
         "symbiosis" ->
             "Symbiosis"
 
-        other ->
-            capitalized other
+        _ ->
+            capitalized (String.trim protocol)
 
 
 appName : String -> String
 appName app =
-    case app of
+    case String.toLower (String.trim app) of
         "stargate" ->
             "Stargate"
 
         "usdt0" ->
             "USDT0"
 
-        other ->
-            capitalized other
+        _ ->
+            capitalized (String.trim app)
 
 
 {-| A name the dashboard has no display form for yet ("across"), as the API
@@ -60,18 +62,6 @@ spells it but with a capital first letter, so it reads as a name.
 capitalized : String -> String
 capitalized name =
     String.toUpper (String.left 1 name) ++ String.dropLeft 1 name
-
-
-{-| The tx hash of a leg identifier (`<hash>_T<n>`, `<hash>_I<n>` or a bare
-hash), without a `0x` prefix.
--}
-legTxHash : String -> String
-legTxHash identifier =
-    identifier
-        |> String.split "_"
-        |> List.head
-        |> Maybe.withDefault identifier
-        |> dropHexPrefix
 
 
 {-| The protocol's explorer page for a transfer: LayerZero Scan finds a message
@@ -91,10 +81,18 @@ explorerLink : { protocol : String, sourceLeg : String, transferId : Maybe Strin
 explorerLink { protocol, sourceLeg, transferId } =
     let
         source =
-            legTxHash sourceLeg
-                |> hexOnly
+            Tx.parseTxIdentifier sourceLeg
+                |> Maybe.map Tx.getTxHash
+                |> Maybe.andThen
+                    (\hash ->
+                        if String.length hash == 64 then
+                            Just hash
+
+                        else
+                            Nothing
+                    )
     in
-    case protocol of
+    case String.toLower (String.trim protocol) of
         "layerzero" ->
             source
                 |> Maybe.map

@@ -27,6 +27,15 @@ suite =
                 [ "ABC_T2", "0xABC_T2", "0XABC_T2" ]
                     |> List.map (ExternalLinks.getBlockExplorerTransactionLinks "eth" >> List.head)
                     |> Expect.equal (List.repeat 3 (Just ( "https://etherscan.io/tx/0xABC/advanced#eventlog#2", "Etherscan" )))
+        , test "non-bridge BTC, Tron and internal-call links keep their hash and anchors" <|
+            \_ ->
+                [ ( "btc", "00ABCDEF" ), ( "trx", "00ABCDEF_T2" ), ( "eth", "0X00ABCDEF_I0" ) ]
+                    |> List.map (\( network, identifier ) -> ExternalLinks.getBlockExplorerTransactionLinks network identifier |> List.head)
+                    |> Expect.equal
+                        [ Just ( "https://www.oklink.com/btc/tx/00ABCDEF", "Oklink" )
+                        , Just ( "https://tronscan.org/#/transaction/00ABCDEF", "Tronscan" )
+                        , Just ( "https://etherscan.io/tx/0x00ABCDEF/advanced#internal", "Etherscan" )
+                        ]
         , test "a network without an explorer produces no links" <|
             \_ ->
                 ExternalLinks.getBlockExplorerTransactionLinks "unknown" "abc_T2"
