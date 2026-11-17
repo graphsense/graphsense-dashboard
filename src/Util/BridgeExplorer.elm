@@ -85,6 +85,13 @@ several. Its `status?id=` pages take an undocumented id, so we link the search.
 Checked on 2026-11-09 on V1 and V2 transfers from all seven CCTP networks we
 serve; V1 transfers from 2023/24 were not found.
 
+Across opens a transfer by its origin tx (`across.to/transfer/0x<hash>`; the
+fill tx is not found there), Relay a request by its deposit tx
+(`relay.link/transaction/0x<hash>`, Relay's documented link; its page sits
+behind a bot check, so only a browser opens it), Wormholescan a message by its
+VAA id from either end. A half row without its source leg links no Across or
+Relay page. Checked on 2026-11-17 on the adapter's recorded transfers.
+
 -}
 explorerLink : { protocol : String, sourceLeg : String, transferId : Maybe String } -> Maybe ExplorerLink
 explorerLink { protocol, sourceLeg, transferId } =
@@ -139,8 +146,80 @@ explorerLink { protocol, sourceLeg, transferId } =
                         }
                     )
 
+        "across" ->
+            source
+                |> Maybe.andThen txHash
+                |> Maybe.map
+                    (\hash ->
+                        { url = "https://across.to/transfer/0x" ++ hash
+                        , label = "Across Explorer"
+                        }
+                    )
+
+        "relay" ->
+            source
+                |> Maybe.andThen txHash
+                |> Maybe.map
+                    (\hash ->
+                        { url = "https://relay.link/transaction/0x" ++ hash
+                        , label = "Relay Explorer"
+                        }
+                    )
+
+        "wormhole" ->
+            transferId
+                |> Maybe.andThen vaaId
+                |> Maybe.map
+                    (\id ->
+                        { url = "https://wormholescan.io/#/tx/" ++ id
+                        , label = "Wormholescan"
+                        }
+                    )
+
         _ ->
             Nothing
+
+
+{-| A tx hash: 32 bytes of hex (no 0x), lowercased.
+-}
+txHash : String -> Maybe String
+txHash hash =
+    if String.length hash == 64 then
+        hexOnly hash |> Maybe.map String.toLower
+
+    else
+        Nothing
+
+
+{-| A Wormhole VAA id as Wormholescan takes it, `<chain>/<emitter>/<sequence>`:
+the Wormhole chain id (its own numbering: eth 2, bnb 4), the emitter as 64 hex
+digits without 0x (its leading zeros are part of it) and the sequence, both in
+decimal.
+-}
+vaaId : String -> Maybe String
+vaaId id =
+    case String.split "/" id of
+        [ chain, emitter, sequence ] ->
+            if
+                decimal chain
+                    && String.length emitter
+                    == 64
+                    && hexOnly emitter
+                    /= Nothing
+                    && decimal sequence
+            then
+                Just (chain ++ "/" ++ String.toLower emitter ++ "/" ++ sequence)
+
+            else
+                Nothing
+
+        _ ->
+            Nothing
+
+
+decimal : String -> Bool
+decimal s =
+    not (String.isEmpty s) && String.all Char.isDigit s
 
 
 {-| A DLN order id: 0x and 32 bytes of hex.
