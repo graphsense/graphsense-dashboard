@@ -5,7 +5,7 @@ the DESTINATION network: its amount must be read as that network's coin. Read
 on the source network, a btc output of a bridge from eth is keyed to eth.
 
 The panel also names the bridge the API says proves the pair (`protocol`,
-`protocol_app`, `transfer_id`, adapter D-38) and links both legs' chain
+`protocol_app`, `transfer_id`, all optional) and links both legs' chain
 explorers and the protocol's own explorer.
 
 -}
@@ -128,7 +128,7 @@ usdt0Guid =
     "0xb071cfdf0f4e7c9bfff73e34fdc70f894bf8e799ce674722b1b15e35bf8c500d"
 
 
-{-| The adapter's row for the USDT0 transfer arb 0x507fa262… → eth 0xcfa572bc….
+{-| A bridge row for the USDT0 transfer arb 0x507fa262… → eth 0xcfa572bc….
 -}
 usdt0 : Api.Data.ExternalConversion
 usdt0 =

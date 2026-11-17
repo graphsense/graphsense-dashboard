@@ -3,8 +3,8 @@ module Util.BridgeExplorer exposing (ExplorerLink, appName, explorerLink, protoc
 {-| Which bridge a conversion went through, named as people know it, and where
 the protocol's own explorer shows the transfer.
 
-The API names the protocol of a bridge row (`protocol`, `protocol_app`,
-`transfer_id`; adapter DASHBOARD\_CHANGES D-38). The links are built here,
+The API can name the protocol of a bridge row (the optional `protocol`,
+`protocol_app` and `transfer_id`). The links are built here,
 like the chain explorers in `Util.ExternalLinks`. Each opens only when clicked,
 and that click tells the explorer's operator which transfer was looked at.
 

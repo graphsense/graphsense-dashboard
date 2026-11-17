@@ -193,9 +193,9 @@ suite =
                             )
             ]
         , describe "a bridge row's protocol, app and transfer id"
-            -- Three optional keys the adapter adds to bridge_tx rows (its
-            -- DASHBOARD_CHANGES D-38), in neither the spec nor any baseline body.
-            [ test "decodes them from the adapter's row" <|
+            -- Three optional keys a backend can add to bridge_tx rows, in
+            -- neither the spec nor any baseline body.
+            [ test "decodes them from a bridge row" <|
                 \_ ->
                     usdt0BridgeRow
                         |> Json.Decode.decodeString Api.Data.externalConversionDecoder
@@ -372,8 +372,8 @@ tokenInputDexSwap =
     """{"conversion_type":"dex_swap","from_address":"0x4c2d696441a11760429cd9845bd84987b9313242","to_address":"0x4c2d696441a11760429cd9845bd84987b9313242","from_asset":"0xdac17f958d2ee523a2206206994597c13d831ec7","to_asset":"native","from_amount":"0x470de4df820000","to_amount":"0x22db8e23bcaee","from_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_T250","to_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_I603","from_network":"eth","to_network":"eth","from_is_supported_asset":true,"to_is_supported_asset":true,"from_asset_symbol":"USDT","from_asset_decimals":6,"from_amount_fiat_values":[{"code":"usd","value":60.0}]}"""
 
 
-{-| The adapter's answer for the USDT0 transfer arb 0x507fa262… → eth
-0xcfa572bc…, byte for byte (built from the recorded receipts, 2026-11-06).
+{-| A bridge row for the USDT0 transfer arb 0x507fa262… → eth 0xcfa572bc…,
+as a backend that sends the optional bridge keys answers it.
 -}
 usdt0BridgeRow : String
 usdt0BridgeRow =

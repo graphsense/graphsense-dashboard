@@ -541,9 +541,9 @@ type alias ExternalConversion =
     , toAssetDecimals : Maybe Int
     , fromAmountFiatValues : Maybe (List Rate)
     , toAmountFiatValues : Maybe (List Rate)
-    -- hand-patched (adapter DASHBOARD_CHANGES D-38): which bridge proves a
-    -- bridge_tx row, the app on top of it and the protocol's transfer id;
-    -- drop once the spec carries these fields
+    -- hand-patched, optional: which bridge proves a bridge_tx row, the app on
+    -- top of it and the protocol's transfer id; drop once the spec carries
+    -- these fields
     , protocol : Maybe String
     , protocolApp : Maybe String
     , transferId : Maybe String

@@ -15,7 +15,7 @@ usdt0Send =
     "507fa26239c34aefcefcb660457a73065383f284ca4673e436ea168e5519b2b0_T13"
 
 
-{-| The order of bnb 0x2b22eab7… → eth 0x9254eb94… (the adapter's recorded case).
+{-| The order of bnb 0x2b22eab7… → eth 0x9254eb94… (a real deBridge order).
 -}
 debridgeOrder : String
 debridgeOrder =
@@ -44,7 +44,7 @@ suite : Test
 suite =
     describe "Util.BridgeExplorer"
         [ test "an unknown name is shown as the API spells it, with a capital first letter" <|
-            -- the adapter names protocols the dashboard has no display name
+            -- the API can name protocols the dashboard has no display name
             -- for yet (across, relay, wormhole); "across" must not read as a word
             \_ ->
                 ( [ "across", "relay", "wormhole", "Mayan", "", " across ", " CCTP ", " LayerZERO ", "  " ] |> List.map BridgeExplorer.protocolName
