@@ -2499,6 +2499,7 @@ updateByMsg uc msg model =
                                 { toAddress = c.toAddress
                                 , toNetwork = c.toNetwork
                                 , conversionType = c.conversionType
+                                , protocol = c.protocol
                                 }
                             )
 
@@ -2511,7 +2512,9 @@ updateByMsg uc msg model =
                         model.network
 
                     else
-                        Network.updateTx txid (\t -> { t | unsupportedConversions = unsupported }) model.network
+                        -- added to what the tx already has: a leg's conversions
+                        -- can arrive in more than one answer
+                        Network.updateTx txid (\t -> { t | unsupportedConversions = List.Extra.unique (t.unsupportedConversions ++ unsupported) }) model.network
 
                 modelWithFlag =
                     { model | network = networkWithFlag }
