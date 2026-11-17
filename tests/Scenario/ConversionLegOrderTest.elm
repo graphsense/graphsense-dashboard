@@ -57,6 +57,17 @@ nativeBridge =
     }
 
 
+{-| A native leg the way every other bridge names it (D-37): the BARE hash,
+meaning the whole tx, which `/txs/{hash}` serves as its root `_I0`.
+-}
+bareNativeBridge : Api.Data.ExternalConversion
+bareNativeBridge =
+    { tokenBridge
+        | fromAssetTransfer = bnbHash
+        , toAssetTransfer = ethHash
+    }
+
+
 bnbHash : String
 bnbHash =
     "d6a24c8473f617a2937c41a8188cbfced028d404be1925eac741e26a9c3cc018"
@@ -106,4 +117,14 @@ suite =
             \_ ->
                 isOutputLegOf nativeBridge ( "bnb", bnbHash ++ "_I0" )
                     |> Expect.equal False
+        , test "a bare-hash native leg is the whole tx, served as its root" <|
+            \_ ->
+                [ ( "eth", ethHash ++ "_I0" ), ( "eth", ethHash ), ( "eth", "0x" ++ ethHash ) ]
+                    |> List.map (isOutputLegOf bareNativeBridge)
+                    |> Expect.equal [ True, True, True ]
+        , test "but not any other sub-transfer of that tx, nor the deposit" <|
+            \_ ->
+                [ ( "eth", ethHash ++ "_T840" ), ( "eth", ethHash ++ "_I1" ), ( "bnb", bnbHash ++ "_I0" ) ]
+                    |> List.map (isOutputLegOf bareNativeBridge)
+                    |> Expect.equal [ False, False, False ]
         ]

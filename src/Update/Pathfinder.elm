@@ -111,7 +111,7 @@ import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
-import Util exposing (and, n, removeLeading0x)
+import Util exposing (and, n)
 import Util.Annotations as Annotations
 import Util.Csv
 import Util.Data as Data
@@ -2346,10 +2346,10 @@ updateByMsg uc msg model =
         InternalConversionLoopAddressesLoaded keepPositionOf conv ->
             let
                 mtxInput =
-                    ConversionEdge.getInputTransferIdRaw conv |> flip Dict.get model.network.txs
+                    ConversionEdge.findLegTx conv.fromNetwork conv.fromAssetTransfer model.network.txs
 
                 mtxOutput =
-                    ConversionEdge.getOutputTransferIdRaw conv |> flip Dict.get model.network.txs
+                    ConversionEdge.findLegTx conv.toNetwork conv.toAssetTransfer model.network.txs
 
                 arrangeConversionNodes txInput txOutput =
                     let
@@ -2517,7 +2517,7 @@ updateByMsg uc msg model =
                     { model | network = networkWithFlag }
 
                 isLeg =
-                    isLegTransfer txid
+                    ConversionEdge.isLeg txid
 
                 fetch id continuation =
                     continuation
@@ -2532,7 +2532,7 @@ updateByMsg uc msg model =
                     (\conversion ( aggm, effects ) ->
                         let
                             withLeg network transfer continuation =
-                                case Dict.get (Id.init network (removeLeading0x transfer)) aggm.network.txs of
+                                case ConversionEdge.findLegTx network transfer aggm.network.txs of
                                     Just leg ->
                                         updateByMsg uc (continuation (Tx.getRawTx leg)) aggm
 
@@ -2562,7 +2562,7 @@ updateByMsg uc msg model =
                 -- only the input leg we asked for may continue; any other answer
                 -- would re-request forever or pair a leg with itself
                 isInputLeg =
-                    isLegTransfer (Tx.getTxId tx) conversion.fromNetwork conversion.fromAssetTransfer
+                    ConversionEdge.isLeg (Tx.getTxId tx) conversion.fromNetwork conversion.fromAssetTransfer
 
                 ( ( legTx, nn ), newTx ) =
                     case Dict.get (Tx.getTxId tx) model.network.txs of
@@ -6541,15 +6541,6 @@ autoLoadConversions keepPositionOf tx model =
         )
 
 
-{-| Is the sub-transaction `txid` the leg a swap names as `transfer` on
-`network`? The conversions endpoint prefixes leg identifiers with `0x`, the txs
-endpoint does not, so the comparison drops it on both sides.
--}
-isLegTransfer : Id -> String -> String -> Bool
-isLegTransfer txid network transfer =
-    Id.network txid == network && (Id.id txid |> removeLeading0x) == (transfer |> removeLeading0x)
-
-
 autoLoadAddresses : Bool -> Tx -> Model -> ( Model, List Effect )
 autoLoadAddresses autoLinkInTraceMode tx model =
     let
@@ -7200,10 +7191,10 @@ positive test against the input leg misses and whatever the else branch assumes
 becomes the answer. Assuming "input leg" there is right far more often: it is
 the tx the graph already held, and the output leg is the one being fetched.
 
+A native bridge leg names the bare hash (D-37), and then the whole tx, served
+as `<hash>_I0`, is that leg (`ConversionEdge.isLeg`).
+
 -}
 isOutputLegOf : Api.Data.ExternalConversion -> Id -> Bool
 isOutputLegOf conversion txId =
-    Id.network txId
-        == conversion.toNetwork
-        && (Id.id txId |> removeLeading0x)
-        == (conversion.toAssetTransfer |> removeLeading0x)
+    ConversionEdge.isLeg txId conversion.toNetwork conversion.toAssetTransfer
