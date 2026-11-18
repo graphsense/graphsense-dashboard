@@ -145,6 +145,43 @@ ethFillRoot =
     tx "eth" "a89e63d97f3add6174a939845fdb8078da3f0e4a17c830b9f291176efcbddcb8_I0" spokePool "0xa9c9259ca0efe93e2af7bda7d8f438683d4b1fd6" "eth"
 
 
+{-| The fill as it really is on eth: the relayer calls the SpokePool with no
+value, and the SpokePool pays the depositor through an internal transfer. Its
+root moves nothing to the payee. The relayer's address is a stand-in.
+-}
+ethFillRootByRelayer : Api.Data.Tx
+ethFillRootByRelayer =
+    Api.Data.TxTxAccount
+        { contractCreation = Nothing
+        , currency = "eth"
+        , fee = Nothing
+        , fromAddress = "0x07ae8551be970cb1cca11dd7a11f47ae82e70e67"
+        , height = 1
+        , identifier = "a89e63d97f3add6174a939845fdb8078da3f0e4a17c830b9f291176efcbddcb8_I0"
+        , isExternal = Just True
+        , network = "eth"
+        , timestamp = 1788254088
+        , toAddress = spokePool
+        , tokenTxId = Nothing
+        , txHash = "a89e63d97f3add6174a939845fdb8078da3f0e4a17c830b9f291176efcbddcb8"
+        , txType = "account"
+        , value = { fiatValues = [], value = 0 }
+        }
+
+
+{-| The base deposit as it really is: the depositor sends the bridged amount
+to the SpokePool.
+-}
+baseDepositRootWithAmount : Api.Data.Tx
+baseDepositRootWithAmount =
+    case baseDepositRoot of
+        Api.Data.TxTxAccount a ->
+            Api.Data.TxTxAccount { a | isExternal = Just True, value = { fiatValues = [], value = 0x003F67C07F4E7000 } }
+
+        utxo ->
+            utxo
+
+
 
 -- DRIVING
 
@@ -300,5 +337,26 @@ suite =
                         |> answerLeg baseDepositRoot
                         |> panel
                         |> Query.has [ Selector.text "Bridge transaction", Selector.text "Across" ]
+            , test "the deposit opened on base shows the row's output amount, not the fill tx's zero value" <|
+                \_ ->
+                    App.init
+                        |> opened baseDepositRootWithAmount
+                        |> gotConversions baseDepositRootWithAmount (decode acrossEthFillFromBase)
+                        |> answerLeg ethFillRootByRelayer
+                        |> panel
+                        -- the fill tx's own node rightly reads 0 ETH; the panel's
+                        -- Output Value must not
+                        |> Query.findAll [ Selector.text "0 ETH" ]
+                        |> Query.count (Expect.equal 1)
+            , test "the panel shows the row's amount on both sides" <|
+                \_ ->
+                    App.init
+                        |> opened baseDepositRootWithAmount
+                        |> gotConversions baseDepositRootWithAmount (decode acrossEthFillFromBase)
+                        |> answerLeg ethFillRootByRelayer
+                        |> panel
+                        -- the deposit tx's node, Input Value and Output Value
+                        |> Query.findAll [ Selector.text "0.018 ETH" ]
+                        |> Query.count (Expect.equal 3)
             ]
         ]

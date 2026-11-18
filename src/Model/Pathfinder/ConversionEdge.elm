@@ -323,14 +323,16 @@ type LegAmount
     | NotInRegistry
 
 
-{-| The input leg's amount: from the loaded leg tx as before, or, for an edge
-drawn from its row, the row's own amount when its token is registered.
+{-| The input leg's amount: from the loaded leg tx as before (a native leg from
+the row, `nativeLegValues`), or, for an edge drawn from its row, the row's own
+amount when its token is registered.
 -}
 inputAmount : ConversionEdge -> LegAmount
 inputAmount c =
     case c.legTxs of
         Just legs ->
-            Amount (Currency.asset c.raw.fromNetwork (Tx.getAssetFromRawTx legs.input)) (inputValues c)
+            Amount (Currency.asset c.raw.fromNetwork (Tx.getAssetFromRawTx legs.input))
+                (nativeLegValues c.raw.fromAsset c.raw.fromAmount c.raw.fromAmountFiatValues (inputValues c))
 
         Nothing ->
             rowAmount c.raw.fromIsSupportedAsset c.raw.fromNetwork c.raw.fromAsset c.raw.fromAmount c.raw.fromAmountFiatValues
@@ -342,10 +344,31 @@ outputAmount : ConversionEdge -> LegAmount
 outputAmount c =
     case c.legTxs of
         Just legs ->
-            Amount (Currency.asset c.raw.toNetwork (Tx.getAssetFromRawTx legs.output)) (outputValues c)
+            Amount (Currency.asset c.raw.toNetwork (Tx.getAssetFromRawTx legs.output))
+                (nativeLegValues c.raw.toAsset c.raw.toAmount c.raw.toAmountFiatValues (outputValues c))
 
         Nothing ->
             rowAmount c.raw.toIsSupportedAsset c.raw.toNetwork c.raw.toAsset c.raw.toAmount c.raw.toAmountFiatValues
+
+
+{-| A native leg is the whole tx (DASHBOARD\_CHANGES D-37), whose own value is
+the leg's amount only when the payer calls the bridge directly: an Across fill
+pays the recipient through an internal transfer, so the fill tx moves 0 to
+them. The row's amount, then, with the leg tx's fiat only where the tx moved
+exactly that amount, else the row's quote.
+-}
+nativeLegValues : String -> String -> Maybe (List Api.Data.Rate) -> Api.Data.Values -> Api.Data.Values
+nativeLegValues asset amount rates legTxValues =
+    case ( asset == nativeAsset, hexAmount amount ) of
+        ( True, Just value ) ->
+            if legTxValues.value == value then
+                legTxValues
+
+            else
+                withFiat rates { value = value, fiatValues = [] }
+
+        _ ->
+            legTxValues
 
 
 {-| A registered token is named by its contract, which the formatter resolves
