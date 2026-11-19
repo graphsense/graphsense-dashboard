@@ -6,7 +6,7 @@ import Init.Pathfinder.ConversionEdge as ConversionEdge
 import Init.Pathfinder.Id as Id
 import Model.Currency as Currency
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
-import Support.SwapFixture exposing (accountTx, dexSwap, inputLegId, outputLegId, settlement, swapper)
+import Support.SwapFixture exposing (accountTx, dexSwap, inputLegId, outputLegId, settlement, swapper, usd1Contract)
 import Test exposing (Test, describe, test)
 
 
@@ -202,4 +202,57 @@ suite =
                     |> ConversionEdge.outputValues
                     |> .fiatValues
                     |> Expect.equal []
+        , describe "a leg that does not touch the row's address (swap paid through an intermediary, pol 0x1733adc7)"
+            [ test "the output shows the row's amount and quote, not zero" <|
+                \_ ->
+                    mismatchedEdge throughForwarder
+                        |> ConversionEdge.outputAmount
+                        |> Expect.equal
+                            (ConversionEdge.Amount (Currency.asset "bnb" usd1Contract)
+                                { value = 196481686, fiatValues = usd6 }
+                            )
+            , test "the input shows the row's amount and quote, not zero" <|
+                \_ ->
+                    mismatchedEdge throughForwarder
+                        |> ConversionEdge.inputAmount
+                        |> Expect.equal
+                            (ConversionEdge.Amount (Currency.asset "bnb" busdContract)
+                                { value = 390282558, fiatValues = usd6 }
+                            )
+            , test "a leg that touches the address still shows the leg's own value" <|
+                \_ ->
+                    edge throughForwarder
+                        |> ConversionEdge.outputAmount
+                        |> amountValue
+                        |> Expect.equal (Just 1)
+            ]
         ]
+
+
+{-| The swap row of pol 0x1733adc7 in shape: its output leg is the swap's output
+Transfer, which paid the intermediary (the deBridge forwarder) and not the row's
+`toAddress`. Amounts small enough for exact Ints.
+-}
+throughForwarder : Api.Data.ExternalConversion
+throughForwarder =
+    { dexSwap
+        | fromAmount = "0x17433d3e"
+        , toAmount = "0xbb61296"
+        , fromAmountFiatValues = Just usd6
+        , toAmountFiatValues = Just usd6
+    }
+
+
+busdContract : String
+busdContract =
+    "0xe9e7cea3dedca5984780bafc599bd69add087d56"
+
+
+amountValue : ConversionEdge.LegAmount -> Maybe Int
+amountValue legAmount =
+    case legAmount of
+        ConversionEdge.Amount _ values ->
+            Just values.value
+
+        ConversionEdge.NotInRegistry ->
+            Nothing

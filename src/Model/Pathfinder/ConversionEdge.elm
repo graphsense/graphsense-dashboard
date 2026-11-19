@@ -324,28 +324,41 @@ type LegAmount
 
 
 {-| The input leg's amount: from the loaded leg tx as before (a native leg from
-the row, `nativeLegValues`), or, for an edge drawn from its row, the row's own
-amount when its token is registered.
+the row, `nativeLegValues`), or the row's own amount (when its token is
+registered) for an edge drawn from its row, and for a leg tx that does not
+touch the row's `fromAddress` at all: a swap paid through an intermediary
+names the Transfer the intermediary made, not one by the trader
+(DASHBOARD\_CHANGES D-41, pol 0x1733adc7).
 -}
 inputAmount : ConversionEdge -> LegAmount
 inputAmount c =
     case c.legTxs of
         Just legs ->
-            Amount (Currency.asset c.raw.fromNetwork (Tx.getAssetFromRawTx legs.input))
-                (nativeLegValues c.raw.fromAsset c.raw.fromAmount c.raw.fromAmountFiatValues (inputValues c))
+            if Tx.getInputValueForAddressFromRawTx c.raw.fromAddress legs.input == Nothing && c.raw.fromAsset /= nativeAsset then
+                rowAmount c.raw.fromIsSupportedAsset c.raw.fromNetwork c.raw.fromAsset c.raw.fromAmount c.raw.fromAmountFiatValues
+
+            else
+                Amount (Currency.asset c.raw.fromNetwork (Tx.getAssetFromRawTx legs.input))
+                    (nativeLegValues c.raw.fromAsset c.raw.fromAmount c.raw.fromAmountFiatValues (inputValues c))
 
         Nothing ->
             rowAmount c.raw.fromIsSupportedAsset c.raw.fromNetwork c.raw.fromAsset c.raw.fromAmount c.raw.fromAmountFiatValues
 
 
-{-| The same for the output leg, on the destination network.
+{-| The same for the output leg, on the destination network: a leg tx that does
+not pay the row's `toAddress` (the swap's output Transfer paid the
+intermediary) shows the row's amount.
 -}
 outputAmount : ConversionEdge -> LegAmount
 outputAmount c =
     case c.legTxs of
         Just legs ->
-            Amount (Currency.asset c.raw.toNetwork (Tx.getAssetFromRawTx legs.output))
-                (nativeLegValues c.raw.toAsset c.raw.toAmount c.raw.toAmountFiatValues (outputValues c))
+            if Tx.getOutputValueForAddressFromRawTx c.raw.toAddress legs.output == Nothing && c.raw.toAsset /= nativeAsset then
+                rowAmount c.raw.toIsSupportedAsset c.raw.toNetwork c.raw.toAsset c.raw.toAmount c.raw.toAmountFiatValues
+
+            else
+                Amount (Currency.asset c.raw.toNetwork (Tx.getAssetFromRawTx legs.output))
+                    (nativeLegValues c.raw.toAsset c.raw.toAmount c.raw.toAmountFiatValues (outputValues c))
 
         Nothing ->
             rowAmount c.raw.toIsSupportedAsset c.raw.toNetwork c.raw.toAsset c.raw.toAmount c.raw.toAmountFiatValues
