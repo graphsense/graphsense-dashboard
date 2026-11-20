@@ -2,7 +2,7 @@ module Model.Tx exposing (AccountTxType(..), Tx, getTxHash, hasAddress, parseTxI
 
 import Api.Data
 import Model.Direction exposing (Direction(..))
-import Parser exposing ((|.), (|=), Parser, backtrackable, end, int, keyword, oneOf, run, succeed, symbol, variable)
+import Parser exposing ((|.), (|=), Parser, backtrackable, end, int, oneOf, run, succeed, symbol, variable)
 import Set
 
 
@@ -14,13 +14,13 @@ type alias Tx =
 
 hexStringWithPrefix : Parser String
 hexStringWithPrefix =
-    oneOf [ succeed identity |. keyword "0x" |= hexString, hexString ]
+    oneOf [ succeed identity |. oneOf [ symbol "0x", symbol "0X" ] |= hexString, hexString ]
 
 
 hexString : Parser String
 hexString =
     variable
-        { start = \_ -> True
+        { start = Char.isHexDigit
         , inner = \c -> Char.isHexDigit c
         , reserved = Set.empty
         }

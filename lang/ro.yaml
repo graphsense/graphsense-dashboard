@@ -502,6 +502,8 @@ bridge transaction: Tranzacție Bridge
 swap transaction: Tranzacție Swap
 swap transactions: Tranzacții Swap
 Bridge transactions: Tranzacții Bridge
+protocol: Protocol
+bridge explorer: Explorer bridge
 hint-minimum-input: Vă rugăm să introduceți cel puțin {0} caractere
 no-results-found: Nu s-au găsit rezultate.
 deprecation notice: Notificare de învechire
