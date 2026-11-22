@@ -11,6 +11,7 @@ module Model.Pathfinder.ConversionEdge exposing
     , isLegTx
     , isRowOnly
     , legTxHash
+    , namedSourceChain
     , nativeAsset
     , outputAmount
     , outputValues
@@ -257,6 +258,19 @@ drawsFromRow c =
 known : String -> Bool
 known value =
     not (List.member (String.toLower (String.trim value)) [ "", "unknown", "pending" ])
+
+
+{-| The chain a half row names for the source leg it does not have (a fill
+on this network of a deposit on Linea or Solana): the backend names such a
+chain in `from_network` although it serves nothing of it.
+-}
+namedSourceChain : Api.Data.ExternalConversion -> Maybe String
+namedSourceChain c =
+    if not (known c.fromAssetTransfer) && known c.fromNetwork then
+        Just c.fromNetwork
+
+    else
+        Nothing
 
 
 {-| An edge drawn from its row (`drawsFromRow`), not from loaded leg txs.

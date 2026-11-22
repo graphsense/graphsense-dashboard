@@ -2514,6 +2514,7 @@ updateByMsg uc msg model =
                             (\c ->
                                 { toAddress = c.toAddress
                                 , toNetwork = c.toNetwork
+                                , fromChain = ConversionEdge.namedSourceChain c
                                 , conversionType = c.conversionType
                                 , protocol = c.protocol
                                 }

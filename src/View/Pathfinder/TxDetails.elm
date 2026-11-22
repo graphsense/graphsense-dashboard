@@ -702,16 +702,25 @@ unsupportedConversionNotice vc conv =
 
         network =
             String.toUpper conv.toNetwork
+
+        source =
+            Maybe.map String.toUpper conv.fromChain
     in
-    case ( conv.conversionType, conv.protocol ) of
-        ( Api.Data.ExternalConversionConversionTypeDexSwap, _ ) ->
+    case ( conv.conversionType, conv.protocol, source ) of
+        ( Api.Data.ExternalConversionConversionTypeDexSwap, _, _ ) ->
             Locale.interpolated vc.locale "unsupported-swap-notice" [ address, network ]
 
-        ( Api.Data.ExternalConversionConversionTypeBridgeTx, Just protocol ) ->
+        ( Api.Data.ExternalConversionConversionTypeBridgeTx, Just protocol, Nothing ) ->
             Locale.interpolated vc.locale "unsupported-protocol-bridge-notice" [ address, network, BridgeExplorer.protocolName protocol ]
 
-        ( Api.Data.ExternalConversionConversionTypeBridgeTx, Nothing ) ->
+        ( Api.Data.ExternalConversionConversionTypeBridgeTx, Just protocol, Just from ) ->
+            Locale.interpolated vc.locale "unsupported-protocol-bridge-from-notice" [ address, network, BridgeExplorer.protocolName protocol, from ]
+
+        ( Api.Data.ExternalConversionConversionTypeBridgeTx, Nothing, Nothing ) ->
             Locale.interpolated vc.locale "unsupported-bridge-notice" [ address, network ]
+
+        ( Api.Data.ExternalConversionConversionTypeBridgeTx, Nothing, Just from ) ->
+            Locale.interpolated vc.locale "unsupported-bridge-from-notice" [ address, network, from ]
 
 
 {-| The notes in place of the notice's one text, stacked, each with the text's

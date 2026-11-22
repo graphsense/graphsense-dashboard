@@ -307,6 +307,8 @@ english =
         [ ( "unsupported-swap-notice", "Note: Unsupported swap transaction detected, target {0} ({1})" )
         , ( "unsupported-bridge-notice", "Note: Unsupported bridge transaction detected, target {0} ({1})" )
         , ( "unsupported-protocol-bridge-notice", "Note: Unsupported {2} bridge transaction detected, target {0} ({1})" )
+        , ( "unsupported-bridge-from-notice", "Note: Unsupported bridge transaction detected, source {2}, target {0} ({1})" )
+        , ( "unsupported-protocol-bridge-from-notice", "Note: Unsupported {2} bridge transaction detected, source {3}, target {0} ({1})" )
         ]
 
 
@@ -574,6 +576,52 @@ suite =
                     , \_ ->
                         html (settle opened)
                             |> Query.has [ Selector.text "Note: Unsupported Across bridge transaction detected, target 0x83470d93e5f039538fb238c62c5ac71a2410d7ca (ETH)" ]
+                    ]
+                    ()
+        , test "a half row whose source chain the backend names says so in its note (D-49)" <|
+            \_ ->
+                let
+                    rows =
+                        acEthFillUsdtFromLinea |> List.map (\r -> { r | fromNetwork = "linea" })
+
+                    opened =
+                        open (destinationTx (bridgeRow rows)) rows
+                in
+                Expect.all
+                    [ \_ -> requestedAddresses opened.app |> Expect.equal []
+                    , \_ -> txRequests opened.app |> Expect.equal 0
+                    , \_ ->
+                        html (settle opened)
+                            |> Query.has [ Selector.text "Note: Unsupported Across bridge transaction detected, source LINEA, target 0x83470d93e5f039538fb238c62c5ac71a2410d7ca (ETH)" ]
+                    ]
+                    ()
+        , test "a half row to a chain the backend names prints it as the target (D-49)" <|
+            \_ ->
+                let
+                    send =
+                        acEthFillUsdtFromLinea
+                            |> List.map
+                                (\r ->
+                                    { r
+                                        | fromNetwork = "eth"
+                                        , fromAssetTransfer = r.toAssetTransfer
+                                        , fromAddress = r.toAddress
+                                        , fromIsSupportedAsset = True
+                                        , toNetwork = "solana"
+                                        , toAssetTransfer = "pending"
+                                        , toAddress = "unknown"
+                                        , toIsSupportedAsset = False
+                                    }
+                                )
+
+                    opened =
+                        open (sourceTx (bridgeRow send)) send
+                in
+                Expect.all
+                    [ \_ -> txRequests opened.app |> Expect.equal 0
+                    , \_ ->
+                        html (settle opened)
+                            |> Query.has [ Selector.text "Note: Unsupported Across bridge transaction detected, target unknown (SOLANA)" ]
                     ]
                     ()
         , test "a row on a network the backend does not serve keeps its note" <|

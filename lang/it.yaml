@@ -608,6 +608,8 @@ export-dialog-transparent-background: "sfondo trasparente"
 unsupported-swap-notice: "Nota: Transazione di scambio non supportata rilevata, destinazione {0} ({1})"
 unsupported-bridge-notice: "Nota: Transazione bridge non supportata rilevata, destinazione {0} ({1})"
 unsupported-protocol-bridge-notice: "Nota: Transazione bridge {2} non supportata rilevata, destinazione {0} ({1})"
+unsupported-bridge-from-notice: "Nota: Transazione bridge non supportata rilevata, origine {2}, destinazione {0} ({1})"
+unsupported-protocol-bridge-from-notice: "Nota: Transazione bridge {2} non supportata rilevata, origine {3}, destinazione {0} ({1})"
 cluster tags: Tag derivati dal cluster
 cluster tags list: Elenco tag derivati dal cluster
 cluster tags disclaimer: "Questi tag non sono assegnati direttamente a questo indirizzo, ma sono derivati dal cluster di appartenenza. Il clustering può contenere errori, pertanto questi tag vanno utilizzati con cautela."

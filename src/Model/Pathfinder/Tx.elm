@@ -81,6 +81,9 @@ type alias Tx =
 type alias UnsupportedConversion =
     { toAddress : String
     , toNetwork : String
+
+    -- the chain a half row names for the source leg it lacks
+    , fromChain : Maybe String
     , conversionType : Api.Data.ExternalConversionConversionType
     , protocol : Maybe String
     }
