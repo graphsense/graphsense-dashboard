@@ -200,7 +200,9 @@ assetsLabel locale conversion =
                     ++ rowLegLabel locale cr.toNetwork cr.toAsset cr.toIsSupportedAsset
 
             else
-                (cr.fromNetwork |> String.toUpper) ++ "-" ++ (conversion.fromAsset |> String.toUpper) ++ " / " ++ (cr.toNetwork |> String.toUpper) ++ "-" ++ (conversion.toAsset |> String.toUpper)
+                bridgeLegLabel cr.fromNetwork cr.fromAsset conversion.fromAsset
+                    ++ " / "
+                    ++ bridgeLegLabel cr.toNetwork cr.toAsset conversion.toAsset
 
 
 {-| A leg of a bridge drawn from its row, as `NETWORK-TICKER` like any bridge
@@ -235,6 +237,23 @@ unsupportedLabel locale conversion =
 
     else
         Just (Locale.string locale "Unsupported token")
+
+
+{-| A bridge leg as `NETWORK-ASSET`. A native leg is the network's gas coin
+(arb pays in ETH), not the currency of its loaded tx, which for a native
+transfer is the network code. Token legs keep the tx's asset.
+-}
+bridgeLegLabel : String -> String -> String -> String
+bridgeLegLabel network rawAsset txAsset =
+    let
+        asset =
+            if rawAsset == ConversionEdge.nativeAsset then
+                (Currency.assetFromBase network).asset
+
+            else
+                txAsset
+    in
+    String.toUpper network ++ "-" ++ String.toUpper asset
 
 
 legLabel : Locale.Model -> String -> String -> Maybe String -> String
