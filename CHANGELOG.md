@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - "Report a tag" can state the wallet type of the address: hot, cold, deposit or other
 
 ### Fixed
+- Addresses still load once the REST API stops sending the deprecated address `status` field (planned after 2026-12-31): the API client no longer requires it
 - Multi-select stuck on when the browser missed the release of Ctrl/Cmd: the next mouse move or click now ends it
 - Tooltip rows keep a gap between label and value; a long label such as the German "Schlagwörter" ran into the value
 
