@@ -257,7 +257,7 @@ type alias Address =
     , noIncomingTxs : Int
     , noOutgoingTxs : Int
     , outDegree : Int
-    , status : AddressStatus
+    , status : Maybe AddressStatus
     , tokenBalances : Maybe (Dict.Dict String (Values))
     , totalReceived : Values
     , totalSpent : Values
@@ -1004,7 +1004,7 @@ encodeAddressPairs model =
             , encode "no_incoming_txs" Json.Encode.int model.noIncomingTxs
             , encode "no_outgoing_txs" Json.Encode.int model.noOutgoingTxs
             , encode "out_degree" Json.Encode.int model.outDegree
-            , encode "status" encodeAddressStatus model.status
+            , maybeEncode "status" encodeAddressStatus model.status
             , maybeEncode "token_balances" (Json.Encode.dict identity encodeValues) model.tokenBalances
             , encode "total_received" encodeValues model.totalReceived
             , encode "total_spent" encodeValues model.totalSpent
@@ -2768,7 +2768,7 @@ addressDecoder =
         |> decode "no_incoming_txs" Json.Decode.int
         |> decode "no_outgoing_txs" Json.Decode.int 
         |> decode "out_degree" Json.Decode.int 
-        |> decode "status" addressStatusDecoder 
+        |> maybeDecode "status" addressStatusDecoder Nothing
         |> maybeDecode "token_balances" (Json.Decode.dict valuesDecodervaluesDecoder) Nothing
         |> decode "total_received" valuesDecoder 
         |> decode "total_spent" valuesDecoder 
