@@ -133,6 +133,58 @@ send =
     """
 
 
+{-| A deBridge send from opt to base, its fill on base not found yet. Both
+tokens are registered, so the backend flags both sides as supported.
+-}
+debridgePending : String
+debridgePending =
+    """
+    {
+      "conversion_type": "bridge_tx",
+      "from_address": "0xba8bd0bc577afb3354751cd63ee2eaa50c0244fc",
+      "to_address": "0xba8bd0bc577afb3354751cd63ee2eaa50c0244fc",
+      "from_asset": "0x0b2c639c533813f4aa9d7837caf62653d097ff85",
+      "to_asset": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "from_amount": "0xe8fe64",
+      "to_amount": "0xe4b2e2",
+      "from_asset_transfer": "1213f310d63a63e689c321c002f0b563948c778852ff944202833a4cc36f55b4_T145",
+      "to_asset_transfer": "pending",
+      "from_network": "opt",
+      "to_network": "base",
+      "from_is_supported_asset": true,
+      "to_is_supported_asset": true,
+      "protocol": "debridge",
+      "transfer_id": "0x9da0b6bd1161cc03945f2ccc529f19e780e04942c6237696271aef2a14a877bd"
+    }
+    """
+
+
+{-| A CCTP mint on arb whose burn on base was not found. Both sides are
+flagged as supported, as for the send above.
+-}
+cctpUnknown : String
+cctpUnknown =
+    """
+    {
+      "conversion_type": "bridge_tx",
+      "from_address": "0x2513fb617fadd40f0bde0c5b0fab1fbae3ec8801",
+      "to_address": "0x2513fb617fadd40f0bde0c5b0fab1fbae3ec8801",
+      "from_asset": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "to_asset": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+      "from_amount": "0x4c4dca",
+      "to_amount": "0x4c4b40",
+      "from_asset_transfer": "unknown",
+      "to_asset_transfer": "df74a15fdac80ba5b0659d8fe9c25688542531452f70c62181387fabba0c8904_T8",
+      "from_network": "base",
+      "to_network": "arb",
+      "from_is_supported_asset": true,
+      "to_is_supported_asset": true,
+      "protocol": "cctp",
+      "transfer_id": "0xd2f46a511dc9d93ccf2b2a28ba89ff9dd4094e2081e3091625a2efb647ddd911"
+    }
+    """
+
+
 {-| Recorded rows as the client decodes them; a row that does not decode is
 missing, which the first test reports.
 -}
@@ -173,6 +225,18 @@ baseTx =
 ethTx : Api.Data.Tx
 ethTx =
     tx "eth" "5d3d5ceae42c16f11362ddcbead82ae7dbb9b3bfacec465fe6d806a86a4890fd_I0"
+
+
+{-| The known legs of the two half rows above.
+-}
+optSendLeg : Api.Data.Tx
+optSendLeg =
+    tx "opt" "1213f310d63a63e689c321c002f0b563948c778852ff944202833a4cc36f55b4_T145"
+
+
+arbMintLeg : Api.Data.Tx
+arbMintLeg =
+    tx "arb" "df74a15fdac80ba5b0659d8fe9c25688542531452f70c62181387fabba0c8904_T8"
 
 
 idOf : Api.Data.Tx -> Id
@@ -230,6 +294,7 @@ english =
         [ ( "unsupported-swap-notice", "Note: Unsupported swap transaction detected, target {0} ({1})" )
         , ( "unsupported-bridge-notice", "Note: Unsupported bridge transaction detected, target {0} ({1})" )
         , ( "unsupported-protocol-bridge-notice", "Note: Unsupported {2} bridge transaction detected, target {0} ({1})" )
+        , ( "unsupported-protocol-bridge-from-notice", "Note: Unsupported {2} bridge transaction detected, source {3}, target {0} ({1})" )
         ]
 
 
@@ -279,14 +344,35 @@ halfRows =
             )
 
 
+{-| The leg txs the last step asked for by a half row's marker. Such a
+request can only fail (the backend answers 400).
+-}
+markerLegRequests : App -> List String
+markerLegRequests =
+    App.apiEffects
+        >> List.filterMap
+            (\eff ->
+                case eff of
+                    Effect.Api.GetConversionLegEffect { currency, txHash } _ ->
+                        if List.member txHash [ "pending", "unknown" ] then
+                            Just (currency ++ "/" ++ txHash)
+
+                        else
+                            Nothing
+
+                    _ ->
+                        Nothing
+            )
+
+
 suite : Test
 suite =
     describe "one note per undrawable conversion"
         [ test "the recorded answers decode" <|
             \_ ->
-                decode [ redeem, resend, swap, send ]
+                decode [ redeem, resend, swap, send, debridgePending, cctpUnknown ]
                     |> List.length
-                    |> Expect.equal 4
+                    |> Expect.equal 6
         , test "a redeem and a re-send in one tx get a note each (wh-base-redeem-resend)" <|
             \_ ->
                 withConversions baseTx [ halfRows [ redeem, resend ] ]
@@ -315,4 +401,24 @@ suite =
             \_ ->
                 withConversions ethTx [ halfRows [ send ] |> List.map (\c -> { c | protocol = Nothing }) ]
                     |> expectNotes [ "Note: Unsupported bridge transaction detected, target 0xd7ca08ec1aee9cce8a8eda9365343ef197674e1a (ARB)" ]
+        , describe "a half row with both sides supported"
+            [ test "a pending payout gets its note" <|
+                \_ ->
+                    withConversions optSendLeg [ decode [ debridgePending ] ]
+                        |> expectNotes [ "Note: Unsupported deBridge bridge transaction detected, target 0xba8bd0bc577afb3354751cd63ee2eaa50c0244fc (BASE)" ]
+            , test "a pending payout is not requested as a tx" <|
+                \_ ->
+                    withConversions optSendLeg [ decode [ debridgePending ] ]
+                        |> markerLegRequests
+                        |> Expect.equal []
+            , test "an unknown source gets its note, naming the source chain" <|
+                \_ ->
+                    withConversions arbMintLeg [ decode [ cctpUnknown ] ]
+                        |> expectNotes [ "Note: Unsupported CCTP bridge transaction detected, source BASE, target 0x2513fb617fadd40f0bde0c5b0fab1fbae3ec8801 (ARB)" ]
+            , test "an unknown source is not requested as a tx" <|
+                \_ ->
+                    withConversions arbMintLeg [ decode [ cctpUnknown ] ]
+                        |> markerLegRequests
+                        |> Expect.equal []
+            ]
         ]

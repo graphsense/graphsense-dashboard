@@ -2507,9 +2507,15 @@ updateByMsg uc msg model =
                         && Update.networkServed uc c.fromNetwork
                         && Update.networkServed uc c.toNetwork
 
+                -- a bridge with a leg still `pending` or `unknown` has no leg tx
+                -- to pair, whatever its flags say: it is a note
+                halfRow c =
+                    (c.conversionType == Api.Data.ExternalConversionConversionTypeBridgeTx)
+                        && not (ConversionEdge.known c.fromAssetTransfer && ConversionEdge.known c.toAssetTransfer)
+
                 unsupported =
                     conversions
-                        |> List.filter (\c -> (not c.toIsSupportedAsset || not c.fromIsSupportedAsset) && not (drawnFromRow c))
+                        |> List.filter (\c -> (not c.toIsSupportedAsset || not c.fromIsSupportedAsset || halfRow c) && not (drawnFromRow c))
                         |> List.map
                             (\c ->
                                 { toAddress = c.toAddress
@@ -2522,7 +2528,7 @@ updateByMsg uc msg model =
 
                 supportedConversions =
                     conversions
-                        |> List.filter (\c -> c.toIsSupportedAsset && c.fromIsSupportedAsset)
+                        |> List.filter (\c -> c.toIsSupportedAsset && c.fromIsSupportedAsset && not (halfRow c))
 
                 networkWithFlag =
                     if List.isEmpty unsupported then

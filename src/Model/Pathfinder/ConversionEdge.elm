@@ -10,6 +10,7 @@ module Model.Pathfinder.ConversionEdge exposing
     , inputValues
     , isLegTx
     , isRowOnly
+    , known
     , legTxHash
     , namedSourceChain
     , nativeAsset
