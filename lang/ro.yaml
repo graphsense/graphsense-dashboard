@@ -255,6 +255,7 @@ request timeout: expirarea cererii
 request error: eroare cerere
 network error: eroare de rețea
 server error: eroare de server
+service temporarily unavailable: serviciu temporar indisponibil
 not found: negăsit
 not supported on lite networks: nu este acceptat pe rețelele lite
 Relationship mode not supported on lite networks: Modul relații nu este acceptat pe rețelele lite

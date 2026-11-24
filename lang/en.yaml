@@ -254,6 +254,7 @@ request timeout: request timeout
 request error: request error
 network error: network error
 server error: server error
+service temporarily unavailable: service temporarily unavailable
 not found: not found
 data error: data error
 service not reachable: service not reachable.

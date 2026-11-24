@@ -189,6 +189,7 @@ bad url: uRL errato
 timeout: tempo scaduto
 network error: errore di rete
 server error: errore del server
+service temporarily unavailable: servizio temporaneamente non disponibile
 not found: non trovato
 not supported on lite networks: non supportato sulle reti lite
 Relationship mode not supported on lite networks: Modalità relazioni non supportata sulle reti lite

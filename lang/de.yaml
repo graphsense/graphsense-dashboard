@@ -193,6 +193,7 @@ request timeout: Zeitüberschreitung
 request error: Anfragefehler
 network error: Netzwerkfehler
 server error: Serverfehler
+service temporarily unavailable: Dienst vorübergehend nicht verfügbar
 not found: Nicht gefunden
 data error: Datenfehler
 service not reachable: Service nicht erreichbar.

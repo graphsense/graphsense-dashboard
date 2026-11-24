@@ -263,6 +263,7 @@ request timeout: tiempo de espera de la solicitud agotado
 request error: error de solicitud
 network error: error de red
 server error: error del servidor
+service temporarily unavailable: servicio no disponible temporalmente
 not found: no encontrado
 not supported on lite networks: no compatible con redes lite
 Relationship mode not supported on lite networks: Modo de relaciones no compatible con redes lite
