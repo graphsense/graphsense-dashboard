@@ -27,7 +27,7 @@ import RecordSetter as Rs
 import RemoteData
 import String.Format
 import Svg.Styled as Svg exposing (Svg, g, path, text)
-import Svg.Styled.Attributes as Svg exposing (css, d, opacity, transform)
+import Svg.Styled.Attributes as Svg exposing (css, d, filter, opacity, transform)
 import Svg.Styled.Events exposing (onMouseOver, preventDefaultOn, stopPropagationOn)
 import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
@@ -46,8 +46,10 @@ import View.Locale as Locale
 view : View.Config -> Pathfinder.Config -> NetworkCapabilities -> Highlight -> DetailLevel -> Address -> Maybe Annotations.AnnotationItem -> Svg Msg
 view vc pc capabilities searchHighlight level address annotation =
     let
+        -- a marked cross-chain sibling keeps its icons zoomed out, like a
+        -- selected node, so its glowing icon stays visible
         detail =
-            DetailLevel.forNode address.selected level
+            DetailLevel.forNode (address.selected || crosschainMarkVisible) level
 
         data =
             RemoteData.toMaybe address.data
@@ -63,6 +65,21 @@ view vc pc capabilities searchHighlight level address annotation =
             pc.hideForExport
                 /= Exporting True
                 && (address.selected || isCurrentSearchMatch)
+
+        hasCrosschainIcon =
+            Dict.size address.networks > 1
+
+        -- the hovered node is this address on another chain: its cross-chain
+        -- (same pubkey) icon glows. Only an icon that is there glows: one
+        -- appearing on hover reads as data the node does not have (its own
+        -- lookup lists no twin when the address is unused on the other
+        -- chain). The ring around the node is taken by the cluster colour.
+        -- The filter is defined once in View.Pathfinder
+        crosschainMarkVisible =
+            pc.hideForExport
+                /= Exporting True
+                && hasCrosschainIcon
+                && address.crosschainSiblingHovered
 
         clusterStroke =
             case ( address.clusterColor, pc.highlightClusterFriends ) of
@@ -209,7 +226,17 @@ view vc pc capabilities searchHighlight level address annotation =
                             }
                         ]
                     , ifTrue (not <| List.isEmpty pluginTagIcons) pluginTagIcons
-                    , ifTrue (Dict.size address.networks > 1) [ Icons.iconsCrosschainSwithoutPadding {} ]
+                    , ifTrue hasCrosschainIcon
+                        [ if crosschainMarkVisible then
+                            g
+                                [ testId "gs-crosschain-sibling-mark"
+                                , filter "url(#crosschainGlow)"
+                                ]
+                                [ Icons.iconsCrosschainSwithoutPadding {} ]
+
+                          else
+                            Icons.iconsCrosschainSwithoutPadding {}
+                        ]
                     ]
 
         iconInstance items index =

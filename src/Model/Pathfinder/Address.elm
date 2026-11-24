@@ -52,6 +52,9 @@ type alias Address =
     , data : WebData Api.Data.Address
     , selected : Bool
     , clusterSiblingHovered : Bool
+
+    -- the hovered node is this address on another chain
+    , crosschainSiblingHovered : Bool
     , exchange : Maybe String
     , hasTags : Bool
     , hasClusterTagsOnly : Bool

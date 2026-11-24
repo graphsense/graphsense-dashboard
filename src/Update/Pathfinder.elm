@@ -2063,6 +2063,8 @@ updateByMsg uc msg model =
                                     |> Maybe.andThen Address.getClusterId
                                     |> Maybe.map (\e -> Network.updateAddressesByClusterId e (s_clusterSiblingHovered True) unhovered.network)
                                     |> Maybe.withDefault model.network
+                                    -- the same address on other chains, if on the graph
+                                    |> Network.setCrosschainSiblingsHovered id
                         in
                         { unhovered
                             | hovered = HoveredAddress id
@@ -5627,6 +5629,7 @@ unhoverAddress a nw =
         |> Maybe.andThen Address.getClusterId
         |> Maybe.map (\e -> Network.updateAddressesByClusterId e (s_clusterSiblingHovered False) nw)
         |> Maybe.withDefault nw
+        |> Network.clearCrosschainSiblingsHovered
 
 
 unselect : Model -> ( Model, List Effect )

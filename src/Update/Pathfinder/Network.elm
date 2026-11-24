@@ -9,6 +9,7 @@ module Update.Pathfinder.Network exposing
     , aggEdgeNeedsData
     , animateAddresses
     , animateTxs
+    , clearCrosschainSiblingsHovered
     , clearSelection
     , deleteAddress
     , deleteAggEdge
@@ -22,6 +23,7 @@ module Update.Pathfinder.Network exposing
     , insertFetchedEdge
     , resolveOverlapsExcept
     , rupsertAggEdge
+    , setCrosschainSiblingsHovered
     , setTxHovered
     , snapToGrid
     , trySetHoverConversionLoop
@@ -936,6 +938,64 @@ updateAddress id update model =
 updateAllAddresses : (Address -> Address) -> Network -> Network
 updateAllAddresses upd model =
     model.addresses |> Dict.foldl (\id _ -> updateAddress id upd) model
+
+
+{-| The other nodes on the graph that are the address `id` on another chain:
+those either side lists in its `networks` (filled from the related-addresses
+lookup, e.g. a TRON address derived from the same key as an eth one), and,
+before that lookup has answered, the same `0x` address on another EVM chain.
+-}
+crosschainSiblingIds : Id -> Network -> List Id
+crosschainSiblingIds id model =
+    case Dict.get id model.addresses of
+        Nothing ->
+            []
+
+        Just hovered ->
+            let
+                lists owner other =
+                    Dict.get (Id.network other) owner.networks
+                        |> Maybe.map (Set.member (Id.id other))
+                        |> Maybe.withDefault False
+
+                sameEvmAddress a b =
+                    let
+                        evm x =
+                            String.startsWith "0x" (String.toLower x)
+                    in
+                    evm a && evm b && String.toLower a == String.toLower b
+
+                isSibling other =
+                    Id.network other.id
+                        /= Id.network id
+                        && (lists hovered other.id
+                                || lists other id
+                                || sameEvmAddress (Id.id id) (Id.id other.id)
+                           )
+            in
+            model.addresses
+                |> Dict.values
+                |> List.filter isSibling
+                |> List.map .id
+
+
+{-| Marks the cross-chain siblings of the hovered address `id`.
+-}
+setCrosschainSiblingsHovered : Id -> Network -> Network
+setCrosschainSiblingsHovered id model =
+    crosschainSiblingIds id model
+        |> List.foldl (\sibling -> updateAddress sibling (s_crosschainSiblingHovered True)) model
+
+
+{-| Clears every cross-chain sibling mark; only the marked nodes change, so the
+others keep their memoized rendering.
+-}
+clearCrosschainSiblingsHovered : Network -> Network
+clearCrosschainSiblingsHovered model =
+    model.addresses
+        |> Dict.values
+        |> List.filter .crosschainSiblingHovered
+        |> List.foldl (\a -> updateAddress a.id (s_crosschainSiblingHovered False)) model
 
 
 updateAddressesByClusterId : Id -> (Address -> Address) -> Network -> Network
