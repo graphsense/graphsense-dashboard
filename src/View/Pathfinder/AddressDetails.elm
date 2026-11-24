@@ -203,6 +203,7 @@ utxo pluginStates vc model id viewState address =
         )
         (SidePanelComponents.sidePanelAddressInstances
             |> Rs.s_labelOfActor (labelOfActor vc model id)
+            |> withoutMissingUsage viewState.address.data
             |> Rs.s_sidePanelAddressDetails
                 (viewState.address.data
                     |> RemoteData.map
@@ -1070,6 +1071,7 @@ account pluginStates vc model id viewState address =
         )
         (SidePanelComponents.sidePanelEthAddressInstances
             |> Rs.s_labelOfActor (labelOfActor vc model id)
+            |> withoutMissingUsage viewState.address.data
             -- an instance override REPLACES the default row that carries the
             -- hideOnLiteNetwork attributes, so it must stay Nothing there
             -- for the display:none default to render
@@ -1228,9 +1230,47 @@ pluginTagsLast =
     [ css [ Css.property "order" "1" ] ]
 
 
+{-| Leaves out the Last usage and First usage rows of an address whose body
+names no `last_tx` / `first_tx`, and their block when it names neither. A lite
+network answers 200 for an address that has never been used on it, without
+either field; the rows then showed their titles with no value. While the
+address loads, the rows stay.
+-}
+withoutMissingUsage :
+    WebData Api.Data.Address
+    -> { a | block2 : Maybe (Html msg), lastUsageOfBlock2 : Maybe (Html msg), firstUsage : Maybe (Html msg) }
+    -> { a | block2 : Maybe (Html msg), lastUsageOfBlock2 : Maybe (Html msg), firstUsage : Maybe (Html msg) }
+withoutMissingUsage data instances =
+    case data of
+        RemoteData.Success address ->
+            let
+                omitted present =
+                    if present then
+                        Nothing
+
+                    else
+                        Just (Html.text "")
+
+                hasLast =
+                    address.lastTx /= Nothing
+
+                hasFirst =
+                    address.firstTx /= Nothing
+            in
+            { instances
+                | block2 = omitted (hasLast || hasFirst)
+                , lastUsageOfBlock2 = omitted hasLast
+                , firstUsage = omitted hasFirst
+            }
+
+        _ ->
+            instances
+
+
 {-| The "first usage"/"last usage" cell of a first\_tx/last\_tx that may be
 absent — an address with no transactions of its own has no usage to show, and
-renders the same empty cell as one whose data has not arrived.
+renders the same empty cell as one whose data has not arrived (the row itself
+is left out then, see `withoutMissingUsage`).
 -}
 usageCell : View.Config -> Maybe Api.Data.TxSummary -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
 usageCell vc =
