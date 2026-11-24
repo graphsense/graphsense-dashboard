@@ -90,14 +90,18 @@ export NODE_OPTIONS=--max-old-space-size=8192
 serve: prepare gen
 	npm run dev
 
+# Every target that compiles Elm goes through tools/retry_elm_glitch.sh: one
+# more attempt when the compiler dies of its MVar deadlock, nothing else.
+ELM_RETRY=tools/retry_elm_glitch.sh
+
 npm-build:
-	npm run build
+	$(ELM_RETRY) npm run build
 
 build: prepare gen
 	$(MAKE) npm-build
 
 compile: prepare gen
-	npm run compile
+	$(ELM_RETRY) npm run compile
 
 # Filters elm's progress chatter (stdout) while letting its error report (stderr)
 # through untouched. The status of a pipeline is the status of its *last* command,
@@ -106,7 +110,7 @@ compile: prepare gen
 compile-quiet: SHELL := /bin/bash
 compile-quiet:
 	@$(MAKE) prepare gen > /dev/null
-	@npx elm make src/Main.elm --output=/dev/null | tr '\r' '\n' | grep -v "^Compiling"; exit $${PIPESTATUS[0]}
+	@$(ELM_RETRY) npx elm make src/Main.elm --output=/dev/null | tr '\r' '\n' | grep -v "^Compiling"; exit $${PIPESTATUS[0]}
 
 check-plugin-folders:
 	@bash -c 'cd $(PLUGINS_DIR); for i in *; do \
@@ -189,7 +193,7 @@ $(CODEGEN_RECORDSETTER): $(CODEGEN_SRC)
 		npx setem --output $(GENERATED) && touch $(GENERATED)/RecordSetter.elm
 
 test: check-lang
-	npx elm-test-rs
+	$(ELM_RETRY) npx elm-test-rs
 
 # Fails when a locale lost a key the code (or lang/en.yaml) still uses. Known
 # gaps live in lang/untranslated-baseline.json; refresh it with
@@ -249,7 +253,7 @@ format-plugins:
 # Runs the note afterwards whatever elm-review returns, so it is the last thing
 # on screen when there *are* findings to act on.
 lint:
-	@npx elm-review; status=$$?; $(MAKE) --no-print-directory lint-coverage-note; exit $$status
+	@$(ELM_RETRY) npx elm-review; status=$$?; $(MAKE) --no-print-directory lint-coverage-note; exit $$status
 
 # Speaks at the one moment someone is about to make the wrong call: deleting a
 # core export that elm-review called unused. That verdict is only trustworthy if
