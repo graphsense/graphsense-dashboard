@@ -16,6 +16,17 @@ jobs:
         with:
           node-version: '20.x'
       - run: npm ci
+      - name: Cache the Elm packages
+        # Without it every run downloads all Elm packages, and a DNS blip on the
+        # package server fails the build (run 45418376094). Safe with the
+        # patched packages: clone-repo re-clones any clone not at its pinned
+        # commit, and the vite build fails on a bundle without the patch.
+        # A partial hit only downloads what is missing.
+        uses: actions/cache@v4
+        with:
+          path: elm_packages
+          key: elm-packages-${{ runner.os }}-${{ hashFiles('elm.json.base', 'codegen/elm.json', 'openapi/elm.json', 'review/elm.json', 'Makefile', 'package-lock.json') }}
+          restore-keys: elm-packages-${{ runner.os }}-
       - run: cp env.template .env
       - run: make build
       - run: make test
@@ -33,6 +44,17 @@ jobs:
         with:
           node-version: '20.x'
       - run: npm ci
+      - name: Cache the Elm packages
+        # Without it every run downloads all Elm packages, and a DNS blip on the
+        # package server fails the build (run 45418376094). Safe with the
+        # patched packages: clone-repo re-clones any clone not at its pinned
+        # commit, and the vite build fails on a bundle without the patch.
+        # A partial hit only downloads what is missing.
+        uses: actions/cache@v4
+        with:
+          path: elm_packages
+          key: elm-packages-${{ runner.os }}-${{ hashFiles('elm.json.base', 'codegen/elm.json', 'openapi/elm.json', 'review/elm.json', 'Makefile', 'package-lock.json') }}
+          restore-keys: elm-packages-${{ runner.os }}-
       - run: cp env.template .env
       - run: make e2e-install
       - run: make e2e
