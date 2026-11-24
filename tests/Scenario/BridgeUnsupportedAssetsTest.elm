@@ -323,6 +323,17 @@ ethOnly =
     { uc | networks = [ "eth" ] }
 
 
+{-| The statistics not answered yet: no network listed.
+-}
+noStatistics : Config.Update.Config
+noStatistics =
+    let
+        uc =
+            Env.updateConfig
+    in
+    { uc | networks = [] }
+
+
 html : App -> Query.Single Msg
 html app =
     let
@@ -640,6 +651,32 @@ suite =
                         case Dict.values before.network.txs of
                             node :: _ ->
                                 Update.Pathfinder.update ethOnly (BrowserGotConversions Set.empty node [ c ]) before
+
+                            [] ->
+                                ( before, [], [] )
+                in
+                Expect.all
+                    [ \_ -> after.network.conversions |> Dict.isEmpty |> Expect.equal True
+                    , \_ -> after.network.txs |> Dict.values |> List.concatMap .unsupportedConversions |> List.length |> Expect.equal 1
+                    , \_ -> List.length effects |> Expect.equal 0
+                    ]
+                    ()
+        , test "a row answered before the statistics arrive keeps its note" <|
+            \_ ->
+                -- the graph cannot yet tell a network it serves from one it
+                -- does not; drawing would request the far address on a network
+                -- that may not be served, and drop the note
+                let
+                    c =
+                        bridgeRow whEthRedeemWethFromBnb
+
+                    before =
+                        open (destinationTx c) [] |> .app |> App.model
+
+                    ( after, effects, _ ) =
+                        case Dict.values before.network.txs of
+                            node :: _ ->
+                                Update.Pathfinder.update noStatistics (BrowserGotConversions Set.empty node [ c ]) before
 
                             [] ->
                                 ( before, [], [] )

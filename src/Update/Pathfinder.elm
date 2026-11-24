@@ -2501,11 +2501,14 @@ updateByMsg uc msg model =
                     Tx.getTxIdForTx tx
 
                 -- a bridge whose token is not in the registry is drawn from its
-                -- row, if the graph can show both of its networks
+                -- row, if the graph can show both of its networks. Only once the
+                -- statistics say so: a row noted now is not drawn later, but one
+                -- drawn to a network the backend does not serve would request
+                -- its address there and lose its note
                 drawnFromRow c =
                     ConversionEdge.drawsFromRow c
-                        && Update.networkServed uc c.fromNetwork
-                        && Update.networkServed uc c.toNetwork
+                        && Update.networkConfirmedServed uc c.fromNetwork
+                        && Update.networkConfirmedServed uc c.toNetwork
 
                 -- a bridge with a leg still `pending` or `unknown` has no leg tx
                 -- to pair, whatever its flags say: it is a note

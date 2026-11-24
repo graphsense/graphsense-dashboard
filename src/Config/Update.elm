@@ -1,4 +1,4 @@
-module Config.Update exposing (Config, networkServed)
+module Config.Update exposing (Config, networkConfirmedServed, networkServed)
 
 import Api.Data
 import Model.Graph.Coords exposing (BBox)
@@ -22,3 +22,13 @@ networkServed : Config -> String -> Bool
 networkServed uc network =
     List.isEmpty uc.networks
         || List.any (\n -> String.toLower n == String.toLower network) uc.networks
+
+
+{-| Stricter than `networkServed`: only a network the statistics list. Before
+they arrive nothing counts as served. For a choice that is not revisited when
+the statistics come in, such as drawing a bridge row as an edge to a network
+the graph may not be able to load.
+-}
+networkConfirmedServed : Config -> String -> Bool
+networkConfirmedServed uc network =
+    not (List.isEmpty uc.networks) && networkServed uc network
