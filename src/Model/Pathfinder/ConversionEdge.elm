@@ -382,21 +382,53 @@ outputAmount c =
 {-| A native leg is the whole tx (DASHBOARD\_CHANGES D-37), whose own value is
 the leg's amount only when the payer calls the bridge directly: an Across fill
 pays the recipient through an internal transfer, so the fill tx moves 0 to
-them. The row's amount, then, with the leg tx's fiat only where the tx moved
-exactly that amount, else the row's quote.
+them. The row's amount, then, with the leg tx's fiat where the tx moved that
+amount. Otherwise the row's quote, and without one (the backend often sends
+none) the leg tx's fiat scaled to the row's amount: the same tx, so the same
+rate. A fill tx that moved nothing has no fiat to scale and shows none.
 -}
 nativeLegValues : String -> String -> Maybe (List Api.Data.Rate) -> Api.Data.Values -> Api.Data.Values
 nativeLegValues asset amount rates legTxValues =
     case ( asset == nativeAsset, hexAmount amount ) of
         ( True, Just value ) ->
-            if legTxValues.value == value then
+            if sameAmount legTxValues.value value then
                 legTxValues
 
             else
-                withFiat rates { value = value, fiatValues = [] }
+                case rates of
+                    Just ((_ :: _) as quote) ->
+                        { value = value, fiatValues = quote }
+
+                    _ ->
+                        { value = value, fiatValues = scaledFiat value legTxValues }
 
         _ ->
             legTxValues
+
+
+{-| Equal amounts, allowing for the rounding above 2^53 base units (about
+0.009 ETH): `hexAmount` and the JSON number can then land a unit in the last
+place apart. Below that, only equal values are the same.
+-}
+sameAmount : Int -> Int -> Bool
+sameAmount a b =
+    toFloat (abs (a - b)) <= toFloat (max (abs a) (abs b)) * 4.5e-16
+
+
+{-| The leg tx's fiat values for `value` base units instead of its own value.
+-}
+scaledFiat : Int -> Api.Data.Values -> List Api.Data.Rate
+scaledFiat value legTxValues =
+    if legTxValues.value == 0 then
+        []
+
+    else
+        let
+            factor =
+                toFloat value / toFloat legTxValues.value
+        in
+        legTxValues.fiatValues
+            |> List.map (\r -> { r | value = r.value * factor })
 
 
 {-| A registered token is named by its contract, which the formatter resolves

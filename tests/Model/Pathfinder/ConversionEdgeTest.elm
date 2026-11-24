@@ -159,15 +159,51 @@ suite =
                             (ConversionEdge.Amount (Currency.assetFromBase "base")
                                 { value = 0x003F67C07F4E7000, fiatValues = usd6 }
                             )
-            , test "a deposit tx moving more than the bridged amount shows the row's amount" <|
+            , test "a deposit tx moving more than the bridged amount shows the row's amount, with the tx's fiat scaled to it" <|
                 \_ ->
+                    -- the row carries no quote, as the backend sends it today:
+                    -- the fiat must not go blank
                     acrossEdge
-                        (rootTx "base" depositHash depositor spokePool { value = 0x003F67C07F4E7000 + 1000, fiatValues = usd6 })
+                        (rootTx "base" depositHash depositor spokePool { value = 0x003F67C07F4E7000 * 2, fiatValues = usd6 })
                         ethFill
                         |> ConversionEdge.inputAmount
                         |> Expect.equal
                             (ConversionEdge.Amount (Currency.assetFromBase "base")
-                                { value = 0x003F67C07F4E7000, fiatValues = [] }
+                                { value = 0x003F67C07F4E7000, fiatValues = [ { code = "usd", value = 3 } ] }
+                            )
+            , test "the row's own quote wins over the scaled tx fiat" <|
+                \_ ->
+                    ConversionEdge.init { acrossFillFromBase | fromAmountFiatValues = Just [ { code = "usd", value = 4 } ] }
+                        ( Id.init "base" (depositHash ++ "_I0"), Id.init "eth" (fillHash ++ "_I0") )
+                        ( Id.init "base" depositor, Id.init "eth" depositor )
+                        (rootTx "base" depositHash depositor spokePool { value = 0x003F67C07F4E7000 * 2, fiatValues = usd6 })
+                        ethFill
+                        |> ConversionEdge.inputAmount
+                        |> Expect.equal
+                            (ConversionEdge.Amount (Currency.assetFromBase "base")
+                                { value = 0x003F67C07F4E7000, fiatValues = [ { code = "usd", value = 4 } ] }
+                            )
+            , test "a tx value a rounding step off the row's amount is the same amount" <|
+                \_ ->
+                    -- above 2^53 the row's hex and the JSON number can round a
+                    -- unit in the last place apart (2048 base units here); the
+                    -- tx then keeps its own value and fiat
+                    let
+                        rounded =
+                            0x003F67C07F4E7000 * 1024
+
+                        tx =
+                            rootTx "base" depositHash depositor spokePool { value = rounded + 2048, fiatValues = usd6 }
+                    in
+                    ConversionEdge.init { acrossFillFromBase | fromAmount = "0xfd9f01fd39c00000" }
+                        ( Id.init "base" (depositHash ++ "_I0"), Id.init "eth" (fillHash ++ "_I0") )
+                        ( Id.init "base" depositor, Id.init "eth" depositor )
+                        tx
+                        ethFill
+                        |> ConversionEdge.inputAmount
+                        |> Expect.equal
+                            (ConversionEdge.Amount (Currency.assetFromBase "base")
+                                { value = rounded + 2048, fiatValues = usd6 }
                             )
             ]
         , test "the conversion's own quote wins over the leg transaction's" <|
