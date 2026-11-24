@@ -1,4 +1,4 @@
-module View.Pathfinder.ConversionEdge exposing (Curve(..), Layout, assetsLabel, layout, view)
+module View.Pathfinder.ConversionEdge exposing (Curve(..), Layout, assetsLabel, layout, rowLegLabel, view)
 
 import Api.Data
 import Config.View as View
@@ -194,7 +194,66 @@ assetsLabel locale conversion =
                 ++ legLabel locale cr.toNetwork cr.toAsset cr.toAssetSymbol
 
         Api.Data.ExternalConversionConversionTypeBridgeTx ->
-            (cr.fromNetwork |> String.toUpper) ++ "-" ++ (conversion.fromAsset |> String.toUpper) ++ " / " ++ (cr.toNetwork |> String.toUpper) ++ "-" ++ (conversion.toAsset |> String.toUpper)
+            if ConversionEdge.isRowOnly conversion then
+                rowLegLabel locale cr.fromNetwork cr.fromAsset cr.fromIsSupportedAsset
+                    ++ " / "
+                    ++ rowLegLabel locale cr.toNetwork cr.toAsset cr.toIsSupportedAsset
+
+            else
+                bridgeLegLabel cr.fromNetwork cr.fromAsset conversion.fromAsset
+                    ++ " / "
+                    ++ bridgeLegLabel cr.toNetwork cr.toAsset conversion.toAsset
+
+
+{-| A leg of a bridge drawn from its row, as `NETWORK-TICKER` like any bridge
+leg. A token outside the registry is named by its short contract and never by a
+symbol: it has no ticker the app could vouch for.
+-}
+rowLegLabel : Locale.Model -> String -> String -> Bool -> String
+rowLegLabel locale network asset supported =
+    String.toUpper network
+        ++ "-"
+        ++ (if supported then
+                legLabel locale network asset Nothing
+
+            else
+                truncateLongIdentifierWithLengths 8 4 asset
+           )
+
+
+{-| The marker below the assets of a bridge drawn from its row.
+-}
+unsupportedLabel : Locale.Model -> ConversionEdge -> Maybe String
+unsupportedLabel locale conversion =
+    let
+        cr =
+            conversion.raw
+    in
+    if not (ConversionEdge.isRowOnly conversion) then
+        Nothing
+
+    else if not cr.fromIsSupportedAsset && not cr.toIsSupportedAsset then
+        Just (Locale.string locale "Unsupported tokens")
+
+    else
+        Just (Locale.string locale "Unsupported token")
+
+
+{-| A bridge leg as `NETWORK-ASSET`. A native leg is the network's gas coin
+(arb pays in ETH), not the currency of its loaded tx, which for a native
+transfer is the network code. Token legs keep the tx's asset.
+-}
+bridgeLegLabel : String -> String -> String -> String
+bridgeLegLabel network rawAsset txAsset =
+    let
+        asset =
+            if rawAsset == ConversionEdge.nativeAsset then
+                (Currency.assetFromBase network).asset
+
+            else
+                txAsset
+    in
+    String.toUpper network ++ "-" ++ String.toUpper asset
 
 
 legLabel : Locale.Model -> String -> String -> Maybe String -> String
@@ -226,6 +285,17 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
 
         labelTextLine2 =
             assetsLabel vc.locale conversion
+
+        labelTextLine3 =
+            unsupportedLabel vc.locale conversion
+
+        -- a third line moves the two above it up, centering all three
+        lineShift =
+            if labelTextLine3 == Nothing then
+                0
+
+            else
+                7
 
         { left, right } =
             calcDimensions vc conversion inputAddress outputAddress
@@ -323,8 +393,13 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
         labelOffsetLine2 =
             iconSize + (Util.TextDimensions.estimateTextWidth vc.characterDimensions labelTextLine2 / 2) + 2
 
+        labelOffsetLine3 =
+            labelTextLine3
+                |> Maybe.map (\t -> iconSize + (Util.TextDimensions.estimateTextWidth vc.characterDimensions t / 2) + 2)
+                |> Maybe.withDefault 0
+
         lableOffset =
-            max labelOffsetLine1 labelOffsetLine2
+            max labelOffsetLine1 labelOffsetLine2 |> max labelOffsetLine3
 
         textLabel =
             if String.isEmpty labelTextLine1 then
@@ -340,7 +415,7 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
                     ]
                     [ Svg.Styled.text_
                         [ Svg.x (String.fromFloat (nodeX + lableOffset))
-                        , Svg.y (String.fromFloat (nodeY - 7))
+                        , Svg.y (String.fromFloat (nodeY - 7 - lineShift))
                         , Svg.textAnchor "middle"
                         , Svg.dominantBaseline "middle"
                         , css
@@ -350,13 +425,27 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
                         [ Svg.Styled.text labelTextLine1 ]
                     , Svg.Styled.text_
                         [ Svg.x (String.fromFloat (nodeX + lableOffset))
-                        , Svg.y (String.fromFloat (nodeY + 7))
+                        , Svg.y (String.fromFloat (nodeY + 7 - lineShift))
                         , Svg.textAnchor "middle"
                         , Svg.dominantBaseline "middle"
                         , css
                             []
                         ]
                         [ Svg.Styled.text labelTextLine2 ]
+                    , labelTextLine3
+                        |> Maybe.map
+                            (\t ->
+                                Svg.Styled.text_
+                                    [ Svg.x (String.fromFloat (nodeX + lableOffset))
+                                    , Svg.y (String.fromFloat (nodeY + 21 - lineShift))
+                                    , Svg.textAnchor "middle"
+                                    , Svg.dominantBaseline "middle"
+                                    , css [ Css.fontStyle Css.italic ]
+                                    , testId "gs-bridge-unsupported-label"
+                                    ]
+                                    [ Svg.Styled.text t ]
+                            )
+                        |> Maybe.withDefault (Svg.Styled.g [] [])
                     ]
     in
     g

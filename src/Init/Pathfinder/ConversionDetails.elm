@@ -11,5 +11,9 @@ init conversionEdge =
     , raw = conversionEdge
     , table =
         Table.initUnsorted
-            |> Table.setData conversionLegTableFilter [ conversionEdge.rawInputTransaction, conversionEdge.rawOutputTransaction ]
+            |> Table.setData conversionLegTableFilter
+                (conversionEdge.legTxs
+                    |> Maybe.map (\legs -> [ legs.input, legs.output ])
+                    |> Maybe.withDefault []
+                )
     }

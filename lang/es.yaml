@@ -516,6 +516,15 @@ bridge transaction: Transacción puente
 swap transaction: Transacción de intercambio
 swap transactions: Transacciones de intercambio
 Bridge transactions: Transacciones puente
+protocol: Protocolo
+bridge explorer: Explorador del puente
+unsupported token: "Token no soportado"
+unsupported tokens: "Tokens no soportados"
+input token: "Token de entrada"
+output token: "Token de salida"
+source tx: "Tx de origen"
+destination tx: "Tx de destino"
+unsupported-bridge-token-hint: "Un token no soportado no figura en el registro de tokens: no se muestra ningún importe ni valor, y su identidad no está verificada."
 hint-minimum-input: Proporcione al menos {0} caracteres
 no-results-found: No se han encontrado resultados.
 deprecation notice: Aviso de obsolescencia
@@ -577,6 +586,9 @@ export-dialog-description: "exportar el gráfico actual a varios formatos"
 export-dialog-transparent-background: "fondo transparente"
 unsupported-swap-notice: "Nota: Transacción de intercambio no soportada detectada, destino {0} ({1})"
 unsupported-bridge-notice: "Nota: Transacción puente no soportada detectada, destino {0} ({1})"
+unsupported-protocol-bridge-notice: "Nota: Transacción puente {2} no soportada detectada, destino {0} ({1})"
+unsupported-bridge-from-notice: "Nota: Transacción puente no soportada detectada, origen {2}, destino {0} ({1})"
+unsupported-protocol-bridge-from-notice: "Nota: Transacción puente {2} no soportada detectada, origen {3}, destino {0} ({1})"
 cluster tags: Etiquetas derivadas del cluster
 cluster tags list: Lista de etiquetas derivadas del cluster
 cluster tags disclaimer: "Estas etiquetas no están asignadas directamente a esta dirección, sino que se infieren del cluster al que pertenece. El clustering puede contener errores, por lo que estas etiquetas deben usarse con precaución."

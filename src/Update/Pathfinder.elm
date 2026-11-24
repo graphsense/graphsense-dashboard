@@ -111,7 +111,7 @@ import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
-import Util exposing (and, n, removeLeading0x)
+import Util exposing (and, n)
 import Util.Annotations as Annotations
 import Util.Csv
 import Util.Data as Data
@@ -352,9 +352,18 @@ conversionAssetRegistrations c =
 
                     _ ->
                         []
+
+        -- a bridge drawn from its row names a token outside the registry by
+        -- its contract, never by a symbol the row may carry
+        regLeg supported network asset symbol decimals =
+            if ConversionEdge.drawsFromRow c && not supported then
+                []
+
+            else
+                reg network asset symbol decimals
     in
-    reg c.fromNetwork c.fromAsset c.fromAssetSymbol c.fromAssetDecimals
-        ++ reg c.toNetwork c.toAsset c.toAssetSymbol c.toAssetDecimals
+    regLeg c.fromIsSupportedAsset c.fromNetwork c.fromAsset c.fromAssetSymbol c.fromAssetDecimals
+        ++ regLeg c.toIsSupportedAsset c.toNetwork c.toAsset c.toAssetSymbol c.toAssetDecimals
 
 
 refreshSearchMatches : Model -> ( Model, List Effect )
@@ -2346,10 +2355,10 @@ updateByMsg uc msg model =
         InternalConversionLoopAddressesLoaded keepPositionOf conv ->
             let
                 mtxInput =
-                    ConversionEdge.getInputTransferIdRaw conv |> flip Dict.get model.network.txs
+                    ConversionEdge.findLegTx conv.fromNetwork conv.fromAssetTransfer model.network.txs
 
                 mtxOutput =
-                    ConversionEdge.getOutputTransferIdRaw conv |> flip Dict.get model.network.txs
+                    ConversionEdge.findLegTx conv.toNetwork conv.toAssetTransfer model.network.txs
 
                 arrangeConversionNodes txInput txOutput =
                     let
@@ -2435,7 +2444,7 @@ updateByMsg uc msg model =
                 -- native deposits name `_I<root trace>`, which IS the base tx
                 -- id, so the old comparison happened to hold.
                 ( inputTx, outputTx ) =
-                    if isOutputLegOf conversion txA.id then
+                    if isOutputLegOf conversion (Tx.getRawTx txA) then
                         ( ntx, txA )
 
                     else
@@ -2491,33 +2500,53 @@ updateByMsg uc msg model =
                 txid =
                     Tx.getTxIdForTx tx
 
+                -- a bridge whose token is not in the registry is drawn from its
+                -- row, if the graph can show both of its networks. Only once the
+                -- statistics say so: a row noted now is not drawn later, but one
+                -- drawn to a network the backend does not serve would request
+                -- its address there and lose its note
+                drawnFromRow c =
+                    ConversionEdge.drawsFromRow c
+                        && Update.networkConfirmedServed uc c.fromNetwork
+                        && Update.networkConfirmedServed uc c.toNetwork
+
+                -- a bridge with a leg still `pending` or `unknown` has no leg tx
+                -- to pair, whatever its flags say: it is a note
+                halfRow c =
+                    (c.conversionType == Api.Data.ExternalConversionConversionTypeBridgeTx)
+                        && not (ConversionEdge.known c.fromAssetTransfer && ConversionEdge.known c.toAssetTransfer)
+
                 unsupported =
                     conversions
-                        |> List.filter (\c -> not c.toIsSupportedAsset || not c.fromIsSupportedAsset)
+                        |> List.filter (\c -> (not c.toIsSupportedAsset || not c.fromIsSupportedAsset || halfRow c) && not (drawnFromRow c))
                         |> List.map
                             (\c ->
                                 { toAddress = c.toAddress
                                 , toNetwork = c.toNetwork
+                                , fromChain = ConversionEdge.namedSourceChain c
                                 , conversionType = c.conversionType
+                                , protocol = c.protocol
                                 }
                             )
 
                 supportedConversions =
                     conversions
-                        |> List.filter (\c -> c.toIsSupportedAsset && c.fromIsSupportedAsset)
+                        |> List.filter (\c -> c.toIsSupportedAsset && c.fromIsSupportedAsset && not (halfRow c))
 
                 networkWithFlag =
                     if List.isEmpty unsupported then
                         model.network
 
                     else
-                        Network.updateTx txid (\t -> { t | unsupportedConversions = unsupported }) model.network
+                        -- added to what the tx already has: a leg's conversions
+                        -- can arrive in more than one answer
+                        Network.updateTx txid (\t -> { t | unsupportedConversions = List.Extra.unique (t.unsupportedConversions ++ unsupported) }) model.network
 
                 modelWithFlag =
                     { model | network = networkWithFlag }
 
                 isLeg =
-                    isLegTransfer txid
+                    ConversionEdge.isLegTx (Tx.getRawTx tx)
 
                 fetch id continuation =
                     continuation
@@ -2532,7 +2561,7 @@ updateByMsg uc msg model =
                     (\conversion ( aggm, effects ) ->
                         let
                             withLeg network transfer continuation =
-                                case Dict.get (Id.init network (removeLeading0x transfer)) aggm.network.txs of
+                                case ConversionEdge.findLegTx network transfer aggm.network.txs of
                                     Just leg ->
                                         updateByMsg uc (continuation (Tx.getRawTx leg)) aggm
 
@@ -2553,6 +2582,7 @@ updateByMsg uc msg model =
                         ( nextModel, effects ++ eff )
                     )
                     ( modelWithFlag, [] )
+                |> drawConversionsFromRows keepPositionOf tx (List.filter drawnFromRow conversions)
 
         BrowserGotConversionInputLeg keepPositionOf anchor conversion tx ->
             let
@@ -2562,7 +2592,7 @@ updateByMsg uc msg model =
                 -- only the input leg we asked for may continue; any other answer
                 -- would re-request forever or pair a leg with itself
                 isInputLeg =
-                    isLegTransfer (Tx.getTxId tx) conversion.fromNetwork conversion.fromAssetTransfer
+                    ConversionEdge.isLegTx tx conversion.fromNetwork conversion.fromAssetTransfer
 
                 ( ( legTx, nn ), newTx ) =
                     case Dict.get (Tx.getTxId tx) model.network.txs of
@@ -6541,13 +6571,108 @@ autoLoadConversions keepPositionOf tx model =
         )
 
 
-{-| Is the sub-transaction `txid` the leg a swap names as `transfer` on
-`network`? The conversions endpoint prefixes leg identifiers with `0x`, the txs
-endpoint does not, so the comparison drops it on both sides.
+{-| Draws the bridge rows `ConversionEdge.drawsFromRow` picks from the rows
+alone: an edge between each row's payer and payee (`Network.addRowConversion`)
+and a load of whichever end is missing. No leg tx is fetched or added: the
+backends serve none for a token outside the registry, and the txs containing
+the legs would show their own counterparties and native values as if they were
+the bridge's.
+
+`tx` is the tx the rows were asked for; one end of each row is on its network.
+An end this loads is placed next to it, the end on the tx's side right of the
+tx and the other end below that end, as the two sides of a bridge are stacked
+elsewhere, each on the first free row. The tx's own sender and receiver are not
+loaded here: they are on the graph or on their way with the tx, and asking again
+would double an expensive request. Ends a loaded file positions (`keepPositionOf`)
+are the file's to load.
+
 -}
-isLegTransfer : Id -> String -> String -> Bool
-isLegTransfer txid network transfer =
-    Id.network txid == network && (Id.id txid |> removeLeading0x) == (transfer |> removeLeading0x)
+drawConversionsFromRows : Set Id -> Tx -> List Api.Data.ExternalConversion -> ( Model, List Effect ) -> ( Model, List Effect )
+drawConversionsFromRows keepPositionOf tx rows start =
+    rows
+        |> List.foldl (drawConversionFromRow keepPositionOf tx) ( start, Dict.empty )
+        |> Tuple.first
+
+
+drawConversionFromRow : Set Id -> Tx -> Api.Data.ExternalConversion -> ( ( Model, List Effect ), Dict Id { x : Float, y : Float } ) -> ( ( Model, List Effect ), Dict Id { x : Float, y : Float } )
+drawConversionFromRow keepPositionOf tx conversion ( ( model, effects ), reserved ) =
+    let
+        txCoords =
+            Tx.toFinalCoords tx
+
+        hash =
+            Tx.getRawBaseTxHashForTx tx |> ConversionEdge.legTxHash
+
+        onTxSide legNetwork transfer =
+            String.toLower legNetwork == String.toLower (Tx.getNetwork tx) && ConversionEdge.legTxHash transfer == hash
+
+        ( near, far ) =
+            if onTxSide conversion.toNetwork conversion.toAssetTransfer && not (onTxSide conversion.fromNetwork conversion.fromAssetTransfer) then
+                ( ConversionEdge.payeeId conversion, ConversionEdge.payerId conversion )
+
+            else
+                ( ConversionEdge.payerId conversion, ConversionEdge.payeeId conversion )
+
+        network =
+            Network.addRowConversion conversion model.network
+
+        onGraph id =
+            Dict.get id network.addresses
+                |> Maybe.map (\a -> { x = a.x, y = A.getTo a.y })
+
+        -- where the tx's own sender and receiver go (findAddressCoordsNextToTx)
+        besideTx id =
+            if List.member id (Tx.getInputAddressIds tx) then
+                Just { txCoords | x = txCoords.x - nodeXOffset }
+
+            else if List.member id (Tx.getOutputAddressIds tx) then
+                Just { txCoords | x = txCoords.x + nodeXOffset }
+
+            else
+                Nothing
+
+        taken =
+            (network.addresses |> Dict.values |> List.map (\a -> { x = a.x, y = A.getTo a.y }))
+                ++ (network.txs |> Dict.values |> List.map Tx.toFinalCoords)
+                ++ Dict.values reserved
+
+        isFree c =
+            not (List.any (\o -> abs (o.x - c.x) < 1 && abs (o.y - c.y) < 1) taken)
+
+        freeBelow c =
+            List.range 1 100
+                |> List.map (\i -> { c | y = c.y + toFloat i * nodeYOffset })
+                |> List.Extra.find isFree
+                |> Maybe.withDefault { c | y = c.y + nodeYOffset }
+
+        known id =
+            onGraph id
+                |> Maybe.Extra.orElse (Dict.get id reserved)
+                |> Maybe.Extra.orElse (besideTx id)
+
+        mustLoad id =
+            known id == Nothing && not (Set.member id keepPositionOf)
+
+        nearCoords =
+            known near
+                |> Maybe.withDefault (freeBelow { txCoords | x = txCoords.x + nodeXOffset })
+
+        farCoords =
+            known far
+                |> Maybe.withDefault (freeBelow nearCoords)
+
+        toLoad =
+            [ ( near, nearCoords ), ( far, farCoords ) ]
+                |> List.filter (first >> mustLoad)
+    in
+    toLoad
+        |> List.foldl
+            (\( id, c ) ( acc, res ) ->
+                ( acc |> and (loadAddressWithPosition False (Fixed c.x c.y) id)
+                , Dict.insert id c res
+                )
+            )
+            ( ( { model | network = network }, effects ), reserved )
 
 
 autoLoadAddresses : Bool -> Tx -> Model -> ( Model, List Effect )
@@ -7200,10 +7325,10 @@ positive test against the input leg misses and whatever the else branch assumes
 becomes the answer. Assuming "input leg" there is right far more often: it is
 the tx the graph already held, and the output leg is the one being fetched.
 
+A native bridge leg names the bare hash (D-37), and then the whole tx, served
+as its root transfer `<hash>_I<root trace>`, is that leg (`ConversionEdge.isLegTx`).
+
 -}
-isOutputLegOf : Api.Data.ExternalConversion -> Id -> Bool
-isOutputLegOf conversion txId =
-    Id.network txId
-        == conversion.toNetwork
-        && (Id.id txId |> removeLeading0x)
-        == (conversion.toAssetTransfer |> removeLeading0x)
+isOutputLegOf : Api.Data.ExternalConversion -> Api.Data.Tx -> Bool
+isOutputLegOf conversion tx =
+    ConversionEdge.isLegTx tx conversion.toNetwork conversion.toAssetTransfer

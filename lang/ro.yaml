@@ -502,6 +502,15 @@ bridge transaction: Tranzacție Bridge
 swap transaction: Tranzacție Swap
 swap transactions: Tranzacții Swap
 Bridge transactions: Tranzacții Bridge
+protocol: Protocol
+bridge explorer: Explorer bridge
+unsupported token: "Token nesuportat"
+unsupported tokens: "Tokenuri nesuportate"
+input token: "Token de intrare"
+output token: "Token de ieșire"
+source tx: "Tx sursă"
+destination tx: "Tx destinație"
+unsupported-bridge-token-hint: "Un token nesuportat nu este în registrul de tokenuri: nu se afișează nicio sumă și nicio valoare, iar identitatea sa nu este verificată."
 hint-minimum-input: Vă rugăm să introduceți cel puțin {0} caractere
 no-results-found: Nu s-au găsit rezultate.
 deprecation notice: Notificare de învechire
@@ -562,6 +571,9 @@ export-dialog-transparent-background: fundal transparent
 unsupported-swap-notice: 'Notă: S-a detectat o tranzacție swap neacceptată, țintă {0} ({1})'
 unsupported-bridge-notice: 'Notă: S-a detectat o tranzacție bridge neacceptată, țintă {0}
   ({1})'
+unsupported-protocol-bridge-notice: 'Notă: S-a detectat o tranzacție bridge {2} neacceptată, țintă {0} ({1})'
+unsupported-bridge-from-notice: 'Notă: S-a detectat o tranzacție bridge neacceptată, sursă {2}, țintă {0} ({1})'
+unsupported-protocol-bridge-from-notice: 'Notă: S-a detectat o tranzacție bridge {2} neacceptată, sursă {3}, țintă {0} ({1})'
 cluster tags: Etichete derivate din cluster
 cluster tags list: Listă de etichete derivate din cluster
 cluster tags disclaimer: Aceste etichete nu sunt atribuite direct acestei adrese, ci sunt
