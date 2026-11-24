@@ -3,6 +3,7 @@ module Update.Pathfinder.Network exposing
     , addAddress
     , addAddressWithPosition
     , addConversion
+    , addRowConversion
     , addTx
     , addTxWithPosition
     , aggEdgeNeedsData
@@ -116,6 +117,39 @@ addConversion conversion inputTx outputTx network =
 
         _ ->
             network
+
+
+{-| Draws a conversion from its row alone (`ConversionEdge.drawsFromRow`):
+between the row's payer and payee, keyed by the row, with no leg tx. It shows
+once both addresses are on the graph, and goes with either of them.
+-}
+addRowConversion : Api.Data.ExternalConversion -> Network -> Network
+addRowConversion conversion network =
+    let
+        edge =
+            ConversionEdge.initFromRow conversion
+
+        edgeMapUpsertFn =
+            Maybe.map (Set.insert edge.id) >> Maybe.withDefault (Set.singleton edge.id) >> Just
+
+        -- the same row answered again must not snap a dragged icon back
+        keptOffset =
+            Dict.get edge.id network.conversions |> Maybe.andThen .nodeOffset
+    in
+    { network
+        | conversions =
+            Dict.insert edge.id
+                { edge
+                    | inputAddress = Dict.get edge.inputAddressId network.addresses
+                    , outputAddress = Dict.get edge.outputAddressId network.addresses
+                    , nodeOffset = keptOffset
+                }
+                network.conversions
+        , conversionsEdgeMap =
+            network.conversionsEdgeMap
+                |> Dict.update edge.inputAddressId edgeMapUpsertFn
+                |> Dict.update edge.outputAddressId edgeMapUpsertFn
+    }
 
 
 clearSelection : Network -> Network
@@ -745,8 +779,16 @@ trySetHoverConversionLoop tId isHovered network =
     case conversion of
         Just conv ->
             updateConversionEdge conv.id (s_hovered isHovered) network
-                |> updateTx (conv.rawInputTransaction |> Tx.getTxId) (s_hovered isHovered)
-                |> updateTx (conv.rawOutputTransaction |> Tx.getTxId) (s_hovered isHovered)
+                |> (\nw ->
+                        conv.legTxs
+                            |> Maybe.map
+                                (\legs ->
+                                    nw
+                                        |> updateTx (legs.input |> Tx.getTxId) (s_hovered isHovered)
+                                        |> updateTx (legs.output |> Tx.getTxId) (s_hovered isHovered)
+                                )
+                            |> Maybe.withDefault nw
+                   )
 
         Nothing ->
             network
