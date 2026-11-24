@@ -132,6 +132,9 @@ shallPushHistory msg _ =
                 AddressDetails.UserClickedContinueChangeTracing ->
                     False
 
+                AddressDetails.UserClickedActor _ ->
+                    False
+
                 AddressDetails.UserClickedToggleBalanceDetails ->
                     False
 
@@ -303,6 +306,12 @@ shallPushHistory msg _ =
             False
 
         BrowserGotActor _ _ ->
+            False
+
+        UserClickedActor _ ->
+            False
+
+        BrowserGotActorForDialog _ _ ->
             False
 
         BrowserGotTx _ _ ->

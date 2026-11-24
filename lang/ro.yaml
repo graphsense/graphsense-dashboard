@@ -352,6 +352,10 @@ Recent searches: Căutări recente
 other Links: Alte linkuri
 social: Social
 jurisdictions: Jurisdicții
+website: Site web
+social media: Rețele sociale
+show tags: Afișează etichetele
+no tags found: Nu s-au găsit etichete
 any category: Orice categorie
 graph: Grafic
 statistics: Statistici
@@ -481,6 +485,8 @@ tag-dialog-additional-info: Informații suplimentare (opțional)
 tag-dialog-additional-info-example: de ex. Legat de un raport de înșelătorie pe xyz.com
 report a tag: Raportați o etichetă
 report tag: Raportează eticheta
+Wallet type: "Tip de portofel"
+Other: "Altul"
 create new actor: Creează un actor nou
 Added tag: Etichetă adăugată
 num-more-assets: încă {0} active

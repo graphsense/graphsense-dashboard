@@ -345,6 +345,10 @@ Recent searches: Recent searches
 other Links: Other Links
 social: Social
 jurisdictions: Jurisdictions
+website: Website
+social media: Social media
+show tags: Show tags
+no tags found: No tags found
 any category: Any Category
 graph: Graph
 statistics: Statistics
@@ -472,6 +476,8 @@ tag-dialog-additional-info: Additional Information (optional)
 tag-dialog-additional-info-example: e.g. Linked to scam report on xyz.com
 report a tag: Report a tag
 report tag: Report tag
+Wallet type: "Wallet type"
+Other: "Other"
 create new actor: Create new actor
 Added tag: Added Tag
 num-more-assets: '{0} more assets'

@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.TagsTable exposing (config)
+module View.Pathfinder.Table.TagsTable exposing (actorConfig, config)
 
 import Api.Data
 import Basics.Extra exposing (flip)
@@ -10,6 +10,7 @@ import Css.Pathfinder exposing (fullWidth)
 import Css.Table
 import Html.Styled exposing (a, span, text)
 import Html.Styled.Attributes exposing (css, href, target, title)
+import Html.Styled.Events exposing (onClick)
 import Model exposing (Msg(..))
 import Msg.Pathfinder
 import RecordSetter as Rs
@@ -74,6 +75,7 @@ type Cell
     | IconCell TagIcon
     | LabelCell CellConfig TagIcon
     | TypeCell ConfidenceCellConfig
+    | AddressCell { address : String, network : String, onClick : Maybe Msg }
 
 
 linkCellStyle : List Css.Style
@@ -258,6 +260,39 @@ cell vc c =
                 )
                 (defaultData cc Nothing linkBodyIcon)
 
+        AddressCell ac ->
+            let
+                cellConfig =
+                    { label = ac.address, subLabel = Just (String.toUpper ac.network) }
+
+                addressText =
+                    text (Util.View.truncateLongIdentifierWithLengths 8 6 ac.address)
+
+                link =
+                    case ac.onClick of
+                        Just msg ->
+                            span
+                                [ css (linkCellStyle ++ [ Css.cursor Css.pointer ])
+                                , onClick msg
+                                , title ac.address
+                                , Util.View.testId "gs-actor-tag-address"
+                                ]
+                                [ addressText ]
+
+                        Nothing ->
+                            span
+                                [ css TagsComponents.tagRowCellLabel_details.styles
+                                , title ac.address
+                                ]
+                                [ addressText ]
+            in
+            TagsComponents.tagRowCellWithInstances
+                (attrs False cellConfig |> Rs.s_root (cellWMinWidth |> css |> List.singleton))
+                (TagsComponents.tagRowCellInstances
+                    |> Rs.s_label (Just link)
+                )
+                (defaultData cellConfig Nothing (Just (Util.View.copyIconPathfinderFixed vc ac.address)))
+
         TypeCell cc ->
             let
                 lbl =
@@ -318,6 +353,60 @@ cell vc c =
         |> List.singleton
         |> Table.HtmlDetails
             [ css [ Css.verticalAlign Css.top ] ]
+
+
+{-| The tags of an actor: they belong to many addresses, so an address column
+(network below it) comes first; a click on the address adds it to the graph.
+Tags also exist on networks this instance does not serve (see `isListedNetwork`):
+those addresses are plain text, as there is nothing to open. Every address can be
+copied, so the unlinked ones can still be looked up elsewhere.
+-}
+actorConfig : View.Config -> (InfiniteTable.Msg -> Msg) -> (String -> String -> Msg) -> InfiniteTable.TableConfig Api.Data.AddressTag Msg
+actorConfig vc tag onAddress =
+    let
+        base =
+            config vc tag
+    in
+    { base
+        | columns =
+            [ addressColumn vc onAddress
+            , labelColumn vc
+            , typeColumn vc
+            , sourceColumn vc
+            , lastModColumn vc
+            ]
+    }
+
+
+addressColumn : View.Config -> (String -> String -> Msg) -> Table.Column Api.Data.AddressTag Msg
+addressColumn vc onAddress =
+    Table.veryCustomColumn
+        { name = Locale.string vc.locale "Address"
+        , viewData =
+            \data ->
+                cell vc
+                    (AddressCell
+                        { address = data.address
+                        , network = data.currency
+                        , onClick =
+                            if isListedNetwork vc data.currency then
+                                Just (onAddress data.currency data.address)
+
+                            else
+                                Nothing
+                        }
+                    )
+        , sorter = Table.unsortable
+        }
+
+
+{-| Whether the statistics list the network. Not `View.networkServed`, which
+counts every network as served until the statistics arrive: a link is only
+offered for a network known to work.
+-}
+isListedNetwork : View.Config -> String -> Bool
+isListedNetwork vc network =
+    List.any (.name >> String.toLower >> (==) (String.toLower network)) vc.networks
 
 
 iconColumn : View.Config -> Table.Column Api.Data.AddressTag Msg

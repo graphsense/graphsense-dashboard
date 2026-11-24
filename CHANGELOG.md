@@ -5,12 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- A tags list for an actor: "Show tags" in the actor dialog lists the actor's tags across all its addresses (address and network, label, type and confidence, source, last modified), loading more while scrolling; a click on an address adds it to the graph, for networks this instance serves, and every address can be copied
+- Actors can be found with the main search boxes (top bar and Pathfinder), not only addresses and transactions; picking one opens the actor dialog
+- An actor dialog with the details of an actor: logo, legal name, websites, categories, all jurisdictions, the number of tags, and its social media and GitHub links. It opens on a click on the actor's name in the side panel or an actor chip in the address tables, from "Learn more" in the actor tooltip, and from an actor search result, which until now did nothing in the Pathfinder
+
 ### Changed
 - The dashboard follows the system's light or dark mode, and switches live when it changes. The mode setting has three choices instead of a light/dark switch: System (the default), Light and Dark. Users who had picked dark keep it; everyone else moves to System once. PNG and PDF exports stay light in every mode
 - Downloaded graph files are named after the graph: "Save graph" writes `<timestamp> <graph name>.gs` (was the timestamp only), like the PDF and PNG export already did. A graph a plugin opens takes the name the plugin gives it (e.g. the reference of the record it belongs to) instead of the name stored in the graph data, so its downloads carry that name; a file the user opens keeps the name it was saved with. Characters not allowed in file names (`/ \ : * ? " < > |`) become `-`
+- The actor tooltip shows three jurisdictions and "... and N more" instead of all of them (Binance has 16)
 - Tag tooltips no longer join all labels into one comma list. The address tooltip shows the best label with "... and N more", a category's tooltip its three best labels one per line, a label's tooltip its categories one per line. Labels rank actor first (the label the tag summary picks for its actor), then by confidence and relevance, instead of alphabetically (category tooltip) or by relevance alone; the side panel's label chips use the same order. Blank labels are dropped and labels differing only in case or spacing count once. Where the API sends the new optional `actors` and `tag_types` of a label, only the best kind is shown and the rest counted: labels of an actor, else labels of other tags, else mentions. An actor label inherited from the cluster only counts as an actor label if the address has no label of its own
 
 - While Ctrl/Cmd is held, the toolbar shows the selection tool as active, so multi-select no longer works unseen, and the shortcut list names it
+- "Report a tag" can state the wallet type of the address: hot, cold, deposit or other
 
 ### Fixed
 - Addresses still load once the REST API stops sending the deprecated address `status` field (planned after 2026-12-31): the API client no longer requires it

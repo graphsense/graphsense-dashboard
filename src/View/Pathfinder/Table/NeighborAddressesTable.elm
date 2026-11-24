@@ -110,7 +110,7 @@ config styles vc conf =
                     withTagSummary ts =
                         case ts.bestActor |> Maybe.andThen (\aid -> conf.actorLabel aid |> Maybe.map (Tuple.pair aid)) of
                             Just ( aid, label ) ->
-                                [ Tag.actorItem vc (toId data) AddressDetails.TooltipMsg aid label ]
+                                [ Tag.actorItem vc (toId data) AddressDetails.TooltipMsg AddressDetails.UserClickedActor aid label ]
 
                             Nothing ->
                                 getSortedConceptsByWeight ts

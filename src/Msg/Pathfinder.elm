@@ -109,6 +109,10 @@ type Msg
     | OnGraphSearchMsg OnGraphSearch.Msg
     | NoOp
     | BrowserGotActor String Api.Data.Actor
+      -- opening the actor dialog: a click on an actor (label, chip, tooltip
+      -- link), or the actor route a search result leads to
+    | UserClickedActor String
+    | BrowserGotActorForDialog String Api.Data.Actor
     | BrowserGotTx AddingTxConfig Api.Data.Tx
     | BrowserGotConversionLoop (Set Id) Tx Api.Data.ExternalConversion Api.Data.Tx
     | BrowserGotConversionInputLeg (Set Id) Tx Api.Data.ExternalConversion Api.Data.Tx
@@ -210,6 +214,7 @@ type OutMsg
     | CloseTopmostOverlay
       -- a served swap leg's curated symbol/decimals, keyed by contract address
     | RegisterConversionAsset String Api.Data.TokenConfig
+    | ShowActorDialog Api.Data.Actor
 
 
 type OverlayWindows

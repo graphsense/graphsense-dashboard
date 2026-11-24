@@ -335,6 +335,10 @@ Recent searches: Ricerche recenti
 other Links: altri collegamenti
 social: social media
 jurisdictions: giurisdizioni
+website: Sito web
+social media: Social media
+show tags: Mostra tag
+no tags found: Nessun tag trovato
 any category: qualsiasi categoria
 graph: grafico
 statistics: statistiche
@@ -525,6 +529,8 @@ time-format: "HH:mm"
 date-format: dd/MM/yy
 report a tag: segnalare un tag
 report tag: segnalare un tag
+Wallet type: "Tipo di wallet"
+Other: "Altro"
 Add_Tag_description: 'Aiutaci a migliorare i nostri dati segnalando un''entità collegata
   a questo indirizzo: verrà esaminata e, se del caso, pubblicata.'
 open in new tab: apri in una nuova scheda

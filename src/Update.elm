@@ -67,6 +67,7 @@ import Util.Data
 import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
 import View.Locale as Locale
+import View.Pathfinder.ActorDialog as ActorDialog
 import View.Pathfinder.Legend exposing (legendView)
 import View.Pathfinder.ShortcutsDialog as ShortcutsDialog
 
@@ -696,6 +697,73 @@ updateHelp uc msg model =
 
                 _ ->
                     n { model | dialog = Nothing }
+
+        UserClickedShowActorTags actorId actorLabel ->
+            let
+                ( table, eff ) =
+                    TagsTable.init "actorTagsTable"
+                        |> InfiniteTable.loadFirstPage (actorTagsInfiniteTableConfig actorId)
+            in
+            ( { model
+                | dialog =
+                    { actorId = actorId
+                    , actorLabel = actorLabel
+                    , table = table
+                    , closeMsg = UserClosesDialog
+                    }
+                        |> Dialog.ActorTags
+                        |> Just
+              }
+            , List.map ApiEffect eff
+            )
+
+        BrowserGotActorTagsForDialog actorId tags ->
+            case model.dialog of
+                Just (Dialog.ActorTags config) ->
+                    if config.actorId == actorId then
+                        let
+                            ( tbl, cmd, eff ) =
+                                InfiniteTable.appendData
+                                    (actorTagsInfiniteTableConfig actorId)
+                                    addressTagsFilter
+                                    tags.nextPage
+                                    tags.addressTags
+                                    config.table
+                        in
+                        ( { model | dialog = Just (Dialog.ActorTags { config | table = tbl }) }
+                        , CmdEffect (Cmd.map ActorTagsDialogTableMsg cmd) :: List.map ApiEffect eff
+                        )
+
+                    else
+                        -- a late page for a dialog that was closed or replaced
+                        n model
+
+                _ ->
+                    n model
+
+        ActorTagsDialogTableMsg imsg ->
+            case model.dialog of
+                Just (Dialog.ActorTags config) ->
+                    let
+                        ( tbl, cmd, eff ) =
+                            InfiniteTable.update (actorTagsInfiniteTableConfig config.actorId) imsg config.table
+                    in
+                    ( { model | dialog = Just (Dialog.ActorTags { config | table = tbl }) }
+                    , CmdEffect (Cmd.map ActorTagsDialogTableMsg cmd) :: List.map ApiEffect eff
+                    )
+
+                _ ->
+                    n model
+
+        UserClickedActorTagAddress network address ->
+            -- the address route adds the address to the graph
+            ( { model | dialog = Nothing }
+            , Route.Pathfinder.addressRoute { network = String.toLower network, address = address }
+                |> Route.pathfinderRoute
+                |> Route.toUrl
+                |> NavPushUrlEffect
+                |> List.singleton
+            )
 
         TagsListDialogAddressTableMsg imsg ->
             case model.dialog of
@@ -1671,6 +1739,18 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
                             )
                 }
 
+        Pathfinder.ShowActorDialog actor ->
+            n
+                { model
+                    | dialog =
+                        Just
+                            ({ html = ActorDialog.view { closeMsg = UserClosesDialog, showTagsMsg = UserClickedShowActorTags actor.id actor.label } actor
+                             , defaultMsg = UserClosesDialog
+                             }
+                                |> Dialog.CustomWithVc
+                            )
+                }
+
         Pathfinder.ShowShortcutsDialog ->
             n
                 { model
@@ -1995,6 +2075,7 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
                                 , addTagMsg = AddTagDialog (UserClickedAddTag id)
                                 , search = Search.init Search.SearchActorsOnly
                                 , selectedActor = Nothing
+                                , walletType = Nothing
                                 , description = ""
                                 }
                             )
@@ -3160,6 +3241,24 @@ addressTagsInfiniteTableConfig id =
                     , includeBestClusterTag = True
                     }
                     (\tags -> PathfinderMsg (Pathfinder.UserGotMoreAddressTagsForDialog id tags))
+    in
+    InfiniteTable.config
+        |> InfiniteTable.withFetch fetchFn
+        |> InfiniteTable.withAbort Effect.Api.CancelEffect Effect.Api.effectToTracker
+        |> InfiniteTable.setTriggerOffset 100
+
+
+actorTagsInfiniteTableConfig : String -> InfiniteTable.Config String (Effect.Api.Effect Msg)
+actorTagsInfiniteTableConfig actorId =
+    let
+        fetchFn =
+            \_ pagesize nextpage ->
+                Effect.Api.GetActorTagsEffect
+                    { actorId = actorId
+                    , pagesize = pagesize
+                    , nextpage = nextpage
+                    }
+                    (BrowserGotActorTagsForDialog actorId)
     in
     InfiniteTable.config
         |> InfiniteTable.withFetch fetchFn

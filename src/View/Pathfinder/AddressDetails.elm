@@ -1462,7 +1462,9 @@ labelOfActor vc model id =
                     ]
                     [ Html.div
                         [ css SidePanelComponents.sidePanelEthAddressLabelOfActor_details.styles
-                        , css [ Css.cursor Css.default ]
+                        , css [ Css.cursor Css.pointer ]
+                        , onClick (Pathfinder.UserClickedActor aid)
+                        , Util.View.testId "gs-actor-label"
                         ]
                         [ Html.div
                             tooltipAttributes

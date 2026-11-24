@@ -136,6 +136,7 @@ update msg model =
                             SearchAddressAndTx conf ->
                                 case conf.currencies_filter of
                                     Just currency_filter ->
+                                        -- actors belong to no network
                                         List.concatMap (currencyToResultWithoutBlock query result) currency_filter
 
                                     _ ->
@@ -145,6 +146,7 @@ update msg model =
                                                     |> List.map .currency
                                         in
                                         List.concatMap (currencyToResultWithoutBlock query result) currency_filter
+                                            ++ actorResultLines result
 
                             SearchTagsOnly ->
                                 labelResultLines result
@@ -373,7 +375,8 @@ getSearchConfig searchType =
 
         SearchAddressAndTx _ ->
             Api.defaultSearchConfig
-                |> Rs.s_includeActors (Just False)
+                -- an actor result opens the actor dialog (Route.Actor)
+                |> Rs.s_includeActors (Just True)
                 |> Rs.s_includeLabels (Just False)
                 |> Rs.s_includeAddresses (Just True)
                 |> Rs.s_includeTxs (Just True)

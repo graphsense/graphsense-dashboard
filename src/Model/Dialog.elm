@@ -1,4 +1,4 @@
-module Model.Dialog exposing (AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initDrag, initExportConfig, placement)
+module Model.Dialog exposing (ActorTagsConfig, AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), WalletType(..), defaultMsg, exportFormatToString, initDrag, initExportConfig, placement, walletTypes)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
@@ -48,6 +48,7 @@ type Model msg
     | Error (ErrorConfig msg)
     | Info (InfoConfig msg)
     | TagsList (TagListConfig msg)
+    | ActorTags (ActorTagsConfig msg)
     | AddTag (AddTagConfig msg)
     | Export (ExportConfig msg)
     | Custom (CustomConfig msg)
@@ -121,14 +122,42 @@ type alias TagListConfig msg =
     }
 
 
+{-| The tags of an actor, across all its addresses, loaded page by page.
+-}
+type alias ActorTagsConfig msg =
+    { actorId : String
+    , actorLabel : String
+    , table : InfiniteTable.Model String Api.Data.AddressTag
+    , closeMsg : msg
+    }
+
+
 type alias AddTagConfig msg =
     { id : Id
     , closeMsg : msg
     , addTagMsg : msg
     , search : Search.Model
     , selectedActor : Maybe ( String, String )
+    , walletType : Maybe WalletType
     , description : String
     }
+
+
+{-| `WalletConcept` holds a concept id of the taxonomy. The taxonomy has no
+"other" concept and the API rejects ids it does not know, so `OtherWallet` is
+not sent: the reporter says what it is in the additional info.
+-}
+type WalletType
+    = WalletConcept String
+    | OtherWallet
+
+
+{-| The wallet types a reported tag can state. The concept taxonomy has more
+wallets; these are the ones analysts report.
+-}
+walletTypes : List WalletType
+walletTypes =
+    [ WalletConcept "hot_wallet", WalletConcept "cold_wallet", WalletConcept "deposit_wallet", OtherWallet ]
 
 
 type alias ExportConfig msg =
@@ -226,6 +255,9 @@ defaultMsg model =
             c.defaultMsg
 
         TagsList c ->
+            c.closeMsg
+
+        ActorTags c ->
             c.closeMsg
 
         Export c ->

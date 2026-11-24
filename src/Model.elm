@@ -126,6 +126,11 @@ type Msg
     | UserClosesDialog
     | TagsListDialogAddressTableMsg InfiniteTable.Msg
     | TagsListDialogClusterTableMsg InfiniteTable.Msg
+      -- the tags of an actor (opened from the actor dialog)
+    | UserClickedShowActorTags String String
+    | BrowserGotActorTagsForDialog String Api.Data.AddressTags
+    | ActorTagsDialogTableMsg InfiniteTable.Msg
+    | UserClickedActorTagAddress String String
     | UserClickedTagsDialogTab Model.Dialog.TagsTab
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
@@ -158,6 +163,7 @@ type Msg
 type AddTagDialogMsgs
     = SearchMsgAddTagDialog Msg.Search.Msg
     | UserInputsDescription String
+    | UserClickedWalletType Model.Dialog.WalletType
     | UserClickedAddTag Id
     | BrowserAddedTag Id
     | RemoveActorTag
