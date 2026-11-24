@@ -10,9 +10,21 @@ exchangeCategory =
     "exchange"
 
 
+{-| Whether every tag of the address is an exchange tag: every label carries
+the `exchange` concept (a tag's category is one of its label's concepts). An
+exchange's own deposit, hot or cold wallet tag adds a wallet-role concept next
+to `exchange`, which counting the concept cloud took for a tag of another kind.
+Without labels, the concept cloud decides.
+-}
 hasOnlyExchangeTags : Api.Data.TagSummary -> Bool
 hasOnlyExchangeTags tagdata =
-    Dict.member exchangeCategory tagdata.conceptTagCloud && Dict.size tagdata.conceptTagCloud == 1
+    if Dict.isEmpty tagdata.labelSummary then
+        Dict.member exchangeCategory tagdata.conceptTagCloud && Dict.size tagdata.conceptTagCloud == 1
+
+    else
+        tagdata.labelSummary
+            |> Dict.values
+            |> List.all (.concepts >> List.member exchangeCategory)
 
 
 isExchangeNode : Api.Data.TagSummary -> Bool
