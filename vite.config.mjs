@@ -138,8 +138,12 @@ export default defineConfig(({ command, mode }) => ({
   // bundle to anyone who can reach it. To open it to the network on purpose,
   // set DEV_HOST=0.0.0.0 in .env or the environment. No VITE_ prefix, so it
   // stays out of the client bundle.
+  // 127.0.0.1, not 'localhost': that resolves to ::1 alone on some hosts, which
+  // refuses the e2e tests' http://127.0.0.1 (`vite preview` takes this host
+  // too), and Elm's Url parser rejects an IPv6 host. Browsers asking for
+  // localhost fall back to 127.0.0.1.
   server: {
-    host: loadEnv(mode, process.cwd(), 'DEV_HOST').DEV_HOST || 'localhost',
+    host: loadEnv(mode, process.cwd(), 'DEV_HOST').DEV_HOST || '127.0.0.1',
     port: 3000,
     hmr : { overlay : true }
   },
