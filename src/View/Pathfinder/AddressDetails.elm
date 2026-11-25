@@ -222,7 +222,7 @@ utxo pluginStates vc model id viewState address =
         { root = sidePanelData
         , iconsTagL =
             { variant =
-                addressTagIcon address
+                addressTagIcon model id address
             }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
@@ -1107,7 +1107,7 @@ account pluginStates vc model id viewState address =
         { identifierWithCopyIcon = sidePanelAddressCopyIcon vc id
         , iconsTagL =
             { variant =
-                addressTagIcon address
+                addressTagIcon model id address
             }
         , leftTab = { variant = none }
         , rightTab = { variant = none }
@@ -1524,9 +1524,34 @@ labelOfActor vc model id =
 View.Pathfinder.Address) so the details icon, the graph icon and the tags list
 stay consistent. `categoriesList` is not a reliable signal: it always contains
 the "learn more" button, so it is non-empty even for addresses with no tags.
+
+One exception: an address whose tags are all exchange tags. The graph node
+shows no tag icon for it, the node itself is drawn as an exchange; the panel
+has no such stand-in, so its categories row would start without an icon. It
+gets the icon its tags call for, direct or from the cluster.
+
 -}
-addressTagIcon : Address -> Html Pathfinder.Msg
-addressTagIcon address =
+addressTagIcon : Pathfinder.Model -> Id -> Address -> Html Pathfinder.Msg
+addressTagIcon model id address =
+    let
+        exchangeOnly =
+            getTagSummary model id
+                |> Maybe.map hasOnlyExchangeTags
+                |> Maybe.withDefault False
+
+        exchangeOnlyIcon =
+            if not exchangeOnly then
+                Nothing
+
+            else if isClusterOnlyTags model id then
+                Just HIcons.IconsTagLTypeIndirect
+
+            else if (getTagSummary model id |> Maybe.map .tagCount |> Maybe.withDefault 0) > 0 then
+                Just HIcons.IconsTagLTypeDirect
+
+            else
+                Nothing
+    in
     if address.listTag == Just ListTag.Blacklist then
         HIcons.iconsTagLWithAttributes
             { bar = [], root = [], tagIcon = [ Util.View.testId "gs-blacklist-tag" ] }
@@ -1539,16 +1564,34 @@ addressTagIcon address =
 
     else if address.hasTags then
         HIcons.iconsTagLWithAttributes
-            { bar = [], root = [], tagIcon = [] }
+            { bar = [], root = [], tagIcon = [ Util.View.testId "gs-direct-tag" ] }
             { root = { type_ = HIcons.IconsTagLTypeDirect } }
 
     else if address.hasClusterTagsOnly then
         HIcons.iconsTagLWithAttributes
-            { bar = [], root = [], tagIcon = [] }
+            { bar = [], root = [], tagIcon = [ Util.View.testId "gs-indirect-tag" ] }
             { root = { type_ = HIcons.IconsTagLTypeIndirect } }
 
     else
-        none
+        case exchangeOnlyIcon of
+            Just type_ ->
+                HIcons.iconsTagLWithAttributes
+                    { bar = []
+                    , root = []
+                    , tagIcon =
+                        [ Util.View.testId
+                            (if type_ == HIcons.IconsTagLTypeDirect then
+                                "gs-direct-tag"
+
+                             else
+                                "gs-indirect-tag"
+                            )
+                        ]
+                    }
+                    { root = { type_ = type_ } }
+
+            Nothing ->
+                none
 
 
 sidePanelAddressCopyIcon : View.Config -> Id -> { identifier : String, copyIconInstance : Html Pathfinder.Msg, addTagIconInstance : Html Pathfinder.Msg, chevronInstance : Html Pathfinder.Msg }
