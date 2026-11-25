@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Hovering an address makes the cross-chain icon glow on the same address on other chains in the graph, so twins like one EVM address on eth and arb are easy to spot
 - A tags list for an actor: "Show tags" in the actor dialog lists the actor's tags across all its addresses (address and network, label, type and confidence, source, last modified), loading more while scrolling; a click on an address adds it to the graph, for networks this instance serves, and every address can be copied
-- Actors can be found with the main search boxes (top bar and Pathfinder), not only addresses and transactions; picking one opens the actor dialog
+- Actors can be found with the main search boxes (top bar and Pathfinder), not only addresses and transactions, at most five below the other results; picking one opens the actor dialog
 - An actor dialog with the details of an actor: logo, legal name, websites, categories, all jurisdictions, the number of tags, and its social media and GitHub links. It opens on a click on the actor's name in the side panel or an actor chip in the address tables, from "Learn more" in the actor tooltip, and from an actor search result, which until now did nothing in the Pathfinder
 
 ### Changed
