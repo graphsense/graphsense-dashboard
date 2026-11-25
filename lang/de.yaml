@@ -193,6 +193,7 @@ request timeout: Zeitüberschreitung
 request error: Anfragefehler
 network error: Netzwerkfehler
 server error: Serverfehler
+service temporarily unavailable: Dienst vorübergehend nicht verfügbar
 not found: Nicht gefunden
 data error: Datenfehler
 service not reachable: Service nicht erreichbar.
@@ -335,6 +336,7 @@ statusbar-not-found-info: Adresse nicht gefunden. Entweder ist sie noch nicht
   in unserer Datenbank eingespielt (aktuell bis Block {0}) oder sie hat bis jetzt
   noch keine Transaktionen erhalten und ist daher nicht in der Blockchain gespeichert.
 and-more: '... und {0} weitere'
+'Only the first {0} tags are shown.': 'Es werden nur die ersten {0} Tags angezeigt.'
 popup-address-not-found-various-reasons: Dies kann mehrere Ursachen haben
 popup-addresses-not-found-not-in-database: Sie sind möglicherweise noch nicht in unsere
   Datenbank eingespielt
@@ -354,6 +356,10 @@ Recent searches: Letzte Sucheingaben
 other Links: Links
 social: Social Media
 jurisdictions: Gerichtsbarkeit
+website: Webseite
+social media: Soziale Medien
+show tags: Tags anzeigen
+no tags found: Keine Tags gefunden
 any category: beliebige Kategorie
 graph: Graph
 statistics: Statistiken
@@ -490,6 +496,8 @@ tag-dialog-additional-info: Zusätzliche Informationen (optional)
 tag-dialog-additional-info-example: z.B. Verknüpft mit einem Betrugsbericht auf xyz.com
 report a tag: Ein Tag melden
 report tag: Tag melden
+Wallet type: "Wallet-Typ"
+Other: "Andere"
 create new actor: Neuen Akteur erstellen
 Added tag: Tag hinzugefügt
 num-more-assets: '{0} weitere Vermögenswerte'
@@ -511,6 +519,15 @@ bridge transaction: Bridge Transaktion
 swap transaction: Swap Transaktion
 swap transactions: Swap Transaktionen
 Bridge transactions: Bridge Transaktionen
+protocol: Protokoll
+bridge explorer: Bridge-Explorer
+unsupported token: "Nicht unterstützter Token"
+unsupported tokens: "Nicht unterstützte Token"
+input token: "Eingangs-Token"
+output token: "Ausgangs-Token"
+source tx: "Quell-Tx"
+destination tx: "Ziel-Tx"
+unsupported-bridge-token-hint: "Ein nicht unterstützter Token steht nicht im Token-Register: Es wird kein Betrag und kein Wert angezeigt, und seine Identität ist nicht geprüft."
 hint-minimum-input: Bitte mindestens {0} Zeichen eingeben
 no-results-found: Keine Ergebnisse gefunden.
 deprecation notice: Ende des Supports
@@ -570,6 +587,9 @@ export-dialog-description: "Exportieren Sie den aktuellen Graphen in verschieden
 export-dialog-transparent-background: "transparenter Hintergrund"
 unsupported-swap-notice: "Hinweis: Nicht unterstützte Swap-Transaktion erkannt, Ziel {0} ({1})"
 unsupported-bridge-notice: "Hinweis: Nicht unterstützte Bridge-Transaktion erkannt, Ziel {0} ({1})"
+unsupported-protocol-bridge-notice: "Hinweis: Nicht unterstützte {2}-Bridge-Transaktion erkannt, Ziel {0} ({1})"
+unsupported-bridge-from-notice: "Hinweis: Nicht unterstützte Bridge-Transaktion erkannt, Quelle {2}, Ziel {0} ({1})"
+unsupported-protocol-bridge-from-notice: "Hinweis: Nicht unterstützte {2}-Bridge-Transaktion erkannt, Quelle {3}, Ziel {0} ({1})"
 cluster tags: Cluster-abgeleitete Schlagwörter
 cluster tags list: Cluster-abgeleitete Schlagwortliste
 cluster tags disclaimer: "Diese Schlagwörter sind nicht direkt dieser Adresse zugeordnet, sondern werden vom zugehörigen Cluster abgeleitet. Clustering kann Fehler enthalten, daher sollten diese Schlagwörter mit Vorsicht verwendet werden."
@@ -621,6 +641,7 @@ Network switched off in the settings (lite networks): Netzwerk in den Einstellun
 Keyboard shortcuts: "Tastenkürzel"
 Add address or tx: "Adresse oder Tx hinzufügen"
 Select all: "Alles auswählen"
+Click for multi-select: "Klicken für Mehrfachauswahl"
 Delete selection: "Auswahl löschen"
 Move the selection along the graph: "Auswahl im Graphen bewegen"
 Close search or dialog: "Suche oder Dialog schließen"
@@ -637,3 +658,6 @@ gs-file-networks-not-on-account: "Dieser Graph enthält Knoten auf {0}, die für
 Not available on your account: "Für dein Konto nicht verfügbar"
 on: "Ein"
 off: "Aus"
+system: "System"
+light: "Hell"
+dark: "Dunkel"

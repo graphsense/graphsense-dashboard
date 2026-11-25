@@ -62,6 +62,9 @@ isCompatibleWithSearchType searchType rl =
         ( SearchAddressAndTx _, Tx _ _ ) ->
             True
 
+        ( SearchAddressAndTx _, Actor _ ) ->
+            True
+
         ( SearchAddressAndTx _, _ ) ->
             False
 

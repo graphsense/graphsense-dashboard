@@ -192,6 +192,41 @@ suite =
                                 }
                             )
             ]
+        , describe "a bridge row's protocol, app and transfer id"
+            -- Three optional keys a backend can add to bridge_tx rows, in
+            -- neither the spec nor any baseline body.
+            [ test "decodes them from a bridge row" <|
+                \_ ->
+                    usdt0BridgeRow
+                        |> Json.Decode.decodeString Api.Data.externalConversionDecoder
+                        |> Result.map (\c -> ( c.protocol, c.protocolApp, c.transferId ))
+                        |> Expect.equal
+                            (Ok
+                                ( Just "layerzero"
+                                , Just "usdt0"
+                                , Just "0xb071cfdf0f4e7c9bfff73e34fdc70f894bf8e799ce674722b1b15e35bf8c500d"
+                                )
+                            )
+            , test "malformed optional bridge metadata does not discard the conversion list" <|
+                \_ ->
+                    -- the last row is a plain swap, without the keys at all
+                    ([ "null", "123", "false", "{}", "[]" ]
+                        |> List.map
+                            (\value ->
+                                baselineDexSwap
+                                    |> String.dropRight 1
+                                    |> (\body -> body ++ ",\"protocol\":" ++ value ++ ",\"protocol_app\":" ++ value ++ ",\"transfer_id\":" ++ value ++ "}")
+                            )
+                    )
+                        ++ [ baselineDexSwap ]
+                        |> List.map
+                            (\row ->
+                                ("[" ++ row ++ "]")
+                                    |> Json.Decode.decodeString (Json.Decode.list Api.Data.externalConversionDecoder)
+                                    |> Result.map (List.map (\c -> ( c.protocol, c.protocolApp, c.transferId )))
+                            )
+                        |> Expect.equal (List.repeat 6 (Ok [ ( Nothing, Nothing, Nothing ) ]))
+            ]
         , describe "the client is stricter than the spec about nulls"
             -- The spec types both of these `anyOf: [string, null]`, the client
             -- as a plain String. A live instance does send them (checked
@@ -274,6 +309,11 @@ suite =
                                 )
                             )
                         |> Expect.equal (Ok ( True, True, False ))
+            , test "a label says which actors and tag types it merges, which ranks it" <|
+                \_ ->
+                    Json.Decode.decodeString Api.Data.tagSummaryDecoder Fixture.tagSummary
+                        |> Result.map (.labelSummary >> Dict.values >> List.map (\ls -> ( ls.actors, ls.tagTypes )))
+                        |> Expect.equal (Ok [ ( Just [ "internet_archive" ], Just [ "actor" ] ) ])
             , test "token configs carry ticker and decimals, which drive every token amount" <|
                 \_ ->
                     Json.Decode.decodeString Api.Data.tokenConfigsDecoder Fixture.tokenConfigs
@@ -330,6 +370,14 @@ swapped to match (the token leg is a `_T` transfer, the native one a trace).
 tokenInputDexSwap : String
 tokenInputDexSwap =
     """{"conversion_type":"dex_swap","from_address":"0x4c2d696441a11760429cd9845bd84987b9313242","to_address":"0x4c2d696441a11760429cd9845bd84987b9313242","from_asset":"0xdac17f958d2ee523a2206206994597c13d831ec7","to_asset":"native","from_amount":"0x470de4df820000","to_amount":"0x22db8e23bcaee","from_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_T250","to_asset_transfer":"0xf5ba2f81943a2f79085667593c83e95a38764ccece331f9eeeef00ca697c7246_I603","from_network":"eth","to_network":"eth","from_is_supported_asset":true,"to_is_supported_asset":true,"from_asset_symbol":"USDT","from_asset_decimals":6,"from_amount_fiat_values":[{"code":"usd","value":60.0}]}"""
+
+
+{-| A bridge row for the USDT0 transfer arb 0x507fa262… → eth 0xcfa572bc…,
+as a backend that sends the optional bridge keys answers it.
+-}
+usdt0BridgeRow : String
+usdt0BridgeRow =
+    """{"conversion_type":"bridge_tx","from_address":"0xd7b44cb976fae38b6660db84de184cb1370d19d7","to_address":"0x9bac2cfcdeaf1850b5b45e61fc2d1e483aec9949","from_asset":"0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9","to_asset":"0xdac17f958d2ee523a2206206994597c13d831ec7","from_amount":"0xa5b948cb","to_amount":"0xa5b948cb","from_asset_transfer":"507fa26239c34aefcefcb660457a73065383f284ca4673e436ea168e5519b2b0_T13","to_asset_transfer":"cfa572bc24099007fdcef331b17d30e83673b7c6972ec1c04419afba9b58a720_T658","from_network":"arb","to_network":"eth","from_is_supported_asset":true,"to_is_supported_asset":true,"protocol":"layerzero","protocol_app":"usdt0","transfer_id":"0xb071cfdf0f4e7c9bfff73e34fdc70f894bf8e799ce674722b1b15e35bf8c500d"}"""
 
 
 legMetadata :

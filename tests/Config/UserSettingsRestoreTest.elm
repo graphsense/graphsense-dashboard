@@ -19,6 +19,7 @@ import Config.View
 import Dict
 import Expect
 import Init
+import Model.ThemeMode as ThemeMode
 import Support.Env as Env
 import Test exposing (Test, describe, test)
 
@@ -33,7 +34,7 @@ allFlipped =
             Config.UserSettings.default "en"
     in
     { base
-        | lightMode = Just False
+        | themeMode = Just ThemeMode.Dark
         , showDatesInUserLocale = Just False
         , showTimeZoneOffset = Just True
         , showTimestampOnTxEdge = Just False
@@ -47,7 +48,7 @@ allFlipped =
 
 restored : Config.UserSettings.UserSettings -> Config.View.Config
 restored settings =
-    Init.viewConfigFromSettings False Env.viewConfig.locale Dict.empty settings
+    Init.viewConfigFromSettings False False Env.viewConfig.locale Dict.empty settings
 
 
 suite : Test

@@ -16,6 +16,7 @@ import Tuple exposing (second)
 import Util.Css exposing (alignItemsStretch)
 import Util.View
 import View.Button as Button
+import View.Controls as Controls
 import View.Locale as Locale
 import View.Search
 
@@ -36,6 +37,13 @@ willBePublishedAlertView vc =
                 (" " ++ Locale.string vc.locale "tags_release_warnings")
             ]
         ]
+
+
+{-| The generated text field is 280px wide, which leaves it short of the dialog.
+-}
+fullWidth : Css.Style
+fullWidth =
+    Css.width (Css.pct 100) |> Css.important
 
 
 view : View.Config -> Dialog.AddTagConfig Msg -> Html Msg
@@ -59,6 +67,7 @@ view vc model =
                             [ Css.displayFlex
                             , Css.flexDirection Css.row
                             , Css.property "gap" "5px"
+                            , fullWidth
                             ]
                         ]
                         [ View.Search.searchWithMoreCss
@@ -69,6 +78,7 @@ view vc model =
                                 |> Rs.s_inputAttributes
                                     [ placeholder (Locale.interpolated vc.locale "e.g." [ "Binance" ])
                                     , css (Util.View.inputFieldStyles False)
+                                    , css [ fullWidth ]
                                     ]
                             )
                             model.search
@@ -78,7 +88,7 @@ view vc model =
         textFieldAttributes =
             F.textFieldWithHelpAttributes
                 |> Rs.s_root
-                    [ [ Css.width <| Css.pct 90 ] |> css
+                    [ css [ fullWidth ]
                     , alignItemsStretch
                     ]
                 |> Rs.s_helperText
@@ -104,6 +114,32 @@ view vc model =
                 , textField = { variant = actorField }
                 }
 
+        walletType =
+            F.radioOptionsWithTitleWithAttributes
+                (F.radioOptionsWithTitleAttributes
+                    |> Rs.s_root [ css [ fullWidth ], alignItemsStretch ]
+                )
+                { radioItemsList =
+                    Dialog.walletTypes
+                        |> List.map
+                            (\wt ->
+                                Controls.radio
+                                    { label =
+                                        case wt of
+                                            Dialog.WalletConcept concept ->
+                                                View.getConceptName vc concept |> Maybe.withDefault concept
+
+                                            Dialog.OtherWallet ->
+                                                Locale.string vc.locale "Other"
+                                    , selected = model.walletType == Just wt
+                                    , disabled = False
+                                    , size = Controls.Small
+                                    , msg = UserClickedWalletType wt |> AddTagDialog
+                                    }
+                            )
+                }
+                { root = { title = Locale.string vc.locale "Wallet type" } }
+
         additionalInfo =
             F.textFieldWithHelpWithAttributes
                 textFieldAttributes
@@ -116,7 +152,8 @@ view vc model =
                     { variant =
                         textarea
                             [ Util.View.inputFieldStyles False |> css
-                            , [ Css.resize Css.none
+                            , [ fullWidth
+                              , Css.resize Css.none
                               , Css.height (Css.em 5) |> Css.important
                               , Css.focus [ Css.height (Css.em 5) |> Css.important ]
                               , Css.whiteSpace Css.preLine
@@ -136,6 +173,7 @@ view vc model =
         )
         { inputList =
             [ actorText
+            , walletType
             , additionalInfo
             ]
                 ++ (if model.selectedActor /= Nothing then

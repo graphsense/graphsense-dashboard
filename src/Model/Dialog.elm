@@ -1,7 +1,6 @@
-module Model.Dialog exposing (AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), defaultMsg, exportFormatToString, initDrag, initExportConfig, placement)
+module Model.Dialog exposing (ActorTagsConfig, AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), WalletType(..), actorTagsLimit, defaultMsg, exportFormatToString, initDrag, initExportConfig, placement, walletTypes)
 
 import Api.Data
-import Basics.Extra exposing (flip)
 import Components.InfiniteTable as InfiniteTable
 import Config.Update as Update
 import Config.View exposing (Config)
@@ -11,7 +10,7 @@ import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Selection as Selection exposing (Selection(..))
 import Model.Search as Search
 import Time
-import View.Locale exposing (makeTimestampFilename)
+import View.Locale exposing (makeGraphFilename)
 
 
 {-| How far the user has dragged the open dialog away from its placement.
@@ -49,6 +48,7 @@ type Model msg
     | Error (ErrorConfig msg)
     | Info (InfoConfig msg)
     | TagsList (TagListConfig msg)
+    | ActorTags (ActorTagsConfig msg)
     | AddTag (AddTagConfig msg)
     | Export (ExportConfig msg)
     | Custom (CustomConfig msg)
@@ -122,14 +122,52 @@ type alias TagListConfig msg =
     }
 
 
+{-| The tags of an actor, across all its addresses, loaded page by page, up
+to `actorTagsLimit`. `limitReached` once more were there than that.
+-}
+type alias ActorTagsConfig msg =
+    { actorId : String
+    , actorLabel : String
+    , table : InfiniteTable.Model String Api.Data.AddressTag
+    , limitReached : Bool
+    , closeMsg : msg
+    }
+
+
+{-| How many tags of an actor the list loads at most. A large exchange has
+millions; scrolling through them would request page after page for no use.
+-}
+actorTagsLimit : Int
+actorTagsLimit =
+    1000
+
+
 type alias AddTagConfig msg =
     { id : Id
     , closeMsg : msg
     , addTagMsg : msg
     , search : Search.Model
     , selectedActor : Maybe ( String, String )
+    , walletType : Maybe WalletType
     , description : String
     }
+
+
+{-| `WalletConcept` holds a concept id of the taxonomy. The taxonomy has no
+"other" concept and the API rejects ids it does not know, so `OtherWallet` is
+not sent: the reporter says what it is in the additional info.
+-}
+type WalletType
+    = WalletConcept String
+    | OtherWallet
+
+
+{-| The wallet types a reported tag can state. The concept taxonomy has more
+wallets; these are the ones analysts report.
+-}
+walletTypes : List WalletType
+walletTypes =
+    [ WalletConcept "hot_wallet", WalletConcept "cold_wallet", WalletConcept "deposit_wallet", OtherWallet ]
 
 
 type alias ExportConfig msg =
@@ -229,6 +267,9 @@ defaultMsg model =
         TagsList c ->
             c.closeMsg
 
+        ActorTags c ->
+            c.closeMsg
+
         Export c ->
             c.closeMsg
 
@@ -260,8 +301,7 @@ initExportConfig uc { selection, filenameBase, closeMsg, time } =
     , keepSelectionHighlight = False
     , fileFormat = ExportFormatPDF
     , filename =
-        makeTimestampFilename uc.locale time
-            |> flip (++) (" " ++ filenameBase ++ ".pdf")
+        makeGraphFilename uc.locale time filenameBase ++ ".pdf"
     , time = time
     , exporting = False
     , transparentBackground = False

@@ -11,8 +11,32 @@ renders as "BNB-USDT / ETH-BNB".
 
 import Api.Data
 import Expect
+import Model.Pathfinder.Id exposing (Id)
 import Test exposing (Test, describe, test)
-import Update.Pathfinder exposing (isOutputLegOf)
+import Update.Pathfinder
+
+
+{-| Asked of a tx known by its id only, as no root transfer.
+-}
+isOutputLegOf : Api.Data.ExternalConversion -> Id -> Bool
+isOutputLegOf conversion ( network, identifier ) =
+    Api.Data.TxTxAccount
+        { contractCreation = Nothing
+        , currency = network
+        , fee = Nothing
+        , fromAddress = "0x" ++ String.repeat 40 "1"
+        , height = 1
+        , identifier = identifier
+        , isExternal = Nothing
+        , network = network
+        , timestamp = 1
+        , toAddress = "0x" ++ String.repeat 40 "2"
+        , tokenTxId = Nothing
+        , txHash = String.split "_" identifier |> List.head |> Maybe.withDefault identifier
+        , txType = "account"
+        , value = { fiatValues = [], value = 1 }
+        }
+        |> Update.Pathfinder.isOutputLegOf conversion
 
 
 {-| A real Stargate leg pair: bnb USDT -> eth USDT, both legs ERC20, so each
@@ -39,6 +63,9 @@ tokenBridge =
     , toAssetDecimals = Nothing
     , fromAmountFiatValues = Nothing
     , toAmountFiatValues = Nothing
+    , protocol = Nothing
+    , protocolApp = Nothing
+    , transferId = Nothing
     }
 
 
@@ -51,6 +78,17 @@ nativeBridge =
     { tokenBridge
         | fromAssetTransfer = bnbHash ++ "_I0"
         , toAssetTransfer = ethHash ++ "_I0"
+    }
+
+
+{-| A native leg the way every other bridge names it (D-37): the BARE hash,
+meaning the whole tx, which `/txs/{hash}` serves as its root `_I0`.
+-}
+bareNativeBridge : Api.Data.ExternalConversion
+bareNativeBridge =
+    { tokenBridge
+        | fromAssetTransfer = bnbHash
+        , toAssetTransfer = ethHash
     }
 
 
@@ -103,4 +141,14 @@ suite =
             \_ ->
                 isOutputLegOf nativeBridge ( "bnb", bnbHash ++ "_I0" )
                     |> Expect.equal False
+        , test "a bare-hash native leg is the whole tx, served as its root" <|
+            \_ ->
+                [ ( "eth", ethHash ++ "_I0" ), ( "eth", ethHash ), ( "eth", "0x" ++ ethHash ) ]
+                    |> List.map (isOutputLegOf bareNativeBridge)
+                    |> Expect.equal [ True, True, True ]
+        , test "but not any other sub-transfer of that tx, nor the deposit" <|
+            \_ ->
+                [ ( "eth", ethHash ++ "_T840" ), ( "eth", ethHash ++ "_I1" ), ( "bnb", bnbHash ++ "_I0" ) ]
+                    |> List.map (isOutputLegOf bareNativeBridge)
+                    |> Expect.equal [ False, False, False ]
         ]

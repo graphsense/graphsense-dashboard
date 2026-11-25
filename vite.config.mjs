@@ -127,15 +127,23 @@ const base64Loader = {
   }
 };
 
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ command, mode }) => ({
   // The Elm time-travel debugger (dev only, never in builds) crashes on large
   // models: its Expando walks the whole model on every update and overflows
   // the stack in Firefox ("InternalError: too much recursion",
   // https://github.com/elm/virtual-dom/issues/80), freezing the app. If that
   // bites you, disable it with ELM_DEBUGGER=false.
   plugins: [elmPlugin({ debug: command === 'serve' && process.env.ELM_DEBUGGER !== 'false' }), elmStepperGuardPlugin(), elmSafeVirtualDomCheckPlugin(), base64Loader, envReplacePlugin({include: [/\.elm$/, /src\/main\.js$/], exclude: /node_modules/})],
-  server: { 
-    host: '0.0.0.0',
+  // Loopback only: the dev server serves the source tree and the .env-filled
+  // bundle to anyone who can reach it. To open it to the network on purpose,
+  // set DEV_HOST=0.0.0.0 in .env or the environment. No VITE_ prefix, so it
+  // stays out of the client bundle.
+  // 127.0.0.1, not 'localhost': that resolves to ::1 alone on some hosts, which
+  // refuses the e2e tests' http://127.0.0.1 (`vite preview` takes this host
+  // too), and Elm's Url parser rejects an IPv6 host. Browsers asking for
+  // localhost fall back to 127.0.0.1.
+  server: {
+    host: loadEnv(mode, process.cwd(), 'DEV_HOST').DEV_HOST || '127.0.0.1',
     port: 3000,
     hmr : { overlay : true }
   },

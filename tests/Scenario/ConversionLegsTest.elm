@@ -36,6 +36,7 @@ import Update.Graph.Transform as Transform
 import Update.Pathfinder.Network as Network
 import Update.Statusbar as Statusbar
 import Util exposing (removeLeading0x)
+import View.Pathfinder.ConversionEdge as ConversionEdgeView
 
 
 
@@ -271,6 +272,43 @@ isSwapSelected app =
             False
 
 
+withSnapping : Bool -> App -> App
+withSnapping on =
+    App.mapModel
+        (\m ->
+            let
+                config =
+                    m.config
+            in
+            { m | config = { config | snapToGrid = on } }
+        )
+
+
+{-| Where the swap icon is drawn, in graph pixels.
+-}
+iconAt : App -> Maybe ( Float, Float )
+iconAt app =
+    let
+        conversions =
+            (App.model app).network.conversions
+    in
+    Maybe.map2
+        (\id ( x, y ) ->
+            let
+                offset =
+                    Dict.get id conversions |> Maybe.andThen .nodeOffset |> Maybe.withDefault { x = 0, y = 0 }
+            in
+            ( x + offset.x, y + offset.y )
+        )
+        (swapEdgeId app)
+        (swapEdgeId app |> Maybe.andThen (ConversionEdgeView.restingIcon conversions))
+
+
+isMultipleOf : Float -> Float -> Bool
+isMultipleOf step v =
+    abs (v / step - toFloat (round (v / step))) < 1.0e-6
+
+
 dragVector : { x : Float, y : Float } -> { x : Float, y : Float } -> App -> { x : Float, y : Float }
 dragVector from to app =
     Transform.vector from to (App.model app).transform
@@ -323,6 +361,37 @@ movingTheSwapIcon =
                     |> dragSwapIcon { x = 10, y = 10 } { x = 0, y = 50 }
                     |> swapIconOffset
                     |> Expect.equal (Ok (Just { x = first.x + second.x, y = first.y + second.y }))
+        , test "with grid snapping, a dropped icon goes to the nearest grid point" <|
+            \_ ->
+                let
+                    dropped =
+                        App.init
+                            |> withSnapping True
+                            |> withSwapEdge
+                            |> withSwapOnScreen
+                            |> dragSwapIcon { x = 100, y = 100 } { x = 163, y = 131 }
+                in
+                case iconAt dropped of
+                    Just ( x, y ) ->
+                        -- the node grid: 4 by 2.5 units of 42 px
+                        ( isMultipleOf 168 x, isMultipleOf 105 y )
+                            |> Expect.equal ( True, True )
+
+                    Nothing ->
+                        Expect.fail "the icon has no position"
+        , test "without grid snapping, a dropped icon stays where the mouse left it" <|
+            \_ ->
+                let
+                    app =
+                        App.init
+                            |> withSnapping False
+                            |> withSwapEdge
+                            |> withSwapOnScreen
+                in
+                app
+                    |> dragSwapIcon { x = 100, y = 100 } { x = 163, y = 131 }
+                    |> swapIconOffset
+                    |> Expect.equal (Ok (Just (dragVector { x = 100, y = 100 } { x = 163, y = 131 } app)))
         , test "pressing and releasing the icon in place selects the swap" <|
             \_ ->
                 App.init

@@ -39,7 +39,7 @@ function measureCharacterDimensions() {
 
 const getTheme = () => {
   const rootStyles = window.getComputedStyle(document.documentElement);
-  return Object.fromEntries(
+  const current = Object.fromEntries(
     Array.from(document.styleSheets)
       .flatMap((styleSheet) => {
         try {
@@ -53,7 +53,25 @@ const getTheme = () => {
       .filter((style) => style.startsWith("--"))
       .map((variable) => [variable, rootStyles.getPropertyValue(variable)]),
   );
+  return {...current, ...getLightPalette()}
 };
+
+// Exports are always light. View.elm keeps the light palette in the page in
+// every mode (marked data-gs-palette="light"); its values replace whatever the
+// dark palette set on :root.
+const getLightPalette = () => {
+  // All of them: elm-css puts an empty <style> wrapper of its own in there first.
+  return Object.fromEntries(
+    Array.from(document.querySelectorAll('[data-gs-palette="light"] style'))
+      .flatMap((style) => (style.sheet ? Array.from(style.sheet.cssRules) : []))
+      .filter((cssRule) => cssRule instanceof CSSStyleRule)
+      .flatMap((cssRule) =>
+        Array.from(cssRule.style)
+          .filter((variable) => variable.startsWith("--"))
+          .map((variable) => [variable, cssRule.style.getPropertyValue(variable).trim()])
+      )
+  )
+}
 
 
 const getNavigatorLanguage = () => {
@@ -103,6 +121,10 @@ function purgeStaleHandoffs () {
 }
 purgeStaleHandoffs()
 
+// System colour scheme. Elm resolves the user's themeMode (System / Light /
+// Dark) against it, and follows it live in System mode.
+const prefersDarkQuery = window.matchMedia('(prefers-color-scheme: dark)')
+
 const app = Elm.Main.init(
   { flags: 
     { localStorage: {...localStorage}
@@ -113,8 +135,18 @@ const app = Elm.Main.init(
     , pluginFlags 
     , locale
     , isMac
+    , prefersDark: prefersDarkQuery.matches
     } 
   })
+
+// index.html marked <html> with data-theme so the page is not white before
+// Elm renders. Elm has rendered now and sets color-scheme itself; the marker
+// would outrank it and keep the old scheme after a switch.
+delete document.documentElement.dataset.theme
+
+prefersDarkQuery.addEventListener('change', (e) => {
+  app.ports.systemColorSchemeChanged?.send(e.matches)
+})
 
 !!document.body.elmTree || console.warn('safe virtual dom not installed!')
 

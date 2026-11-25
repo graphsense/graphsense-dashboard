@@ -9,7 +9,7 @@ import Css
 import Css.Pathfinder as Css
 import Dict
 import Html.Styled as Html exposing (Html, div, text)
-import Html.Styled.Attributes exposing (css, href, target, title)
+import Html.Styled.Attributes exposing (css, href, target)
 import Model.Currency exposing (assetFromBase)
 import Model.NetworkCapabilities as NetworkCapabilities exposing (NetworkCapabilities)
 import Model.Pathfinder as Pathfinder exposing (getTagSummary)
@@ -24,6 +24,7 @@ import Theme.Html.TagsComponents as TagsComponents
 import Tuple exposing (pair)
 import Util.Css as Css
 import Util.Data as Data
+import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Pathfinder.TagConfidence exposing (ConfidenceRange(..), getConfidenceRangeFromFloat)
 import Util.Pathfinder.TagSummary as TagSummary
 import Util.TooltipType exposing (TooltipType(..))
@@ -143,11 +144,19 @@ baseRowStyle =
     [ Css.width (Css.pct 100) ]
 
 
+{-| The generated row only spreads label and value apart, so a label longer
+than its minimum width (German "Schlagwörter") would touch the value.
+-}
+labelValueRowStyle : List Css.Style
+labelValueRowStyle =
+    baseRowStyle ++ [ Css.property "gap" "16px" ]
+
+
 tooltipRow : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRowText : String, secondRowVisible : Bool, secondRowText : String } } -> Html msg
 tooltipRow =
     GraphComponents.tooltipRowWithAttributes
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_root [ css baseRowStyle ]
+            |> Rs.s_root [ css labelValueRowStyle ]
             |> Rs.s_tooltipRowLabel [ css [ Css.minWidth (Css.px 90) ] ]
             |> Rs.s_firstValue [ css [ Css.property "white-space" "wrap", Css.textAlign Css.right ] ]
         )
@@ -157,7 +166,7 @@ tooltipRowCustomValue : String -> Html msg -> Html msg
 tooltipRowCustomValue title rowValue =
     GraphComponents.tooltipRowWithInstances
         (GraphComponents.tooltipRowAttributes
-            |> Rs.s_root [ css baseRowStyle ]
+            |> Rs.s_root [ css labelValueRowStyle ]
         )
         (GraphComponents.tooltipRowInstances |> Rs.s_tooltipRowValue (Just rowValue))
         { tooltipRowLabel = { title = title }
@@ -176,102 +185,117 @@ linkRow vc txt msg =
         )
 
 
-showActor : View.Config -> Actor -> List (Html msg)
+showActor : View.Config -> Actor -> List (Html Msg)
 showActor vc a =
     let
-        mainUri =
-            if not (String.startsWith "http://" a.uri) && not (String.startsWith "https://" a.uri) then
-                "https://" ++ a.uri
-
-            else
-                a.uri
+        jurisdictions =
+            a.jurisdictions |> List.map (.label >> Locale.string vc.locale)
     in
     [ tooltipRow
         { tooltipRowLabel = { title = Locale.string vc.locale "actor" }
         , tooltipRowValue = a.label |> val vc
         }
-    , tooltipRowCustomValue (Locale.string vc.locale "Url") (Html.a [ Css.plainLinkStyle vc |> css, href mainUri, target "blank" ] [ text a.uri ])
-    , tooltipRowCustomValue
-        (Locale.string vc.locale "jurisdictions")
-        (let
-            jl =
-                List.length a.jurisdictions
-         in
-         a.jurisdictions
-            |> List.indexedMap
-                (\i z ->
-                    div
-                        [ title (Locale.string vc.locale z.label)
-                        , Css.mGap
-                            |> Css.paddingRight
-                            |> List.singleton
-                            |> css
-                        ]
-                        [ text
-                            (Locale.string vc.locale z.label
-                                ++ (if i /= (jl - 1) then
-                                        ", "
-
-                                    else
-                                        ""
-                                   )
-                            )
-                        ]
-                )
-            |> div [ [ Css.displayFlex, Css.flexDirection Css.column ] |> css ]
-        )
+    , tooltipRowCustomValue (Locale.string vc.locale "Url") (Html.a [ Css.plainLinkStyle vc |> css, href (addProtocolPrefx a.uri), target "blank" ] [ text a.uri ])
     ]
+        -- Binance alone lists dozens of jurisdictions: three, then a count;
+        -- the actor dialog has them all
+        ++ labelRows vc
+            (Locale.string vc.locale "jurisdictions")
+            { labels = List.take maxStackedLines jurisdictions
+            , more = max 0 (List.length jurisdictions - maxStackedLines)
+            }
+        ++ [ UserClickedActor a.id |> linkRow vc "learn more" ]
 
 
 tagConcept : View.Config -> Id -> String -> TagSummary -> List (Html Msg)
 tagConcept vc id concept tag =
     let
         relevantLabels =
-            Dict.toList tag.labelSummary |> List.filter (Tuple.second >> (.concepts >> List.member concept)) |> List.map Tuple.second
-
-        labels =
-            relevantLabels |> List.map .label
+            Dict.values tag.labelSummary |> List.filter (.concepts >> List.member concept)
 
         maxConfidence =
             relevantLabels |> List.map .confidence |> List.maximum |> Maybe.withDefault 0
 
-        -- tagCount =
-        --     relevantLabels |> List.map .count |> List.sum
         sources =
-            relevantLabels |> List.map .sources |> List.foldr (++) [] |> Set.fromList
+            relevantLabels |> List.concatMap .sources |> Set.fromList
     in
-    [ tooltipRow
-        { tooltipRowLabel =
-            { title = Locale.string vc.locale "Labels"
-            }
-        , tooltipRowValue =
-            let
-                max_labels =
-                    7
-            in
-            labels
-                |> List.take max_labels
-                |> List.intersperse ", "
-                |> flip (++)
-                    (if List.length labels > max_labels then
-                        [ "..." ]
+    (TagSummary.labelPreview maxStackedLines (Just concept) tag
+        |> Maybe.map (labelRows vc (Locale.string vc.locale "Labels"))
+        |> Maybe.withDefault []
+    )
+        ++ [ tooltipRowCustomValue (Locale.string vc.locale "confidence") (getConfidenceIndicator vc maxConfidence)
+           , tooltipRow
+                { tooltipRowLabel = { title = Locale.string vc.locale "sources" }
+                , tooltipRowValue =
+                    Set.size sources
+                        |> String.fromInt
+                        |> val vc
+                }
+           , TagsList id |> UserOpensDialogWindow |> linkRow vc "learn more"
+           ]
 
-                     else
-                        []
-                    )
-                |> String.concat
-                |> val vc
-        }
-    , tooltipRowCustomValue (Locale.string vc.locale "confidence") (getConfidenceIndicator vc maxConfidence)
-    , tooltipRow
-        { tooltipRowLabel = { title = Locale.string vc.locale "sources" }
-        , tooltipRowValue =
-            Set.size sources
-                |> String.fromInt
-                |> val vc
-        }
-    , TagsList id |> UserOpensDialogWindow |> linkRow vc "learn more"
+
+{-| A list of values (labels, categories) as one tooltip row titled
+`rowTitle` (already translated): one line each, then "... and N more". Never all labels joined in one cell: an
+address can carry dozens (scraped page titles, mostly), which wraps into an
+unreadable block. Nor one tooltip row per label: each row brings the generated
+row height, which spreads three labels over the whole tooltip.
+-}
+labelRows : View.Config -> String -> TagSummary.LabelPreview -> List (Html msg)
+labelRows vc rowTitle { labels, more } =
+    let
+        line styles attrs txt =
+            div (css (styles ++ [ Css.justifyContent Css.flexEnd, Css.textAlign Css.right ]) :: attrs)
+                [ text txt ]
+
+        labelLine lbl =
+            line GraphComponents.tooltipRowValueFirstValue_details.styles
+                (if String.length lbl > maxLabelLength then
+                    [ Html.Styled.Attributes.title lbl ]
+
+                 else
+                    []
+                )
+                (Util.View.truncate maxLabelLength lbl)
+
+        moreLine =
+            if more > 0 then
+                [ line
+                    -- the generated style pins this value to the 68px of
+                    -- the Figma sample; later declarations in the same
+                    -- block win
+                    (GraphComponents.tooltipRowValueSecondValue_details.styles ++ [ Css.width Css.auto ])
+                    []
+                    (Locale.interpolated vc.locale "and-more" [ String.fromInt more ])
+                ]
+
+            else
+                []
+    in
+    [ tooltipRowCustomValue rowTitle
+        (div
+            [ css
+                [ Css.displayFlex
+                , Css.flexDirection Css.column
+                , Css.alignItems Css.flexEnd
+                , Css.property "gap" "2px"
+                ]
+            ]
+            (List.map labelLine labels ++ moreLine)
+        )
     ]
+
+
+maxLabelLength : Int
+maxLabelLength =
+    28
+
+
+{-| How many lines `labelRows` shows before "... and N more".
+-}
+maxStackedLines : Int
+maxStackedLines =
+    3
 
 
 changeHeuristics : View.Config -> { a | confidence : Float, heuristics : List String } -> List (Html msg)
@@ -337,17 +361,16 @@ tagLabel vc lbl tag =
                         []
 
                     else
-                        tooltipRow
-                            { tooltipRowLabel = { title = Locale.string vc.locale "Categories" }
-                            , tooltipRowValue =
+                        let
+                            names =
                                 lbldata.concepts
                                     |> List.map (\x -> getConceptName vc x |> Maybe.withDefault x)
-                                    |> String.join ", "
-                                    |> Locale.string vc.locale
-                                    |> Util.View.truncate 20
-                                    |> val vc
+                        in
+                        labelRows vc
+                            (Locale.string vc.locale "Categories")
+                            { labels = List.take maxStackedLines names
+                            , more = max 0 (List.length names - maxStackedLines)
                             }
-                            |> List.singleton
                    )
                 ++ [ tooltipRow
                         { tooltipRowLabel = { title = Locale.string vc.locale "sources" }
@@ -456,19 +479,10 @@ address vc tracingMode capabilities tags adr =
                     ]
                )
         )
-            ++ (case tags of
-                    Just ts ->
-                        [ tooltipRow
-                            { tooltipRowLabel = { title = Locale.string vc.locale "Tags" }
-                            , tooltipRowValue =
-                                ts
-                                    |> TagSummary.getLabelPreview 20
-                                    |> val vc
-                            }
-                        ]
-
-                    _ ->
-                        []
+            ++ (tags
+                    |> Maybe.andThen (TagSummary.labelPreview 1 Nothing)
+                    |> Maybe.map (labelRows vc (Locale.string vc.locale "Tags"))
+                    |> Maybe.withDefault []
                )
 
 

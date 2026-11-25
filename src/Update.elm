@@ -8,6 +8,7 @@ import Browser.Dom
 import Components.InfiniteTable as InfiniteTable
 import Components.Table as Table
 import Config.Update exposing (Config)
+import Config.View
 import Dict exposing (Dict)
 import Effect.Api
 import Effect.Locale as Locale
@@ -66,6 +67,7 @@ import Util.Data
 import Util.Http exposing (Headers)
 import Util.ThemedSelectBox as TSelectBox
 import View.Locale as Locale
+import View.Pathfinder.ActorDialog as ActorDialog
 import View.Pathfinder.Legend exposing (legendView)
 import View.Pathfinder.ShortcutsDialog as ShortcutsDialog
 
@@ -696,6 +698,90 @@ updateHelp uc msg model =
                 _ ->
                     n { model | dialog = Nothing }
 
+        UserClickedShowActorTags actorId actorLabel ->
+            let
+                ( table, eff ) =
+                    TagsTable.init "actorTagsTable"
+                        |> InfiniteTable.loadFirstPage (actorTagsInfiniteTableConfig actorId)
+            in
+            ( { model
+                | dialog =
+                    { actorId = actorId
+                    , actorLabel = actorLabel
+                    , table = table
+                    , limitReached = False
+                    , closeMsg = UserClosesDialog
+                    }
+                        |> Dialog.ActorTags
+                        |> Just
+              }
+            , List.map ApiEffect eff
+            )
+
+        BrowserGotActorTagsForDialog actorId tags ->
+            case model.dialog of
+                Just (Dialog.ActorTags config) ->
+                    if config.actorId == actorId then
+                        let
+                            -- no further page once the limit is reached; the
+                            -- list says it shows only the first ones when
+                            -- there were more
+                            room =
+                                Dialog.actorTagsLimit - List.length (InfiniteTable.getCurrentData config.table)
+
+                            limitReached =
+                                List.length tags.addressTags
+                                    > room
+                                    || (List.length tags.addressTags == room && tags.nextPage /= Nothing)
+
+                            ( tbl, cmd, eff ) =
+                                InfiniteTable.appendData
+                                    (actorTagsInfiniteTableConfig actorId)
+                                    addressTagsFilter
+                                    (if limitReached then
+                                        Nothing
+
+                                     else
+                                        tags.nextPage
+                                    )
+                                    (List.take room tags.addressTags)
+                                    config.table
+                        in
+                        ( { model | dialog = Just (Dialog.ActorTags { config | table = tbl, limitReached = config.limitReached || limitReached }) }
+                        , CmdEffect (Cmd.map ActorTagsDialogTableMsg cmd) :: List.map ApiEffect eff
+                        )
+
+                    else
+                        -- a late page for a dialog that was closed or replaced
+                        n model
+
+                _ ->
+                    n model
+
+        ActorTagsDialogTableMsg imsg ->
+            case model.dialog of
+                Just (Dialog.ActorTags config) ->
+                    let
+                        ( tbl, cmd, eff ) =
+                            InfiniteTable.update (actorTagsInfiniteTableConfig config.actorId) imsg config.table
+                    in
+                    ( { model | dialog = Just (Dialog.ActorTags { config | table = tbl }) }
+                    , CmdEffect (Cmd.map ActorTagsDialogTableMsg cmd) :: List.map ApiEffect eff
+                    )
+
+                _ ->
+                    n model
+
+        UserClickedActorTagAddress network address ->
+            -- the address route adds the address to the graph
+            ( { model | dialog = Nothing }
+            , Route.Pathfinder.addressRoute { network = String.toLower network, address = address }
+                |> Route.pathfinderRoute
+                |> Route.toUrl
+                |> NavPushUrlEffect
+                |> List.singleton
+            )
+
         TagsListDialogAddressTableMsg imsg ->
             case model.dialog of
                 Just (Dialog.TagsList config) ->
@@ -816,16 +902,16 @@ updateHelp uc msg model =
         UserSwitchesLocale loc ->
             switchLocale loc model
 
-        UserClickedLightmode ->
+        UserSelectedThemeMode mode ->
             let
                 newModel =
-                    { model
-                        | config =
-                            model.config
-                                |> s_lightmode (not model.config.lightmode)
-                    }
+                    { model | config = Config.View.setThemeMode mode model.config }
             in
             ( newModel, [ saveUserSettings newModel ] )
+
+        BrowserChangedColorScheme systemDark ->
+            -- only the resolved lightmode changes, and it is not a setting: nothing to save
+            n { model | config = Config.View.setSystemDark systemDark model.config }
 
         UserInputsApiKeyForm input ->
             { model
@@ -1379,7 +1465,7 @@ updateHelp uc msg model =
                 )
                     |> updateByPluginOutMsg uc outMsg
                     |> (\( mdl, eff ) ->
-                            deserialize uc filename data mdl
+                            deserialize uc Nothing filename data mdl
                                 |> mapSecond ((++) eff)
                        )
 
@@ -1667,6 +1753,18 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
                              , defaultMsg = closemsg
                              }
                                 |> Dialog.Custom
+                            )
+                }
+
+        Pathfinder.ShowActorDialog actor ->
+            n
+                { model
+                    | dialog =
+                        Just
+                            ({ html = ActorDialog.view { closeMsg = UserClosesDialog, showTagsMsg = UserClickedShowActorTags actor.id actor.label } actor
+                             , defaultMsg = UserClosesDialog
+                             }
+                                |> Dialog.CustomWithVc
                             )
                 }
 
@@ -1994,6 +2092,7 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
                                 , addTagMsg = AddTagDialog (UserClickedAddTag id)
                                 , search = Search.init Search.SearchActorsOnly
                                 , selectedActor = Nothing
+                                , walletType = Nothing
                                 , description = ""
                                 }
                             )
@@ -2337,7 +2436,9 @@ updateByPluginOutMsg uc outMsgs ( mo, effects ) =
                             |> updateByPluginOutMsg uc outMsg
 
                     PluginInterface.Deserialize filename data ->
-                        deserialize uc filename data model
+                        -- The plugin names the graph it opens (e.g. after the
+                        -- record it belongs to), so downloads carry that name.
+                        deserialize uc (Just filename) filename data model
                             |> mapSecond ((++) eff)
 
                     PluginInterface.SendToPort value ->
@@ -2865,14 +2966,29 @@ clearSearch model =
         |> n
 
 
-deserialize : Config -> String -> Value -> Model key -> ( Model key, List Effect )
-deserialize uc filename data model =
+{-| `graphName`, if given and not blank, replaces the name stored in the graph
+data; a user-opened file keeps the name it was saved with.
+-}
+deserialize : Config -> Maybe String -> String -> Value -> Model key -> ( Model key, List Effect )
+deserialize uc graphName filename data model =
     Pathfinder.deserialize data
         |> Result.map
             (\deser ->
                 let
                     ( pathfinder, pathfinderEffects ) =
-                        Pathfinder.fromDeserialized uc deser model.pathfinder
+                        Pathfinder.fromDeserialized uc
+                            (case graphName |> Maybe.map String.trim of
+                                Just name ->
+                                    if String.isEmpty name then
+                                        deser
+
+                                    else
+                                        { deser | name = name }
+
+                                Nothing ->
+                                    deser
+                            )
+                            model.pathfinder
 
                     -- one notice naming the networks the load left unfetched,
                     -- instead of a generic error toast per 403
@@ -3142,6 +3258,24 @@ addressTagsInfiniteTableConfig id =
                     , includeBestClusterTag = True
                     }
                     (\tags -> PathfinderMsg (Pathfinder.UserGotMoreAddressTagsForDialog id tags))
+    in
+    InfiniteTable.config
+        |> InfiniteTable.withFetch fetchFn
+        |> InfiniteTable.withAbort Effect.Api.CancelEffect Effect.Api.effectToTracker
+        |> InfiniteTable.setTriggerOffset 100
+
+
+actorTagsInfiniteTableConfig : String -> InfiniteTable.Config String (Effect.Api.Effect Msg)
+actorTagsInfiniteTableConfig actorId =
+    let
+        fetchFn =
+            \_ pagesize nextpage ->
+                Effect.Api.GetActorTagsEffect
+                    { actorId = actorId
+                    , pagesize = pagesize
+                    , nextpage = nextpage
+                    }
+                    (BrowserGotActorTagsForDialog actorId)
     in
     InfiniteTable.config
         |> InfiniteTable.withFetch fetchFn

@@ -19,11 +19,13 @@ import Json.Decode
 import Model exposing (Auth(..), Effect(..), Msg(..), Page(..), RequestLimit(..), RequestLimitInterval(..))
 import Model.Notification as Notification
 import Model.Search
+import Model.ThemeMode as ThemeMode
 import Msg.Pathfinder
 import Msg.Search
 import RemoteData
 import Support.MainApp as App exposing (App)
 import Test exposing (Test, describe, test)
+import Test.Html.Event as Event
 import Test.Html.Query as Query
 import Test.Html.Selector as Selector
 import Update.Dialog
@@ -67,6 +69,11 @@ withStats f =
 statusbarVisible : App -> Bool
 statusbarVisible =
     App.model >> .statusbar >> .visible
+
+
+lightmode : App -> Bool
+lightmode =
+    App.model >> .config >> .lightmode
 
 
 isSaveSettings : Effect -> Bool
@@ -364,22 +371,76 @@ suite =
                     App.initAt "/settings"
                         |> App.step (UserSwitchesLocale "de")
                         |> App.expectEffect "a SaveUserSettingsEffect" isSaveSettings
-            , test "toggling light mode writes the settings" <|
+            , test "choosing a theme mode writes the settings" <|
                 \_ ->
                     App.initAt "/settings"
-                        |> App.step UserClickedLightmode
+                        |> App.step (UserSelectedThemeMode ThemeMode.Dark)
                         |> App.expectEffect "a SaveUserSettingsEffect" isSaveSettings
-            , test "toggling light mode actually flips it" <|
+            , test "choosing Dark turns the UI dark" <|
                 \_ ->
-                    let
-                        before =
-                            App.initAt "/settings"
-                    in
-                    App.step UserClickedLightmode before
-                        |> App.model
-                        |> .config
-                        |> .lightmode
-                        |> Expect.notEqual (before |> App.model |> .config |> .lightmode)
+                    App.initAt "/settings"
+                        |> App.step (UserSelectedThemeMode ThemeMode.Dark)
+                        |> lightmode
+                        |> Expect.equal False
+            , test "the settings page offers all three modes" <|
+                \_ ->
+                    App.initAt "/settings"
+                        |> App.html
+                        |> Expect.all
+                            [ Query.has [ Selector.text "System" ]
+                            , Query.has [ Selector.text "Light" ]
+                            , Query.has [ Selector.text "Dark" ]
+                            ]
+            , test "clicking Dark on the settings page selects it" <|
+                \_ ->
+                    App.initAt "/settings"
+                        |> App.html
+                        |> Query.find
+                            [ Selector.attribute (Attributes.attribute "data-testid" "gs-theme-mode")
+                            , Selector.attribute (Attributes.attribute "data-testkey" "dark")
+                            ]
+                        |> Event.simulate Event.click
+                        |> Event.expect (UserSelectedThemeMode ThemeMode.Dark)
+            ]
+        , describe "following the system colour scheme"
+            [ test "System mode follows the system live" <|
+                \_ ->
+                    App.initAt "/settings"
+                        |> App.step (UserSelectedThemeMode ThemeMode.System)
+                        |> App.steps [ BrowserChangedColorScheme True ]
+                        |> lightmode
+                        |> Expect.equal False
+            , test "and back" <|
+                \_ ->
+                    App.initAt "/settings"
+                        |> App.steps [ BrowserChangedColorScheme True, BrowserChangedColorScheme False ]
+                        |> lightmode
+                        |> Expect.equal True
+            , test "Light ignores the system" <|
+                \_ ->
+                    App.initAt "/settings"
+                        |> App.step (UserSelectedThemeMode ThemeMode.Light)
+                        |> App.step (BrowserChangedColorScheme True)
+                        |> lightmode
+                        |> Expect.equal True
+            , test "Dark ignores the system" <|
+                \_ ->
+                    App.initAt "/settings"
+                        |> App.step (UserSelectedThemeMode ThemeMode.Dark)
+                        |> App.step (BrowserChangedColorScheme False)
+                        |> lightmode
+                        |> Expect.equal False
+            , test "a system switch is not a settings change" <|
+                \_ ->
+                    App.initAt "/settings"
+                        |> App.step (BrowserChangedColorScheme True)
+                        |> App.expectNoEffect "a SaveUserSettingsEffect" isSaveSettings
+            , test "the page sets color-scheme for scrollbars and form fields" <|
+                \_ ->
+                    App.initAt "/settings"
+                        |> App.step (UserSelectedThemeMode ThemeMode.Dark)
+                        |> App.html
+                        |> Query.has [ Selector.text ":root { color-scheme: dark; }" ]
             ]
         , describe "escape and the statusbar"
             [ test "closes the open statusbar" <|

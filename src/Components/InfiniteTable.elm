@@ -248,6 +248,14 @@ appendData cfg filt nextpage data (Model model) =
             model.table
                 |> s_loading False
         , iterations = model.iterations + 1
+
+        -- The DOM content height is only measured on scroll. The new rows
+        -- make the content taller now; left at the old height, the
+        -- `nearActualBottom` check in `shouldLoadMore` kept seeing a user at
+        -- the bottom who had stopped scrolling there, and every page that
+        -- arrived fetched the next one, through all of them (the actor tags
+        -- list: over 190 requests after one scroll).
+        , contentHeight = model.contentHeight + model.rowHeight * toFloat (IntDict.size newDict - offset)
     }
         |> setIntDict nextpageNew True newDict
         |> loadMore cfg

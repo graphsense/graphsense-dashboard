@@ -263,6 +263,7 @@ request timeout: tiempo de espera de la solicitud agotado
 request error: error de solicitud
 network error: error de red
 server error: error del servidor
+service temporarily unavailable: servicio no disponible temporalmente
 not found: no encontrado
 not supported on lite networks: no compatible con redes lite
 Relationship mode not supported on lite networks: Modo de relaciones no compatible con redes lite
@@ -343,6 +344,7 @@ statusbar-not-found-info: Dirección no encontrada. Es posible que aún no esté
   en nuestra base de datos (sincronizada hasta el bloque {0}) o que no haya recibido
   ninguna transacción y, por lo tanto, no esté almacenada en la cadena de bloques.
 and-more: '... y {0} más'
+'Only the first {0} tags are shown.': 'Solo se muestran las primeras {0} etiquetas.'
 popup-address-not-found-various-reasons: puede haber varias razones
 popup-addresses-not-found-not-in-database: es posible que aún no estén en nuestra
   base de datos
@@ -362,6 +364,10 @@ Recent searches: Búsquedas recientes
 other Links: Otros enlaces
 social: Social
 jurisdictions: Jurisdicciones
+website: Sitio web
+social media: Redes sociales
+show tags: Mostrar etiquetas
+no tags found: No se encontraron etiquetas
 any category: Cualquier categoría
 graph: Gráfico
 statistics: Estadísticas
@@ -495,6 +501,8 @@ tag-dialog-additional-info-example: Por ejemplo, vinculado a un informe de estaf
   en xyz.com
 report a tag: informar de una etiqueta
 report tag: informar de una etiqueta
+Wallet type: "Tipo de wallet"
+Other: "Otro"
 create new actor: Crear un nuevo actor
 Added tag: Etiqueta añadida
 num-more-assets: '{0} activos más'
@@ -516,6 +524,15 @@ bridge transaction: Transacción puente
 swap transaction: Transacción de intercambio
 swap transactions: Transacciones de intercambio
 Bridge transactions: Transacciones puente
+protocol: Protocolo
+bridge explorer: Explorador del puente
+unsupported token: "Token no soportado"
+unsupported tokens: "Tokens no soportados"
+input token: "Token de entrada"
+output token: "Token de salida"
+source tx: "Tx de origen"
+destination tx: "Tx de destino"
+unsupported-bridge-token-hint: "Un token no soportado no figura en el registro de tokens: no se muestra ningún importe ni valor, y su identidad no está verificada."
 hint-minimum-input: Proporcione al menos {0} caracteres
 no-results-found: No se han encontrado resultados.
 deprecation notice: Aviso de obsolescencia
@@ -577,6 +594,9 @@ export-dialog-description: "exportar el gráfico actual a varios formatos"
 export-dialog-transparent-background: "fondo transparente"
 unsupported-swap-notice: "Nota: Transacción de intercambio no soportada detectada, destino {0} ({1})"
 unsupported-bridge-notice: "Nota: Transacción puente no soportada detectada, destino {0} ({1})"
+unsupported-protocol-bridge-notice: "Nota: Transacción puente {2} no soportada detectada, destino {0} ({1})"
+unsupported-bridge-from-notice: "Nota: Transacción puente no soportada detectada, origen {2}, destino {0} ({1})"
+unsupported-protocol-bridge-from-notice: "Nota: Transacción puente {2} no soportada detectada, origen {3}, destino {0} ({1})"
 cluster tags: Etiquetas derivadas del cluster
 cluster tags list: Lista de etiquetas derivadas del cluster
 cluster tags disclaimer: "Estas etiquetas no están asignadas directamente a esta dirección, sino que se infieren del cluster al que pertenece. El clustering puede contener errores, por lo que estas etiquetas deben usarse con precaución."
@@ -625,6 +645,7 @@ network-not-available-lite-off: "{0} no está disponible mientras las redes lite
 Keyboard shortcuts: "Atajos de teclado"
 Add address or tx: "Añadir dirección o tx"
 Select all: "Seleccionar todo"
+Click for multi-select: "Clic para selección múltiple"
 Delete selection: "Eliminar la selección"
 Move the selection along the graph: "Mover la selección por el gráfico"
 Close search or dialog: "Cerrar la búsqueda o el diálogo"
@@ -641,3 +662,6 @@ gs-file-networks-not-on-account: "Este grafo contiene nodos en {0} que no están
 Not available on your account: "No disponible en tu cuenta"
 on: "Activado"
 off: "Desactivado"
+system: "Sistema"
+light: "Claro"
+dark: "Oscuro"

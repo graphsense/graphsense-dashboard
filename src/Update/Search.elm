@@ -77,6 +77,15 @@ actorResultLines =
         >> List.map (\x -> Actor ( x.id, x.label ))
 
 
+{-| Actors in a main search box (top bar, Pathfinder) sit below the addresses
+and transactions, which are what that box is mostly for: a few are enough.
+The actor picker (SearchActorsOnly) lists all the API sends.
+-}
+mainSearchActorLimit : Int
+mainSearchActorLimit =
+    5
+
+
 filterByPrefix : String -> Api.Data.SearchResult -> Api.Data.SearchResult
 filterByPrefix input result =
     { result
@@ -130,12 +139,13 @@ update msg model =
                         case model.searchType of
                             SearchAll { latestBlocks } ->
                                 searchResultToResultLines query latestBlocks result
-                                    ++ actorResultLines result
+                                    ++ (actorResultLines result |> List.take mainSearchActorLimit)
                                     ++ labelResultLines result
 
                             SearchAddressAndTx conf ->
                                 case conf.currencies_filter of
                                     Just currency_filter ->
+                                        -- actors belong to no network
                                         List.concatMap (currencyToResultWithoutBlock query result) currency_filter
 
                                     _ ->
@@ -145,6 +155,7 @@ update msg model =
                                                     |> List.map .currency
                                         in
                                         List.concatMap (currencyToResultWithoutBlock query result) currency_filter
+                                            ++ (actorResultLines result |> List.take mainSearchActorLimit)
 
                             SearchTagsOnly ->
                                 labelResultLines result
@@ -373,7 +384,8 @@ getSearchConfig searchType =
 
         SearchAddressAndTx _ ->
             Api.defaultSearchConfig
-                |> Rs.s_includeActors (Just False)
+                -- an actor result opens the actor dialog (Route.Actor)
+                |> Rs.s_includeActors (Just True)
                 |> Rs.s_includeLabels (Just False)
                 |> Rs.s_includeAddresses (Just True)
                 |> Rs.s_includeTxs (Just True)

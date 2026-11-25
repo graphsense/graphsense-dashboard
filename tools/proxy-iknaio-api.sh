@@ -51,7 +51,8 @@ cat << "EOF" > /etc/nginx/conf.d/default.conf
 
 map $http_origin $cors_origin {
     default "";
-    "~^https?://([^/]+\.)?(.+)$" $http_origin;
+    # Only local origins (the dev server); any other site must not use your key
+    "~^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$" $http_origin;
 }
 
 server {

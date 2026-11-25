@@ -257,6 +257,11 @@ tags in one step.
 
 Notable changes go in `CHANGELOG.md` under the current unreleased heading.
 
+On a release, `master` is merged from `develop`, not fast-forwarded: `master` holds
+GitHub squash commits, so the merge conflicts on lines the squash duplicated. Resolve it
+to develop's tree (`git restore --source=develop .`) and check that both trees are equal.
+Pushing a tag publishes the GitHub release and the Docker image right away.
+
 ## Docker build
 
 ### Prerequisites
@@ -321,8 +326,9 @@ Notes:
 * The proxy listens on `127.0.0.1` only, so other machines can't reach it. Other users
   on the same machine can, and their requests carry your key, so on a shared host stop
   the proxy when you're done.
-* CORS in the script is configured for `http://localhost:3000`, which is what `make serve`
-  uses. Change the origin in the script if you serve from elsewhere.
+* CORS only allows local origins (`localhost` or `127.0.0.1`, any port, e.g. `make serve`
+  on `http://localhost:3000`), so other websites open in your browser can't use your key
+  through the proxy. Extend the `map` in the script if you serve from another origin.
 * The proxy's port 8080 collides with `DASHBOARD_PORT` from the template. Change one of
   them if you run both at once.
 

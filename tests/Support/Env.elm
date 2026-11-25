@@ -8,8 +8,9 @@ module Support.Env exposing
 Pathfinder scenario and a whole-app scenario cannot drift apart.
 
 Everything here is fixed: a 1920x1080 viewport, the "en" locale with no
-translations loaded, and no plugins. Nothing depends on the machine the tests
-run on or on what `config/Config.elm` happens to register locally.
+translations loaded, the statistics answered (`servedNetworks`), and no
+plugins. Nothing depends on the machine the tests run on or on what
+`config/Config.elm` happens to register locally.
 
 -}
 
@@ -20,6 +21,7 @@ import Dict
 import Init.Locale
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale
+import Model.ThemeMode
 
 
 {-| `Init.Locale.init` leaves `mapping` empty — translations are fetched over
@@ -48,14 +50,25 @@ updateConfig =
     , size = Just viewport
     , allConcepts = []
     , abuseConcepts = []
-    , networks = []
+    , networks = servedNetworks
     }
+
+
+{-| The networks the statistics list once they have arrived: the core
+networks and the lite ones. A scenario starts after boot (see the module
+doc), so the statistics are in.
+-}
+servedNetworks : List String
+servedNetworks =
+    [ "btc", "bch", "ltc", "zec", "eth", "trx", "bnb", "arb", "base", "opt", "pol", "avax", "gnosis", "robinhood" ]
 
 
 viewConfig : Config.View.Config
 viewConfig =
     { locale = locale
     , lightmode = True
+    , themeMode = Model.ThemeMode.System
+    , systemDark = False
     , size = Just viewport
     , showDatesInUserLocale = True
     , showTimeZoneOffset = False

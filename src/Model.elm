@@ -21,6 +21,7 @@ import Model.Pathfinder
 import Model.Pathfinder.Id exposing (Id)
 import Model.Search
 import Model.Statusbar
+import Model.ThemeMode exposing (ThemeMode)
 import Msg.ExportDialog
 import Msg.Locale
 import Msg.Pathfinder
@@ -43,6 +44,7 @@ type alias Flags =
     , pluginFlags : Plugin.Flags
     , locale : String
     , isMac : Bool
+    , prefersDark : Bool
     }
 
 
@@ -110,7 +112,8 @@ type Msg
     | UserReleasedDialog
     | UserHoveredDialogHandle Bool
     | UserClickedLogout
-    | UserClickedLightmode
+    | UserSelectedThemeMode ThemeMode
+    | BrowserChangedColorScheme Bool
     | TimeUpdateReset Time.Posix
     | BrowserGotContentsElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserChangedWindowSize Int Int
@@ -123,6 +126,11 @@ type Msg
     | UserClosesDialog
     | TagsListDialogAddressTableMsg InfiniteTable.Msg
     | TagsListDialogClusterTableMsg InfiniteTable.Msg
+      -- the tags of an actor (opened from the actor dialog)
+    | UserClickedShowActorTags String String
+    | BrowserGotActorTagsForDialog String Api.Data.AddressTags
+    | ActorTagsDialogTableMsg InfiniteTable.Msg
+    | UserClickedActorTagAddress String String
     | UserClickedTagsDialogTab Model.Dialog.TagsTab
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
@@ -155,6 +163,7 @@ type Msg
 type AddTagDialogMsgs
     = SearchMsgAddTagDialog Msg.Search.Msg
     | UserInputsDescription String
+    | UserClickedWalletType Model.Dialog.WalletType
     | UserClickedAddTag Id
     | BrowserAddedTag Id
     | RemoveActorTag
@@ -244,7 +253,7 @@ type Effect
 userSettingsFromMainModel : Model key -> UserSettings
 userSettingsFromMainModel model =
     { selectedLanguage = model.config.locale.locale
-    , lightMode = Just model.config.lightmode
+    , themeMode = Just model.config.themeMode
     , valueDetail = Just model.config.locale.valueDetail
     , preferredFiatCurrency = Just model.config.preferredFiatCurrency
     , showValuesInFiat = Just model.config.showValuesInFiat

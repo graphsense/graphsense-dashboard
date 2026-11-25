@@ -16,6 +16,7 @@ module View.Locale exposing
     , interpolatedMarkdown
     , isFirstSecondOfTheDay
     , isLastSecondOfTheDay
+    , makeGraphFilename
     , makeTimestampFilename
     , percentage
     , string
@@ -589,6 +590,15 @@ httpErrorToString model error =
         Http.BadStatus 404 ->
             string model "not found"
 
+        -- gs-rest: a query over its time budget, e.g. the links between two
+        -- busy clusters
+        Http.BadStatus 408 ->
+            string model "request timeout"
+
+        -- gs-rest: the database is down for a moment (Retry-After)
+        Http.BadStatus 503 ->
+            string model "service temporarily unavailable"
+
         Http.BadStatus 504 ->
             string model "timeout"
 
@@ -621,6 +631,39 @@ titleCase model =
 makeTimestampFilename : Model -> Time.Posix -> String
 makeTimestampFilename locale =
     timestampWithFormat "yyyy-MM-dd HH-mm-ss" locale
+
+
+{-| Timestamp plus the graph name, without extension, e.g.
+"2026-11-04 14-30-00 AB-123 - 2026". Characters that are not allowed in file
+names on common systems become "-", control characters (tabs, line breaks)
+spaces; a blank name leaves the timestamp alone.
+-}
+makeGraphFilename : Model -> Time.Posix -> String -> String
+makeGraphFilename locale t name =
+    let
+        safe =
+            name
+                |> String.map
+                    (\c ->
+                        if Char.toCode c < 32 then
+                            ' '
+
+                        else if String.contains (String.fromChar c) "/\\:*?\"<>|" then
+                            '-'
+
+                        else
+                            c
+                    )
+                |> String.words
+                |> String.join " "
+    in
+    makeTimestampFilename locale t
+        ++ (if String.isEmpty safe then
+                ""
+
+            else
+                " " ++ safe
+           )
 
 
 timestampNormal : Model -> Posix -> String

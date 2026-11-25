@@ -74,6 +74,7 @@ subscriptions model =
 
     -- .gs file import: the deserialized payload is decoded as a Pathfinder graph
     , Ports.deserialized BrowserGotDeserializedGS
+    , Ports.systemColorSchemeChanged BrowserChangedColorScheme
     , model.user.hovercard
         |> Maybe.map (Hovercard.subscriptions >> Sub.map UserHovercardMsg)
         |> Maybe.withDefault Sub.none

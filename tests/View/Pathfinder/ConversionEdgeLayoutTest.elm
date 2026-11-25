@@ -108,4 +108,52 @@ suite =
 
                     Bezier _ _ ->
                         Expect.fail "same start and end must draw a loop"
+        , describe "between nodes side by side (a bridge laid out left to right)"
+            (let
+                left =
+                    ( 100, 200 )
+
+                right =
+                    ( 268, 200 )
+
+                forward offset =
+                    ConversionEdge.forwardLayout { start = left, end = right, displacementIndex = 0, nodeOffset = offset }
+
+                onCurve l =
+                    case l.curve of
+                        Bezier c1 c2 ->
+                            l.node |> expectPoint (midpoint left c1 c2 right)
+
+                        Loop _ ->
+                            Expect.fail "two different nodes must draw a curve, not a loop"
+             in
+             [ test "the icon sits halfway, on the line between the two" <|
+                \_ -> (forward noOffset).node |> expectPoint ( 184, 200 )
+             , test "a moved icon is where it was dropped, and the curve follows it" <|
+                \_ ->
+                    forward { x = 10, y = -30 }
+                        |> Expect.all
+                            [ .node >> expectPoint ( 194, 170 )
+                            , onCurve
+                            ]
+             , test "a second edge between the same nodes bows apart" <|
+                \_ ->
+                    ConversionEdge.forwardLayout { start = left, end = right, displacementIndex = 1, nodeOffset = noOffset }
+                        |> .node
+                        |> Tuple.second
+                        |> Expect.greaterThan 200
+             , test "only with the input side left of the output side" <|
+                \_ ->
+                    [ ConversionEdge.isSideBySide { x = 0, y = 0 } { x = 4, y = 0 }
+                    , ConversionEdge.isSideBySide { x = 0, y = 0 } { x = 4, y = 2.5 }
+
+                    -- above one another: a swap's U-turn, a bridge from its row
+                    , ConversionEdge.isSideBySide { x = 0, y = 0 } { x = 0, y = 2.5 }
+
+                    -- the money flowing right to left
+                    , ConversionEdge.isSideBySide { x = 4, y = 0 } { x = 0, y = 0 }
+                    ]
+                        |> Expect.equal [ True, True, False, False ]
+             ]
+            )
         ]

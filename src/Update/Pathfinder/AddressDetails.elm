@@ -579,6 +579,9 @@ update uc msg model =
             WorkflowNextUtxoTx.update config subMsg
                 |> flip (handleWorkflowNextUtxo config) model
 
+        UserClickedActor _ ->
+            n model
+
         UserClickedContinueChangeTracing ->
             model.txs
                 |> RemoteData.toMaybe

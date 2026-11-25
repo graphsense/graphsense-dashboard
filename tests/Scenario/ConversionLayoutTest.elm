@@ -1,9 +1,10 @@
 module Scenario.ConversionLayoutTest exposing (suite)
 
-{-| Once both legs of a swap or bridge are on the graph, the addresses of the
-two legs are laid out as a U-turn (`InternalConversionLoopAddressesLoaded`).
-Nodes a `.gs` file put somewhere must keep their saved position; only what the
-UI adds by itself is arranged.
+{-| Once both legs of a swap or bridge are on the graph, they are laid out
+(`InternalConversionLoopAddressesLoaded`): a bridge left to right in the order
+the money moves, a swap, one owner's round trip, as a U-turn. Nodes a `.gs`
+file put somewhere must keep their saved position, and so must an address
+another tx on the graph has; only what the UI adds by itself is arranged.
 -}
 
 import Animation
@@ -13,14 +14,18 @@ import Effect.Api
 import Expect exposing (Expectation)
 import Fixtures.Api as Fixture
 import Json.Decode
+import Maybe.Extra
+import Model.Pathfinder exposing (Model)
 import Model.Pathfinder.Deserialize exposing (Deserialized, DeserializedThing)
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Network exposing (FindPosition(..))
 import Msg.Pathfinder exposing (Msg(..))
 import Set
 import Support.App as App exposing (App)
 import Support.Env as Env
 import Test exposing (Test, describe, test)
 import Update.Pathfinder
+import Update.Pathfinder.Network
 
 
 
@@ -95,6 +100,9 @@ conversion =
     , toAssetDecimals = Nothing
     , fromAmountFiatValues = Nothing
     , toAmountFiatValues = Nothing
+    , protocol = Nothing
+    , protocolApp = Nothing
+    , transferId = Nothing
     }
 
 
@@ -291,6 +299,43 @@ bothLegs =
     }
 
 
+{-| The file's graph, with the conversion looked up the way the UI does it,
+with no nodes pinned, after `prepare` changed the model.
+-}
+expandInUi : Legs -> Api.Data.ExternalConversion -> (Model -> Model) -> App
+expandInUi legs conv prepare =
+    expandInUiBeforeAddresses legs conv prepare
+        |> App.step (InternalConversionLoopAddressesLoaded Set.empty conv)
+
+
+{-| The same, up to the second leg arriving, before the layout that waits for
+the legs' addresses.
+-}
+expandInUiBeforeAddresses : Legs -> Api.Data.ExternalConversion -> (Model -> Model) -> App
+expandInUiBeforeAddresses legs conv prepare =
+    let
+        opened =
+            open legs bothLegs
+                |> App.mapModel prepare
+
+        lookUpConversions =
+            Dict.get btcTxId (App.model opened).network.txs
+                |> Maybe.map (\tx -> [ BrowserGotConversions Set.empty tx [ conv ] ])
+                |> Maybe.withDefault []
+    in
+    opened
+        |> App.steps lookUpConversions
+        |> App.respond
+            (\eff ->
+                case eff of
+                    Effect.Api.GetTxEffect _ toMsg ->
+                        Just (toMsg legs.eth)
+
+                    _ ->
+                        Nothing
+            )
+
+
 suite : Test
 suite =
     describe "conversion layout"
@@ -324,7 +369,7 @@ suite =
                             , \a -> Dict.keys (App.model a).network.conversions |> Expect.equal [ ( ethTxId, btcTxId ) ]
                             ]
                             arranged
-        , test "a leg missing from the file is added and laid out as a U-turn" <|
+        , test "a leg missing from the file is added left of the one from the file" <|
             \_ ->
                 withLegs <|
                     \legs ->
@@ -344,6 +389,9 @@ suite =
                                     |> App.steps loops
                                     |> answerAddresses legs
                                     |> App.steps (List.concatMap arrangeFor loops)
+
+                            ( btcX, btcY ) =
+                                txAt btcTxId arranged |> Maybe.withDefault ( 0, 0 )
                         in
                         [ ethTxId, ethSender, ethVault, btcInput1, btcInput2, btcRecipient ]
                             |> List.map
@@ -355,44 +403,24 @@ suite =
                                         addressAt id arranged
                                 )
                             |> Expect.equal
-                                [ -- the new leg goes below the one from the file
-                                  Just ( 9, 19.2 )
-                                , Just ( 5, 19.2 )
-                                , Just ( 13, 19.2 )
+                                [ -- the new leg goes left of the one from the
+                                  -- file, on its row: sender, tx, vault
+                                  Just ( btcX - 16, btcY )
+                                , Just ( btcX - 20, btcY )
+                                , Just ( btcX - 12, btcY )
 
                                 -- the file's nodes stay put
                                 , Just ( 2, 11 )
                                 , Just ( 30, 30 )
                                 , Just ( 40, 1.3 )
                                 ]
-        , test "expanding a conversion in the UI lays it out as a U-turn, stacking a leg's inputs" <|
+        , test "expanding a bridge in the UI lays it out left to right, stacking a leg's inputs" <|
             \_ ->
                 withLegs <|
                     \legs ->
                         let
-                            -- The same graph, but the conversion is looked up
-                            -- the way the UI does it, with no nodes pinned.
-                            opened =
-                                open legs bothLegs
-
-                            lookUpConversions =
-                                Dict.get btcTxId (App.model opened).network.txs
-                                    |> Maybe.map (\tx -> [ BrowserGotConversions Set.empty tx [ conversion ] ])
-                                    |> Maybe.withDefault []
-
                             arranged =
-                                opened
-                                    |> App.steps lookUpConversions
-                                    |> App.respond
-                                        (\eff ->
-                                            case eff of
-                                                Effect.Api.GetTxEffect _ toMsg ->
-                                                    Just (toMsg legs.eth)
-
-                                                _ ->
-                                                    Nothing
-                                        )
-                                    |> App.step (InternalConversionLoopAddressesLoaded Set.empty conversion)
+                                expandInUi legs conversion identity
 
                             -- the whole graph is snapped to the grid, txs included
                             ( ( ethX, ethY ), ( btcX, btcY ) ) =
@@ -400,17 +428,230 @@ suite =
                                 , txAt btcTxId arranged |> Maybe.withDefault ( 0, 0 )
                                 )
                         in
-                        [ ethSender, ethVault, btcRecipient, btcInput1, btcInput2 ]
+                        ( ( btcX - ethX, btcY - ethY )
+                        , [ ethSender, ethVault, btcInput1, btcInput2, btcRecipient ]
+                            |> List.map (\id -> addressAt id arranged)
+                        )
+                            |> Expect.equal
+                                ( -- the output leg right of the input leg
+                                  ( 16, 0 )
+                                , [ -- input leg: sender left, vault right
+                                    Just ( ethX - 4, ethY )
+                                  , Just ( ethX + 4, ethY )
+
+                                  -- output leg: inputs left, one below the
+                                  -- other, recipient right
+                                  , Just ( btcX - 4, btcY )
+                                  , Just ( btcX - 4, btcY + 2.5 )
+                                  , Just ( btcX + 4, btcY )
+                                  ]
+                                )
+        , test "an address another tx has stays put, and the bridge hangs off it" <|
+            \_ ->
+                withLegs <|
+                    \legs ->
+                        let
+                            -- the tx the user opened paid the bridge's sender
+                            otherTx =
+                                case legs.eth of
+                                    Api.Data.TxTxAccount t ->
+                                        Api.Data.TxTxAccount
+                                            { t
+                                                | txHash = String.repeat 32 "cd"
+                                                , identifier = String.repeat 32 "cd"
+                                                , fromAddress = "0x" ++ String.repeat 40 "3"
+                                                , toAddress = Tuple.second ethSender
+                                            }
+
+                                    other ->
+                                        other
+
+                            -- without snapping, which would move every node
+                            arranged =
+                                expandInUi legs
+                                    conversion
+                                    (\m ->
+                                        let
+                                            config =
+                                                m.config
+                                        in
+                                        { m
+                                            | config = { config | snapToGrid = False }
+                                            , network =
+                                                Update.Pathfinder.Network.addTx m.config otherTx m.network
+                                                    |> Tuple.second
+                                        }
+                                    )
+
+                            sender =
+                                addressAt ethSender arranged |> Maybe.withDefault ( 0, 0 )
+                        in
+                        ( addressAt ethSender arranged == Just ( -13, 7.1 )
+                        , txAt ethTxId arranged
+                        , addressAt ethVault arranged
+                        )
+                            |> Expect.equal
+                                ( True
+                                , Just ( Tuple.first sender + 4, Tuple.second sender )
+                                , Just ( Tuple.first sender + 8, Tuple.second sender )
+                                )
+        , test "a swap keeps its U-turn" <|
+            \_ ->
+                withLegs <|
+                    \legs ->
+                        let
+                            arranged =
+                                expandInUi legs { conversion | conversionType = Api.Data.ExternalConversionConversionTypeDexSwap } identity
+
+                            ( btcX, btcY ) =
+                                txAt btcTxId arranged |> Maybe.withDefault ( 0, 0 )
+                        in
+                        [ btcRecipient, btcInput1, btcInput2 ]
                             |> List.map (\id -> addressAt id arranged)
                             |> Expect.equal
-                                [ -- input leg: sender left, vault right
-                                  Just ( ethX - 4, ethY )
-                                , Just ( ethX + 4, ethY )
-
-                                -- output leg, mirrored: recipient left, inputs
-                                -- right and one below the other
-                                , Just ( btcX - 4, btcY )
+                                [ -- output leg, mirrored: recipient left,
+                                  -- inputs right and one below the other
+                                  Just ( btcX - 4, btcY )
                                 , Just ( btcX + 4, btcY )
                                 , Just ( btcX + 4, btcY + 2.5 )
                                 ]
+        , test "a swap's address does not land on a node already there" <|
+            \_ ->
+                withLegs <|
+                    \legs ->
+                        let
+                            swap =
+                                { conversion | conversionType = Api.Data.ExternalConversionConversionTypeDexSwap }
+
+                            -- where the U-turn puts the leg's first input:
+                            -- right of the leg, on its row (the file's btc tx
+                            -- is at ( 9, 17.2 ))
+                            blocker =
+                                ( "btc", "blocker" )
+
+                            arranged =
+                                expandInUi legs
+                                    swap
+                                    (\m ->
+                                        let
+                                            config =
+                                                m.config
+                                        in
+                                        { m
+                                            | config = { config | snapToGrid = False }
+                                            , network =
+                                                Update.Pathfinder.Network.addAddressWithPosition m.config (Fixed 13 17.2) blocker m.network
+                                                    |> Tuple.second
+                                        }
+                                    )
+
+                            ( btcX, btcY ) =
+                                txAt btcTxId arranged |> Maybe.withDefault ( 0, 0 )
+                        in
+                        [ blocker, btcInput1, btcInput2 ]
+                            |> List.map (\id -> addressAt id arranged)
+                            |> Expect.equal
+                                [ Just ( 13, 17.2 )
+
+                                -- each goes one row further down instead
+                                , Just ( btcX + 4, btcY + 2.5 )
+                                , Just ( btcX + 4, btcY + 5 )
+                                ]
+        , test "a bridge goes down to the first row where nothing is in its way" <|
+            \_ ->
+                withLegs <|
+                    \legs ->
+                        let
+                            -- the chain hangs off the eth leg at ( 5, -5.3 ):
+                            -- the btc leg goes to x 21, its recipient to x 25
+                            blocker =
+                                ( "btc", "blocker" )
+
+                            arranged =
+                                expandInUi legs
+                                    conversion
+                                    (\m ->
+                                        let
+                                            config =
+                                                m.config
+                                        in
+                                        { m
+                                            | config = { config | snapToGrid = False }
+                                            , network =
+                                                Update.Pathfinder.Network.addAddressWithPosition m.config (Fixed 25 -5.3) blocker m.network
+                                                    |> Tuple.second
+                                        }
+                                    )
+
+                            network =
+                                (App.model arranged).network
+
+                            others id =
+                                (network.addresses |> Dict.toList |> List.map (\( i, a ) -> ( i, ( a.x, Animation.getTo a.y ) )))
+                                    ++ (network.txs |> Dict.toList |> List.map (\( i, t ) -> ( i, ( t.x, Animation.getTo t.y ) )))
+                                    |> List.filter (Tuple.first >> (/=) id)
+                                    |> List.map Tuple.second
+
+                            -- closer than a node and its label take
+                            clashes id =
+                                Maybe.map
+                                    (\( x, y ) -> List.any (\( ox, oy ) -> abs (ox - x) < 3 && abs (oy - y) < 2) (others id))
+                                    (Maybe.Extra.or (addressAt id arranged) (txAt id arranged))
+                                    |> Maybe.withDefault True
+                        in
+                        ( ( addressAt blocker arranged, txAt ethTxId arranged, txAt btcTxId arranged )
+                        , List.filter clashes [ ethTxId, btcTxId, ethSender, ethVault, btcInput1, btcInput2, btcRecipient ]
+                        )
+                            |> Expect.equal
+                                ( ( -- the blocker stays, the chain is one row down
+                                    Just ( 25, -5.3 )
+                                  , Just ( 5, -2.8 )
+                                  , Just ( 21, -2.8 )
+                                  )
+                                , []
+                                )
+        , test "the address the user started from stays put, and the bridge ends at it" <|
+            \_ ->
+                withLegs <|
+                    \legs ->
+                        let
+                            arranged =
+                                expandInUi legs
+                                    conversion
+                                    (\m ->
+                                        let
+                                            config =
+                                                m.config
+                                        in
+                                        { m
+                                            | config = { config | snapToGrid = False }
+                                            , network =
+                                                Update.Pathfinder.Network.updateAddress btcRecipient (\a -> { a | isStartingPoint = True }) m.network
+                                        }
+                                    )
+
+                            recipient =
+                                addressAt btcRecipient arranged |> Maybe.withDefault ( 0, 0 )
+                        in
+                        ( addressAt btcRecipient arranged, txAt btcTxId arranged, txAt ethTxId arranged )
+                            |> Expect.equal
+                                ( -- where the file put it
+                                  Just ( 40, 1.3 )
+                                , Just ( Tuple.first recipient - 4, Tuple.second recipient )
+                                , Just ( Tuple.first recipient - 20, Tuple.second recipient )
+                                )
+        , test "the legs are laid out as soon as the second one arrives, before their addresses load" <|
+            \_ ->
+                withLegs <|
+                    \legs ->
+                        let
+                            arrived =
+                                expandInUiBeforeAddresses legs conversion identity
+                        in
+                        case ( txAt ethTxId arrived, txAt btcTxId arrived ) of
+                            ( Just ( ethX, ethY ), Just ( btcX, btcY ) ) ->
+                                ( btcX - ethX, btcY - ethY ) |> Expect.equal ( 16, 0 )
+
+                            _ ->
+                                Expect.fail "a leg is missing"
         ]

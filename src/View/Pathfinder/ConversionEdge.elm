@@ -1,14 +1,17 @@
-module View.Pathfinder.ConversionEdge exposing (Curve(..), Layout, assetsLabel, layout, view)
+module View.Pathfinder.ConversionEdge exposing (Curve(..), Layout, assetsLabel, forwardLayout, isSideBySide, layout, restingIcon, rowLegLabel, view, withDisplacementIndex)
 
 import Api.Data
 import Config.View as View
 import Css
+import Dict exposing (Dict)
 import Html.Styled.Events exposing (onMouseLeave)
+import List.Extra
 import Model.Currency as Currency
 import Model.Locale as Locale
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.SearchBox exposing (Highlight, dimmedOpacity)
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
@@ -24,48 +27,6 @@ import Util.TextDimensions
 import Util.View exposing (onClickWithStop, pointer, testId, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
-
-
-type alias Dimensions =
-    { x : Float
-    , y : Float
-    , left : Pos
-    , right : Pos
-    }
-
-
-calcDimensions : View.Config -> ConversionEdge -> Address -> Address -> Dimensions
-calcDimensions _ _ aAddress bAddress =
-    let
-        -- Padding for the labels
-        aPos =
-            aAddress |> toPosition
-
-        bPos =
-            bAddress |> toPosition
-
-        x =
-            (aPos.x + bPos.x) / 2
-
-        y =
-            (aPos.y + bPos.y) / 2
-
-        { left, right } =
-            if aPos.x < bPos.x then
-                { left = aPos
-                , right = bPos
-                }
-
-            else
-                { left = bPos
-                , right = aPos
-                }
-    in
-    { x = x * unit
-    , y = y * unit
-    , left = left
-    , right = right
-    }
 
 
 {-| The drawn shape of a swap edge: a cubic Bézier between two different
@@ -178,6 +139,159 @@ layout { start, end, displacementIndex, nodeOffset } =
         }
 
 
+{-| Whether the input side (the input leg's address) stands left of the output
+side, as a bridge laid out left to right puts them (in grid units). Ends above
+one another (a swap's U-turn, a bridge drawn from its row) or the other way
+round keep the curve bulging out to the right.
+-}
+isSideBySide : Pos -> Pos -> Bool
+isSideBySide input output =
+    output.x - input.x >= 2
+
+
+{-| Icon position and curve for an edge between two nodes side by side: from
+the right of the left node to the left of the right node, the icon halfway.
+Several edges between the same nodes bow apart vertically. A dragged icon stays
+on the curve, as in `layout`.
+-}
+forwardLayout :
+    { start : ( Float, Float )
+    , end : ( Float, Float )
+    , displacementIndex : Int
+    , nodeOffset : { x : Float, y : Float }
+    }
+    -> Layout
+forwardLayout { start, end, displacementIndex, nodeOffset } =
+    let
+        ( startX, startY ) =
+            start
+
+        ( endX, endY ) =
+            end
+
+        reach =
+            max 20 ((endX - startX) / 3)
+
+        bow =
+            40 * toFloat displacementIndex
+
+        shift k ( x, y ) =
+            ( x + k * nodeOffset.x, y + k * nodeOffset.y )
+
+        ( c1X, c1Y ) =
+            shift (4 / 3) ( startX + reach, startY + bow )
+
+        ( c2X, c2Y ) =
+            shift (4 / 3) ( endX - reach, endY + bow )
+    in
+    { curve = Bezier ( c1X, c1Y ) ( c2X, c2Y )
+    , node =
+        ( (startX + 3 * c1X + 3 * c2X + endX) / 8
+        , (startY + 3 * c1Y + 3 * c2Y + endY) / 8
+        )
+    }
+
+
+{-| Where an edge between `inputAddress` and `outputAddress` runs and where its
+icon sits, for an icon moved by `offset`.
+-}
+geometry :
+    Int
+    -> { x : Float, y : Float }
+    -> Address
+    -> Address
+    ->
+        { left : Pos
+        , right : Pos
+        , sideBySide : Bool
+        , startX : Float
+        , startY : Float
+        , endPoint : ( Float, Float )
+        , edgeLayout : Layout
+        }
+geometry displacementIndex offset inputAddress outputAddress =
+    let
+        aPos =
+            toPosition inputAddress
+
+        bPos =
+            toPosition outputAddress
+
+        ( left, right ) =
+            if aPos.x < bPos.x then
+                ( aPos, bPos )
+
+            else
+                ( bPos, aPos )
+
+        fd =
+            GraphComponents.addressNodeNodeFrame_details
+
+        rad =
+            fd.width / 2 + fd.strokeWidth
+
+        -- only when the money flows left to right: an input side right of
+        -- the output side (legs not laid out by the dashboard) keeps the curve
+        sideBySide =
+            isSideBySide aPos bPos
+
+        -- Attach to the right side of both nodes, or, side by side, from the
+        -- right of the left one to the left of the right one
+        startX =
+            left.x * unit + rad
+
+        startY =
+            left.y * unit
+
+        endPoint =
+            if sideBySide then
+                ( right.x * unit - rad, right.y * unit )
+
+            else
+                ( right.x * unit + rad, right.y * unit )
+    in
+    { left = left
+    , right = right
+    , sideBySide = sideBySide
+    , startX = startX
+    , startY = startY
+    , endPoint = endPoint
+    , edgeLayout =
+        (if sideBySide then
+            forwardLayout
+
+         else
+            layout
+        )
+            { start = ( startX, startY )
+            , end = endPoint
+            , displacementIndex = displacementIndex
+            , nodeOffset = offset
+            }
+    }
+
+
+{-| Where the icon of `conversion` sits before it is moved, in graph pixels;
+Nothing when an end is not on the graph.
+-}
+restingIcon : Dict ( Id, Id ) ConversionEdge -> ( Id, Id ) -> Maybe ( Float, Float )
+restingIcon conversions key =
+    Dict.values conversions
+        |> withDisplacementIndex
+        |> List.Extra.find (\( _, ( c, _, _ ) ) -> c.id == key)
+        |> Maybe.map (\( i, ( _, a, b ) ) -> (geometry i { x = 0, y = 0 } a b).edgeLayout.node)
+
+
+{-| The conversions with both ends on the graph, each with its index among
+those between the same two addresses: several bow apart.
+-}
+withDisplacementIndex : List ConversionEdge -> List ( Int, ( ConversionEdge, Address, Address ) )
+withDisplacementIndex =
+    List.filterMap (\x -> Maybe.map2 (\a b -> ( x, a, b )) x.inputAddress x.outputAddress)
+        >> List.Extra.gatherEqualsBy (\( _, a, b ) -> ( a, b ))
+        >> List.concatMap (\( first, rest ) -> first :: rest |> List.indexedMap Tuple.pair)
+
+
 {-| Both legs' assets, read from the raw conversion rather than the loaded
 nodes: for a same-tx swap one node is the native root.
 -}
@@ -194,7 +308,66 @@ assetsLabel locale conversion =
                 ++ legLabel locale cr.toNetwork cr.toAsset cr.toAssetSymbol
 
         Api.Data.ExternalConversionConversionTypeBridgeTx ->
-            (cr.fromNetwork |> String.toUpper) ++ "-" ++ (conversion.fromAsset |> String.toUpper) ++ " / " ++ (cr.toNetwork |> String.toUpper) ++ "-" ++ (conversion.toAsset |> String.toUpper)
+            if ConversionEdge.isRowOnly conversion then
+                rowLegLabel locale cr.fromNetwork cr.fromAsset cr.fromIsSupportedAsset
+                    ++ " / "
+                    ++ rowLegLabel locale cr.toNetwork cr.toAsset cr.toIsSupportedAsset
+
+            else
+                bridgeLegLabel cr.fromNetwork cr.fromAsset conversion.fromAsset
+                    ++ " / "
+                    ++ bridgeLegLabel cr.toNetwork cr.toAsset conversion.toAsset
+
+
+{-| A leg of a bridge drawn from its row, as `NETWORK-TICKER` like any bridge
+leg. A token outside the registry is named by its short contract and never by a
+symbol: it has no ticker the app could vouch for.
+-}
+rowLegLabel : Locale.Model -> String -> String -> Bool -> String
+rowLegLabel locale network asset supported =
+    String.toUpper network
+        ++ "-"
+        ++ (if supported then
+                legLabel locale network asset Nothing
+
+            else
+                truncateLongIdentifierWithLengths 8 4 asset
+           )
+
+
+{-| The marker below the assets of a bridge drawn from its row.
+-}
+unsupportedLabel : Locale.Model -> ConversionEdge -> Maybe String
+unsupportedLabel locale conversion =
+    let
+        cr =
+            conversion.raw
+    in
+    if not (ConversionEdge.isRowOnly conversion) then
+        Nothing
+
+    else if not cr.fromIsSupportedAsset && not cr.toIsSupportedAsset then
+        Just (Locale.string locale "Unsupported tokens")
+
+    else
+        Just (Locale.string locale "Unsupported token")
+
+
+{-| A bridge leg as `NETWORK-ASSET`. A native leg is the network's gas coin
+(arb pays in ETH), not the currency of its loaded tx, which for a native
+transfer is the network code. Token legs keep the tx's asset.
+-}
+bridgeLegLabel : String -> String -> String -> String
+bridgeLegLabel network rawAsset txAsset =
+    let
+        asset =
+            if rawAsset == ConversionEdge.nativeAsset then
+                (Currency.assetFromBase network).asset
+
+            else
+                txAsset
+    in
+    String.toUpper network ++ "-" ++ String.toUpper asset
 
 
 legLabel : Locale.Model -> String -> String -> Maybe String -> String
@@ -227,35 +400,19 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
         labelTextLine2 =
             assetsLabel vc.locale conversion
 
-        { left, right } =
-            calcDimensions vc conversion inputAddress outputAddress
+        labelTextLine3 =
+            unsupportedLabel vc.locale conversion
 
-        fd =
-            GraphComponents.addressNodeNodeFrame_details
+        -- a third line moves the two above it up, centering all three
+        lineShift =
+            if labelTextLine3 == Nothing then
+                0
 
-        rad =
-            fd.width / 2 + fd.strokeWidth
+            else
+                7
 
-        -- Always attach to the right side of both nodes
-        startX =
-            left.x * unit + rad
-
-        startY =
-            left.y * unit
-
-        endPoint =
-            ( right.x * unit + rad, right.y * unit )
-
-        currentOffset =
-            conversion.nodeOffset |> Maybe.withDefault { x = 0, y = 0 }
-
-        edgeLayout =
-            layout
-                { start = ( startX, startY )
-                , end = endPoint
-                , displacementIndex = displacementIndex
-                , nodeOffset = currentOffset
-                }
+        { left, right, sideBySide, startX, startY, endPoint, edgeLayout } =
+            geometry displacementIndex (conversion.nodeOffset |> Maybe.withDefault { x = 0, y = 0 }) inputAddress outputAddress
 
         -- Create path - either loop or curve
         pat =
@@ -323,8 +480,41 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
         labelOffsetLine2 =
             iconSize + (Util.TextDimensions.estimateTextWidth vc.characterDimensions labelTextLine2 / 2) + 2
 
+        labelOffsetLine3 =
+            labelTextLine3
+                |> Maybe.map (\t -> iconSize + (Util.TextDimensions.estimateTextWidth vc.characterDimensions t / 2) + 2)
+                |> Maybe.withDefault 0
+
         lableOffset =
-            max labelOffsetLine1 labelOffsetLine2
+            max labelOffsetLine1 labelOffsetLine2 |> max labelOffsetLine3
+
+        -- Right of the icon, or, on an edge between nodes side by side, above
+        -- it: right of it the text would sit on the edge, below it among the
+        -- address labels. Each line's position.
+        -- below it instead when the right end is the higher one: the icon
+        -- then sits just under that end, among its address label
+        ( labelX, labelY ) =
+            if sideBySide && right.y < left.y - 0.5 then
+                ( nodeX
+                , \line -> nodeY + iconSize / 2 + 8 + 14 * toFloat (line - 1)
+                )
+
+            else if sideBySide then
+                ( nodeX
+                , \line -> nodeY - iconSize / 2 - 6 - 14 * toFloat (labelLines - line)
+                )
+
+            else
+                ( nodeX + lableOffset
+                , \line -> nodeY - 7 - lineShift + 14 * toFloat (line - 1)
+                )
+
+        labelLines =
+            if labelTextLine3 == Nothing then
+                2
+
+            else
+                3
 
         textLabel =
             if String.isEmpty labelTextLine1 then
@@ -339,8 +529,8 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
                         ]
                     ]
                     [ Svg.Styled.text_
-                        [ Svg.x (String.fromFloat (nodeX + lableOffset))
-                        , Svg.y (String.fromFloat (nodeY - 7))
+                        [ Svg.x (String.fromFloat labelX)
+                        , Svg.y (String.fromFloat (labelY 1))
                         , Svg.textAnchor "middle"
                         , Svg.dominantBaseline "middle"
                         , css
@@ -349,14 +539,28 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
                         ]
                         [ Svg.Styled.text labelTextLine1 ]
                     , Svg.Styled.text_
-                        [ Svg.x (String.fromFloat (nodeX + lableOffset))
-                        , Svg.y (String.fromFloat (nodeY + 7))
+                        [ Svg.x (String.fromFloat labelX)
+                        , Svg.y (String.fromFloat (labelY 2))
                         , Svg.textAnchor "middle"
                         , Svg.dominantBaseline "middle"
                         , css
                             []
                         ]
                         [ Svg.Styled.text labelTextLine2 ]
+                    , labelTextLine3
+                        |> Maybe.map
+                            (\t ->
+                                Svg.Styled.text_
+                                    [ Svg.x (String.fromFloat labelX)
+                                    , Svg.y (String.fromFloat (labelY 3))
+                                    , Svg.textAnchor "middle"
+                                    , Svg.dominantBaseline "middle"
+                                    , css [ Css.fontStyle Css.italic ]
+                                    , testId "gs-bridge-unsupported-label"
+                                    ]
+                                    [ Svg.Styled.text t ]
+                            )
+                        |> Maybe.withDefault (Svg.Styled.g [] [])
                     ]
     in
     g

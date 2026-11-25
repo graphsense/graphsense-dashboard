@@ -79,6 +79,9 @@ shallPushHistory msg _ =
         RuntimeModKeyHeld _ ->
             False
 
+        RuntimeModKeyHeldBriefly _ ->
+            False
+
         UserReleasedEscape ->
             False
 
@@ -127,6 +130,9 @@ shallPushHistory msg _ =
                     False
 
                 AddressDetails.UserClickedContinueChangeTracing ->
+                    False
+
+                AddressDetails.UserClickedActor _ ->
                     False
 
                 AddressDetails.UserClickedToggleBalanceDetails ->
@@ -300,6 +306,12 @@ shallPushHistory msg _ =
             False
 
         BrowserGotActor _ _ ->
+            False
+
+        UserClickedActor _ ->
+            False
+
+        BrowserGotActorForDialog _ _ ->
             False
 
         BrowserGotTx _ _ ->

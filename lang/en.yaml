@@ -254,6 +254,7 @@ request timeout: request timeout
 request error: request error
 network error: network error
 server error: server error
+service temporarily unavailable: service temporarily unavailable
 not found: not found
 data error: data error
 service not reachable: service not reachable.
@@ -345,6 +346,10 @@ Recent searches: Recent searches
 other Links: Other Links
 social: Social
 jurisdictions: Jurisdictions
+website: Website
+social media: Social media
+show tags: Show tags
+no tags found: No tags found
 any category: Any Category
 graph: Graph
 statistics: Statistics
@@ -472,6 +477,8 @@ tag-dialog-additional-info: Additional Information (optional)
 tag-dialog-additional-info-example: e.g. Linked to scam report on xyz.com
 report a tag: Report a tag
 report tag: Report tag
+Wallet type: "Wallet type"
+Other: "Other"
 create new actor: Create new actor
 Added tag: Added Tag
 num-more-assets: '{0} more assets'
@@ -552,6 +559,10 @@ export-dialog-description: "export the current graph to a various formats"
 export-dialog-transparent-background: "transparent background"
 unsupported-swap-notice: "Note: Unsupported swap transaction detected, target {0} ({1})"
 unsupported-bridge-notice: "Note: Unsupported bridge transaction detected, target {0} ({1})"
+unsupported-protocol-bridge-notice: "Note: Unsupported {2} bridge transaction detected, target {0} ({1})"
+unsupported-bridge-from-notice: "Note: Unsupported bridge transaction detected, source {2}, target {0} ({1})"
+unsupported-protocol-bridge-from-notice: "Note: Unsupported {2} bridge transaction detected, source {3}, target {0} ({1})"
+unsupported-bridge-token-hint: "An unsupported token is not in the token registry: no amount or value is shown, and its identity is not verified."
 cluster tags: Cluster-derived tags
 cluster tags list: Cluster-derived tags list
 cluster tags disclaimer: "These tags are not directly assigned to this address but inferred from the cluster it belongs to. Clustering can contain errors, so these tags should be used with caution."
@@ -604,6 +615,7 @@ Network switched off in the settings (lite networks): Network switched off in th
 Keyboard shortcuts: "Keyboard shortcuts"
 Add address or tx: "Add address or tx"
 Select all: "Select all"
+Click for multi-select: "Click for multi-select"
 Delete selection: "Delete selection"
 Move the selection along the graph: "Move the selection along the graph"
 Close search or dialog: "Close search or dialog"
