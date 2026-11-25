@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - "Report a tag" can state the wallet type of the address: hot, cold, deposit or other
 
 ### Fixed
+- Scrolling to the end of a long list (the actor tags list, transaction and tag lists) and stopping there no longer keeps loading page after page until the list is exhausted
+- The address panel shows the tag icon in front of the categories also for an address tagged only as an exchange
 - Swaps no longer put nodes on top of each other: in a transaction with several swaps the pools could land on the same spot and the trader was moved along with every swap. An address another transaction on the graph has stays where it is, and a placed address goes down to the first free spot
 - Addresses still load once the REST API stops sending the deprecated address `status` field (planned after 2026-12-31): the API client no longer requires it
 - Multi-select stuck on when the browser missed the release of Ctrl/Cmd: the next mouse move or click now ends it
