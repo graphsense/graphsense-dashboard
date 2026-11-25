@@ -142,6 +142,7 @@ mapMsg map model =
             { actorId = conf.actorId
             , actorLabel = conf.actorLabel
             , table = conf.table
+            , limitReached = conf.limitReached
             , closeMsg = map conf.closeMsg
             }
                 |> ActorTags

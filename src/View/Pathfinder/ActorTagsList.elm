@@ -1,7 +1,8 @@
 module View.Pathfinder.ActorTagsList exposing (view)
 
 {-| The tags of an actor, across all its addresses (Binance has millions), as
-a table that loads page by page while scrolling. Opened from "Show tags" in
+a table that loads page by page while scrolling, up to the first
+`Dialog.actorTagsLimit`, with a note when there were more. Opened from "Show tags" in
 the actor dialog. A click on an address adds it to the graph.
 
 Same frame and header as the tags list of an address
@@ -83,5 +84,14 @@ view vc conf =
             ]
             [ header
             , table
+            , if conf.limitReached then
+                div
+                    [ css [ Css.padding2 (Css.px 8) Css.zero, Css.fontStyle Css.italic ]
+                    , testId "gs-actor-tags-limit"
+                    ]
+                    [ Html.Styled.text (Locale.interpolated vc.locale "Only the first {0} tags are shown." [ String.fromInt Dialog.actorTagsLimit ]) ]
+
+              else
+                none
             ]
         ]

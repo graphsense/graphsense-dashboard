@@ -319,6 +319,7 @@ statusbar-not-found-info: Indirizzo non trovato. Potrebbe non essere ancora nel
   database (sincronizzato al blocco {0}) oppure non ha ancora ricevuto transazioni
   e quindi non è archiviato nella blockchain.
 and-more: '... e altri {0}'
+'Only the first {0} tags are shown.': 'Vengono mostrati solo i primi {0} tag.'
 popup-address-not-found-various-reasons: potrebbero esserci varie ragioni
 popup-addresses-not-found-not-in-database: potrebbero non essere ancora presenti nel
   nostro database

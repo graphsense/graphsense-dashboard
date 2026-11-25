@@ -14,6 +14,7 @@ import Fixtures.Api as Fixture
 import Html.Attributes
 import Html.Styled
 import Json.Decode
+import Json.Encode
 import Model exposing (Effect(..), Msg(..))
 import Msg.Pathfinder as Pathfinder
 import Support.Env as Env
@@ -253,6 +254,33 @@ suite =
                     |> App.html
                     |> Query.findAll [ Selector.attribute (Html.Attributes.title "1KrakenAddressOfAnotherActor") ]
                     |> Query.count (Expect.equal 0)
+        , describe "the first 1000 tags"
+            [ test "a list that reaches the limit says so" <|
+                \_ ->
+                    -- nine full pages, then one of 150 with more to come
+                    withPages (List.repeat 9 100 ++ [ 150 ])
+                        |> App.html
+                        |> Expect.all
+                            [ Query.has [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-actor-tags-limit") ]
+                            , Query.has [ Selector.text "Only the first 1000 tags are shown." ]
+                            ]
+            , test "a list with no more tags than the limit has no note" <|
+                \_ ->
+                    withPagesEnding (List.repeat 10 100)
+                        |> App.html
+                        |> Query.findAll [ Selector.attribute (Html.Attributes.attribute "data-testid" "gs-actor-tags-limit") ]
+                        |> Query.count (Expect.equal 0)
+            , test "below the limit, scrolling to the end loads the next page" <|
+                \_ ->
+                    withPages [ 100 ]
+                        |> scrollToEnd
+                        |> App.expectEffect "the next page" isActorTagsFetch
+            , test "at the limit, scrolling to the end loads nothing" <|
+                \_ ->
+                    withPages (List.repeat 9 100 ++ [ 150 ])
+                        |> scrollToEnd
+                        |> App.expectNoEffect "another page" isActorTagsFetch
+            ]
         , test "the labels keep their width next to the 100% wide values" <|
             \_ ->
                 ActorDialog.view { closeMsg = UserClosesDialog, showTagsMsg = UserClosesDialog } binance Env.viewConfig
@@ -316,3 +344,77 @@ actorTagsDialogServing networks =
 actorTagsDialogWithPage : App
 actorTagsDialogWithPage =
     actorTagsDialogServing [ "btc", "eth" ]
+
+
+{-| The actor tags list after pages of the given sizes, each with a next page.
+-}
+withPages : List Int -> App
+withPages sizes =
+    pagesOf sizes (Just "more")
+
+
+{-| The same, with no next page after the last.
+-}
+withPagesEnding : List Int -> App
+withPagesEnding sizes =
+    pagesOf sizes Nothing
+
+
+pagesOf : List Int -> Maybe String -> App
+pagesOf sizes lastNext =
+    let
+        template =
+            List.head tagsPage.addressTags
+
+        tagsFrom start n =
+            template
+                |> Maybe.map (\t -> List.range start (start + n - 1) |> List.map (\i -> { t | address = "addr" ++ String.fromInt i }))
+                |> Maybe.withDefault []
+
+        count =
+            List.length sizes
+
+        pages =
+            sizes
+                |> List.indexedMap
+                    (\i n ->
+                        BrowserGotActorTagsForDialog "binance"
+                            { addressTags = tagsFrom (100000 * i) n
+                            , nextPage =
+                                if i == count - 1 then
+                                    lastNext
+
+                                else
+                                    Just "more"
+                            }
+                    )
+    in
+    App.initAt "/pathfinder"
+        |> App.step (UserClickedShowActorTags "binance" "Binance")
+        |> App.steps pages
+
+
+{-| The table's scroll event, scrolled to its end.
+-}
+scrollToEnd : App -> App
+scrollToEnd app =
+    app
+        |> App.html
+        |> Query.find [ Selector.id "actorTagsTable" ]
+        |> Event.simulate
+            (Event.custom "scroll"
+                (Json.Encode.object
+                    [ ( "target"
+                      , Json.Encode.object
+                            [ ( "scrollTop", Json.Encode.float 1000000 )
+                            , ( "scrollHeight", Json.Encode.float 1000300 )
+                            , ( "offsetHeight", Json.Encode.float 300 )
+                            , ( "clientHeight", Json.Encode.float 300 )
+                            ]
+                      )
+                    ]
+                )
+            )
+        |> Event.toResult
+        |> Result.map (\msg -> App.step msg app)
+        |> Result.withDefault app

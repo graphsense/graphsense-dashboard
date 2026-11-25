@@ -344,6 +344,7 @@ statusbar-not-found-info: Dirección no encontrada. Es posible que aún no esté
   en nuestra base de datos (sincronizada hasta el bloque {0}) o que no haya recibido
   ninguna transacción y, por lo tanto, no esté almacenada en la cadena de bloques.
 and-more: '... y {0} más'
+'Only the first {0} tags are shown.': 'Solo se muestran las primeras {0} etiquetas.'
 popup-address-not-found-various-reasons: puede haber varias razones
 popup-addresses-not-found-not-in-database: es posible que aún no estén en nuestra
   base de datos

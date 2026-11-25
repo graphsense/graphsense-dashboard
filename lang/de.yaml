@@ -336,6 +336,7 @@ statusbar-not-found-info: Adresse nicht gefunden. Entweder ist sie noch nicht
   in unserer Datenbank eingespielt (aktuell bis Block {0}) oder sie hat bis jetzt
   noch keine Transaktionen erhalten und ist daher nicht in der Blockchain gespeichert.
 and-more: '... und {0} weitere'
+'Only the first {0} tags are shown.': 'Es werden nur die ersten {0} Tags angezeigt.'
 popup-address-not-found-various-reasons: Dies kann mehrere Ursachen haben
 popup-addresses-not-found-not-in-database: Sie sind möglicherweise noch nicht in unsere
   Datenbank eingespielt

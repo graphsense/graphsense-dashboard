@@ -336,6 +336,7 @@ statusbar-not-found-info: Adresa nu a fost găsită. Este posibil să nu fie în
   de date (sincronizată până la blocul {0}) sau nu a primit nicio tranzacție și, prin urmare,
   nu este stocată în blockchain.
 and-more: '... și încă {0}'
+'Only the first {0} tags are shown.': 'Sunt afișate doar primele {0} etichete.'
 popup-address-not-found-various-reasons: ar putea exista diverse motive
 popup-addresses-not-found-not-in-database: este posibil să nu fie încă în baza noastră de
   date
