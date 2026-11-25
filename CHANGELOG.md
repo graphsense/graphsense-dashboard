@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - An actor dialog with the details of an actor: logo, legal name, websites, categories, all jurisdictions, the number of tags, and its social media and GitHub links. It opens on a click on the actor's name in the side panel or an actor chip in the address tables, from "Learn more" in the actor tooltip, and from an actor search result, which until now did nothing in the Pathfinder
 
 ### Changed
+- Bridges are laid out left to right in the order the money moves: sender, source-chain transfer, bridge contract, the Bridge TX link, minter or solver, destination-chain transfer, recipient. The receiving leg was mirrored below the sending one, so its arrow pointed back to the left. Addresses already on the graph for another transaction (often the receiver of the transaction that was opened), and the address the graph was started from, stay where they are, and the bridge continues from them instead of pulling them away. Swaps keep their U-turn
 - The dashboard follows the system's light or dark mode, and switches live when it changes. The mode setting has three choices instead of a light/dark switch: System (the default), Light and Dark. Users who had picked dark keep it; everyone else moves to System once. PNG and PDF exports stay light in every mode
 - Downloaded graph files are named after the graph: "Save graph" writes `<timestamp> <graph name>.gs` (was the timestamp only), like the PDF and PNG export already did. A graph a plugin opens takes the name the plugin gives it (e.g. the reference of the record it belongs to) instead of the name stored in the graph data, so its downloads carry that name; a file the user opens keeps the name it was saved with. Characters not allowed in file names (`/ \ : * ? " < > |`) become `-`
 - The actor tooltip shows three jurisdictions and "... and N more" instead of all of them (Binance has 16)
@@ -21,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - "Report a tag" can state the wallet type of the address: hot, cold, deposit or other
 
 ### Fixed
+- Swaps no longer put nodes on top of each other: in a transaction with several swaps the pools could land on the same spot and the trader was moved along with every swap. An address another transaction on the graph has stays where it is, and a placed address goes down to the first free spot
 - Addresses still load once the REST API stops sending the deprecated address `status` field (planned after 2026-12-31): the API client no longer requires it
 - Multi-select stuck on when the browser missed the release of Ctrl/Cmd: the next mouse move or click now ends it
 - Tooltip rows keep a gap between label and value; a long label such as the German "Schlagwörter" ran into the value

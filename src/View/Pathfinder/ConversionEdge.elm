@@ -1,4 +1,4 @@
-module View.Pathfinder.ConversionEdge exposing (Curve(..), Layout, assetsLabel, layout, rowLegLabel, view)
+module View.Pathfinder.ConversionEdge exposing (Curve(..), Layout, assetsLabel, forwardLayout, isSideBySide, layout, rowLegLabel, view)
 
 import Api.Data
 import Config.View as View
@@ -178,6 +178,59 @@ layout { start, end, displacementIndex, nodeOffset } =
         }
 
 
+{-| Whether the input side (the input leg's address) stands left of the output
+side, as a bridge laid out left to right puts them (in grid units). Ends above
+one another (a swap's U-turn, a bridge drawn from its row) or the other way
+round keep the curve bulging out to the right.
+-}
+isSideBySide : Pos -> Pos -> Bool
+isSideBySide input output =
+    output.x - input.x >= 2
+
+
+{-| Icon position and curve for an edge between two nodes side by side: from
+the right of the left node to the left of the right node, the icon halfway.
+Several edges between the same nodes bow apart vertically. A dragged icon stays
+on the curve, as in `layout`.
+-}
+forwardLayout :
+    { start : ( Float, Float )
+    , end : ( Float, Float )
+    , displacementIndex : Int
+    , nodeOffset : { x : Float, y : Float }
+    }
+    -> Layout
+forwardLayout { start, end, displacementIndex, nodeOffset } =
+    let
+        ( startX, startY ) =
+            start
+
+        ( endX, endY ) =
+            end
+
+        reach =
+            max 20 ((endX - startX) / 3)
+
+        bow =
+            40 * toFloat displacementIndex
+
+        shift k ( x, y ) =
+            ( x + k * nodeOffset.x, y + k * nodeOffset.y )
+
+        ( c1X, c1Y ) =
+            shift (4 / 3) ( startX + reach, startY + bow )
+
+        ( c2X, c2Y ) =
+            shift (4 / 3) ( endX - reach, endY + bow )
+    in
+    { curve = Bezier ( c1X, c1Y ) ( c2X, c2Y )
+    , node =
+        ( (startX + 3 * c1X + 3 * c2X + endX) / 8
+        , (startY + 3 * c1Y + 3 * c2Y + endY) / 8
+        )
+    }
+
+
 {-| Both legs' assets, read from the raw conversion rather than the loaded
 nodes: for a same-tx swap one node is the native root.
 -}
@@ -306,7 +359,13 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
         rad =
             fd.width / 2 + fd.strokeWidth
 
-        -- Always attach to the right side of both nodes
+        -- only when the money flows left to right: an input side right of
+        -- the output side (legs not laid out by the dashboard) keeps the curve
+        sideBySide =
+            isSideBySide (toPosition inputAddress) (toPosition outputAddress)
+
+        -- Attach to the right side of both nodes, or, side by side, from the
+        -- right of the left one to the left of the right one
         startX =
             left.x * unit + rad
 
@@ -314,13 +373,22 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
             left.y * unit
 
         endPoint =
-            ( right.x * unit + rad, right.y * unit )
+            if sideBySide then
+                ( right.x * unit - rad, right.y * unit )
+
+            else
+                ( right.x * unit + rad, right.y * unit )
 
         currentOffset =
             conversion.nodeOffset |> Maybe.withDefault { x = 0, y = 0 }
 
         edgeLayout =
-            layout
+            (if sideBySide then
+                forwardLayout
+
+             else
+                layout
+            )
                 { start = ( startX, startY )
                 , end = endPoint
                 , displacementIndex = displacementIndex
@@ -401,6 +469,34 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
         lableOffset =
             max labelOffsetLine1 labelOffsetLine2 |> max labelOffsetLine3
 
+        -- Right of the icon, or, on an edge between nodes side by side, above
+        -- it: right of it the text would sit on the edge, below it among the
+        -- address labels. Each line's position.
+        -- below it instead when the right end is the higher one: the icon
+        -- then sits just under that end, among its address label
+        ( labelX, labelY ) =
+            if sideBySide && right.y < left.y - 0.5 then
+                ( nodeX
+                , \line -> nodeY + iconSize / 2 + 8 + 14 * toFloat (line - 1)
+                )
+
+            else if sideBySide then
+                ( nodeX
+                , \line -> nodeY - iconSize / 2 - 6 - 14 * toFloat (labelLines - line)
+                )
+
+            else
+                ( nodeX + lableOffset
+                , \line -> nodeY - 7 - lineShift + 14 * toFloat (line - 1)
+                )
+
+        labelLines =
+            if labelTextLine3 == Nothing then
+                2
+
+            else
+                3
+
         textLabel =
             if String.isEmpty labelTextLine1 then
                 Svg.Styled.g [] []
@@ -414,8 +510,8 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
                         ]
                     ]
                     [ Svg.Styled.text_
-                        [ Svg.x (String.fromFloat (nodeX + lableOffset))
-                        , Svg.y (String.fromFloat (nodeY - 7 - lineShift))
+                        [ Svg.x (String.fromFloat labelX)
+                        , Svg.y (String.fromFloat (labelY 1))
                         , Svg.textAnchor "middle"
                         , Svg.dominantBaseline "middle"
                         , css
@@ -424,8 +520,8 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
                         ]
                         [ Svg.Styled.text labelTextLine1 ]
                     , Svg.Styled.text_
-                        [ Svg.x (String.fromFloat (nodeX + lableOffset))
-                        , Svg.y (String.fromFloat (nodeY + 7 - lineShift))
+                        [ Svg.x (String.fromFloat labelX)
+                        , Svg.y (String.fromFloat (labelY 2))
                         , Svg.textAnchor "middle"
                         , Svg.dominantBaseline "middle"
                         , css
@@ -436,8 +532,8 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
                         |> Maybe.map
                             (\t ->
                                 Svg.Styled.text_
-                                    [ Svg.x (String.fromFloat (nodeX + lableOffset))
-                                    , Svg.y (String.fromFloat (nodeY + 21 - lineShift))
+                                    [ Svg.x (String.fromFloat labelX)
+                                    , Svg.y (String.fromFloat (labelY 3))
                                     , Svg.textAnchor "middle"
                                     , Svg.dominantBaseline "middle"
                                     , css [ Css.fontStyle Css.italic ]
