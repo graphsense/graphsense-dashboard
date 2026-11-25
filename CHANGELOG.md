@@ -3,14 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [26.11.0] - 2026-11-25
 
 ### Added
 - Actor dialog with an actor's details: logo, legal name, websites, categories, jurisdictions, number of tags, social media and GitHub links. Opens from the actor's name in the side panel, an actor chip in the address tables, "Learn more" in the actor tooltip, and an actor search result
 - Actors can be found with the main search boxes (top bar and Pathfinder), at most five below the addresses and transactions
 - Tags list for an actor ("Show tags" in the actor dialog): its tags across all its addresses, loaded while scrolling up to the first 1000 (a note says so when there are more). A click on an address adds it to the graph; every address can be copied
-- The bridge panel names the bridge protocol and links its explorer (Across, Relay, Wormhole, CCTP)
-- Bridges whose tokens are not in the token registry are drawn as a Bridge TX edge; the unregistered side shows "Unsupported token" instead of an amount
+- The bridge panel names the bridge protocol and links its explorer (Across, Relay, Wormhole, CCTP), where the REST API sends them
+- Bridges whose tokens are not in the token registry are drawn as a Bridge TX edge; the unregistered side shows "Unsupported token" instead of an amount. Needs a REST API that reports such bridges
 - Hovering an address makes the cross-chain icon glow on the same address on other chains in the graph
 - "Report a tag" can state the wallet type of the address: hot, cold, deposit or other
 
@@ -22,7 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - An actor label inherited from the cluster ranks below the address's own labels
 - The actor tooltip shows three jurisdictions and "... and N more"
 - While Ctrl/Cmd is held, the toolbar shows the selection tool as active
-- A half bridge's note names the source chain
+- A half bridge's note names the source chain, where the REST API sends it
 - Timeouts (408) and unavailable services (503) from the API get readable messages instead of "bad status"
 
 ### Fixed
