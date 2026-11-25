@@ -1,14 +1,17 @@
-module View.Pathfinder.ConversionEdge exposing (Curve(..), Layout, assetsLabel, forwardLayout, isSideBySide, layout, rowLegLabel, view)
+module View.Pathfinder.ConversionEdge exposing (Curve(..), Layout, assetsLabel, forwardLayout, isSideBySide, layout, restingIcon, rowLegLabel, view, withDisplacementIndex)
 
 import Api.Data
 import Config.View as View
 import Css
+import Dict exposing (Dict)
 import Html.Styled.Events exposing (onMouseLeave)
+import List.Extra
 import Model.Currency as Currency
 import Model.Locale as Locale
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.SearchBox exposing (Highlight, dimmedOpacity)
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
@@ -24,48 +27,6 @@ import Util.TextDimensions
 import Util.View exposing (onClickWithStop, pointer, testId, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Utils exposing (Pos, toPosition)
-
-
-type alias Dimensions =
-    { x : Float
-    , y : Float
-    , left : Pos
-    , right : Pos
-    }
-
-
-calcDimensions : View.Config -> ConversionEdge -> Address -> Address -> Dimensions
-calcDimensions _ _ aAddress bAddress =
-    let
-        -- Padding for the labels
-        aPos =
-            aAddress |> toPosition
-
-        bPos =
-            bAddress |> toPosition
-
-        x =
-            (aPos.x + bPos.x) / 2
-
-        y =
-            (aPos.y + bPos.y) / 2
-
-        { left, right } =
-            if aPos.x < bPos.x then
-                { left = aPos
-                , right = bPos
-                }
-
-            else
-                { left = bPos
-                , right = aPos
-                }
-    in
-    { x = x * unit
-    , y = y * unit
-    , left = left
-    , right = right
-    }
 
 
 {-| The drawn shape of a swap edge: a cubic Bézier between two different
@@ -231,6 +192,106 @@ forwardLayout { start, end, displacementIndex, nodeOffset } =
     }
 
 
+{-| Where an edge between `inputAddress` and `outputAddress` runs and where its
+icon sits, for an icon moved by `offset`.
+-}
+geometry :
+    Int
+    -> { x : Float, y : Float }
+    -> Address
+    -> Address
+    ->
+        { left : Pos
+        , right : Pos
+        , sideBySide : Bool
+        , startX : Float
+        , startY : Float
+        , endPoint : ( Float, Float )
+        , edgeLayout : Layout
+        }
+geometry displacementIndex offset inputAddress outputAddress =
+    let
+        aPos =
+            toPosition inputAddress
+
+        bPos =
+            toPosition outputAddress
+
+        ( left, right ) =
+            if aPos.x < bPos.x then
+                ( aPos, bPos )
+
+            else
+                ( bPos, aPos )
+
+        fd =
+            GraphComponents.addressNodeNodeFrame_details
+
+        rad =
+            fd.width / 2 + fd.strokeWidth
+
+        -- only when the money flows left to right: an input side right of
+        -- the output side (legs not laid out by the dashboard) keeps the curve
+        sideBySide =
+            isSideBySide aPos bPos
+
+        -- Attach to the right side of both nodes, or, side by side, from the
+        -- right of the left one to the left of the right one
+        startX =
+            left.x * unit + rad
+
+        startY =
+            left.y * unit
+
+        endPoint =
+            if sideBySide then
+                ( right.x * unit - rad, right.y * unit )
+
+            else
+                ( right.x * unit + rad, right.y * unit )
+    in
+    { left = left
+    , right = right
+    , sideBySide = sideBySide
+    , startX = startX
+    , startY = startY
+    , endPoint = endPoint
+    , edgeLayout =
+        (if sideBySide then
+            forwardLayout
+
+         else
+            layout
+        )
+            { start = ( startX, startY )
+            , end = endPoint
+            , displacementIndex = displacementIndex
+            , nodeOffset = offset
+            }
+    }
+
+
+{-| Where the icon of `conversion` sits before it is moved, in graph pixels;
+Nothing when an end is not on the graph.
+-}
+restingIcon : Dict ( Id, Id ) ConversionEdge -> ( Id, Id ) -> Maybe ( Float, Float )
+restingIcon conversions key =
+    Dict.values conversions
+        |> withDisplacementIndex
+        |> List.Extra.find (\( _, ( c, _, _ ) ) -> c.id == key)
+        |> Maybe.map (\( i, ( _, a, b ) ) -> (geometry i { x = 0, y = 0 } a b).edgeLayout.node)
+
+
+{-| The conversions with both ends on the graph, each with its index among
+those between the same two addresses: several bow apart.
+-}
+withDisplacementIndex : List ConversionEdge -> List ( Int, ( ConversionEdge, Address, Address ) )
+withDisplacementIndex =
+    List.filterMap (\x -> Maybe.map2 (\a b -> ( x, a, b )) x.inputAddress x.outputAddress)
+        >> List.Extra.gatherEqualsBy (\( _, a, b ) -> ( a, b ))
+        >> List.concatMap (\( first, rest ) -> first :: rest |> List.indexedMap Tuple.pair)
+
+
 {-| Both legs' assets, read from the raw conversion rather than the loaded
 nodes: for a same-tx swap one node is the native root.
 -}
@@ -350,50 +411,8 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
             else
                 7
 
-        { left, right } =
-            calcDimensions vc conversion inputAddress outputAddress
-
-        fd =
-            GraphComponents.addressNodeNodeFrame_details
-
-        rad =
-            fd.width / 2 + fd.strokeWidth
-
-        -- only when the money flows left to right: an input side right of
-        -- the output side (legs not laid out by the dashboard) keeps the curve
-        sideBySide =
-            isSideBySide (toPosition inputAddress) (toPosition outputAddress)
-
-        -- Attach to the right side of both nodes, or, side by side, from the
-        -- right of the left one to the left of the right one
-        startX =
-            left.x * unit + rad
-
-        startY =
-            left.y * unit
-
-        endPoint =
-            if sideBySide then
-                ( right.x * unit - rad, right.y * unit )
-
-            else
-                ( right.x * unit + rad, right.y * unit )
-
-        currentOffset =
-            conversion.nodeOffset |> Maybe.withDefault { x = 0, y = 0 }
-
-        edgeLayout =
-            (if sideBySide then
-                forwardLayout
-
-             else
-                layout
-            )
-                { start = ( startX, startY )
-                , end = endPoint
-                , displacementIndex = displacementIndex
-                , nodeOffset = currentOffset
-                }
+        { left, right, sideBySide, startX, startY, endPoint, edgeLayout } =
+            geometry displacementIndex (conversion.nodeOffset |> Maybe.withDefault { x = 0, y = 0 }) inputAddress outputAddress
 
         -- Create path - either loop or curve
         pat =

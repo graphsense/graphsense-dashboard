@@ -1,7 +1,6 @@
 module View.Pathfinder.Network exposing (addresses, relations)
 
 import Animation
-import Basics.Extra exposing (uncurry)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -346,10 +345,7 @@ txRelations vc gc level searchBox annotations txs conversions =
     in
     (if vc.showConversionEdges then
         [ conversions_
-            |> List.filterMap
-                (\x -> Maybe.map2 (\a b -> ( x, a, b )) x.inputAddress x.outputAddress)
-            |> List.Extra.gatherEqualsBy (\( _, a, b ) -> ( a, b ))
-            |> List.concatMap (uncurry (::) >> List.indexedMap Tuple.pair)
+            |> ConversionEdge.withDisplacementIndex
             |> List.map
                 (\( i, ( conversion, a, b ) ) ->
                     conversionEdge vc gc searchBox conversion i a b

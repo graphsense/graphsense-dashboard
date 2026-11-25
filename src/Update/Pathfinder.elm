@@ -123,6 +123,7 @@ import Util.Pathfinder.TagSummary as TagSummary
 import Util.TooltipType exposing (TooltipType)
 import View.Locale as Locale exposing (makeGraphFilename)
 import View.Pathfinder exposing (originShiftX)
+import View.Pathfinder.ConversionEdge as ConversionEdgeView
 import Workflow
 
 
@@ -2390,91 +2391,7 @@ updateByMsg uc msg model =
             removeAddress id model
 
         InternalConversionLoopAddressesLoaded keepPositionOf conv ->
-            let
-                mtxInput =
-                    ConversionEdge.findLegTx conv.fromNetwork conv.fromAssetTransfer model.network.txs
-
-                mtxOutput =
-                    ConversionEdge.findLegTx conv.toNetwork conv.toAssetTransfer model.network.txs
-
-                arrangeConversionNodes txInput txOutput =
-                    let
-                        displacementFromTx =
-                            4
-
-                        -- Several addresses on one side of a leg are stacked
-                        -- nodeYOffset apart, like findAddressCoordsNextToTx
-                        -- does, rather than all put on the same point, and an
-                        -- address goes down to the first spot no other node
-                        -- takes. Addresses positioned by a loaded file, or
-                        -- that another tx on the graph has, stay put: a tx
-                        -- with several swaps would otherwise drag the trader
-                        -- along with each, and put pools on top of each other.
-                        placeNextTo tx dx ids net =
-                            let
-                                txCoords =
-                                    Tx.toFinalCoords tx
-                            in
-                            ids
-                                |> List.Extra.unique
-                                |> List.filter (\id -> Dict.member id net.addresses && not (addressPlacedElsewhere keepPositionOf [ txInput.id, txOutput.id ] net id))
-                                |> List.indexedMap Tuple.pair
-                                |> List.foldl
-                                    (\( i, id ) acc ->
-                                        Network.updateAddress id
-                                            (placeAt
-                                                (firstFreeSpot acc
-                                                    [ id ]
-                                                    { x = txCoords.x + dx
-                                                    , y = txCoords.y + toFloat i * nodeYOffset
-                                                    }
-                                                )
-                                            )
-                                            acc
-                                    )
-                                    net
-
-                        -- A swap is one owner's round trip through a pool:
-                        -- its legs share addresses, so they are laid out as a
-                        -- U-turn, the output leg mirrored below the input leg.
-                        uTurn =
-                            model.network
-                                -- input leg
-                                |> placeNextTo txInput -displacementFromTx (Tx.getInputAddressIds txInput)
-                                |> placeNextTo txInput displacementFromTx (Tx.getOutputAddressIds txInput)
-                                -- output leg, mirrored
-                                |> placeNextTo txOutput -displacementFromTx (Tx.getOutputAddressIds txOutput)
-                                |> placeNextTo txOutput displacementFromTx (Tx.getInputAddressIds txOutput)
-
-                        legAddresses tx =
-                            Tx.getInputAddressIds tx ++ Tx.getOutputAddressIds tx
-
-                        sharesAddress =
-                            List.any (\id -> List.member id (legAddresses txOutput)) (legAddresses txInput)
-
-                        netOut =
-                            if conv.conversionType == Api.Data.ExternalConversionConversionTypeBridgeTx && not sharesAddress then
-                                arrangeBridgeLegs keepPositionOf txInput txOutput model.network
-
-                            else
-                                uTurn
-                    in
-                    n
-                        { model
-                            | network =
-                                netOut
-                                    -- Snapping the whole network would move
-                                    -- the file's nodes too.
-                                    |> (if model.config.snapToGrid && Set.isEmpty keepPositionOf then
-                                            Network.snapToGrid
-
-                                        else
-                                            identity
-                                       )
-                        }
-            in
-            Maybe.map2 arrangeConversionNodes mtxInput mtxOutput
-                |> Maybe.withDefault (n model)
+            n { model | network = arrangeConversion model.config.snapToGrid keepPositionOf conv model.network }
 
         BrowserGotConversionLoop keepPositionOf txA conversion tx ->
             let
@@ -2512,11 +2429,16 @@ updateByMsg uc msg model =
                     else
                         ( txA, ntx )
 
+                -- laid out right away, with the addresses already loaded,
+                -- so the new leg does not show up somewhere else first; the
+                -- addresses still loading are put next to their leg where it
+                -- now is, and the layout runs again once they are there
                 nnn =
                     nn
                         |> Network.addConversion conversion inputTx outputTx
                         |> Network.updateTx inputTx.id (s_conversionType (Just Tx.InputLegConversion))
                         |> Network.updateTx outputTx.id (s_conversionType (Just Tx.OutputLegConversion))
+                        |> arrangeConversion model.config.snapToGrid keepPositionOf conversion
 
                 nFromAddress =
                     Data.normalizeIdentifier conversion.fromNetwork conversion.fromAddress
@@ -5460,8 +5382,31 @@ releaseConversionNode nodeDrag model =
     if conversionNodeOffset nodeDrag.key model == nodeDrag.baseOffset then
         selectConversionEdge nodeDrag.key model
 
+    else if model.config.snapToGrid then
+        n { model | network = snapConversionNode nodeDrag.key model.network }
+
     else
         n model
+
+
+{-| With grid snapping on, a dropped bridge or swap icon goes to the nearest
+point of the grid nodes snap to (`Network.snapToGrid`).
+-}
+snapConversionNode : ( Id, Id ) -> Network -> Network
+snapConversionNode key network =
+    case ( ConversionEdgeView.restingIcon network.conversions key, Dict.get key network.conversions |> Maybe.andThen .nodeOffset ) of
+        ( Just ( restX, restY ), Just offset ) ->
+            let
+                snap v step =
+                    toFloat (round (v / (step * unit))) * (step * unit)
+
+                ( x, y ) =
+                    ( snap (restX + offset.x) nodeXOffset, snap (restY + offset.y) nodeYOffset )
+            in
+            Network.updateConversionEdge key (\edge -> { edge | nodeOffset = Just { x = x - restX, y = y - restY } }) network
+
+        _ ->
+            network
 
 
 {-| The icon is never auto-placed, so the stored offset is where it is drawn.
@@ -6607,6 +6552,96 @@ fromDeserialized uc deserialized model =
     )
 
 
+{-| Lays out the two legs of a conversion once both are on the graph: a
+bridge left to right (`arrangeBridgeLegs`), a swap as a U-turn. Runs as soon
+as the second leg arrives, so the legs show up where they belong, and again
+once their addresses have loaded, for those that came in later. With grid
+snapping on, the graph is snapped afterwards, unless a file positions nodes.
+-}
+arrangeConversion : Bool -> Set Id -> Api.Data.ExternalConversion -> Network -> Network
+arrangeConversion snapToGrid keepPositionOf conv network =
+    let
+        mtxInput =
+            ConversionEdge.findLegTx conv.fromNetwork conv.fromAssetTransfer network.txs
+
+        mtxOutput =
+            ConversionEdge.findLegTx conv.toNetwork conv.toAssetTransfer network.txs
+
+        arrange txInput txOutput =
+            let
+                displacementFromTx =
+                    4
+
+                -- Several addresses on one side of a leg are stacked
+                -- nodeYOffset apart, like findAddressCoordsNextToTx
+                -- does, rather than all put on the same point, and an
+                -- address goes down to the first spot no other node
+                -- takes. Addresses positioned by a loaded file, or
+                -- that another tx on the graph has, stay put: a tx
+                -- with several swaps would otherwise drag the trader
+                -- along with each, and put pools on top of each other.
+                placeNextTo tx dx ids net =
+                    let
+                        txCoords =
+                            Tx.toFinalCoords tx
+                    in
+                    ids
+                        |> List.Extra.unique
+                        |> List.filter (\id -> Dict.member id net.addresses && not (addressPlacedElsewhere keepPositionOf [ txInput.id, txOutput.id ] net id))
+                        |> List.indexedMap Tuple.pair
+                        |> List.foldl
+                            (\( i, id ) acc ->
+                                Network.updateAddress id
+                                    (placeAt
+                                        (firstFreeSpot acc
+                                            [ id ]
+                                            { x = txCoords.x + dx
+                                            , y = txCoords.y + toFloat i * nodeYOffset
+                                            }
+                                        )
+                                    )
+                                    acc
+                            )
+                            net
+
+                -- A swap is one owner's round trip through a pool:
+                -- its legs share addresses, so they are laid out as a
+                -- U-turn, the output leg mirrored below the input leg.
+                uTurn =
+                    network
+                        -- input leg
+                        |> placeNextTo txInput -displacementFromTx (Tx.getInputAddressIds txInput)
+                        |> placeNextTo txInput displacementFromTx (Tx.getOutputAddressIds txInput)
+                        -- output leg, mirrored
+                        |> placeNextTo txOutput -displacementFromTx (Tx.getOutputAddressIds txOutput)
+                        |> placeNextTo txOutput displacementFromTx (Tx.getInputAddressIds txOutput)
+
+                legAddresses tx =
+                    Tx.getInputAddressIds tx ++ Tx.getOutputAddressIds tx
+
+                sharesAddress =
+                    List.any (\id -> List.member id (legAddresses txOutput)) (legAddresses txInput)
+
+                netOut =
+                    if conv.conversionType == Api.Data.ExternalConversionConversionTypeBridgeTx && not sharesAddress then
+                        arrangeBridgeLegs keepPositionOf txInput txOutput network
+
+                    else
+                        uTurn
+            in
+            netOut
+                -- Snapping the whole network would move the file's nodes too.
+                |> (if snapToGrid && Set.isEmpty keepPositionOf then
+                        Network.snapToGrid
+
+                    else
+                        identity
+                   )
+    in
+    Maybe.map2 arrange mtxInput mtxOutput
+        |> Maybe.withDefault network
+
+
 {-| Lays a bridge out left to right, in the order the money moves:
 
     sender -> input leg -> bridge contract ~~Bridge TX~~ minter or solver -> output leg -> recipient
@@ -6639,9 +6674,29 @@ arrangeBridgeLegs keepPositionOf legIn legOut network =
         txStays tx =
             Set.member tx.id keepPositionOf || tx.isStartingPoint
 
+        -- where an address is, or, still loading for another tx, where it
+        -- will be: next to that tx (findAddressCoordsNextToTx), so the
+        -- chain need not wait for it and move later
         coordsOf id =
             Dict.get id network.addresses
                 |> Maybe.map (\a -> { x = a.x, y = A.getTo a.y })
+                |> Maybe.Extra.orElseLazy
+                    (\_ ->
+                        network.txs
+                            |> Dict.values
+                            |> List.filter (\t -> not (List.member t.id legIds))
+                            |> List.Extra.findMap
+                                (\t ->
+                                    if List.member id (Tx.getOutputAddressIds t) then
+                                        Just (shiftX nodeXOffset (Tx.toFinalCoords t))
+
+                                    else if List.member id (Tx.getInputAddressIds t) then
+                                        Just (shiftX -nodeXOffset (Tx.toFinalCoords t))
+
+                                    else
+                                        Nothing
+                                )
+                    )
 
         firstStaying ids =
             ids

@@ -304,6 +304,15 @@ with no nodes pinned, after `prepare` changed the model.
 -}
 expandInUi : Legs -> Api.Data.ExternalConversion -> (Model -> Model) -> App
 expandInUi legs conv prepare =
+    expandInUiBeforeAddresses legs conv prepare
+        |> App.step (InternalConversionLoopAddressesLoaded Set.empty conv)
+
+
+{-| The same, up to the second leg arriving, before the layout that waits for
+the legs' addresses.
+-}
+expandInUiBeforeAddresses : Legs -> Api.Data.ExternalConversion -> (Model -> Model) -> App
+expandInUiBeforeAddresses legs conv prepare =
     let
         opened =
             open legs bothLegs
@@ -325,7 +334,6 @@ expandInUi legs conv prepare =
                     _ ->
                         Nothing
             )
-        |> App.step (InternalConversionLoopAddressesLoaded Set.empty conv)
 
 
 suite : Test
@@ -632,4 +640,18 @@ suite =
                                 , Just ( Tuple.first recipient - 4, Tuple.second recipient )
                                 , Just ( Tuple.first recipient - 20, Tuple.second recipient )
                                 )
+        , test "the legs are laid out as soon as the second one arrives, before their addresses load" <|
+            \_ ->
+                withLegs <|
+                    \legs ->
+                        let
+                            arrived =
+                                expandInUiBeforeAddresses legs conversion identity
+                        in
+                        case ( txAt ethTxId arrived, txAt btcTxId arrived ) of
+                            ( Just ( ethX, ethY ), Just ( btcX, btcY ) ) ->
+                                ( btcX - ethX, btcY - ethY ) |> Expect.equal ( 16, 0 )
+
+                            _ ->
+                                Expect.fail "a leg is missing"
         ]
