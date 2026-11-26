@@ -280,8 +280,10 @@ suite =
                         |> App.step NoOp
                         |> lookOf "a"
                         |> Expect.equal (Just NoHighlight)
-            , test "Ctrl+F stays as is: a query without a match greys everything" <|
-                \_ -> graph |> openCtrlF "zzz" |> lookOf "a" |> Expect.equal (Just Dimmed)
+            , test "Ctrl+F: a match greys the rest" <|
+                \_ -> graph |> openCtrlF "c" |> lookOf "a" |> Expect.equal (Just Dimmed)
+            , test "Ctrl+F: a query without a match greys nothing either" <|
+                \_ -> graph |> openCtrlF "zzz" |> lookOf "a" |> Expect.equal (Just NoHighlight)
             , test "an open Ctrl+F search wins over the main search" <|
                 \_ ->
                     graph
