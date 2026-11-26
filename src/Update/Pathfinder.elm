@@ -232,7 +232,7 @@ update uc msg model =
                 |> and (syncSidePanel uc)
                 |> and dispatchEventualMessages
                 |> and refreshSearchMatches
-                |> and (refreshHighlighting uc)
+                |> and (refreshHighlighting uc model)
                 |> and (closeSearchOnNodeClick msg)
                 |> and (closeTooltip msg)
     in
@@ -413,9 +413,14 @@ openToolbarHovercard hovercardType model =
 
 {-| Rebuild `model.highlighting` from the search and the filters. Replaced only
 when it changed, so the lazily rendered graph layers keep their memoization.
+
+`before` is the model before the message: transactions (or aggregated edges)
+it did not have and that the filters hide at once get a notification, so an
+expand that seems to do nothing explains itself.
+
 -}
-refreshHighlighting : Update.Config -> Model -> ( Model, List Effect )
-refreshHighlighting uc model =
+refreshHighlighting : Update.Config -> Model -> Model -> ( Model, List Effect )
+refreshHighlighting uc before model =
     let
         next =
             { search = model.onGraphSearch
@@ -429,12 +434,45 @@ refreshHighlighting uc model =
                     model.network
             , showHidden = model.graphFilter.showHiddenGrey
             }
-    in
-    if next == model.highlighting then
-        n model
 
-    else
-        n { model | highlighting = next }
+        newlyHidden =
+            if model.graphFilter /= before.graphFilter then
+                0
+
+            else
+                (Set.toList next.filter.hiddenTxs
+                    |> List.filter (\id -> not (Dict.member id before.network.txs))
+                    |> List.length
+                )
+                    + (Set.toList next.filter.hiddenAggEdges
+                        |> List.filter (\key -> not (Dict.member key before.network.aggEdges))
+                        |> List.length
+                      )
+
+        notice =
+            if newlyHidden == 0 then
+                []
+
+            else
+                [ (if newlyHidden == 1 then
+                    Locale.string uc.locale "1 new transaction is hidden by the filters"
+
+                   else
+                    Locale.interpolated uc.locale "{0} new transactions are hidden by the filters" [ String.fromInt newlyHidden ]
+                  )
+                    |> Notification.infoDefault
+                    |> Notification.map (s_isEphemeral True)
+                    |> Notification.map (s_showClose False)
+                    |> ShowNotificationEffect
+                ]
+    in
+    ( if next == model.highlighting then
+        model
+
+      else
+        { model | highlighting = next }
+    , notice
+    )
 
 
 {-| Addresses a filter greys instead of hiding: annotated and selected ones

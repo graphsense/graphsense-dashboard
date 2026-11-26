@@ -5,10 +5,16 @@ graph shows after a filter changes, and what a filter does not touch (undo
 history, the network itself).
 -}
 
+import Api.Data
 import Dict
+import Effect.Api
+import Effect.Pathfinder
 import Expect exposing (Expectation)
+import Fixtures.Api as Fixture
 import Html.Attributes
+import Json.Decode
 import Model.Graph.Transform as Transform
+import Model.Notification as Notification
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Overview as Overview
 import Model.Pathfinder.Selection exposing (Selection(..))
@@ -17,6 +23,7 @@ import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.GraphFilter as GraphFilterMsg
 import Msg.Pathfinder.Overview as OverviewMsg
 import RecordSetter exposing (s_network, s_selection, s_x)
+import Route.Pathfinder as Route
 import Set
 import Support.App as App exposing (App)
 import Support.GraphFilterFixture exposing (accountTx, addr, chain, day, usd)
@@ -51,6 +58,58 @@ farGraph =
                 { m | network = { network | addresses = Dict.update (addr "d") (Maybe.map (s_x 500)) network.addresses } }
             )
         |> App.step NoOp
+
+
+{-| Any priced transfer is tiny under this limit.
+-}
+tinyOnEverything : App
+tinyOnEverything =
+    App.init
+        |> filter (GraphFilterMsg.UserChangedLimit 1.0e12)
+        |> filter GraphFilterMsg.UserToggledHideTiny
+
+
+withTxFixture : (Api.Data.Tx -> Expectation) -> Expectation
+withTxFixture f =
+    case Json.Decode.decodeString Api.Data.txDecoder Fixture.txUtxo of
+        Ok tx ->
+            f tx
+
+        Err e ->
+            Expect.fail ("the tx fixture did not decode: " ++ Json.Decode.errorToString e)
+
+
+txHashOf : Api.Data.Tx -> String
+txHashOf tx =
+    case tx of
+        Api.Data.TxTxUtxo t ->
+            t.txHash
+
+        Api.Data.TxTxAccount t ->
+            t.txHash
+
+
+answerTx : Api.Data.Tx -> App -> App
+answerTx tx =
+    App.respond
+        (\eff ->
+            case eff of
+                Effect.Api.GetTxEffect _ toMsg ->
+                    Just (toMsg tx)
+
+                _ ->
+                    Nothing
+        )
+
+
+isHiddenNotice : Effect.Pathfinder.Effect -> Bool
+isHiddenNotice eff =
+    case eff of
+        Effect.Pathfinder.ShowNotificationEffect (Notification.Info data) ->
+            String.contains "hidden by the filters" data.message
+
+        _ ->
+            False
 
 
 filter : GraphFilterMsg.Msg -> App -> App
@@ -176,6 +235,29 @@ suite =
                     |> .graphFilter
                     |> .excludedAssets
                     |> Expect.equal Set.empty
+        , describe "transactions hidden on arrival"
+            [ test "a transaction the filters hide at once gets a notice" <|
+                \_ ->
+                    withTxFixture <|
+                        \tx ->
+                            tinyOnEverything
+                                |> App.navigate (Route.txRoute { network = "btc", txHash = txHashOf tx })
+                                |> answerTx tx
+                                |> App.expectEffect "a hidden-by-filters notice" isHiddenNotice
+            , test "no notice without a filter" <|
+                \_ ->
+                    withTxFixture <|
+                        \tx ->
+                            App.init
+                                |> App.navigate (Route.txRoute { network = "btc", txHash = txHashOf tx })
+                                |> answerTx tx
+                                |> App.expectNoEffect "a hidden-by-filters notice" isHiddenNotice
+            , test "no notice when a filter is switched on" <|
+                \_ ->
+                    graph
+                        |> filter GraphFilterMsg.UserToggledHideTiny
+                        |> App.expectNoEffect "a hidden-by-filters notice" isHiddenNotice
+            ]
         , describe "the overview map"
             [ test "is not drawn while the whole graph fits the screen" <|
                 \_ -> graph |> App.html |> Query.findAll [ byTestId "gs-overview" ] |> Query.count (Expect.equal 0)
