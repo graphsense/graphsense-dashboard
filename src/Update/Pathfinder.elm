@@ -46,7 +46,7 @@ import Model.Locale as Locale
 import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Notification as Notification
 import Model.Pathfinder exposing (..)
-import Model.Pathfinder.Address as Address exposing (Address, Txs(..), expandAllowed, getAddressType, getTxs, txsSetter)
+import Model.Pathfinder.Address as Address exposing (Address, Txs(..), expandHandleAllowed, getAddressType, getTxs, txsSetter)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
@@ -2224,12 +2224,12 @@ updateByMsg uc msg model =
             Dict.get id model.network.addresses
                 |> Maybe.map
                     (\address ->
-                        if expandAllowed address then
+                        if expandHandleAllowed address then
                             expandAddress uc address direction model
 
                         else
                             ( model
-                            , TxTracingThroughService id address.exchange
+                            , TxTracingThroughService id (address.exchange |> Maybe.Extra.orElse address.actor)
                                 |> InfoError
                                 |> ErrorEffect
                                 |> List.singleton
@@ -4626,8 +4626,31 @@ updateTagDataOnAddress addressId m =
                     m.network
                         |> Network.updateAddress addressId (s_hasTags False)
                         |> Network.updateAddress addressId (\t -> { t | hasClusterTagsOnly = False, listTag = Nothing })
+
+        -- only when the address has tags of its own: a cluster is
+        -- heuristic, and cluster tags alone must not disable tracing on an
+        -- address the cluster's owner may not even control. With direct
+        -- tags, the summary that also folds in the best cluster tag (the
+        -- default fetch) is fine.
+        addressLevelSummary td =
+            case td of
+                HasTagSummaries { withoutCluster } ->
+                    Just withoutCluster
+
+                HasTagSummaryWithoutCluster ts ->
+                    Just ts
+
+                HasTagSummaryWithCluster ts ->
+                    Just ts
+
+                _ ->
+                    Nothing
+
+        withServiceStop td =
+            Network.updateAddress addressId
+                (\addr -> { addr | serviceStop = addressLevelSummary td |> Maybe.andThen TagSummary.expandStopConcept })
     in
-    tag |> Maybe.map (\n -> { m | network = net n }) |> Maybe.withDefault m
+    tag |> Maybe.map (\td -> { m | network = net td |> withServiceStop td }) |> Maybe.withDefault m
 
 
 getNextTxEffects : Network -> Id -> Direction -> { addBetweenLinks : Bool, addAnyLinks : Bool } -> Maybe Id -> List Effect

@@ -1,8 +1,9 @@
-module Util.Pathfinder.TagSummary exposing (LabelPreview, exchangeCategory, hasOnlyExchangeTags, isExchangeNode, labelEntries, labelPreview)
+module Util.Pathfinder.TagSummary exposing (LabelPreview, exchangeCategory, expandStopConcept, hasOnlyExchangeTags, isExchangeNode, labelEntries, labelPreview)
 
 import Api.Data
 import Dict
 import List.Extra
+import Maybe.Extra
 
 
 exchangeCategory : String
@@ -199,3 +200,62 @@ cleanLabel lbl =
 
         words ->
             Just (String.join " " words)
+
+
+{-| Concepts of services that pool customer funds. An expand at such an
+address picks the service's most recent tx, which belongs to an unrelated
+customer, so the graph's expand handles stop there.
+-}
+expandStopConcepts : List String
+expandStopConcepts =
+    [ exchangeCategory
+    , "defi_dex"
+    , "defi_bridge"
+    , "mixing"
+    , "mixing_service"
+    , "coinjoin"
+    , "market"
+    , "gambling"
+    , "payment_processor"
+    , "wallet_service"
+    , "atm"
+    , "defi_lending"
+    , "defi_custody"
+    ]
+
+
+{-| A concept below this confidence-weighted share only stops the expand
+when it is also the address's top concept. Keeps a single weak mention tag
+(say, one third-party "market" tag) from disabling the handles.
+-}
+expandStopMinWeight : Float
+expandStopMinWeight =
+    0.3
+
+
+{-| The pooling-service concept that should stop the expand handles, if any:
+the top concept of the tag summary (ignoring `unknown`), or any such concept
+whose weighted share reaches `expandStopMinWeight`.
+-}
+expandStopConcept : Api.Data.TagSummary -> Maybe String
+expandStopConcept tagdata =
+    let
+        ranked =
+            tagdata.conceptTagCloud
+                |> Dict.toList
+                |> List.filter (Tuple.first >> (/=) "unknown")
+                |> List.sortBy (Tuple.second >> .weighted >> negate)
+
+        isStop =
+            Tuple.first >> (\c -> List.member c expandStopConcepts)
+
+        top =
+            List.head ranked |> Maybe.Extra.filter isStop
+
+        heavy =
+            ranked
+                |> List.Extra.find (\entry -> isStop entry && (Tuple.second entry).weighted >= expandStopMinWeight)
+    in
+    top
+        |> Maybe.Extra.orElse heavy
+        |> Maybe.map Tuple.first

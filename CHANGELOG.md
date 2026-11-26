@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Expanding an address onto a CoinJoin (mixing) transaction stops at the CoinJoin: it no longer places the CoinJoin's biggest input or output as if the funds came from or went there, and an info box explains why. An address can still be picked from the transaction's inputs/outputs table
+- The expand handles are disabled not only on exchanges but on every address whose own tags mark it as a service that pools funds (DEX, bridge, mixer, market, gambling, payment processor, wallet service, ATM, lending, custody), so an expand no longer adds an unrelated customer's transaction as if it continued the trace. A service concept counts when it is the address's top concept or carries at least 30% of the tag weight, so a single weak mention does not disable tracing
 
 ## [26.11.0] - 2026-11-25
 

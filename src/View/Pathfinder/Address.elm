@@ -16,7 +16,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords
 import Model.NetworkCapabilities as NetworkCapabilities exposing (NetworkCapabilities)
 import Model.Pathfinder exposing (unit)
-import Model.Pathfinder.Address exposing (Address, AddressServiceType(..), Txs(..), expandAllowed, getTxs, isSmartContract, txsGetSet)
+import Model.Pathfinder.Address exposing (Address, AddressServiceType(..), Txs(..), expandHandleAllowed, getTxs, isSmartContract, txsGetSet)
 import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.DetailLevel as DetailLevel exposing (DetailLevel(..))
 import Model.Pathfinder.Id as Id
@@ -371,7 +371,7 @@ view vc pc capabilities searchHighlight level address annotation =
                                     )
                                     { root =
                                         { state =
-                                            if expandAllowed address then
+                                            if expandHandleAllowed address then
                                                 Icons.IconsNodeOpenLeftStateActiv
 
                                             else
@@ -394,7 +394,7 @@ view vc pc capabilities searchHighlight level address annotation =
                                     )
                                     { root =
                                         { state =
-                                            if expandAllowed address then
+                                            if expandHandleAllowed address then
                                                 Icons.IconsNodeOpenRightStateActiv
 
                                             else
