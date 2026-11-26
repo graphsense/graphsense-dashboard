@@ -590,6 +590,15 @@ httpErrorToString model error =
         Http.BadStatus 404 ->
             string model "not found"
 
+        -- gs-rest: a query over its time budget, e.g. the links between two
+        -- busy clusters
+        Http.BadStatus 408 ->
+            string model "request timeout"
+
+        -- gs-rest: the database is down for a moment (Retry-After)
+        Http.BadStatus 503 ->
+            string model "service temporarily unavailable"
+
         Http.BadStatus 504 ->
             string model "timeout"
 

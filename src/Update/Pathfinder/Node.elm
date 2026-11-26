@@ -1,4 +1,4 @@
-module Update.Pathfinder.Node exposing (Node, move, moveAbs, release, setY)
+module Update.Pathfinder.Node exposing (Node, move, release, setY)
 
 import Animation exposing (Animation, Clock)
 import Model.Graph.Coords exposing (Coords)
@@ -22,14 +22,6 @@ move vector node =
     { node
         | dx = vector.x
         , dy = vector.y
-    }
-
-
-moveAbs : Coords -> Node a -> Node a
-moveAbs position node =
-    { node
-        | x = position.x
-        , y = node.y |> Animation.to position.y
     }
 
 

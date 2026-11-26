@@ -3,11 +3,13 @@ module Update.Pathfinder.Network exposing
     , addAddress
     , addAddressWithPosition
     , addConversion
+    , addRowConversion
     , addTx
     , addTxWithPosition
     , aggEdgeNeedsData
     , animateAddresses
     , animateTxs
+    , clearCrosschainSiblingsHovered
     , clearSelection
     , deleteAddress
     , deleteAggEdge
@@ -21,6 +23,7 @@ module Update.Pathfinder.Network exposing
     , insertFetchedEdge
     , resolveOverlapsExcept
     , rupsertAggEdge
+    , setCrosschainSiblingsHovered
     , setTxHovered
     , snapToGrid
     , trySetHoverConversionLoop
@@ -116,6 +119,39 @@ addConversion conversion inputTx outputTx network =
 
         _ ->
             network
+
+
+{-| Draws a conversion from its row alone (`ConversionEdge.drawsFromRow`):
+between the row's payer and payee, keyed by the row, with no leg tx. It shows
+once both addresses are on the graph, and goes with either of them.
+-}
+addRowConversion : Api.Data.ExternalConversion -> Network -> Network
+addRowConversion conversion network =
+    let
+        edge =
+            ConversionEdge.initFromRow conversion
+
+        edgeMapUpsertFn =
+            Maybe.map (Set.insert edge.id) >> Maybe.withDefault (Set.singleton edge.id) >> Just
+
+        -- the same row answered again must not snap a dragged icon back
+        keptOffset =
+            Dict.get edge.id network.conversions |> Maybe.andThen .nodeOffset
+    in
+    { network
+        | conversions =
+            Dict.insert edge.id
+                { edge
+                    | inputAddress = Dict.get edge.inputAddressId network.addresses
+                    , outputAddress = Dict.get edge.outputAddressId network.addresses
+                    , nodeOffset = keptOffset
+                }
+                network.conversions
+        , conversionsEdgeMap =
+            network.conversionsEdgeMap
+                |> Dict.update edge.inputAddressId edgeMapUpsertFn
+                |> Dict.update edge.outputAddressId edgeMapUpsertFn
+    }
 
 
 clearSelection : Network -> Network
@@ -745,8 +781,16 @@ trySetHoverConversionLoop tId isHovered network =
     case conversion of
         Just conv ->
             updateConversionEdge conv.id (s_hovered isHovered) network
-                |> updateTx (conv.rawInputTransaction |> Tx.getTxId) (s_hovered isHovered)
-                |> updateTx (conv.rawOutputTransaction |> Tx.getTxId) (s_hovered isHovered)
+                |> (\nw ->
+                        conv.legTxs
+                            |> Maybe.map
+                                (\legs ->
+                                    nw
+                                        |> updateTx (legs.input |> Tx.getTxId) (s_hovered isHovered)
+                                        |> updateTx (legs.output |> Tx.getTxId) (s_hovered isHovered)
+                                )
+                            |> Maybe.withDefault nw
+                   )
 
         Nothing ->
             network
@@ -894,6 +938,64 @@ updateAddress id update model =
 updateAllAddresses : (Address -> Address) -> Network -> Network
 updateAllAddresses upd model =
     model.addresses |> Dict.foldl (\id _ -> updateAddress id upd) model
+
+
+{-| The other nodes on the graph that are the address `id` on another chain:
+those either side lists in its `networks` (filled from the related-addresses
+lookup, e.g. a TRON address derived from the same key as an eth one), and,
+before that lookup has answered, the same `0x` address on another EVM chain.
+-}
+crosschainSiblingIds : Id -> Network -> List Id
+crosschainSiblingIds id model =
+    case Dict.get id model.addresses of
+        Nothing ->
+            []
+
+        Just hovered ->
+            let
+                lists owner other =
+                    Dict.get (Id.network other) owner.networks
+                        |> Maybe.map (Set.member (Id.id other))
+                        |> Maybe.withDefault False
+
+                sameEvmAddress a b =
+                    let
+                        evm x =
+                            String.startsWith "0x" (String.toLower x)
+                    in
+                    evm a && evm b && String.toLower a == String.toLower b
+
+                isSibling other =
+                    Id.network other.id
+                        /= Id.network id
+                        && (lists hovered other.id
+                                || lists other id
+                                || sameEvmAddress (Id.id id) (Id.id other.id)
+                           )
+            in
+            model.addresses
+                |> Dict.values
+                |> List.filter isSibling
+                |> List.map .id
+
+
+{-| Marks the cross-chain siblings of the hovered address `id`.
+-}
+setCrosschainSiblingsHovered : Id -> Network -> Network
+setCrosschainSiblingsHovered id model =
+    crosschainSiblingIds id model
+        |> List.foldl (\sibling -> updateAddress sibling (s_crosschainSiblingHovered True)) model
+
+
+{-| Clears every cross-chain sibling mark; only the marked nodes change, so the
+others keep their memoized rendering.
+-}
+clearCrosschainSiblingsHovered : Network -> Network
+clearCrosschainSiblingsHovered model =
+    model.addresses
+        |> Dict.values
+        |> List.filter .crosschainSiblingHovered
+        |> List.foldl (\a -> updateAddress a.id (s_crosschainSiblingHovered False)) model
 
 
 updateAddressesByClusterId : Id -> (Address -> Address) -> Network -> Network

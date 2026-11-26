@@ -899,6 +899,7 @@ graphSvg vc gc model dim =
             , gradient "account" { outgoing = True, reverse = True }
             , gradient "account" { outgoing = False, reverse = True }
             , dropShadowEdgeHighlight
+            , crosschainGlow
             ]
         , updTransform
             |> Transform.background
@@ -970,6 +971,43 @@ dropShadowEdgeHighlight =
                 [ in_ "SourceGraphic"
                 ]
                 []
+            ]
+        ]
+
+
+{-| The glow on the network icon of a node that is the hovered address on
+another chain (View.Pathfinder.Address). In the brand colour, which follows
+the light/dark theme because it is a CSS variable.
+-}
+crosschainGlow : Svg Msg
+crosschainGlow =
+    filter
+        [ id "crosschainGlow"
+        , x "-150%"
+        , y "-150%"
+        , width "400%"
+        , height "400%"
+        ]
+        [ feGaussianBlur
+            [ in_ "SourceAlpha"
+            , stdDeviation "3"
+            , result "blur"
+            ]
+            []
+        , feFlood
+            [ css [ Css.property "flood-color" Colors.brandPrimary ] ]
+            []
+        , feComposite
+            [ in2 "blur"
+            , operator "in"
+            , result "glow"
+            ]
+            []
+        , feMerge
+            []
+            [ feMergeNode [ in_ "glow" ] []
+            , feMergeNode [ in_ "glow" ] []
+            , feMergeNode [ in_ "SourceGraphic" ] []
             ]
         ]
 

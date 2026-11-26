@@ -718,6 +718,7 @@ updateHelp uc msg model =
                     { actorId = actorId
                     , actorLabel = actorLabel
                     , table = table
+                    , limitReached = False
                     , closeMsg = UserClosesDialog
                     }
                         |> Dialog.ActorTags
@@ -731,15 +732,31 @@ updateHelp uc msg model =
                 Just (Dialog.ActorTags config) ->
                     if config.actorId == actorId then
                         let
+                            -- no further page once the limit is reached; the
+                            -- list says it shows only the first ones when
+                            -- there were more
+                            room =
+                                Dialog.actorTagsLimit - List.length (InfiniteTable.getCurrentData config.table)
+
+                            limitReached =
+                                List.length tags.addressTags
+                                    > room
+                                    || (List.length tags.addressTags == room && tags.nextPage /= Nothing)
+
                             ( tbl, cmd, eff ) =
                                 InfiniteTable.appendData
                                     (actorTagsInfiniteTableConfig actorId)
                                     addressTagsFilter
-                                    tags.nextPage
-                                    tags.addressTags
+                                    (if limitReached then
+                                        Nothing
+
+                                     else
+                                        tags.nextPage
+                                    )
+                                    (List.take room tags.addressTags)
                                     config.table
                         in
-                        ( { model | dialog = Just (Dialog.ActorTags { config | table = tbl }) }
+                        ( { model | dialog = Just (Dialog.ActorTags { config | table = tbl, limitReached = config.limitReached || limitReached }) }
                         , CmdEffect (Cmd.map ActorTagsDialogTableMsg cmd) :: List.map ApiEffect eff
                         )
 

@@ -24,6 +24,7 @@ init id { x, y } =
     , data = NotAsked
     , selected = False
     , clusterSiblingHovered = False
+    , crosschainSiblingHovered = False
     , exchange = Nothing
     , actor = Nothing
     , hasTags = False

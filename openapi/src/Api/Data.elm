@@ -541,6 +541,12 @@ type alias ExternalConversion =
     , toAssetDecimals : Maybe Int
     , fromAmountFiatValues : Maybe (List Rate)
     , toAmountFiatValues : Maybe (List Rate)
+    -- hand-patched, optional: which bridge proves a bridge_tx row, the app on
+    -- top of it and the protocol's transfer id; drop once the spec carries
+    -- these fields
+    , protocol : Maybe String
+    , protocolApp : Maybe String
+    , transferId : Maybe String
     }
 
 
@@ -1687,6 +1693,9 @@ encodeExternalConversionPairs model =
             , maybeEncode "to_asset_decimals" Json.Encode.int model.toAssetDecimals
             , maybeEncode "from_amount_fiat_values" (Json.Encode.list encodeRate) model.fromAmountFiatValues
             , maybeEncode "to_amount_fiat_values" (Json.Encode.list encodeRate) model.toAmountFiatValues
+            , maybeEncode "protocol" Json.Encode.string model.protocol
+            , maybeEncode "protocol_app" Json.Encode.string model.protocolApp
+            , maybeEncode "transfer_id" Json.Encode.string model.transferId
             ]
     in
     pairs
@@ -2990,6 +2999,9 @@ externalConversionDecoder =
         |> maybeDecode "to_asset_decimals" Json.Decode.int Nothing
         |> maybeDecode "from_amount_fiat_values" (Json.Decode.list rateDecoder) Nothing
         |> maybeDecode "to_amount_fiat_values" (Json.Decode.list rateDecoder) Nothing
+        |> decodeChain (Json.Decode.maybe (Json.Decode.field "protocol" Json.Decode.string))
+        |> decodeChain (Json.Decode.maybe (Json.Decode.field "protocol_app" Json.Decode.string))
+        |> decodeChain (Json.Decode.maybe (Json.Decode.field "transfer_id" Json.Decode.string))
 
 
 externalConversionConversionTypeDecoder : Json.Decode.Decoder ExternalConversionConversionType

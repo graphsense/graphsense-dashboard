@@ -77,6 +77,15 @@ actorResultLines =
         >> List.map (\x -> Actor ( x.id, x.label ))
 
 
+{-| Actors in a main search box (top bar, Pathfinder) sit below the addresses
+and transactions, which are what that box is mostly for: a few are enough.
+The actor picker (SearchActorsOnly) lists all the API sends.
+-}
+mainSearchActorLimit : Int
+mainSearchActorLimit =
+    5
+
+
 filterByPrefix : String -> Api.Data.SearchResult -> Api.Data.SearchResult
 filterByPrefix input result =
     { result
@@ -130,7 +139,7 @@ update msg model =
                         case model.searchType of
                             SearchAll { latestBlocks } ->
                                 searchResultToResultLines query latestBlocks result
-                                    ++ actorResultLines result
+                                    ++ (actorResultLines result |> List.take mainSearchActorLimit)
                                     ++ labelResultLines result
 
                             SearchAddressAndTx conf ->
@@ -146,7 +155,7 @@ update msg model =
                                                     |> List.map .currency
                                         in
                                         List.concatMap (currencyToResultWithoutBlock query result) currency_filter
-                                            ++ actorResultLines result
+                                            ++ (actorResultLines result |> List.take mainSearchActorLimit)
 
                             SearchTagsOnly ->
                                 labelResultLines result

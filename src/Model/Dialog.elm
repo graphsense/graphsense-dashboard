@@ -1,4 +1,4 @@
-module Model.Dialog exposing (ActorTagsConfig, AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), WalletType(..), defaultMsg, exportFormatToString, initDrag, initExportConfig, placement, walletTypes)
+module Model.Dialog exposing (ActorTagsConfig, AddTagConfig, ClusterTagsState(..), ConfirmConfig, CustomConfig, CustomConfigWithVc, Drag, ErrorConfig, ErrorType(..), ExportArea(..), ExportConfig, ExportFormat(..), GeneralErrorConfig, InfoConfig, Model(..), OptionsConfig, Placement(..), PluginConfig, TagListConfig, TagsTab(..), WalletType(..), actorTagsLimit, defaultMsg, exportFormatToString, initDrag, initExportConfig, placement, walletTypes)
 
 import Api.Data
 import Components.InfiniteTable as InfiniteTable
@@ -122,14 +122,24 @@ type alias TagListConfig msg =
     }
 
 
-{-| The tags of an actor, across all its addresses, loaded page by page.
+{-| The tags of an actor, across all its addresses, loaded page by page, up
+to `actorTagsLimit`. `limitReached` once more were there than that.
 -}
 type alias ActorTagsConfig msg =
     { actorId : String
     , actorLabel : String
     , table : InfiniteTable.Model String Api.Data.AddressTag
+    , limitReached : Bool
     , closeMsg : msg
     }
+
+
+{-| How many tags of an actor the list loads at most. A large exchange has
+millions; scrolling through them would request page after page for no use.
+-}
+actorTagsLimit : Int
+actorTagsLimit =
+    1000
 
 
 type alias AddTagConfig msg =

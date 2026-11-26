@@ -3,29 +3,45 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [26.11.0] - 2026-11-25
 
 ### Added
-- A tags list for an actor: "Show tags" in the actor dialog lists the actor's tags across all its addresses (address and network, label, type and confidence, source, last modified), loading more while scrolling; a click on an address adds it to the graph, for networks this instance serves, and every address can be copied
-- Actors can be found with the main search boxes (top bar and Pathfinder), not only addresses and transactions; picking one opens the actor dialog
-- An actor dialog with the details of an actor: logo, legal name, websites, categories, all jurisdictions, the number of tags, and its social media and GitHub links. It opens on a click on the actor's name in the side panel or an actor chip in the address tables, from "Learn more" in the actor tooltip, and from an actor search result, which until now did nothing in the Pathfinder
-
-### Changed
-- The dashboard follows the system's light or dark mode, and switches live when it changes. The mode setting has three choices instead of a light/dark switch: System (the default), Light and Dark. Users who had picked dark keep it; everyone else moves to System once. PNG and PDF exports stay light in every mode
-- Downloaded graph files are named after the graph: "Save graph" writes `<timestamp> <graph name>.gs` (was the timestamp only), like the PDF and PNG export already did. A graph a plugin opens takes the name the plugin gives it (e.g. the reference of the record it belongs to) instead of the name stored in the graph data, so its downloads carry that name; a file the user opens keeps the name it was saved with. Characters not allowed in file names (`/ \ : * ? " < > |`) become `-`
-- The actor tooltip shows three jurisdictions and "... and N more" instead of all of them (Binance has 16)
-- Tag tooltips no longer join all labels into one comma list. The address tooltip shows the best label with "... and N more", a category's tooltip its three best labels one per line, a label's tooltip its categories one per line. Labels rank actor first (the label the tag summary picks for its actor), then by confidence and relevance, instead of alphabetically (category tooltip) or by relevance alone; the side panel's label chips use the same order. Blank labels are dropped and labels differing only in case or spacing count once. Where the API sends the new optional `actors` and `tag_types` of a label, only the best kind is shown and the rest counted: labels of an actor, else labels of other tags, else mentions. An actor label inherited from the cluster only counts as an actor label if the address has no label of its own
-
-- While Ctrl/Cmd is held, the toolbar shows the selection tool as active, so multi-select no longer works unseen, and the shortcut list names it
+- Actor dialog with an actor's details: logo, legal name, websites, categories, jurisdictions, number of tags, social media and GitHub links. Opens from the actor's name in the side panel, an actor chip in the address tables, "Learn more" in the actor tooltip, and an actor search result
+- Actors can be found with the main search boxes (top bar and Pathfinder), at most five below the addresses and transactions
+- Tags list for an actor ("Show tags" in the actor dialog): its tags across all its addresses, loaded while scrolling up to the first 1000 (a note says so when there are more). A click on an address adds it to the graph; every address can be copied
+- The bridge panel names the bridge protocol and links its explorer (Across, Relay, Wormhole, CCTP), where the REST API sends them
+- Bridges whose tokens are not in the token registry are drawn as a Bridge TX edge; the unregistered side shows "Unsupported token" instead of an amount. Needs a REST API that reports such bridges
+- Hovering an address makes the cross-chain icon glow on the same address on other chains in the graph
 - "Report a tag" can state the wallet type of the address: hot, cold, deposit or other
 
+### Changed
+- Bridges are laid out left to right in the order the money moves, from the sender through the bridge to the recipient; the receiving side used to be mirrored and pointed back to the left. Addresses already on the graph for another transaction stay where they are
+- The dashboard follows the system's light or dark mode: the setting is now System (default), Light or Dark. PNG and PDF exports stay light
+- Downloaded graph files are named after the graph (`<timestamp> <graph name>.gs`); a graph opened by a plugin takes the name the plugin gives it
+- Tag tooltips list labels ranked and one per line instead of as one comma list: actor labels first, then by confidence; blank and duplicate labels are dropped. The side panel's label chips use the same order
+- An actor label inherited from the cluster ranks below the address's own labels
+- The actor tooltip shows three jurisdictions and "... and N more"
+- While Ctrl/Cmd is held, the toolbar shows the selection tool as active
+- A half bridge's note names the source chain, where the REST API sends it
+- Timeouts (408) and unavailable services (503) from the API get readable messages instead of "bad status"
+
 ### Fixed
-- Addresses still load once the REST API stops sending the deprecated address `status` field (planned after 2026-12-31): the API client no longer requires it
-- Multi-select stuck on when the browser missed the release of Ctrl/Cmd: the next mouse move or click now ends it
-- Tooltip rows keep a gap between label and value; a long label such as the German "Schlagwörter" ran into the value
+- Swaps no longer put nodes on top of each other in a transaction with several swaps
+- A bridge's second leg no longer shows up somewhere else first and then jumps into place
+- With grid snapping on, a dragged bridge or swap icon snaps to the grid
+- Scrolling to the end of a long list and stopping there no longer keeps loading page after page
+- Native bridge legs are drawn, shown at the bridged amount and with their fiat value
+- An exchange's own deposit wallet tag no longer counts as a tag of another kind: such addresses keep the exchange icon in the in/output list and on the graph
+- The address panel shows the tag icon in front of the categories also for an address tagged only as an exchange
+- The address panel leaves out the First/Last usage rows when the address has no transaction for them
+- Addresses still load once the API stops sending the deprecated address `status` field (planned after 2026-12-31)
+- Multi-select no longer stays on when the browser missed the release of Ctrl/Cmd
+- Tooltip rows keep a gap between label and value
 
 ### Security
-- `tools/proxy-iknaio-api.sh` answers CORS only for local origins (`localhost`, `127.0.0.1`); it used to allow every origin with credentials, so any website open in the browser could use the developer's API key through a running proxy
+- npm dependencies updated (vite 8.3.8, dompurify 3.5.0, source-map-js 1.2.4, brace-expansion, minimatch)
+- The dev server and the preview listen on 127.0.0.1 only (`DEV_HOST` opens them on purpose); they were reachable from the whole network
+- `tools/proxy-iknaio-api.sh` answers CORS only for local origins; it used to allow every origin with credentials
 
 ## [26.10.1] - 2026-10-30
 
