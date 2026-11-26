@@ -1,7 +1,9 @@
 module Scenario.SelectionStatsPanelTest exposing (suite)
 
+import Dict
 import Expect
 import Html.Attributes
+import Init.Pathfinder.Address as Address
 import Init.Pathfinder.Id as Id
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
 import Msg.Pathfinder exposing (Msg(..))
@@ -51,4 +53,43 @@ suite =
                         [ App.html >> Query.findAll [ byTestId "gs-selection-stats" ] >> Query.count (Expect.equal 0)
                         , App.model >> .selection >> Expect.equal NoSelection
                         ]
+        , test "a floating toolbar shows the actions for the selection" <|
+            \_ ->
+                twoSelectedOnGraph
+                    |> App.html
+                    |> Query.find [ byTestId "gs-selection-toolbar" ]
+                    |> Query.findAll [ byTestId "gs-selection-toolbar-delete" ]
+                    |> Query.count (Expect.equal 1)
+        , test "its delete removes the selection, like the toolbar's delete" <|
+            \_ ->
+                twoSelectedOnGraph
+                    |> App.html
+                    |> Query.find [ byTestId "gs-selection-toolbar-delete" ]
+                    |> Event.simulate Event.click
+                    |> Event.expect UserClickedToolbarDeleteIcon
+        , test "no toolbar without a multi-selection" <|
+            \_ -> App.init |> App.html |> Query.findAll [ byTestId "gs-selection-toolbar" ] |> Query.count (Expect.equal 0)
         ]
+
+
+{-| The toolbar is placed over the selected nodes, so they must be on the graph.
+-}
+twoSelectedOnGraph : App
+twoSelectedOnGraph =
+    twoSelected
+        |> App.mapModel
+            (\m ->
+                let
+                    network =
+                        m.network
+                in
+                { m
+                    | network =
+                        { network
+                            | addresses =
+                                [ "0xa", "0xb" ]
+                                    |> List.map (\a -> ( Id.init "eth" a, Address.init (Id.init "eth" a) { x = 0, y = 0 } ))
+                                    |> Dict.fromList
+                        }
+                }
+            )

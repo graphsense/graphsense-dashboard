@@ -58,6 +58,7 @@ import View.Pathfinder.Network as Network
 import View.Pathfinder.RelationDetails as RelationDetails
 import View.Pathfinder.SearchBox as OnGraphSearchView
 import View.Pathfinder.SelectionStats as SelectionStatsView
+import View.Pathfinder.SelectionToolbar as SelectionToolbarView
 import View.Pathfinder.ShortcutHints as ShortcutHints
 import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.TxDetails as TxDetails
@@ -86,6 +87,12 @@ view pluginStates vc model =
     , topCenterPanel pluginStates vc gc model
     , topRightPanel pluginStates vc model
     , bottomCenterPanel vc model
+    , case ( model.selection, vc.size ) of
+        ( Pathfinder.MultiSelect selection, Just dim ) ->
+            SelectionToolbarView.view vc model selection dim
+
+        _ ->
+            none
     , OnGraphSearchView.view vc model.onGraphSearch
     , Util.Tooltip.view vc model
         |> Tooltip.view (Util.Tooltip.tooltipConfig vc TooltipMsg) model.tooltip
