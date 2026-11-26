@@ -19,6 +19,7 @@ import Effect.Api as Api exposing (Effect(..))
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Effect.Search
 import Encode.Pathfinder as Pathfinder
+import File.Download
 import Hovercard
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
@@ -61,7 +62,7 @@ import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
 import Model.Pathfinder.Overview as Overview
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.SearchBox as OnGraphSearch
-import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
+import Model.Pathfinder.Selection as Selection exposing (MultiSelectOptions(..), Selection(..))
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Model.Pathfinder.Tx as Tx exposing (Io, Tx)
@@ -333,6 +334,9 @@ appLevelOutMsgs msg model =
             [ OpenExportDialog time ]
 
         InternalExportGraphTxsCompleted ->
+            [ CloseExportDialog ]
+
+        BrowserGotGraphML _ _ ->
             [ CloseExportDialog ]
 
         UserReleasedEscape ->
@@ -3497,6 +3501,14 @@ updateByMsg uc msg model =
         InternalExportGraphTxsCompleted ->
             -- Handled by the shell; see appLevelOutMsgs.
             n model
+
+        BrowserGotGraphML filename graphml ->
+            -- the shell closes the dialog; see appLevelOutMsgs
+            ( model
+            , [ File.Download.string filename "application/graphml+xml" graphml
+                    |> CmdEffect
+              ]
+            )
 
         InternalChangedTxFilter id filter ->
             n { model | txsFilters = AssocList.insert id filter model.txsFilters }
@@ -7729,12 +7741,37 @@ updateByExportMsg uc msg conf model =
                 Dialog.ExportFormatPNG ->
                     exportGraphImage uc conf model
 
+                Dialog.ExportFormatGraphML ->
+                    ( model, [ exportGraphML conf model ] )
+
         _ ->
             -- Port-reply messages (BrowserSentBBox, BrowserRenderedGraphForExport,
             -- BrowserSentExportGraphResult) are dispatched at the top-level
             -- Update so that they fire even when the user has closed the export
             -- dialog mid-flight. See Update.elm `ExportDialogMsg`.
             n model
+
+
+{-| The graph, or the selected nodes, sent to the backend's converter
+(POST /graph/convert), which answers with the GraphML document. There is no
+"visible area" for a graph format: the dialog only offers the whole graph and
+the selection.
+-}
+exportGraphML : Dialog.ExportConfig msg -> Model -> Effect
+exportGraphML conf model =
+    Api.ConvertGraphToGraphMLEffect
+        { graph =
+            case conf.area of
+                Dialog.ExportAreaSelected ->
+                    Pathfinder.encodeSelection (Selection.toMultiSelect model.selection) model
+
+                _ ->
+                    Pathfinder.encode model
+        , aggregate = conf.graphmlAggregate
+        , includeTags = conf.graphmlIncludeTags
+        }
+        (BrowserGotGraphML conf.filename)
+        |> ApiEffect
 
 
 exportGraphTxs : Update.Config -> Dialog.ExportConfig msg -> Model -> ( Model, List Effect )

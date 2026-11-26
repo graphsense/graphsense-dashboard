@@ -676,6 +676,12 @@ export-dialog-only-visible-inoutputs-help: Când este activat, CSV-ul conține d
   dintre intrările și ieșirile vizibile în graf. Dezactivează pentru a exporta întreaga matrice
   de intrări/ieșiri — pentru tranzacții cu multe intrări și ieșiri aceasta poate genera un
   fișier foarte mare.
+export-dialog-graphml-aggregate: "GraphML: o muchie per expeditor și destinatar"
+export-dialog-graphml-aggregate-help: "Când este activat, GraphML conține o muchie per expeditor, destinatar și activ (valoare totală, număr de tranzacții, prima și ultima dată) în loc de un nod per tranzacție. O tranzacție UTXO cu mai mulți expeditori nu spune cine pe cine a plătit, așa că astfel de muchii nu au valoare."
+export-dialog-graphml-include-tags: "GraphML: include etichetele adreselor"
+export-dialog-graphml-include-tags-help: "Adaugă în GraphML atribuirea la nivel de adresă (fără etichete de cluster). Durează mai mult la grafuri mari."
+export-dialog-graphml-too-many-nodes: "Exportul GraphML acceptă cel mult {0} noduri (adrese și tranzacții)"
+statusbar-converting-graphml: "se convertește graficul în GraphML"
 csv-note-capped: Tranzacție prea mare – au fost exportate doar fluxurile cu o adresă vizibilă,
   trunchiate la limita de export.
 csv-note-visible-only: Au fost exportate doar fluxurile cu o adresă vizibilă.

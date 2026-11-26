@@ -12,6 +12,7 @@ import Api.Request.Tags
 import Api.Request.Tokens
 import Api.Request.Txs
 import Api.Time exposing (Posix, dateTimeDecoder)
+import Dict
 import Http
 import Json.Decode
 import Json.Encode
@@ -22,6 +23,7 @@ import Sha256
 import Task
 import Time
 import Tuple exposing (pair)
+import Url.Builder
 import Util.Http exposing (Headers)
 
 
@@ -338,6 +340,15 @@ type Effect msg
         , nextpage : Maybe String
         }
         (Api.Data.Txs -> msg)
+      {- POST /graph/convert?to=graphml (beta): the Pathfinder graph as the
+         dashboard encodes it, answered with the GraphML document as text.
+      -}
+    | ConvertGraphToGraphMLEffect
+        { graph : Json.Encode.Value
+        , aggregate : Bool
+        , includeTags : Bool
+        }
+        (String -> msg)
     | CancelEffect String
 
 
@@ -353,6 +364,11 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> AddUserReportedTag eff
+
+        ConvertGraphToGraphMLEffect eff m ->
+            m
+                >> mapMsg
+                |> ConvertGraphToGraphMLEffect eff
 
         GetAddressTagSummaryEffect eff m ->
             m
@@ -951,6 +967,42 @@ perform apiKey extraHeaders wrapMsg cancelMsg effect =
             Api.Request.Txs.listTxFlows currency txHash (Just (not includeZeroValueSubTxs)) Nothing token_currency nextpage pagesize
                 |> send apiKey extraHeaders wrapMsg effect toMsg
 
+        ConvertGraphToGraphMLEffect { graph, aggregate, includeTags } toMsg ->
+            Http.riskyRequest
+                { method = "POST"
+                , headers =
+                    (if String.isEmpty apiKey then
+                        extraHeaders
+
+                     else
+                        ( "Authorization", apiKey ) :: extraHeaders
+                    )
+                        |> List.map (\( k, v ) -> Http.header k v)
+                , url =
+                    Url.Builder.crossOrigin Api.baseUrl
+                        [ "graph", "convert" ]
+                        ([ Url.Builder.string "to" "graphml"
+                         , Url.Builder.string "tx_mode"
+                            (if aggregate then
+                                "aggregate"
+
+                             else
+                                "node"
+                            )
+                         ]
+                            ++ (if includeTags then
+                                    [ Url.Builder.string "include" "tags" ]
+
+                                else
+                                    []
+                               )
+                        )
+                , body = Http.jsonBody graph
+                , expect = expectTextWithHeaders wrapMsg effect toMsg
+                , timeout = Nothing
+                , tracker = Nothing
+                }
+
         CancelEffect tracker ->
             [ Http.cancel tracker
             , Task.succeed ()
@@ -1124,6 +1176,11 @@ retryToken effect =
             Nothing
 
         AddUserReportedTag _ _ ->
+            Nothing
+
+        -- one tx lookup per tx node on the backend: a timeout retried would
+        -- only double that load
+        ConvertGraphToGraphMLEffect _ _ ->
             Nothing
 
         CancelEffect _ ->
@@ -1349,6 +1406,31 @@ send apiKey extraHeaders wrapMsg effect toMsg =
     withAuthorization apiKey
         >> Api.withHeaders extraHeaders
         >> Api.sendAndAlsoReceiveHeaders wrapMsg effect toMsg
+
+
+{-| Like the generated client's JSON expectation, for a plain-text body: the
+same error triple, so retries, notifications and the statusbar treat it like
+any other API response.
+-}
+expectTextWithHeaders : (Result ( Http.Error, Headers, eff ) ( Headers, msg ) -> msg) -> eff -> (String -> msg) -> Http.Expect msg
+expectTextWithHeaders wrapMsg eff toMsg =
+    Http.expectStringResponse wrapMsg <|
+        \response ->
+            case response of
+                Http.BadUrl_ url ->
+                    Err ( Http.BadUrl url, Dict.empty, eff )
+
+                Http.Timeout_ ->
+                    Err ( Http.Timeout, Dict.empty, eff )
+
+                Http.NetworkError_ ->
+                    Err ( Http.NetworkError, Dict.empty, eff )
+
+                Http.BadStatus_ metadata _ ->
+                    Err ( Http.BadStatus metadata.statusCode, metadata.headers, eff )
+
+                Http.GoodStatus_ metadata body ->
+                    Ok ( metadata.headers, toMsg body )
 
 
 isOutgoingToDirection : Bool -> Api.Request.Clusters.Direction

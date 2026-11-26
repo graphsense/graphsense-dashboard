@@ -579,6 +579,9 @@ messageFromApiEffect model effect =
                 )
                     |> Just
 
+            Api.ConvertGraphToGraphMLEffect _ _ ->
+                ( "statusbar-converting-graphml", [] ) |> Just
+
             Api.CancelEffect _ ->
                 Nothing
 

@@ -185,6 +185,15 @@ type alias ExportConfig msg =
     -- the graph are exported. Defaults to True to avoid exploding the CSV for
     -- large transactions (see initExportConfig). Ignored for non-CSV formats.
     , onlyVisibleIos : Bool
+
+    -- GraphML export only (POST /graph/convert): one edge per sender,
+    -- receiver and asset instead of one node per transaction, and the
+    -- address-level attribution in the document.
+    , graphmlAggregate : Bool
+    , graphmlIncludeTags : Bool
+
+    -- Addresses plus txs per area, for the backend's node cap on GraphML.
+    , nodeCounts : { whole : Int, selected : Int }
     }
 
 
@@ -198,6 +207,7 @@ type ExportFormat
     = ExportFormatPDF
     | ExportFormatPNG
     | ExportFormatCSV
+    | ExportFormatGraphML
 
 
 exportFormatToString : ExportFormat -> String
@@ -211,6 +221,9 @@ exportFormatToString format =
 
         ExportFormatCSV ->
             "csv"
+
+        ExportFormatGraphML ->
+            "graphml"
 
 
 type alias PluginConfig msg =
@@ -287,9 +300,10 @@ initExportConfig :
         , filenameBase : String
         , closeMsg : msg
         , time : Time.Posix
+        , nodeCount : Int
         }
     -> ExportConfig msg
-initExportConfig uc { selection, filenameBase, closeMsg, time } =
+initExportConfig uc { selection, filenameBase, closeMsg, time, nodeCount } =
     { closeMsg = closeMsg
     , area =
         case selection of
@@ -309,5 +323,11 @@ initExportConfig uc { selection, filenameBase, closeMsg, time } =
     -- Default to exporting only visible inputs/outputs so large transactions
     -- don't blow up the CSV.
     , onlyVisibleIos = True
+    , graphmlAggregate = False
+    , graphmlIncludeTags = True
+    , nodeCounts =
+        { whole = nodeCount
+        , selected = Selection.toMultiSelect selection |> List.length
+        }
     , hasSelections = selection /= NoSelection
     }

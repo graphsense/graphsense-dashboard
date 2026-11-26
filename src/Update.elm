@@ -564,6 +564,15 @@ updateHelp uc msg model =
 
                 dialogAfterError =
                     case result of
+                        -- the export failed: the dialog stays open for another try
+                        Err ( _, _, Effect.Api.ConvertGraphToGraphMLEffect _ _ ) ->
+                            case newDialog of
+                                Just (Dialog.Export conf) ->
+                                    Just (Dialog.Export { conf | exporting = False })
+
+                                _ ->
+                                    newDialog
+
                         Err ( _, _, Effect.Api.GetAddressTagsEffect _ _ ) ->
                             case newDialog of
                                 Just (Dialog.TagsList conf) ->
@@ -2107,6 +2116,9 @@ applyPathfinderOutMsg uc pathfinderOutMsg ( model, effects ) =
                             , closeMsg = UserClosesDialog
                             , time = t
                             , selection = model.pathfinder.selection
+                            , nodeCount =
+                                Dict.size model.pathfinder.network.addresses
+                                    + Dict.size model.pathfinder.network.txs
                             }
                             |> Dialog.Export
                             |> Just

@@ -16,3 +16,5 @@ type Msg
     | UserLeavesFilename
     | UserClickedTransparentBackground
     | UserClickedOnlyVisibleInOutputs
+    | UserClickedGraphMLAggregate
+    | UserClickedGraphMLIncludeTags
