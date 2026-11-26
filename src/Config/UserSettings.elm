@@ -28,6 +28,8 @@ type alias UserSettings =
     , showBothValues : Maybe Bool
     , liteNetworks : Maybe Bool
     , avoidOverlapingNodes : Maybe Bool
+    , graphFilterLimit : Maybe Float
+    , overviewHidden : Maybe Bool
     , recentSearches : List ResultLine
 
     -- , showLabelsInTaggingOverview : Maybe Bool
@@ -85,6 +87,8 @@ decoder =
         |> optional "showBothValues" (nullable bool |> fromString) Nothing
         |> optional "liteNetworks" (nullable bool |> fromString) Nothing
         |> optional "avoidOverlapingNodes" (nullable bool |> fromString) Nothing
+        |> optional "graphFilterLimit" (nullable Decode.float |> fromString) Nothing
+        |> optional "overviewHidden" (nullable bool |> fromString) Nothing
         |> optional "recentSearches"
             (Decode.oneOf
                 [ if persistRecentSearches then
@@ -165,6 +169,8 @@ encoder settings =
         , ( "showBothValues", settings.showBothValues |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "liteNetworks", settings.liteNetworks |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "avoidOverlapingNodes", settings.avoidOverlapingNodes |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+        , ( "graphFilterLimit", settings.graphFilterLimit |> Maybe.map Json.Encode.float |> Maybe.withDefault Json.Encode.null )
+        , ( "overviewHidden", settings.overviewHidden |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "recentSearches"
           , (if persistRecentSearches then
                 settings.recentSearches
@@ -293,6 +299,8 @@ default locale =
     , showBothValues = Nothing
     , liteNetworks = Nothing
     , avoidOverlapingNodes = Nothing
+    , graphFilterLimit = Nothing
+    , overviewHidden = Nothing
     , recentSearches = []
 
     -- , showLabelsInTaggingOverview = Nothing

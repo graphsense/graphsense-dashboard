@@ -28,8 +28,15 @@ import Util.Annotations as Annotations
 import Util.EventualMessages as EventualMessages
 
 
-init : { x | snapToGrid : Maybe Bool, highlightClusterFriends : Maybe Bool, tracingMode : Maybe TracingMode, avoidOverlapingNodes : Maybe Bool, recentSearches : List Model.Search.ResultLine } -> ( Model, Cmd Msg )
+init : { x | snapToGrid : Maybe Bool, highlightClusterFriends : Maybe Bool, tracingMode : Maybe TracingMode, avoidOverlapingNodes : Maybe Bool, graphFilterLimit : Maybe Float, overviewHidden : Maybe Bool, recentSearches : List Model.Search.ResultLine } -> ( Model, Cmd Msg )
 init us =
+    let
+        graphFilterInit =
+            GraphFilter.init
+
+        overviewInit =
+            Overview.init
+    in
     ( { route = Route.Root
       , network = Network.init
       , actors = Dict.empty
@@ -43,9 +50,17 @@ init us =
       , hovered = NoHover
       , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) us.recentSearches
       , onGraphSearch = SearchBox.empty
-      , graphFilter = GraphFilter.init
+      , graphFilter =
+            us.graphFilterLimit
+                |> Maybe.map (\limit -> { graphFilterInit | limit = limit })
+                |> Maybe.withDefault graphFilterInit
       , highlighting = Highlighting.init
-      , overview = Overview.init
+      , overview =
+            if us.overviewHidden == Just True then
+                { overviewInit | visibility = Overview.Hidden }
+
+            else
+                overviewInit
       , dragging = NoDragging
       , draggingAggEdgeLabel = Nothing
       , draggingConversionNode = Nothing

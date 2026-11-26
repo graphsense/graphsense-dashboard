@@ -19,6 +19,7 @@ import Model.NetworkCapabilities exposing (NetworkCapabilities)
 import Model.Notification
 import Model.Pathfinder
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Overview as Overview
 import Model.Search
 import Model.Statusbar
 import Model.ThemeMode exposing (ThemeMode)
@@ -267,5 +268,7 @@ userSettingsFromMainModel model =
     , showBothValues = Just model.config.showBothValues
     , liteNetworks = Just model.config.liteNetworks
     , avoidOverlapingNodes = Just model.pathfinder.config.avoidOverlapingNodes
+    , graphFilterLimit = Just model.pathfinder.graphFilter.limit
+    , overviewHidden = Just (model.pathfinder.overview.visibility == Overview.Hidden)
     , recentSearches = model.search.recentSearches
     }

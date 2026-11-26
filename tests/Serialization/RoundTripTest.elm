@@ -56,6 +56,8 @@ emptyModel =
         , highlightClusterFriends = Nothing
         , tracingMode = Nothing
         , avoidOverlapingNodes = Nothing
+        , graphFilterLimit = Nothing
+        , overviewHidden = Nothing
         , recentSearches = []
         }
         |> Tuple.first

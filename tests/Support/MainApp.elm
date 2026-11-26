@@ -125,6 +125,8 @@ initialModel url =
             , highlightClusterFriends = Nothing
             , tracingMode = Nothing
             , avoidOverlapingNodes = Nothing
+            , graphFilterLimit = Nothing
+            , overviewHidden = Nothing
             , recentSearches = []
             }
             |> first

@@ -21,6 +21,8 @@ import Model.Notification as Notification
 import Model.Search
 import Model.ThemeMode as ThemeMode
 import Msg.Pathfinder
+import Msg.Pathfinder.GraphFilter
+import Msg.Pathfinder.Overview
 import Msg.Search
 import RemoteData
 import Support.MainApp as App exposing (App)
@@ -371,6 +373,21 @@ suite =
                     App.initAt "/settings"
                         |> App.step (UserSwitchesLocale "de")
                         |> App.expectEffect "a SaveUserSettingsEffect" isSaveSettings
+            , test "hiding the overview map writes the settings" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.step (PathfinderMsg (Msg.Pathfinder.OverviewMsg Msg.Pathfinder.Overview.UserClickedHideOverview))
+                        |> App.expectEffect "a SaveUserSettingsEffect" isSaveSettings
+            , test "changing the tiny-transfer limit writes the settings" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.step (PathfinderMsg (Msg.Pathfinder.GraphFilterMsg (Msg.Pathfinder.GraphFilter.UserChangedLimit 50)))
+                        |> App.expectEffect "a SaveUserSettingsEffect" isSaveSettings
+            , test "turning a filter on does not write the settings" <|
+                \_ ->
+                    App.initAt "/pathfinder"
+                        |> App.step (PathfinderMsg (Msg.Pathfinder.GraphFilterMsg Msg.Pathfinder.GraphFilter.UserToggledHideTiny))
+                        |> App.expectNoEffect "a SaveUserSettingsEffect" isSaveSettings
             , test "choosing a theme mode writes the settings" <|
                 \_ ->
                     App.initAt "/settings"

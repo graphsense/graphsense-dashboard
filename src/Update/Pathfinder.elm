@@ -6722,6 +6722,8 @@ fromDeserialized uc deserialized model =
                 , highlightClusterFriends = Just model.config.highlightClusterFriends
                 , tracingMode = Just model.config.tracingMode
                 , avoidOverlapingNodes = Just model.config.avoidOverlapingNodes
+                , graphFilterLimit = Just model.graphFilter.limit
+                , overviewHidden = Just (model.overview.visibility == Overview.Hidden)
                 , recentSearches = model.search.recentSearches
                 }
     in

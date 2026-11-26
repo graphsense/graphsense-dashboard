@@ -2211,6 +2211,7 @@ updatePathfinderMsg uc m model =
                 |> applyPathfinderOutMsgs uc outMsgs
                 |> notifyPluginsOfPathfinderMsg uc m
                 |> syncRecentSearches pathfinderOld
+                |> syncFilterPreferences pathfinderOld
     in
     if newModel.pathfinder.network == pathfinderOld.network && newModel.pathfinder.annotations == pathfinderOld.annotations then
         ( newModel, newEffects )
@@ -2244,6 +2245,21 @@ syncRecentSearches pathfinderOld ( model, effects ) =
                 syncRecentsFromPathfinder model
         in
         ( synced, effects ++ [ saveUserSettings synced ] )
+
+
+{-| Persist the on-graph filter preferences (the tiny-transfer limit, whether
+the overview map is hidden) once a Pathfinder message changed them.
+-}
+syncFilterPreferences : Model.Pathfinder.Model -> ( Model key, List Effect ) -> ( Model key, List Effect )
+syncFilterPreferences pathfinderOld ( model, effects ) =
+    if
+        (model.pathfinder.graphFilter.limit == pathfinderOld.graphFilter.limit)
+            && (model.pathfinder.overview.visibility == pathfinderOld.overview.visibility)
+    then
+        ( model, effects )
+
+    else
+        ( model, effects ++ [ saveUserSettings model ] )
 
 
 updateByPluginOutMsg : Config -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
