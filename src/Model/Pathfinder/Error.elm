@@ -12,6 +12,7 @@ type Error
 
 type InfoError
     = TxTracingThroughService Id (Maybe String)
+    | TxTracingThroughMixer Id
     | NoAdjaccentTxForAddressFound Id
     | NoAdjacentTxForAddressAndNeighborFound Id Id
     | MaxChangeHopsLimitReached Int Id

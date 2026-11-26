@@ -73,6 +73,12 @@ pathFinderErrorToNotifications err =
                 |> Notify.map (Rs.s_variables [ Id.id tid |> truncateLongIdentifier, String.fromInt max ])
                 |> List.singleton
 
+        InfoError (TxTracingThroughMixer txId) ->
+            Notify.infoDefault "Infobox-auto-tracing-stops-at-mixer"
+                |> Notify.map (Rs.s_title (Just "auto trace limit"))
+                |> Notify.map (Rs.s_variables [ Id.id txId |> truncateLongIdentifier ])
+                |> List.singleton
+
         InfoError (TxTracingThroughService id exchangeLabel) ->
             Notify.infoDefault "Infobox-auto-tracing-stops-at-service"
                 |> Notify.map (Rs.s_title (Just "auto trace limit"))

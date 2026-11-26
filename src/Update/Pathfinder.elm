@@ -6111,11 +6111,41 @@ addTx uc anchorAddressId direction addressId tx model =
             address =
                 Id.id anchorAddressId
 
+            -- A CoinJoin breaks the link between its inputs and outputs, so
+            -- the "biggest" address on the far side is not where the anchor's
+            -- funds came from or went to. Land on the tx but place no address
+            -- beyond it; picking one from the io table (which passes
+            -- `addressId`) stays possible as a deliberate choice.
+            stopsAtMixer =
+                addressId
+                    == Nothing
+                    && (case newTx.type_ of
+                            Tx.Utxo { raw } ->
+                                Tx.isRawCoinJoin raw
+
+                            Tx.Account _ ->
+                                False
+                       )
+
             -- TODO what if multisig?
             firstAddress =
-                addressId
-                    |> Maybe.Extra.orElse
-                        (getAddressForDirection newTx direction (Set.singleton address))
+                if stopsAtMixer then
+                    Nothing
+
+                else
+                    addressId
+                        |> Maybe.Extra.orElse
+                            (getAddressForDirection newTx direction (Set.singleton address))
+
+            mixerNotice =
+                if stopsAtMixer then
+                    [ TxTracingThroughMixer newTx.id
+                        |> InfoError
+                        |> ErrorEffect
+                    ]
+
+                else
+                    []
         in
         firstAddress
             |> Maybe.map
@@ -6128,6 +6158,7 @@ addTx uc anchorAddressId direction addressId tx model =
                 )
             |> Maybe.withDefault (n newmodel)
             |> and (autoLoadConversions Set.empty newTx)
+            |> Tuple.mapSecond (\eff -> eff ++ mixerNotice)
 
 
 checkSelection : Update.Config -> Model -> ( Model, List Effect )

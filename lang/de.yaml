@@ -421,6 +421,7 @@ infobox-auto-tracing-stops-at-service: Die automatische Nachverfolgung endet an 
 copy address ID: Adress ID kopieren
 copy transaction ID: Transaktions ID kopieren
 auto trace limit: Beschränkung der Auto-Nachverfolgung
+infobox-auto-tracing-stops-at-mixer: "Die automatische Nachverfolgung endet bei {0}, einer CoinJoin-Transaktion (Mixing). Ein CoinJoin trennt die Verbindung zwischen Ein- und Ausgängen, daher lässt sich keine einzelne Adresse auf der anderen Seite als Herkunft oder Ziel der Mittel benennen. Sie können manuell weitermachen, indem Sie eine Adresse aus den Ein- oder Ausgängen der Transaktion wählen."
 infobox-no-suitable-adjacent-transaction: Keine passende Anschlusstransaktion für
   Adresse {0} gefunden. Wahrscheinlich wurde der Betrag noch nicht weiter verwendet.
 save file: Als Datei speichen
