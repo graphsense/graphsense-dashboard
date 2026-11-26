@@ -57,6 +57,7 @@ import View.Pathfinder.ConversionDetails as ConversionDetails
 import View.Pathfinder.Network as Network
 import View.Pathfinder.RelationDetails as RelationDetails
 import View.Pathfinder.SearchBox as OnGraphSearchView
+import View.Pathfinder.SelectionStats as SelectionStatsView
 import View.Pathfinder.ShortcutHints as ShortcutHints
 import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.TxDetails as TxDetails
@@ -658,7 +659,12 @@ settingsHovercardView vc pm hc =
 topRightPanel : ModelState -> View.Config -> Pathfinder.Model -> Html Msg
 topRightPanel pluginStates vc model =
     div [ Css.topRightPanelStyle vc |> css ]
-        [ detailsView pluginStates vc model
+        [ case model.selection of
+            Pathfinder.MultiSelect selection ->
+                SelectionStatsView.view vc model selection
+
+            _ ->
+                detailsView pluginStates vc model
         ]
 
 
