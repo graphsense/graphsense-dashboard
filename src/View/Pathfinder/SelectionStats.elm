@@ -11,14 +11,15 @@ its own: the generated side-panel rows assume the address panel's layout.
 import Config.View as View
 import Css
 import Html.Styled exposing (Html, div, span, text)
-import Html.Styled.Attributes exposing (css)
+import Html.Styled.Attributes exposing (css, title)
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.Selection exposing (MultiSelectOptions)
 import Model.Pathfinder.SelectionStats as SelectionStats
-import Msg.Pathfinder exposing (Msg)
+import Msg.Pathfinder exposing (Msg(..))
 import Theme.Colors as Colors
+import Theme.Html.Icons as Icons
 import Time
-import Util.View exposing (testId)
+import Util.View exposing (onClickWithStop, testId)
 import View.Locale as Locale
 
 
@@ -73,8 +74,17 @@ view vc model selection =
             , Css.marginRight (Css.px 16)
             ]
         ]
-        ([ div [ css [ Css.fontSize (Css.px 20), Css.fontWeight (Css.int 600) ] ]
-            [ text (Locale.interpolated vc.locale "{0} selected" [ String.fromInt (stats.addresses + stats.txs) ]) ]
+        ([ div [ css [ Css.displayFlex, Css.alignItems Css.flexStart ] ]
+            [ div [ css [ Css.flexGrow (Css.num 1), Css.fontSize (Css.px 20), Css.fontWeight (Css.int 600) ] ]
+                [ text (Locale.interpolated vc.locale "{0} selected" [ String.fromInt (stats.addresses + stats.txs) ]) ]
+            , span
+                [ testId "gs-selection-stats-close"
+                , title (Locale.string vc.locale "Close")
+                , css [ Css.cursor Css.pointer, Css.displayFlex ]
+                , onClickWithStop UserClosedDetailsView
+                ]
+                [ Icons.iconsCloseBlack {} ]
+            ]
          , div [ css [ Css.fontSize (Css.px 12), Css.property "color" Colors.greyBlue500, Css.marginTop (Css.px 2) ] ]
             [ text
                 (Locale.interpolated vc.locale
