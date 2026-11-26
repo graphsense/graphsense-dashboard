@@ -4,9 +4,8 @@ module View.Pathfinder.SelectionToolbar exposing (view)
 actions for several nodes are visible without knowing the right-click menu
 (Adva's "quick actions" idea, Slack 2026-11-10/13; light, not dark).
 
-Draft: the actions that exist for a multi-selection today, plus "Group" and
-"Find paths" shown disabled as placeholders for the discussion. The
-statistics stay in the side panel (`View.Pathfinder.SelectionStats`).
+Draft: the actions that exist for a multi-selection today. The statistics
+stay in the side panel (`View.Pathfinder.SelectionStats`).
 
 -}
 
@@ -99,22 +98,6 @@ view vc model selection dim =
                         ]
                         [ icon ]
 
-                placeholder label =
-                    span
-                        [ title (Locale.string vc.locale "Not built yet")
-                        , css
-                            [ Css.padding2 Css.zero (Css.px 10)
-                            , Css.height (Css.px 26)
-                            , Css.displayFlex
-                            , Css.alignItems Css.center
-                            , Css.borderRadius (Css.px 4)
-                            , Css.fontSize (Css.px 12)
-                            , Css.property "color" Colors.greyBlue200
-                            , Css.property "border" ("1px dashed " ++ Colors.greyBlue200)
-                            ]
-                        ]
-                        [ text label ]
-
                 separator =
                     span [ css [ Css.width (Css.px 1), Css.height (Css.px 18), Css.property "background-color" Colors.greyBlue100, Css.margin2 Css.zero (Css.px 4) ] ] []
             in
@@ -143,7 +126,7 @@ view vc model selection dim =
                         , Css.alignItems Css.center
                         , Css.property "gap" "4px"
                         , Css.height (Css.px 26)
-                        , Css.padding3 Css.zero (Css.px 4) (Css.px 10)
+                        , Css.padding4 Css.zero (Css.px 4) Css.zero (Css.px 10)
                         , Css.borderRadius (Css.px 13)
                         , Css.property "background-color" Colors.blue50
                         , Css.property "color" Colors.blue700
@@ -152,15 +135,27 @@ view vc model selection dim =
                         ]
                     ]
                     [ text (Locale.interpolated vc.locale "{0} selected" [ String.fromInt (List.length selection) ])
-                    , button "gs-selection-toolbar-clear" (Locale.string vc.locale "Clear selection") (Icons.iconsCloseSnoPadding {}) UserClosedDetailsView
+                    , span
+                        [ testId "gs-selection-toolbar-clear"
+                        , title (Locale.string vc.locale "Clear selection")
+                        , onClickWithStop UserClosedDetailsView
+                        , css
+                            [ Css.displayFlex
+                            , Css.alignItems Css.center
+                            , Css.justifyContent Css.center
+                            , Css.width (Css.px 18)
+                            , Css.height (Css.px 18)
+                            , Css.borderRadius (Css.px 9)
+                            , Css.cursor Css.pointer
+                            , Css.hover [ Css.property "background-color" Colors.blue100 ]
+                            ]
+                        ]
+                        [ Icons.iconsCloseSnoPadding {} ]
                     ]
                 , separator
                 , button "gs-selection-toolbar-align" (Locale.string vc.locale "Align horizontally") (Icons.iconsHorizontalAlign {}) UserClickedContextMenuAlignHorizontally
                 , button "gs-selection-toolbar-annotate" (Locale.string vc.locale "Annotate") (Icons.iconsAnnotateS {}) UserToggleAnnotationSettings
                 , button "gs-selection-toolbar-newtab" (Locale.string vc.locale "Open in new tab") (Icons.iconsGoToS {}) (UserClickedContextMenuOpenInNewTab (AddressContextMenu first.id))
-                , separator
-                , placeholder (Locale.string vc.locale "Group")
-                , placeholder (Locale.string vc.locale "Find paths")
                 , separator
                 , button "gs-selection-toolbar-delete" (Locale.string vc.locale "Remove from graph") (Icons.iconsDeleteS {}) UserClickedToolbarDeleteIcon
                 ]
