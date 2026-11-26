@@ -124,7 +124,15 @@ popover vc model hc =
     div
         [ testId "gs-graph-filter"
         , css
+            -- the hovercard draws only the tick; the panel brings its own
+            -- background, as the display settings panel does
             [ Css.width (Css.px 320)
+            , Css.property "background-color" Colors.white
+            , Css.borderRadius (Css.px 5)
+            , Css.border3 (Css.px 1) Css.solid Css.transparent
+            , Css.property "border-color" Colors.greyBlue100
+            , Css.property "box-shadow" ("0 4px 12px " ++ Colors.greyShadow)
+            , Css.overflow Css.hidden
             , Css.property "color" Colors.greyBlue900
             , Css.fontSize (Css.px 12)
             ]
