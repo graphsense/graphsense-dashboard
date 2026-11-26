@@ -12,7 +12,7 @@ import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.SearchBox exposing (Highlight, dimmedOpacity)
+import Model.Pathfinder.SearchBox exposing (Highlight, edgeAttrs)
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter as Rs
 import Svg.PathD exposing (Segment(..), pathD)
@@ -571,7 +571,7 @@ view vc searchHighlight conversion displacementIndex inputAddress outputAddress 
          , UserMovesMouseOverConversionEdge id conversion
             |> onMouseOver
          ]
-            ++ dimmedOpacity searchHighlight
+            ++ edgeAttrs searchHighlight
         )
         ((if hl then
             [ path

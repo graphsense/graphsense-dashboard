@@ -173,6 +173,16 @@ aggRelations vc level hovered selection highlighting txs agg =
             in
             searchDimmed || focusDimmed
 
+        lookOf edge =
+            if Highlighting.forAggEdge highlighting ( edge.a, edge.b ) == Just SearchBox.FilteredOut then
+                Filtered
+
+            else if isDimmed edge then
+                Dimmed
+
+            else
+                Normal
+
         -- edges paired with their resolved endpoint addresses
         placedEdges =
             agg_
@@ -203,12 +213,12 @@ aggRelations vc level hovered selection highlighting txs agg =
     Svg.g []
         [ placedEdges
             |> List.map
-                (\( edge, a, b ) -> aggEdgeEdge vc (isDimmed edge) (offsetFor edge) edge a b)
+                (\( edge, a, b ) -> aggEdgeEdge vc (lookOf edge) (offsetFor edge) edge a b)
             |> Keyed.node "g" []
         , if level == Full then
             placedEdges
                 |> List.map
-                    (\( edge, a, b ) -> aggEdgeNode vc (isDimmed edge) (offsetFor edge) edge a b)
+                    (\( edge, a, b ) -> aggEdgeNode vc (lookOf edge) (offsetFor edge) edge a b)
                 |> Keyed.node "g" []
 
           else
@@ -441,21 +451,45 @@ search. The opacity is always set (not only when dimmed) and carries a CSS
 transition, so focus changes fade smoothly instead of snapping — this avoids
 the flicker that hard toggling caused when the mouse moves across the graph.
 -}
-dimAttrs : Bool -> List (Svg.Attribute Msg)
-dimAttrs dimmed =
+dimAttrs : EdgeLook -> List (Svg.Attribute Msg)
+dimAttrs look =
     [ css
-        [ Css.opacity
+        ([ Css.opacity
             (Css.num
-                (if dimmed then
-                    0.15
+                (case look of
+                    Dimmed ->
+                        0.15
 
-                 else
-                    1
+                    Filtered ->
+                        0.35
+
+                    Normal ->
+                        1
                 )
             )
-        , Css.property "transition" "opacity 0.2s ease-in-out"
-        ]
+         , Css.property "transition" "opacity 0.2s ease-in-out"
+         ]
+            -- one css value: two would each become a class, and which wins
+            -- would depend on how their text sorts (see .claude/CLAUDE.md)
+            ++ (if look == Filtered then
+                    [ Css.property "filter" "grayscale(1)"
+                    , Css.property "stroke-dasharray" "4 3"
+                    ]
+
+                else
+                    []
+               )
+        )
     ]
+
+
+{-| How an aggregated edge is drawn: dimmed by focus or search, or hidden by
+the filters and drawn grey and dashed because grey mode is on.
+-}
+type EdgeLook
+    = Normal
+    | Dimmed
+    | Filtered
 
 
 aggEdgeNodeHighlight : View.Config -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> ( String, Svg Msg )
@@ -465,20 +499,20 @@ aggEdgeNodeHighlight vc offset edge aAddress bAddress =
     )
 
 
-aggEdgeNode : View.Config -> Bool -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdgeNode vc dimmed offset edge aAddress bAddress =
+aggEdgeNode : View.Config -> EdgeLook -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeNode vc look offset edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "en"
     , Svg.g
-        (dimAttrs dimmed)
+        (dimAttrs look)
         [ Svg.lazy5 AggEdge.view vc offset edge aAddress bAddress ]
     )
 
 
-aggEdgeEdge : View.Config -> Bool -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> ( String, Svg Msg )
-aggEdgeEdge vc dimmed offset edge aAddress bAddress =
+aggEdgeEdge : View.Config -> EdgeLook -> { x : Float, y : Float } -> AggEdge -> Address -> Address -> ( String, Svg Msg )
+aggEdgeEdge vc look offset edge aAddress bAddress =
     ( Id.toString edge.a ++ Id.toString edge.b |> (++) "ee"
     , Svg.g
-        (dimAttrs dimmed)
+        (dimAttrs look)
         [ Svg.lazy6 AggEdge.edge vc offset edge aAddress bAddress False ]
     )
 

@@ -226,12 +226,14 @@ popover vc model hc =
                 , Css.property "border-top-color" Colors.greyBlue50
                 ]
             ]
-            [ Controls.toggle
-                { size = SwitchSizeBig
-                , selected = f.showHiddenGrey
-                , disabled = False
-                , msg = msg GraphFilterMsg.UserToggledShowHidden
-                }
+            [ span [ testId "gs-filter-grey" ]
+                [ Controls.toggle
+                    { size = SwitchSizeBig
+                    , selected = f.showHiddenGrey
+                    , disabled = False
+                    , msg = msg GraphFilterMsg.UserToggledShowHidden
+                    }
+                ]
             , span [ css [ Css.flexGrow (Css.num 1), Css.property "color" Colors.greyBlue700 ] ]
                 [ Locale.text vc.locale "Show hidden edges in grey" ]
             , link vc (Locale.string vc.locale "Reset") (msg GraphFilterMsg.UserClickedReset)

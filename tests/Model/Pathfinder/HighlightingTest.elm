@@ -31,12 +31,12 @@ suite =
     describe "Model.Pathfinder.Highlighting"
         [ test "a kept address is drawn normally while grey mode is off" <|
             \_ -> Highlighting.forNode (filtered False) (addr "a") |> Expect.equal (Just NoHighlight)
-        , test "a kept address is dimmed in grey mode" <|
-            \_ -> Highlighting.forNode (filtered True) (addr "a") |> Expect.equal (Just Dimmed)
+        , test "a kept address is grey in grey mode" <|
+            \_ -> Highlighting.forNode (filtered True) (addr "a") |> Expect.equal (Just FilteredOut)
         , test "a hidden address is not drawn while grey mode is off" <|
             \_ -> Highlighting.forNode (filtered False) (addr "b") |> Expect.equal Nothing
-        , test "a hidden address is dimmed in grey mode" <|
-            \_ -> Highlighting.forNode (filtered True) (addr "b") |> Expect.equal (Just Dimmed)
+        , test "a hidden address is grey in grey mode" <|
+            \_ -> Highlighting.forNode (filtered True) (addr "b") |> Expect.equal (Just FilteredOut)
         , test "an address the filters do not touch is drawn normally" <|
             \_ -> Highlighting.forNode (filtered False) (addr "c") |> Expect.equal (Just NoHighlight)
         ]

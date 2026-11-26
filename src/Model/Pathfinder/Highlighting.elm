@@ -49,8 +49,8 @@ forNode h id =
 
     else if Set.member id h.filter.greyedAddresses && h.showHidden then
         -- kept although the filters would remove it (starting point,
-        -- annotated, selected): drawn normally, dimmed only in grey mode
-        Just Dimmed
+        -- annotated, selected): drawn normally, grey only in grey mode
+        Just FilteredOut
 
     else
         Just (SearchBox.highlightFor h.search id)
@@ -81,7 +81,7 @@ forAggEdge h ( a, b ) =
 hidden : Highlighting -> Maybe Highlight
 hidden h =
     if h.showHidden then
-        Just Dimmed
+        Just FilteredOut
 
     else
         Nothing

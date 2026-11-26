@@ -5,7 +5,7 @@ import Config.View as View
 import Css
 import Model.Pathfinder.DetailLevel exposing (DetailLevel)
 import Model.Pathfinder.Id as Id
-import Model.Pathfinder.SearchBox exposing (Highlight, dimmedOpacity)
+import Model.Pathfinder.SearchBox exposing (Highlight, dimmedOpacity, edgeAttrs)
 import Model.Pathfinder.Tx exposing (Tx, TxType(..))
 import Msg.Pathfinder exposing (Msg)
 import Svg.Styled exposing (Svg, g)
@@ -63,7 +63,7 @@ edge vc gc searchHighlight level tx annotation =
                     Svg.lazy5 AccountTx.edge vc gc t tx annotation
 
         attrs =
-            dimmedOpacity searchHighlight ++ unservedAttrs vc tx
+            edgeAttrs searchHighlight ++ unservedAttrs vc tx
     in
     if List.isEmpty attrs then
         inner

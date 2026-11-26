@@ -3,17 +3,19 @@ module Model.Pathfinder.SearchBox exposing
     , Model
     , currentMatch
     , dimmedOpacity
+    , edgeAttrs
     , empty
     , highlightFor
     , highlightForAny
     , inputId
     )
 
+import Css
 import List.Extra
 import Model.Pathfinder.Id exposing (Id)
 import Set exposing (Set)
 import Svg.Styled exposing (Attribute)
-import Svg.Styled.Attributes exposing (opacity)
+import Svg.Styled.Attributes exposing (css, opacity, strokeDasharray)
 
 
 type alias Model =
@@ -29,6 +31,9 @@ type Highlight
     = NoHighlight
     | Dimmed
     | CurrentMatch
+      -- hidden by the on-graph filters, drawn because "show hidden edges in
+      -- grey" is on
+    | FilteredOut
 
 
 inputId : String
@@ -40,11 +45,27 @@ inputId =
 -}
 dimmedOpacity : Highlight -> List (Attribute msg)
 dimmedOpacity highlight =
-    if highlight == Dimmed then
-        [ opacity "0.25" ]
+    case highlight of
+        Dimmed ->
+            [ opacity "0.25" ]
+
+        FilteredOut ->
+            [ opacity "0.35", css [ Css.property "filter" "grayscale(1)" ] ]
+
+        _ ->
+            []
+
+
+{-| `dimmedOpacity`, and a filtered-out edge is dashed as well. Set on the
+group around an edge, the dash reaches the paths that do not set their own.
+-}
+edgeAttrs : Highlight -> List (Attribute msg)
+edgeAttrs highlight =
+    if highlight == FilteredOut then
+        strokeDasharray "4 3" :: dimmedOpacity highlight
 
     else
-        []
+        dimmedOpacity highlight
 
 
 empty : Model
