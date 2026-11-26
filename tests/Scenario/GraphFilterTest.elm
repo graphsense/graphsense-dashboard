@@ -8,12 +8,15 @@ history, the network itself).
 import Dict
 import Expect exposing (Expectation)
 import Html.Attributes
+import Model.Graph.Transform as Transform
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Overview as Overview
 import Model.Pathfinder.Selection exposing (Selection(..))
 import Model.Pathfinder.Tools exposing (ToolbarHovercardType(..))
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.GraphFilter as GraphFilterMsg
-import RecordSetter exposing (s_network, s_selection)
+import Msg.Pathfinder.Overview as OverviewMsg
+import RecordSetter exposing (s_network, s_selection, s_x)
 import Set
 import Support.App as App exposing (App)
 import Support.GraphFilterFixture exposing (accountTx, addr, chain, day, usd)
@@ -31,6 +34,22 @@ graph =
     App.init
         |> App.mapModel (s_network chain)
         -- a first message runs the update pipeline, as any click would
+        |> App.step NoOp
+
+
+{-| The same graph with address d far off to the right, off screen.
+-}
+farGraph : App
+farGraph =
+    graph
+        |> App.mapModel
+            (\m ->
+                let
+                    network =
+                        m.network
+                in
+                { m | network = { network | addresses = Dict.update (addr "d") (Maybe.map (s_x 500)) network.addresses } }
+            )
         |> App.step NoOp
 
 
@@ -157,6 +176,52 @@ suite =
                     |> .graphFilter
                     |> .excludedAssets
                     |> Expect.equal Set.empty
+        , describe "the overview map"
+            [ test "is not drawn while the whole graph fits the screen" <|
+                \_ -> graph |> App.html |> Query.findAll [ byTestId "gs-overview" ] |> Query.count (Expect.equal 0)
+            , test "is drawn once part of the graph is off screen" <|
+                \_ -> farGraph |> App.html |> Query.findAll [ byTestId "gs-overview" ] |> Query.count (Expect.equal 1)
+            , test "a press on it moves the view there" <|
+                \_ ->
+                    farGraph
+                        |> App.step (OverviewMsg (OverviewMsg.UserPressedOverview { x = 4000, y = 300 }))
+                        |> App.model
+                        |> .transform
+                        |> Transform.getSettled
+                        |> (\c -> ( c.x, c.y ))
+                        |> Expect.equal ( 4000, 300 )
+            , test "dragging follows the pointer until released" <|
+                \_ ->
+                    farGraph
+                        |> App.steps
+                            [ OverviewMsg (OverviewMsg.UserPressedOverview { x = 100, y = 0 })
+                            , OverviewMsg (OverviewMsg.UserDraggedOverview { x = 200, y = 0 })
+                            , OverviewMsg OverviewMsg.UserReleasedOverview
+                            , OverviewMsg (OverviewMsg.UserDraggedOverview { x = 900, y = 0 })
+                            ]
+                        |> App.model
+                        |> .transform
+                        |> Transform.getSettled
+                        |> .x
+                        |> Expect.equal 200
+            , test "hiding it leaves a button to bring it back" <|
+                \_ ->
+                    farGraph
+                        |> App.step (OverviewMsg OverviewMsg.UserClickedHideOverview)
+                        |> App.html
+                        |> Expect.all
+                            [ Query.findAll [ byTestId "gs-overview" ] >> Query.count (Expect.equal 0)
+                            , Query.findAll [ byTestId "gs-overview-show" ] >> Query.count (Expect.equal 1)
+                            ]
+            , test "brought back, it stays even when the graph fits" <|
+                \_ ->
+                    graph
+                        |> App.steps [ OverviewMsg OverviewMsg.UserClickedHideOverview, OverviewMsg OverviewMsg.UserClickedShowOverview ]
+                        |> Expect.all
+                            [ App.model >> .overview >> .visibility >> Expect.equal Overview.Shown
+                            , App.html >> Query.findAll [ byTestId "gs-overview" ] >> Query.count (Expect.equal 1)
+                            ]
+            ]
         , describe "the filter UI"
             [ test "the toolbar button opens and closes the filter popover" <|
                 \_ ->

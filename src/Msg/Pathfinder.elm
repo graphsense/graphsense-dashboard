@@ -18,6 +18,7 @@ import Model.Pathfinder.Tx exposing (Tx)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.ConversionDetails as ConversionDetails
 import Msg.Pathfinder.GraphFilter as GraphFilter
+import Msg.Pathfinder.Overview as Overview
 import Msg.Pathfinder.RelationDetails as RelationDetails
 import Msg.Pathfinder.SearchBox as OnGraphSearch
 import Msg.Pathfinder.TxDetails as TxDetails
@@ -109,6 +110,7 @@ type Msg
     | UserPressedSearchHotkey
     | OnGraphSearchMsg OnGraphSearch.Msg
     | GraphFilterMsg GraphFilter.Msg
+    | OverviewMsg Overview.Msg
     | NoOp
     | BrowserGotActor String Api.Data.Actor
       -- opening the actor dialog: a click on an actor (label, chip, tooltip

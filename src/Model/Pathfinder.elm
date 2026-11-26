@@ -25,6 +25,7 @@ import Model.Pathfinder.Highlighting exposing (Highlighting)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id, TxsFilterId)
 import Model.Pathfinder.Network exposing (Network, NetworkConditions)
+import Model.Pathfinder.Overview as Overview
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.SearchBox as SearchBox
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
@@ -89,6 +90,7 @@ type alias Model =
 
     -- derived from onGraphSearch and graphFilter, see Model.Pathfinder.Highlighting
     , highlighting : Highlighting
+    , overview : Overview.Model
     , transform : Transform.Model Id
     , history : History.Model Entry.Model
     , details : Maybe Details

@@ -58,6 +58,7 @@ import Model.Pathfinder.GraphFilter as GraphFilter
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id, TxsFilterId(..))
 import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
+import Model.Pathfinder.Overview as Overview
 import Model.Pathfinder.RelationDetails as RelationDetails
 import Model.Pathfinder.SearchBox as OnGraphSearch
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
@@ -78,6 +79,7 @@ import Msg.Pathfinder
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.ConversionDetails as ConversionDetails
 import Msg.Pathfinder.GraphFilter as GraphFilterMsg
+import Msg.Pathfinder.Overview as OverviewMsg
 import Msg.Pathfinder.RelationDetails as RelationDetails
 import Msg.Pathfinder.SearchBox as OnGraphSearchMsg
 import Msg.Pathfinder.TxDetails as TxDetails
@@ -1010,6 +1012,38 @@ updateByMsg uc msg model =
             , [ focusCmd ]
             )
                 |> and (panToCurrentMatch uc Nothing)
+
+        OverviewMsg ovMsg ->
+            let
+                overview =
+                    model.overview
+
+                centerOn p =
+                    let
+                        current =
+                            Transform.getCurrent model.transform
+                    in
+                    Transform.move { current | x = p.x, y = p.y } model.transform
+            in
+            case ovMsg of
+                OverviewMsg.UserPressedOverview p ->
+                    n { model | overview = { overview | dragging = True }, transform = centerOn p }
+
+                OverviewMsg.UserDraggedOverview p ->
+                    if overview.dragging then
+                        n { model | transform = centerOn p }
+
+                    else
+                        n model
+
+                OverviewMsg.UserReleasedOverview ->
+                    n { model | overview = { overview | dragging = False } }
+
+                OverviewMsg.UserClickedHideOverview ->
+                    n { model | overview = { overview | visibility = Overview.Hidden, dragging = False } }
+
+                OverviewMsg.UserClickedShowOverview ->
+                    n { model | overview = { overview | visibility = Overview.Shown } }
 
         GraphFilterMsg gfMsg ->
             let

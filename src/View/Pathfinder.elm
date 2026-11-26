@@ -57,6 +57,7 @@ import View.Pathfinder.ContextMenuItem as ContextMenuItem
 import View.Pathfinder.ConversionDetails as ConversionDetails
 import View.Pathfinder.GraphFilter as GraphFilterView
 import View.Pathfinder.Network as Network
+import View.Pathfinder.Overview as OverviewView
 import View.Pathfinder.RelationDetails as RelationDetails
 import View.Pathfinder.SearchBox as OnGraphSearchView
 import View.Pathfinder.ShortcutHints as ShortcutHints
@@ -87,6 +88,9 @@ view pluginStates vc model =
     , topCenterPanel pluginStates vc gc model
     , topRightPanel pluginStates vc model
     , bottomCenterPanel vc model
+    , vc.size
+        |> Maybe.map (OverviewView.view vc model)
+        |> Maybe.withDefault none
     , OnGraphSearchView.view vc model.onGraphSearch
     , Util.Tooltip.view vc model
         |> Tooltip.view (Util.Tooltip.tooltipConfig vc TooltipMsg) model.tooltip

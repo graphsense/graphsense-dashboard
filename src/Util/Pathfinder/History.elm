@@ -309,6 +309,10 @@ shallPushHistory msg _ =
         GraphFilterMsg _ ->
             False
 
+        -- moves the view only
+        OverviewMsg _ ->
+            False
+
         BrowserGotActor _ _ ->
             False
 

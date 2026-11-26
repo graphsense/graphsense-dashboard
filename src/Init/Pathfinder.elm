@@ -17,6 +17,7 @@ import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.GraphFilter as GraphFilter
 import Model.Pathfinder.Highlighting as Highlighting
 import Model.Pathfinder.Network as Network
+import Model.Pathfinder.Overview as Overview
 import Model.Pathfinder.SearchBox as SearchBox
 import Model.Pathfinder.Selection exposing (Selection(..))
 import Model.Pathfinder.Tools exposing (PointerTool(..))
@@ -44,6 +45,7 @@ init us =
       , onGraphSearch = SearchBox.empty
       , graphFilter = GraphFilter.init
       , highlighting = Highlighting.init
+      , overview = Overview.init
       , dragging = NoDragging
       , draggingAggEdgeLabel = Nothing
       , draggingConversionNode = Nothing
