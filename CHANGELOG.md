@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Filters on the Pathfinder graph, from the new filter icon in the toolbar: hide tiny transfers (default under 10 in the chosen fiat currency, the limit can be changed) and pick the assets to show. Filtered transfers are hidden with the addresses only they reach; starting points, annotated and selected addresses stay on the graph, greyed. Both legs of a swap stay when either asset is shown. "Show hidden edges in grey" brings the hidden part back, dimmed. While a filter is on, a row above the graph names each filter and how many edges it hides, and the icon shows how many filters are on. Filters are not saved in `.gs` files and are not part of undo
+
 ### Changed
 - Expanding an address onto a CoinJoin (mixing) transaction stops at the CoinJoin: it no longer places the CoinJoin's biggest input or output as if the funds came from or went there, and an info box explains why. An address can still be picked from the transaction's inputs/outputs table
 - The expand handles are disabled not only on exchanges but on every address whose own tags mark it as a service that pools funds (DEX, bridge, mixer, market, gambling, payment processor, wallet service, ATM, lending, custody), so an expand no longer adds an unrelated customer's transaction as if it continued the trace. A service concept counts when it is the address's top concept or carries at least 30% of the tag weight, so a single weak mention does not disable tracing

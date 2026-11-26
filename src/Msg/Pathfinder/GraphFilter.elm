@@ -4,9 +4,14 @@ import Model.Pathfinder.GraphFilter exposing (Period)
 
 
 type Msg
-    = UserToggledHideTiny
+    = UserClickedToggleFilter
+    | UserClickedCloseFilter
+    | UserToggledHideTiny
+    | UserClickedChangeLimit
+    | UserClickedLimitDone
     | UserChangedLimit Float
     | UserToggledAsset String
+    | UserClickedClearAssets
     | UserChangedPeriod (Maybe Period)
     | UserToggledShowHidden
     | UserClickedReset

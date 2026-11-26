@@ -20,6 +20,7 @@ import Model.Locale as Locale
 import Model.Pathfinder as Pathfinder
 import Model.Pathfinder.ContextMenu as ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.DetailLevel as DetailLevel
+import Model.Pathfinder.GraphFilter as GraphFilter
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Selection as Pathfinder
 import Model.Pathfinder.Tools exposing (PointerTool(..), ToolbarHovercardModel, ToolbarHovercardType(..))
@@ -54,6 +55,7 @@ import View.Locale as Locale
 import View.Pathfinder.AddressDetails as AddressDetails
 import View.Pathfinder.ContextMenuItem as ContextMenuItem
 import View.Pathfinder.ConversionDetails as ConversionDetails
+import View.Pathfinder.GraphFilter as GraphFilterView
 import View.Pathfinder.Network as Network
 import View.Pathfinder.RelationDetails as RelationDetails
 import View.Pathfinder.SearchBox as OnGraphSearchView
@@ -499,12 +501,15 @@ topCenterPanel pluginStates vc gc model =
                 , export =
                     ExportCSV.isDownloading model.exportCSVGraph
                         || (model.exportImage /= Nothing)
+                , activeFilters = GraphFilter.activeCount model.graphFilter
+                , filterOpen = Maybe.map Tuple.first model.toolbarHovercard == Just Filter
                 }
             ]
         , div
             [ css [ Css.property "pointer-events" "all", Css.position Css.relative, Css.overflow Css.visible ] ]
             [ graphActionsView vc gc model
             ]
+        , GraphFilterView.statusRow vc model
         ]
 
 
@@ -513,6 +518,9 @@ toolbarHovercardView vc m ( hcid, hc ) =
     case ( hcid, m.selection ) of
         ( Settings, _ ) ->
             settingsHovercardView vc m hc
+
+        ( Filter, _ ) ->
+            GraphFilterView.popover vc m hc
 
         ( Annotation, Pathfinder.SelectedAddress id ) ->
             annotationHovercardView vc [ id ] (Annotations.getAnnotation id m.annotations) hc

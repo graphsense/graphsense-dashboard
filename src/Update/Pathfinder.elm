@@ -77,6 +77,7 @@ import Msg.Pathfinder
         )
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Pathfinder.ConversionDetails as ConversionDetails
+import Msg.Pathfinder.GraphFilter as GraphFilterMsg
 import Msg.Pathfinder.RelationDetails as RelationDetails
 import Msg.Pathfinder.SearchBox as OnGraphSearchMsg
 import Msg.Pathfinder.TxDetails as TxDetails
@@ -393,6 +394,19 @@ conversionAssetRegistrations c =
 refreshSearchMatches : Model -> ( Model, List Effect )
 refreshSearchMatches model =
     n { model | onGraphSearch = OnGraphSearchUpdate.refreshMatches (searchContext model) model.onGraphSearch }
+
+
+openToolbarHovercard : ToolbarHovercardType -> Model -> ( Model, List Effect )
+openToolbarHovercard hovercardType model =
+    toolbarHovercardTypeToId hovercardType
+        |> Hovercard.init
+        |> mapFirst (\hcm -> model |> s_toolbarHovercard (Just ( hovercardType, hcm )))
+        |> mapSecond
+            (Cmd.map
+                ToolbarHovercardMsg
+                >> CmdEffect
+                >> List.singleton
+            )
 
 
 {-| Rebuild `model.highlighting` from the search and the filters. Replaced only
@@ -998,7 +1012,30 @@ updateByMsg uc msg model =
                 |> and (panToCurrentMatch uc Nothing)
 
         GraphFilterMsg gfMsg ->
-            n { model | graphFilter = GraphFilterUpdate.update gfMsg model.graphFilter }
+            let
+                updated =
+                    { model | graphFilter = GraphFilterUpdate.update gfMsg model.graphFilter }
+
+                filterOpen =
+                    Maybe.map Tuple.first model.toolbarHovercard == Just Filter
+            in
+            case gfMsg of
+                GraphFilterMsg.UserClickedToggleFilter ->
+                    if filterOpen then
+                        n { updated | toolbarHovercard = Nothing }
+
+                    else
+                        openToolbarHovercard Filter updated
+
+                GraphFilterMsg.UserClickedCloseFilter ->
+                    if filterOpen then
+                        n { updated | toolbarHovercard = Nothing }
+
+                    else
+                        n updated
+
+                _ ->
+                    n updated
 
         OnGraphSearchMsg sbMsg ->
             let

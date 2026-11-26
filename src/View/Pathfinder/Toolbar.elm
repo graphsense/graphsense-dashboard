@@ -14,6 +14,7 @@ import Util.Pathfinder.Shortcuts as Shortcuts
 import Util.View exposing (onClickWithStop, testId)
 import Util.View.Loadingspinner as Loadingspinner
 import View.Locale as Locale
+import View.Pathfinder.GraphFilter as GraphFilterView
 
 
 type alias Config =
@@ -26,6 +27,8 @@ type alias Config =
     , exportName : String
     , alignHorizontalDisabled : Bool
     , export : Bool
+    , activeFilters : Int
+    , filterOpen : Bool
     }
 
 
@@ -81,10 +84,6 @@ view vc config =
                 (css (highlightBackground Select)
                     :: iconsAttr "gs-toolbar-select" "selection Tool" False UserClickedSelectionTool
                 )
-            |> Rs.s_iconsDisplayConfiguration
-                (id (toolbarHovercardTypeToId Settings)
-                    :: iconsAttr "gs-toolbar-display-settings" "Display settings" False (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
-                )
             |> Rs.s_iconsCenterGraph
                 (iconsAttr "gs-toolbar-center" "center graph" False UserClickedFitGraph)
             |> Rs.s_iconsSave
@@ -116,6 +115,23 @@ view vc config =
                         ]
          in
          SettingsComponents.toolbarInstances
+            -- the last section holds display settings and, new, the graph
+            -- filter; the generated toolbar has no slot for the latter yet
+            |> Rs.s_section5
+                (Just
+                    (div [ css [ Css.displayFlex, Css.property "gap" "6px", Css.alignItems Css.center ] ]
+                        [ Icons.iconsDisplayConfigurationWithAttributes
+                            (Icons.iconsDisplayConfigurationAttributes
+                                |> Rs.s_root
+                                    (id (toolbarHovercardTypeToId Settings)
+                                        :: iconsAttr "gs-toolbar-display-settings" "Display settings" False (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
+                                    )
+                            )
+                            {}
+                        , GraphFilterView.toolbarButton vc { activeFilters = config.activeFilters, open = config.filterOpen }
+                        ]
+                    )
+                )
             |> Rs.s_iconsExport
                 (if config.export then
                     Just ls

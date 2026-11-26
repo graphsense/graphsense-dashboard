@@ -1,7 +1,7 @@
 module Model.Pathfinder.GraphFilter exposing
     ( Model, Period, Config, Result
     , init, isActive, activeCount, emptyResult
-    , apply, txFiatValue, assetsOnGraph
+    , apply, txFiatValue, assetsOnGraph, countBelowLimit
     )
 
 {-| On-graph filters of the Pathfinder: hide transfers by value (fiat), time
@@ -30,7 +30,7 @@ Rules:
 
 @docs Model, Period, Config, Result
 @docs init, isActive, activeCount, emptyResult
-@docs apply, txFiatValue, assetsOnGraph
+@docs apply, txFiatValue, assetsOnGraph, countBelowLimit
 
 -}
 
@@ -65,6 +65,9 @@ type alias Model =
     -- excluded rather than included, so assets added later show up
     , excludedAssets : Set String
     , showHiddenGrey : Bool
+
+    -- the limit editor in the popover is open; not a filter
+    , editingLimit : Bool
     }
 
 
@@ -91,6 +94,7 @@ init =
     , period = Nothing
     , excludedAssets = Set.empty
     , showHiddenGrey = False
+    , editingLimit = False
     }
 
 
@@ -437,3 +441,38 @@ assetsOnGraph mode network =
     )
         |> Set.fromList
         |> Set.toList
+
+
+{-| How many transfers (or aggregated edges) on the graph are worth less than
+`limit`, whether or not "hide tiny transfers" is on: the popover says how much
+the switch hides before it is flipped. Unpriced ones never count.
+-}
+countBelowLimit : String -> TracingMode -> Float -> Network -> Int
+countBelowLimit fiatCode mode limit network =
+    let
+        below =
+            Maybe.map (\v -> v < limit) >> Maybe.withDefault False
+    in
+    case mode of
+        TransactionTracingMode ->
+            network.txs
+                |> Dict.values
+                |> List.filter (txFiatValue fiatCode >> below)
+                |> List.length
+
+        AggregateTracingMode ->
+            network.aggEdges
+                |> Dict.values
+                |> List.filter
+                    (\edge ->
+                        case aggEdgeValues edge of
+                            [] ->
+                                False
+
+                            values ->
+                                values
+                                    |> List.map (Tuple.second >> Locale.getFiatValue fiatCode)
+                                    |> List.foldl (Maybe.map2 (+)) (Just 0)
+                                    |> below
+                    )
+                |> List.length

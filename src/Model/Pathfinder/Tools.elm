@@ -15,6 +15,7 @@ type alias ToolbarHovercardModel =
 type ToolbarHovercardType
     = Settings
     | Annotation
+    | Filter
 
 
 toolbarHovercardTypeToId : ToolbarHovercardType -> String
@@ -25,3 +26,6 @@ toolbarHovercardTypeToId thct =
 
         Annotation ->
             "toolbar-annotation-settings"
+
+        Filter ->
+            "toolbar-graph-filter"

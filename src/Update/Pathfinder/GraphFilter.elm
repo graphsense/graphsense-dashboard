@@ -8,6 +8,22 @@ import Set
 update : Msg -> Model -> Model
 update msg model =
     case msg of
+        UserClickedToggleFilter ->
+            -- the popover itself is a toolbar hovercard, see Update.Pathfinder
+            model
+
+        UserClickedCloseFilter ->
+            { model | editingLimit = False }
+
+        UserClickedChangeLimit ->
+            { model | editingLimit = True }
+
+        UserClickedLimitDone ->
+            { model | editingLimit = False }
+
+        UserClickedClearAssets ->
+            { model | excludedAssets = GraphFilter.init.excludedAssets }
+
         UserToggledHideTiny ->
             { model | hideTiny = not model.hideTiny }
 
