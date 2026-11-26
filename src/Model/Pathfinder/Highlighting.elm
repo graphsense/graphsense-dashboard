@@ -47,7 +47,9 @@ forNode h id =
     if Set.member id h.filter.hiddenAddresses || Set.member id h.filter.hiddenTxs then
         hidden h
 
-    else if Set.member id h.filter.greyedAddresses then
+    else if Set.member id h.filter.greyedAddresses && h.showHidden then
+        -- kept although the filters would remove it (starting point,
+        -- annotated, selected): drawn normally, dimmed only in grey mode
         Just Dimmed
 
     else

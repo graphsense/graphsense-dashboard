@@ -24,7 +24,8 @@ Rules:
     it is the total output. Provisional, to be checked in testing.
   - An address is hidden when it has transfers on the graph but none of them
     is visible. Protected addresses (starting points, plus what the caller
-    passes: annotated, selected) are greyed instead. Addresses without any
+    passes: annotated, selected) are kept instead (`greyedAddresses`: drawn
+    normally, dimmed in grey mode). Addresses without any
     transfer on the graph are never touched.
   - In the aggregated tracing mode, an edge passes on its total fiat value and
     its assets; the time filter does not apply (edge totals have no time).
