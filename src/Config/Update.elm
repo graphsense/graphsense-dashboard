@@ -11,6 +11,7 @@ type alias Config =
     , allConcepts : List Api.Data.Concept
     , abuseConcepts : List Api.Data.Concept
     , networks : List String -- what the backend serves right now (statistics); empty until they arrive
+    , preferredFiatCurrency : String -- for the on-graph value filter
     }
 
 

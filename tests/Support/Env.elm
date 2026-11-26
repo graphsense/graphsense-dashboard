@@ -51,6 +51,7 @@ updateConfig =
     , allConcepts = []
     , abuseConcepts = []
     , networks = servedNetworks
+    , preferredFiatCurrency = "usd"
     }
 
 

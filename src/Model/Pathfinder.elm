@@ -20,6 +20,8 @@ import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
 import Model.Pathfinder.ContextMenu exposing (ContextMenu)
 import Model.Pathfinder.ConversionDetails exposing (ConversionDetailsModel)
 import Model.Pathfinder.Deserialize exposing (DeserializedThing)
+import Model.Pathfinder.GraphFilter as GraphFilter
+import Model.Pathfinder.Highlighting exposing (Highlighting)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id, TxsFilterId)
 import Model.Pathfinder.Network exposing (Network, NetworkConditions)
@@ -83,6 +85,10 @@ type alias Model =
     , hovered : Hovered
     , search : Search.Model
     , onGraphSearch : SearchBox.Model
+    , graphFilter : GraphFilter.Model
+
+    -- derived from onGraphSearch and graphFilter, see Model.Pathfinder.Highlighting
+    , highlighting : Highlighting
     , transform : Transform.Model Id
     , history : History.Model Entry.Model
     , details : Maybe Details

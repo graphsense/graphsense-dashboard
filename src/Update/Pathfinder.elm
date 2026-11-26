@@ -54,6 +54,7 @@ import Model.Pathfinder.ContextMenu as ContextMenu
 import Model.Pathfinder.ConversionEdge as ConversionEdge
 import Model.Pathfinder.Deserialize exposing (Deserialized)
 import Model.Pathfinder.Error exposing (Error(..), InfoError(..))
+import Model.Pathfinder.GraphFilter as GraphFilter
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id, TxsFilterId(..))
 import Model.Pathfinder.Network as Network exposing (FindPosition(..), Network)
@@ -103,6 +104,7 @@ import Update.Pathfinder.Address as PathfinderAddress
 import Update.Pathfinder.AddressDetails as AddressDetails
 import Update.Pathfinder.AggEdge as AggEdge
 import Update.Pathfinder.ConversionDetails as ConversionDetails
+import Update.Pathfinder.GraphFilter as GraphFilterUpdate
 import Update.Pathfinder.Network as Network exposing (ingestAddresses, ingestAggEdges, ingestTxs)
 import Update.Pathfinder.Node as Node
 import Update.Pathfinder.RelationDetails as RelationDetails
@@ -227,6 +229,7 @@ update uc msg model =
                 |> and (syncSidePanel uc)
                 |> and dispatchEventualMessages
                 |> and refreshSearchMatches
+                |> and (refreshHighlighting uc)
                 |> and (closeSearchOnNodeClick msg)
                 |> and (closeTooltip msg)
     in
@@ -390,6 +393,64 @@ conversionAssetRegistrations c =
 refreshSearchMatches : Model -> ( Model, List Effect )
 refreshSearchMatches model =
     n { model | onGraphSearch = OnGraphSearchUpdate.refreshMatches (searchContext model) model.onGraphSearch }
+
+
+{-| Rebuild `model.highlighting` from the search and the filters. Replaced only
+when it changed, so the lazily rendered graph layers keep their memoization.
+-}
+refreshHighlighting : Update.Config -> Model -> ( Model, List Effect )
+refreshHighlighting uc model =
+    let
+        next =
+            { search = model.onGraphSearch
+            , filter =
+                GraphFilter.apply
+                    { fiatCode = uc.preferredFiatCurrency
+                    , tracingMode = model.config.tracingMode
+                    , protected = protectedFromFilter model
+                    }
+                    model.graphFilter
+                    model.network
+            , showHidden = model.graphFilter.showHiddenGrey
+            }
+    in
+    if next == model.highlighting then
+        n model
+
+    else
+        n { model | highlighting = next }
+
+
+{-| Addresses a filter greys instead of hiding: annotated and selected ones
+(starting points are handled by the filter itself).
+-}
+protectedFromFilter : Model -> Set Id
+protectedFromFilter model =
+    let
+        selected =
+            case model.selection of
+                SelectedAddress id ->
+                    [ id ]
+
+                MultiSelect opts ->
+                    List.filterMap
+                        (\o ->
+                            case o of
+                                MSelectedAddress id ->
+                                    Just id
+
+                                MSelectedTx _ ->
+                                    Nothing
+                        )
+                        opts
+
+                _ ->
+                    []
+    in
+    Annotations.toList model.annotations
+        |> List.map Tuple.first
+        |> (++) selected
+        |> Set.fromList
 
 
 searchContext : Model -> OnGraphSearchUpdate.Context
@@ -935,6 +996,9 @@ updateByMsg uc msg model =
             , [ focusCmd ]
             )
                 |> and (panToCurrentMatch uc Nothing)
+
+        GraphFilterMsg gfMsg ->
+            n { model | graphFilter = GraphFilterUpdate.update gfMsg model.graphFilter }
 
         OnGraphSearchMsg sbMsg ->
             let

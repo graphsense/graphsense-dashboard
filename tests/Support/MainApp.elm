@@ -197,6 +197,7 @@ step msg (App app) =
             , abuseConcepts = app.model_.config.abuseConcepts
             , networks = List.map .name app.model_.config.networks
             , allConcepts = app.model_.config.allConcepts
+            , preferredFiatCurrency = app.model_.config.preferredFiatCurrency
             }
 
         ( next, produced ) =

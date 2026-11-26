@@ -12,6 +12,7 @@ import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AggEdge exposing (AggEdge)
 import Model.Pathfinder.ConversionEdge as ConversionEdge exposing (ConversionEdge)
 import Model.Pathfinder.DetailLevel exposing (DetailLevel(..))
+import Model.Pathfinder.Highlighting as Highlighting exposing (Highlighting)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.SearchBox as SearchBox
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..), Selection(..))
@@ -31,15 +32,23 @@ import View.Pathfinder.Tx as Tx
 import View.Pathfinder.Tx.Utxo exposing (RenderLevel(..))
 
 
-addresses : View.Config -> Pathfinder.Config -> DetailLevel -> NetworkCapabilities -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
-addresses vc pc level capabilities searchBox annotations =
+{-| The address nodes. Addresses the on-graph filters hide are left out
+(`Highlighting.forNode`).
+-}
+addresses : View.Config -> Pathfinder.Config -> DetailLevel -> NetworkCapabilities -> Highlighting -> Annotations.AnnotationModel -> Dict Id Address -> Svg Msg
+addresses vc pc level capabilities highlighting annotations =
     Dict.foldl
         (\id address svg ->
-            ( Id.toString id
-            , Annotations.getAnnotation id annotations
-                |> Svg.lazy7 Address.view vc pc capabilities (SearchBox.highlightFor searchBox id) level address
-            )
-                :: svg
+            case Highlighting.forNode highlighting id of
+                Nothing ->
+                    svg
+
+                Just hl ->
+                    ( Id.toString id
+                    , Annotations.getAnnotation id annotations
+                        |> Svg.lazy7 Address.view vc pc capabilities hl level address
+                    )
+                        :: svg
         )
         []
         >> Keyed.node "g" []
@@ -61,16 +70,16 @@ suspect this swap before suspecting the model: the keyed children below are the
 part of the view whose structure changes underneath elm.
 
 -}
-relations : View.Config -> Pathfinder.Config -> DetailLevel -> Hovered -> Selection -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
-relations vc gc level hovered selection searchBox annotations txs agg conversions =
+relations : View.Config -> Pathfinder.Config -> DetailLevel -> Hovered -> Selection -> Highlighting -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
+relations vc gc level hovered selection highlighting annotations txs agg conversions =
     case gc.tracingMode of
         Pathfinder.AggregateTracingMode ->
             -- Exactly at Svg.Styled.Lazy's lazy7 limit. Adding another argument
             -- means packing the scalars into one value, or memoization is lost.
-            Svg.lazy7 aggRelations vc level hovered selection searchBox txs agg
+            Svg.lazy7 aggRelations vc level hovered selection highlighting txs agg
 
         Pathfinder.TransactionTracingMode ->
-            Svg.lazy7 txRelations vc gc level searchBox annotations txs conversions
+            Svg.lazy7 txRelations vc gc level highlighting annotations txs conversions
 
 
 {-| Render aggregate-mode edges.
@@ -90,8 +99,8 @@ relations vc gc level hovered selection searchBox annotations txs agg conversion
     so toggling between tx and aggregate mode keeps the same visual layout.
 
 -}
-aggRelations : View.Config -> DetailLevel -> Hovered -> Selection -> SearchBox.Model -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Svg Msg
-aggRelations vc level hovered selection searchBox txs agg =
+aggRelations : View.Config -> DetailLevel -> Hovered -> Selection -> Highlighting -> Dict Id Tx -> Dict ( Id, Id ) AggEdge -> Svg Msg
+aggRelations vc level hovered selection highlighting txs agg =
     let
         agg_ =
             Dict.values agg
@@ -99,6 +108,7 @@ aggRelations vc level hovered selection searchBox txs agg =
                     (\edge ->
                         RemoteData.isSuccess edge.a2b
                             && RemoteData.isSuccess edge.b2a
+                            && (Highlighting.forAggEdge highlighting ( edge.a, edge.b ) /= Nothing)
                     )
 
         -- hovered and/or selected addresses that drive the focus dimming
@@ -150,8 +160,10 @@ aggRelations vc level hovered selection searchBox txs agg =
 
         isDimmed edge =
             let
+                -- dimmed by the on-graph search, or a filtered-out edge
+                -- shown in grey
                 searchDimmed =
-                    SearchBox.highlightForAny searchBox [ edge.a, edge.b ] == SearchBox.Dimmed
+                    Highlighting.forAggEdge highlighting ( edge.a, edge.b ) == Just SearchBox.Dimmed
 
                 focusDimmed =
                     focusActive
@@ -331,24 +343,27 @@ avgTxY txs txIds =
             Just (List.sum ys / toFloat (List.length ys))
 
 
-txRelations : View.Config -> Pathfinder.Config -> DetailLevel -> SearchBox.Model -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
-txRelations vc gc level searchBox annotations txs conversions =
+txRelations : View.Config -> Pathfinder.Config -> DetailLevel -> Highlighting -> Annotations.AnnotationModel -> Dict Id Tx -> Dict ( Id, Id ) ConversionEdge -> Svg Msg
+txRelations vc gc level highlighting annotations txs conversions =
     let
+        -- each tx with its highlight; txs the on-graph filters hide are left out
         txs_ =
             Dict.values txs
+                |> List.filterMap (\tx -> Highlighting.forNode highlighting tx.id |> Maybe.map (\hl -> ( tx, hl )))
 
         conversions_ =
             Dict.values conversions
+                |> List.filter (\c -> Highlighting.forConversion highlighting c.id [] /= Nothing)
 
         ( txsHighlighted_, txsRegular_ ) =
-            List.partition (\tx -> tx.hovered || tx.selected) txs_
+            List.partition (\( tx, _ ) -> tx.hovered || tx.selected) txs_
     in
     (if vc.showConversionEdges then
         [ conversions_
             |> ConversionEdge.withDisplacementIndex
             |> List.map
                 (\( i, ( conversion, a, b ) ) ->
-                    conversionEdge vc gc searchBox conversion i a b
+                    conversionEdge vc gc highlighting conversion i a b
                 )
             |> Keyed.node "g" []
         ]
@@ -358,10 +373,10 @@ txRelations vc gc level searchBox annotations txs conversions =
     )
         ++ [ txsRegular_
                 |> List.map
-                    (\tx ->
+                    (\( tx, hl ) ->
                         ( Id.toString tx.id |> (++) "te"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy6 Tx.edge vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
+                            |> Svg.lazy6 Tx.edge vc gc hl Edge tx
                         )
                     )
                 |> Keyed.node "g" []
@@ -374,46 +389,46 @@ txRelations vc gc level searchBox annotations txs conversions =
                 []
              )
                 |> List.map
-                    (\tx ->
+                    (\( tx, hl ) ->
                         ( Id.toString tx.id |> (++) "tl"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy6 Tx.edge vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
+                            |> Svg.lazy6 Tx.edge vc gc hl Label tx
                         )
                     )
                 |> Keyed.node "g" []
            , txsRegular_
                 |> List.map
-                    (\tx ->
+                    (\( tx, hl ) ->
                         ( Id.toString tx.id |> (++) "tn"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy6 Tx.view vc gc (SearchBox.highlightFor searchBox tx.id) level tx
+                            |> Svg.lazy6 Tx.view vc gc hl level tx
                         )
                     )
                 |> Keyed.node "g" []
            , txsHighlighted_
                 |> List.map
-                    (\tx ->
+                    (\( tx, hl ) ->
                         ( Id.toString tx.id |> (++) "teh"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy6 Tx.edge vc gc (SearchBox.highlightFor searchBox tx.id) Edge tx
+                            |> Svg.lazy6 Tx.edge vc gc hl Edge tx
                         )
                     )
                 |> Keyed.node "g" []
            , txsHighlighted_
                 |> List.map
-                    (\tx ->
+                    (\( tx, hl ) ->
                         ( Id.toString tx.id |> (++) "tlh"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy6 Tx.edge vc gc (SearchBox.highlightFor searchBox tx.id) Label tx
+                            |> Svg.lazy6 Tx.edge vc gc hl Label tx
                         )
                     )
                 |> Keyed.node "g" []
            , txsHighlighted_
                 |> List.map
-                    (\tx ->
+                    (\( tx, hl ) ->
                         ( Id.toString tx.id |> (++) "tnh"
                         , Annotations.getAnnotation tx.id annotations
-                            |> Svg.lazy6 Tx.view vc gc (SearchBox.highlightFor searchBox tx.id) level tx
+                            |> Svg.lazy6 Tx.view vc gc hl level tx
                         )
                     )
                 |> Keyed.node "g" []
@@ -468,14 +483,22 @@ aggEdgeEdge vc dimmed offset edge aAddress bAddress =
     )
 
 
-conversionEdge : View.Config -> Pathfinder.Config -> SearchBox.Model -> ConversionEdge -> Int -> Address -> Address -> ( String, Svg Msg )
-conversionEdge vc _ searchBox conversion displacementIndex aAddress bAddress =
+conversionEdge : View.Config -> Pathfinder.Config -> Highlighting -> ConversionEdge -> Int -> Address -> Address -> ( String, Svg Msg )
+conversionEdge vc _ highlighting conversion displacementIndex aAddress bAddress =
     let
         ( inputTxId, outputTxId ) =
             conversion.id
     in
     ( ConversionEdge.toIdString conversion |> (++) "ce"
-    , Svg.lazy6 ConversionEdge.view vc (SearchBox.highlightForAny searchBox [ aAddress.id, bAddress.id, inputTxId, outputTxId ]) conversion displacementIndex aAddress bAddress
+    , Svg.lazy6 ConversionEdge.view
+        vc
+        (Highlighting.forConversion highlighting conversion.id [ aAddress.id, bAddress.id, inputTxId, outputTxId ]
+            |> Maybe.withDefault SearchBox.Dimmed
+        )
+        conversion
+        displacementIndex
+        aAddress
+        bAddress
     )
 
 

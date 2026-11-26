@@ -14,6 +14,8 @@ import Model.NetworkCapabilities as NetworkCapabilities
 import Model.Pathfinder exposing (Hovered(..), Model)
 import Model.Pathfinder.CheckingNeighbors as CheckingNeighbors
 import Model.Pathfinder.Colors as Colors
+import Model.Pathfinder.GraphFilter as GraphFilter
+import Model.Pathfinder.Highlighting as Highlighting
 import Model.Pathfinder.Network as Network
 import Model.Pathfinder.SearchBox as SearchBox
 import Model.Pathfinder.Selection exposing (Selection(..))
@@ -40,6 +42,8 @@ init us =
       , hovered = NoHover
       , search = Search.initWithRecents (Search.initSearchAddressAndTxs Nothing) us.recentSearches
       , onGraphSearch = SearchBox.empty
+      , graphFilter = GraphFilter.init
+      , highlighting = Highlighting.init
       , dragging = NoDragging
       , draggingAggEdgeLabel = Nothing
       , draggingConversionNode = Nothing

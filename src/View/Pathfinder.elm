@@ -924,8 +924,8 @@ graphSvg vc gc model dim =
                     )
                 ]
                 dim
-        , Network.relations vc gc detail model.hovered model.selection model.onGraphSearch model.annotations model.network.txs model.network.aggEdges model.network.conversions
-        , Svg.lazy7 Network.addresses vc gc detail model.networkCapabilities model.onGraphSearch model.annotations model.network.addresses
+        , Network.relations vc gc detail model.hovered model.selection model.highlighting model.annotations model.network.txs model.network.aggEdges model.network.conversions
+        , Svg.lazy7 Network.addresses vc gc detail model.networkCapabilities model.highlighting model.annotations model.network.addresses
         , drawDragSelector vc model
 
         -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system

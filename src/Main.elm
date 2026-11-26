@@ -36,6 +36,7 @@ main =
             , abuseConcepts = []
             , allConcepts = []
             , networks = []
+            , preferredFiatCurrency = "usd"
             }
     in
     Browser.application
@@ -57,6 +58,7 @@ main =
                         , abuseConcepts = model.config.abuseConcepts
                         , allConcepts = model.config.allConcepts
                         , networks = List.map .name model.config.networks
+                        , preferredFiatCurrency = model.config.preferredFiatCurrency
                     }
                     msg
                     model

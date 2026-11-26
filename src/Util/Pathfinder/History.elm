@@ -305,6 +305,10 @@ shallPushHistory msg _ =
         OnGraphSearchMsg _ ->
             False
 
+        -- view state: filters are not part of undo/redo
+        GraphFilterMsg _ ->
+            False
+
         BrowserGotActor _ _ ->
             False
 
