@@ -15,10 +15,13 @@ import Html.Attributes
 import Json.Decode
 import Model.Graph.Transform as Transform
 import Model.Notification as Notification
+import Model.Pathfinder.Highlighting as Highlighting
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Overview as Overview
+import Model.Pathfinder.SearchBox as SearchBox exposing (Highlight(..))
 import Model.Pathfinder.Selection exposing (Selection(..))
 import Model.Pathfinder.Tools exposing (ToolbarHovercardType(..))
+import Model.Search as Search
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.GraphFilter as GraphFilterMsg
 import Msg.Pathfinder.Overview as OverviewMsg
@@ -110,6 +113,30 @@ isHiddenNotice eff =
 
         _ ->
             False
+
+
+typeInMainSearch : String -> App -> App
+typeInMainSearch q =
+    App.mapModel (\m -> { m | search = Search.setQuery q m.search |> (\sr -> { sr | visible = True }) })
+        >> App.step NoOp
+
+
+openCtrlF : String -> App -> App
+openCtrlF q =
+    App.mapModel
+        (\m ->
+            let
+                box =
+                    SearchBox.empty
+            in
+            { m | onGraphSearch = { box | visible = True, query = q } }
+        )
+        >> App.step NoOp
+
+
+lookOf : String -> App -> Maybe Highlight
+lookOf a app =
+    Highlighting.forNode (App.model app).highlighting (addr a)
 
 
 filter : GraphFilterMsg.Msg -> App -> App
@@ -235,6 +262,36 @@ suite =
                     |> .graphFilter
                     |> .excludedAssets
                     |> Expect.equal Set.empty
+        , describe "highlighting from the search bars"
+            [ test "the main search highlights a match on the graph and greys the rest" <|
+                \_ ->
+                    graph
+                        |> typeInMainSearch "c"
+                        |> Expect.all
+                            [ lookOf "c" >> Expect.equal (Just NoHighlight)
+                            , lookOf "a" >> Expect.equal (Just Dimmed)
+                            ]
+            , test "a main search query without a match on the graph greys nothing" <|
+                \_ -> graph |> typeInMainSearch "zzz" |> lookOf "a" |> Expect.equal (Just NoHighlight)
+            , test "with the main search's dropdown closed nothing is greyed" <|
+                \_ ->
+                    graph
+                        |> App.mapModel (\m -> { m | search = Search.setQuery "c" m.search })
+                        |> App.step NoOp
+                        |> lookOf "a"
+                        |> Expect.equal (Just NoHighlight)
+            , test "Ctrl+F stays as is: a query without a match greys everything" <|
+                \_ -> graph |> openCtrlF "zzz" |> lookOf "a" |> Expect.equal (Just Dimmed)
+            , test "an open Ctrl+F search wins over the main search" <|
+                \_ ->
+                    graph
+                        |> openCtrlF "a"
+                        |> typeInMainSearch "c"
+                        |> Expect.all
+                            [ lookOf "a" >> Expect.notEqual (Just Dimmed)
+                            , lookOf "c" >> Expect.equal (Just Dimmed)
+                            ]
+            ]
         , describe "transactions hidden on arrival"
             [ test "a transaction the filters hide at once gets a notice" <|
                 \_ ->
