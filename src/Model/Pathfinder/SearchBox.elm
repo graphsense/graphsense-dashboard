@@ -78,9 +78,15 @@ empty =
     }
 
 
+{-| Searching, and something on the graph matches. A query that matches
+nothing greys out nothing: the box already says nothing was found, and a
+graph turned all grey says nothing more.
+-}
 isActive : Model -> Bool
 isActive m =
-    m.visible && not (String.isEmpty (String.trim m.query))
+    m.visible
+        && not (String.isEmpty (String.trim m.query))
+        && not (Set.isEmpty m.matchSet)
 
 
 isCurrentMatch : Model -> Id -> Bool

@@ -1,4 +1,4 @@
-module Update.Pathfinder.SearchBox exposing (Context, close, open, refreshMatches, update)
+module Update.Pathfinder.SearchBox exposing (Context, close, matchesFor, open, refreshMatches, update)
 
 import Api.Data
 import Dict exposing (Dict)
@@ -63,11 +63,15 @@ refreshMatches ctx model =
         model
 
 
-recompute : Context -> Model -> Model
-recompute ctx model =
+{-| The addresses and transactions on the graph that `query` matches, in the
+order the on-graph search steps through them. Also used by the main search
+bar, which highlights them while the user types.
+-}
+matchesFor : Context -> String -> List Id
+matchesFor ctx query =
     let
         q =
-            String.toLower (String.trim model.query)
+            String.toLower (String.trim query)
                 |> removeLeading0x
 
         addressMatches =
@@ -89,9 +93,15 @@ recompute ctx model =
                     |> Dict.values
                     |> List.filter (txMatchesQuery q ctx)
                     |> List.map .id
+    in
+    addressMatches ++ txMatches
 
+
+recompute : Context -> Model -> Model
+recompute ctx model =
+    let
         matches =
-            addressMatches ++ txMatches
+            matchesFor ctx model.query
 
         previousCurrent =
             SearchBox.currentMatch model

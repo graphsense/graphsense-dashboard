@@ -441,7 +441,7 @@ refreshHighlighting uc before model =
                 Nothing
 
         next =
-            { search = model.onGraphSearch
+            { search = searchHighlight model
             , filter =
                 if inputs /= Nothing && inputs == model.filterInputs then
                     model.highlighting.filter
@@ -489,6 +489,44 @@ refreshHighlighting uc before model =
         { model | highlighting = next, filterInputs = inputs }
     , notice
     )
+
+
+{-| What the graph highlights for search.
+
+The on-graph search (Ctrl+F) while it has a query, as before: matches
+highlighted, everything else greyed, also when nothing matches.
+
+Otherwise the main search bar, while its dropdown is open: nodes already on
+the graph that match the query are highlighted and the rest greyed, but only
+when something matches. A query that matches nothing on the graph is usually
+an address to add, so it greys out nothing.
+
+-}
+searchHighlight : Model -> OnGraphSearch.Model
+searchHighlight model =
+    let
+        ctrlF =
+            model.onGraphSearch
+
+        mainQuery =
+            Search.query model.search |> String.trim
+
+        base =
+            OnGraphSearch.empty
+    in
+    if ctrlF.visible && not (String.isEmpty (String.trim ctrlF.query)) then
+        ctrlF
+
+    else if model.search.visible && not (String.isEmpty mainQuery) then
+        case OnGraphSearchUpdate.matchesFor (searchContext model) mainQuery of
+            [] ->
+                base
+
+            matches ->
+                { base | visible = True, query = mainQuery, matches = matches, matchSet = Set.fromList matches }
+
+    else
+        base
 
 
 {-| Addresses a filter greys instead of hiding: annotated and selected ones
