@@ -422,16 +422,28 @@ expand that seems to do nothing explains itself.
 refreshHighlighting : Update.Config -> Model -> Model -> ( Model, List Effect )
 refreshHighlighting uc before model =
     let
+        filterConfig =
+            { fiatCode = uc.preferredFiatCurrency
+            , tracingMode = model.config.tracingMode
+            , protected = protectedFromFilter model
+            }
+
+        -- no filter, nothing to compare: `apply` returns at once
+        inputs =
+            if GraphFilter.isActive model.graphFilter then
+                Just (GraphFilter.inputs filterConfig model.graphFilter model.network)
+
+            else
+                Nothing
+
         next =
             { search = model.onGraphSearch
             , filter =
-                GraphFilter.apply
-                    { fiatCode = uc.preferredFiatCurrency
-                    , tracingMode = model.config.tracingMode
-                    , protected = protectedFromFilter model
-                    }
-                    model.graphFilter
-                    model.network
+                if inputs /= Nothing && inputs == model.filterInputs then
+                    model.highlighting.filter
+
+                else
+                    GraphFilter.apply filterConfig model.graphFilter model.network
             , showHidden = model.graphFilter.showHiddenGrey
             }
 
@@ -467,10 +479,10 @@ refreshHighlighting uc before model =
                 ]
     in
     ( if next == model.highlighting then
-        model
+        { model | filterInputs = inputs }
 
       else
-        { model | highlighting = next }
+        { model | highlighting = next, filterInputs = inputs }
     , notice
     )
 

@@ -90,6 +90,9 @@ type alias Model =
 
     -- derived from onGraphSearch and graphFilter, see Model.Pathfinder.Highlighting
     , highlighting : Highlighting
+
+    -- what `highlighting.filter` was computed from, see GraphFilter.inputs
+    , filterInputs : Maybe GraphFilter.Inputs
     , overview : Overview.Model
     , transform : Transform.Model Id
     , history : History.Model Entry.Model

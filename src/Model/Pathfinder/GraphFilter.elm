@@ -1,7 +1,7 @@
 module Model.Pathfinder.GraphFilter exposing
-    ( Model, TimeMode(..), Period, Config, Result, Bucket
+    ( Model, TimeMode(..), Period, Config, Result, Bucket, Inputs
     , init, isActive, activeCount, emptyResult
-    , apply, txFiatValue, assetsOnGraph, countBelowLimit
+    , apply, inputs, txFiatValue, assetsOnGraph, countBelowLimit
     , dayBounds, fromDateString, toDateString, activity
     )
 
@@ -30,9 +30,9 @@ Rules:
   - In the aggregated tracing mode, an edge passes on its total fiat value and
     its assets; the time filter does not apply (edge totals have no time).
 
-@docs Model, TimeMode, Period, Config, Result, Bucket
+@docs Model, TimeMode, Period, Config, Result, Bucket, Inputs
 @docs init, isActive, activeCount, emptyResult
-@docs apply, txFiatValue, assetsOnGraph, countBelowLimit
+@docs apply, inputs, txFiatValue, assetsOnGraph, countBelowLimit
 @docs dayBounds, fromDateString, toDateString, activity
 
 -}
@@ -257,6 +257,40 @@ splitProtected config network =
                        )
                 )
         )
+
+
+{-| What `apply` depends on, without what changes on every pan, drag or
+hover (positions, hover and selection flags). Equal inputs give an equal
+result, so a caller can skip `apply`, which costs milliseconds on a large
+graph, while the user only moves things around.
+-}
+type alias Inputs =
+    { config : Config
+    , model : Model
+    , txs : List Id
+
+    -- with whether it is a starting point
+    , addresses : List ( Id, Bool )
+
+    -- with whether both directions have loaded
+    , aggEdges : List ( ( Id, Id ), Bool )
+    , conversions : List ( Id, Id )
+    }
+
+
+inputs : Config -> Model -> Network -> Inputs
+inputs config model network =
+    { config = config
+    , model = model
+    , txs = Dict.keys network.txs
+    , addresses = Dict.foldr (\id a acc -> ( id, a.isStartingPoint ) :: acc) [] network.addresses
+    , aggEdges =
+        Dict.foldr
+            (\key e acc -> ( key, RemoteData.isSuccess e.a2b && RemoteData.isSuccess e.b2a ) :: acc)
+            []
+            network.aggEdges
+    , conversions = Dict.keys network.conversions
+    }
 
 
 

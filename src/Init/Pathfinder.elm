@@ -55,6 +55,7 @@ init us =
                 |> Maybe.map (\limit -> { graphFilterInit | limit = limit })
                 |> Maybe.withDefault graphFilterInit
       , highlighting = Highlighting.init
+      , filterInputs = Nothing
       , overview =
             if us.overviewHidden == Just True then
                 { overviewInit | visibility = Overview.Hidden }

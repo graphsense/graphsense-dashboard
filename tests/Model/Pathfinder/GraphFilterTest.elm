@@ -200,6 +200,20 @@ suite =
                     GraphFilter.activity "usd" Time.utc 60 AggregateTracingMode init chain
                         |> Expect.equal []
             ]
+        , describe "inputs (what the result depends on)"
+            [ test "moving an address does not change them" <|
+                \_ ->
+                    GraphFilter.inputs txConfig tiny { chain | addresses = Dict.map (\_ a -> { a | x = a.x + 5 }) chain.addresses }
+                        |> Expect.equal (GraphFilter.inputs txConfig tiny chain)
+            , test "a new transaction changes them" <|
+                \_ ->
+                    GraphFilter.inputs txConfig tiny { chain | txs = Dict.insert (txId "t9") (accountTx "t9" "c" "d" "eth" (usd 1) 0) chain.txs }
+                        |> Expect.notEqual (GraphFilter.inputs txConfig tiny chain)
+            , test "a newly protected address changes them" <|
+                \_ ->
+                    GraphFilter.inputs { txConfig | protected = Set.singleton (addr "c") } tiny chain
+                        |> Expect.notEqual (GraphFilter.inputs txConfig tiny chain)
+            ]
         , describe "assets"
             [ test "hides transfers of an excluded asset" <|
                 \_ ->
