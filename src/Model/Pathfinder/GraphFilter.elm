@@ -1,7 +1,8 @@
 module Model.Pathfinder.GraphFilter exposing
-    ( Model, Period, Config, Result
+    ( Model, TimeMode(..), Period, Config, Result, Bucket
     , init, isActive, activeCount, emptyResult
     , apply, txFiatValue, assetsOnGraph, countBelowLimit
+    , dayBounds, fromDateString, toDateString, activity
     )
 
 {-| On-graph filters of the Pathfinder: hide transfers by value (fiat), time
@@ -28,14 +29,16 @@ Rules:
   - In the aggregated tracing mode, an edge passes on its total fiat value and
     its assets; the time filter does not apply (edge totals have no time).
 
-@docs Model, Period, Config, Result
+@docs Model, TimeMode, Period, Config, Result, Bucket
 @docs init, isActive, activeCount, emptyResult
 @docs apply, txFiatValue, assetsOnGraph, countBelowLimit
+@docs dayBounds, fromDateString, toDateString, activity
 
 -}
 
 import Api.Data
 import Config.Pathfinder exposing (TracingMode(..))
+import Date
 import Dict exposing (Dict)
 import Model.Locale as Locale
 import Model.Pathfinder.AggEdge exposing (AggEdge)
@@ -45,6 +48,7 @@ import Model.Pathfinder.Tx as Tx exposing (Tx, TxType(..))
 import RemoteData
 import Set exposing (Set)
 import Time exposing (Posix)
+import Time.Extra
 
 
 {-| Inclusive on both ends.
@@ -60,6 +64,7 @@ type alias Model =
 
     -- in the user's fiat currency; kept while `hideTiny` is off
     , limit : Float
+    , timeMode : TimeMode
     , period : Maybe Period
 
     -- excluded rather than included, so assets added later show up
@@ -68,7 +73,18 @@ type alias Model =
 
     -- the limit editor in the popover is open; not a filter
     , editingLimit : Bool
+
+    -- the bucket a drag on the activity strip started on; not a filter
+    , stripDrag : Maybe Period
     }
+
+
+{-| How the period is picked; the period itself is what filters.
+-}
+type TimeMode
+    = AnyTime
+    | OneDay
+    | DateRange
 
 
 type alias Config =
@@ -91,10 +107,12 @@ init : Model
 init =
     { hideTiny = False
     , limit = 10
+    , timeMode = AnyTime
     , period = Nothing
     , excludedAssets = Set.empty
     , showHiddenGrey = False
     , editingLimit = False
+    , stripDrag = Nothing
     }
 
 
@@ -476,3 +494,132 @@ countBelowLimit fiatCode mode limit network =
                                     |> below
                     )
                 |> List.length
+
+
+
+-- TIME
+
+
+{-| The whole day `t` falls on, in `zone`.
+-}
+dayBounds : Time.Zone -> Posix -> Period
+dayBounds zone t =
+    let
+        from =
+            Time.Extra.floor Time.Extra.Day zone t
+    in
+    { from = from
+    , until = Time.Extra.add Time.Extra.Day 1 zone from |> Time.posixToMillis |> (+) -1 |> Time.millisToPosix
+    }
+
+
+{-| The start of the day a date field holds ("2026-03-02"), in `zone`.
+-}
+fromDateString : Time.Zone -> String -> Maybe Posix
+fromDateString zone str =
+    Date.fromIsoString str
+        |> Result.toMaybe
+        |> Maybe.map
+            (\d ->
+                Time.Extra.partsToPosix zone
+                    { year = Date.year d
+                    , month = Date.month d
+                    , day = Date.day d
+                    , hour = 0
+                    , minute = 0
+                    , second = 0
+                    , millisecond = 0
+                    }
+            )
+
+
+{-| The value for a date field.
+-}
+toDateString : Time.Zone -> Posix -> String
+toDateString zone =
+    Date.fromPosix zone >> Date.toIsoString
+
+
+{-| One bar of the activity strip: the fiat value moved in `period`.
+-}
+type alias Bucket =
+    { period : Period
+    , value : Float
+    }
+
+
+{-| Money moved per day on the graph, for the activity strip: from the day of
+the first transfer to the day of the last, one bucket per day, or per several
+days when that would make more than `maxBuckets` bars. Only transfers that
+pass the asset and value filters count, so the strip shows what the time
+filter picks from. Empty in the aggregated mode, which has no times.
+-}
+activity : String -> Time.Zone -> Int -> TracingMode -> Model -> Network -> List Bucket
+activity fiatCode zone maxBuckets mode model network =
+    let
+        partners =
+            swapPartnerAssets network
+
+        counted =
+            network.txs
+                |> Dict.values
+                |> List.filter
+                    (\tx ->
+                        assetPasses model partners tx
+                            && valuePasses model (txFiatValue fiatCode tx)
+                    )
+                |> List.map
+                    (\tx ->
+                        ( Tx.getRawTimestamp tx * 1000 |> Time.millisToPosix
+                        , txFiatValue fiatCode tx |> Maybe.withDefault 0
+                        )
+                    )
+
+        times =
+            List.map (Tuple.first >> Time.posixToMillis) counted
+    in
+    case ( mode, List.minimum times, List.maximum times ) of
+        ( TransactionTracingMode, Just first, Just last ) ->
+            let
+                start =
+                    Time.Extra.floor Time.Extra.Day zone (Time.millisToPosix first)
+
+                days =
+                    Time.Extra.diff Time.Extra.Day zone start (Time.millisToPosix last) + 1
+
+                daysPerBucket =
+                    max 1 (ceiling (toFloat days / toFloat (max 1 maxBuckets)))
+
+                bucketCount =
+                    ceiling (toFloat days / toFloat daysPerBucket)
+
+                bucketOf t =
+                    Time.Extra.diff Time.Extra.Day zone start t // daysPerBucket
+
+                sums =
+                    counted
+                        |> List.foldl
+                            (\( t, v ) -> Dict.update (bucketOf t) (Maybe.withDefault 0 >> (+) v >> Just))
+                            Dict.empty
+            in
+            List.range 0 (bucketCount - 1)
+                |> List.map
+                    (\i ->
+                        let
+                            from =
+                                Time.Extra.add Time.Extra.Day (i * daysPerBucket) zone start
+                        in
+                        { period =
+                            { from = from
+                            , until =
+                                Time.Extra.add Time.Extra.Day daysPerBucket zone from
+                                    |> Time.posixToMillis
+                                    |> (+) -1
+                                    |> Time.millisToPosix
+                            }
+                        , value = Dict.get i sums |> Maybe.withDefault 0
+                        }
+                    )
+
+        _ ->
+            []

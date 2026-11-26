@@ -217,6 +217,13 @@ suite =
                         |> Query.find [ byTestId "gs-filter-chip-remove" ]
                         |> Event.simulate Event.click
                         |> Event.expect (GraphFilterMsg GraphFilterMsg.UserClickedClearAssets)
+            , test "a picked day shows as a time chip" <|
+                \_ ->
+                    graph
+                        |> filter (GraphFilterMsg.UserChangedDay "1970-01-11")
+                        |> App.html
+                        |> Query.findAll [ byTestId "gs-filter-chip" ]
+                        |> Query.count (Expect.equal 1)
             , test "clearing the assets brings every asset back" <|
                 \_ ->
                     graph

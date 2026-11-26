@@ -1014,7 +1014,7 @@ updateByMsg uc msg model =
         GraphFilterMsg gfMsg ->
             let
                 updated =
-                    { model | graphFilter = GraphFilterUpdate.update gfMsg model.graphFilter }
+                    { model | graphFilter = GraphFilterUpdate.update uc.locale.zone gfMsg model.graphFilter }
 
                 filterOpen =
                     Maybe.map Tuple.first model.toolbarHovercard == Just Filter

@@ -10,15 +10,17 @@ then they move to the generated `Theme` modules.
 
 -}
 
+import Config.Pathfinder exposing (TracingMode(..))
 import Config.View as View
 import Css
 import Dict
 import Hovercard
 import Html.Styled as Html exposing (Html, div, input, span, text)
 import Html.Styled.Attributes as HA exposing (css)
-import Html.Styled.Events exposing (onInput)
+import Html.Styled.Events exposing (onInput, stopPropagationOn)
+import Json.Decode
 import Model.Pathfinder as Pathfinder
-import Model.Pathfinder.GraphFilter as GraphFilter
+import Model.Pathfinder.GraphFilter as GraphFilter exposing (Bucket, Period, TimeMode(..))
 import Model.Pathfinder.Tools exposing (ToolbarHovercardType(..), toolbarHovercardTypeToId)
 import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.GraphFilter as GraphFilterMsg
@@ -28,6 +30,7 @@ import Theme.Colors as Colors
 import Theme.Html.Buttons as Buttons
 import Theme.Html.Icons as Icons
 import Theme.Html.SelectionControls exposing (SwitchSize(..))
+import Time
 import Util.Css
 import Util.View exposing (hovercard, onClickWithStop, testId)
 import View.Button as Button
@@ -187,6 +190,7 @@ popover vc model hc =
                     div [ css [ Css.displayFlex, Css.marginTop (Css.px 4) ] ]
                         [ link vc (Locale.string vc.locale "Change limit") (msg GraphFilterMsg.UserClickedChangeLimit) ]
                 ]
+            , timeSection vc model
             , div []
                 [ div [ css [ Css.fontWeight (Css.int 600), Css.marginBottom (Css.px 8) ] ] [ Locale.text vc.locale "Assets" ]
                 , if List.isEmpty assets then
@@ -196,7 +200,7 @@ popover vc model hc =
                     div [ css [ Css.displayFlex, Css.flexWrap Css.wrap, Css.alignItems Css.center, Css.property "gap" "4px" ] ]
                         (List.map
                             (\asset ->
-                                optionChip asset
+                                optionChip (String.toUpper asset)
                                     (not (Set.member asset f.excludedAssets))
                                     (msg (GraphFilterMsg.UserToggledAsset asset))
                             )
@@ -327,7 +331,7 @@ optionChip label selected onClick =
                     Css.int 400
             ]
         ]
-        [ text (String.toUpper label) ]
+        [ text label ]
 
 
 {-| `label` comes translated, so check-lang sees the literal key at the call.
@@ -381,7 +385,7 @@ statusRow vc model =
                     |> Maybe.map
                         (\{ from, until } ->
                             ( Locale.string vc.locale "Time"
-                            , Locale.timestampDateUniform vc.locale from ++ " – " ++ Locale.timestampDateUniform vc.locale until
+                            , periodLabel vc f.timeMode { from = from, until = until }
                             , GraphFilterMsg.UserChangedPeriod Nothing
                             )
                         )
@@ -475,3 +479,210 @@ chipStyle background =
         , Css.whiteSpace Css.noWrap
         ]
     ]
+
+
+
+-- TIME
+
+
+{-| The most bars the activity strip draws; longer spans get several days per
+bar.
+-}
+maxBars : Int
+maxBars =
+    60
+
+
+timeSection : View.Config -> Pathfinder.Model -> Html Msg
+timeSection vc model =
+    let
+        f =
+            model.graphFilter
+
+        zone =
+            vc.locale.zone
+
+        buckets =
+            GraphFilter.activity vc.preferredFiatCurrency zone maxBars model.config.tracingMode f model.network
+
+        modeChip label mode =
+            optionChip label (f.timeMode == mode) (msg (GraphFilterMsg.UserChoseTimeMode mode))
+
+        dateValue =
+            Maybe.map (GraphFilter.toDateString zone) >> Maybe.withDefault ""
+
+        bounds =
+            case ( List.head buckets, List.reverse buckets |> List.head ) of
+                ( Just first, Just last ) ->
+                    [ HA.min (GraphFilter.toDateString zone first.period.from)
+                    , HA.max (GraphFilter.toDateString zone last.period.until)
+                    ]
+
+                _ ->
+                    []
+    in
+    div [ testId "gs-filter-time" ]
+        [ div [ css [ Css.displayFlex, Css.alignItems Css.baseline, Css.marginBottom (Css.px 8) ] ]
+            [ span [ css [ Css.flexGrow (Css.num 1), Css.fontWeight (Css.int 600) ] ] [ Locale.text vc.locale "Time" ]
+            , f.period
+                |> Maybe.map (\p -> span [ css [ Css.property "color" Colors.blue500 ] ] [ text (periodLabel vc f.timeMode p) ])
+                |> Maybe.withDefault (text "")
+            ]
+        , case model.config.tracingMode of
+            AggregateTracingMode ->
+                div [ css [ Css.property "color" Colors.greyBlue500 ] ]
+                    [ Locale.text vc.locale "The time filter works in the transaction view" ]
+
+            TransactionTracingMode ->
+                div [ css [ Css.displayFlex, Css.flexDirection Css.column, Css.property "gap" "8px" ] ]
+                    [ div [ css [ Css.displayFlex, Css.property "gap" "4px" ] ]
+                        [ modeChip (Locale.string vc.locale "Any time") AnyTime
+                        , modeChip (Locale.string vc.locale "One day") OneDay
+                        , modeChip (Locale.string vc.locale "Date range") DateRange
+                        ]
+
+                    -- above the date fields: they appear when a drag starts,
+                    -- and must not push the strip away from the pointer
+                    , activityStrip vc f.period buckets
+                    , case f.timeMode of
+                        AnyTime ->
+                            text ""
+
+                        OneDay ->
+                            dateField "gs-filter-day" bounds (dateValue (Maybe.map .from f.period)) GraphFilterMsg.UserChangedDay
+
+                        DateRange ->
+                            div [ css [ Css.displayFlex, Css.alignItems Css.center, Css.property "gap" "8px" ] ]
+                                [ dateField "gs-filter-from" bounds (dateValue (Maybe.map .from f.period)) GraphFilterMsg.UserChangedFrom
+                                , span [ css [ Css.property "color" Colors.greyBlue500 ] ] [ Locale.text vc.locale "to" ]
+                                , dateField "gs-filter-until" bounds (dateValue (Maybe.map .until f.period)) GraphFilterMsg.UserChangedUntil
+                                ]
+                    ]
+        ]
+
+
+periodLabel : View.Config -> TimeMode -> Period -> String
+periodLabel vc mode { from, until } =
+    if mode == OneDay then
+        Locale.timestampDateUniform vc.locale from
+
+    else
+        Locale.timestampDateUniform vc.locale from ++ " – " ++ Locale.timestampDateUniform vc.locale until
+
+
+dateField : String -> List (Html.Attribute Msg) -> String -> (String -> GraphFilterMsg.Msg) -> Html Msg
+dateField tid bounds value toMsg =
+    input
+        ([ HA.type_ "date"
+         , testId tid
+         , HA.value value
+         , onInput (toMsg >> msg)
+         , css
+            [ Css.flexGrow (Css.num 1)
+            , Css.minWidth Css.zero
+            , Css.height (Css.px 30)
+            , Css.padding2 Css.zero (Css.px 8)
+            , Css.borderRadius (Css.px 4)
+            , Css.border3 (Css.px 1) Css.solid Css.transparent
+            , Css.property "border-color" Colors.greyBlue200
+            , Css.property "color" Colors.greyBlue900
+            , Css.boxSizing Css.borderBox
+            , Css.fontSize (Css.px 12)
+            ]
+         ]
+            ++ bounds
+        )
+        []
+
+
+{-| Money moved per bar, height relative to the busiest bar (square root, so
+small days stay visible next to a big one). Press a bar to pick it, drag to
+pick a period. Bars outside the picked period are light.
+-}
+activityStrip : View.Config -> Maybe Period -> List Bucket -> Html Msg
+activityStrip vc period buckets =
+    let
+        top =
+            buckets |> List.map .value |> List.maximum |> Maybe.withDefault 0
+
+        inPeriod b =
+            case period of
+                Just p ->
+                    Time.posixToMillis b.period.from <= Time.posixToMillis p.until && Time.posixToMillis b.period.until >= Time.posixToMillis p.from
+
+                Nothing ->
+                    True
+
+        mouse event toMsg b =
+            stopPropagationOn event (Json.Decode.succeed ( msg (toMsg b.period), True ))
+
+        bar b =
+            div
+                [ testId "gs-filter-strip-bar"
+                , HA.title (Locale.timestampDateUniform vc.locale b.period.from ++ ": " ++ Locale.fiat vc.locale vc.preferredFiatCurrency b.value)
+                , mouse "mousedown" GraphFilterMsg.UserPressedStripBucket b
+                , mouse "mouseenter" GraphFilterMsg.UserEnteredStripBucket b
+                , mouse "mouseup" GraphFilterMsg.UserReleasedStripBucket b
+                , css
+                    [ Css.flexGrow (Css.num 1)
+                    , Css.flexBasis (Css.px 0)
+                    , Css.height (Css.pct 100)
+                    , Css.displayFlex
+                    , Css.alignItems Css.flexEnd
+                    , Css.justifyContent Css.center
+                    , Css.cursor Css.pointer
+                    , Css.property "background-color" <|
+                        if period /= Nothing && inPeriod b then
+                            Colors.blue50
+
+                        else
+                            "transparent"
+                    ]
+                ]
+                [ if b.value > 0 && top > 0 then
+                    div
+                        [ css
+                            [ Css.width (Css.pct 70)
+                            , Css.maxWidth (Css.px 8)
+                            , Css.height (Css.px (3 + sqrt (b.value / top) * 22))
+                            , Css.marginBottom (Css.px 3)
+                            , Css.borderRadius (Css.px 1)
+                            , Css.property "background-color" <|
+                                if inPeriod b then
+                                    Colors.greyBlue500
+
+                                else
+                                    Colors.greyBlue100
+                            ]
+                        ]
+                        []
+
+                  else
+                    text ""
+                ]
+    in
+    case ( List.head buckets, List.reverse buckets |> List.head ) of
+        ( Just first, Just last ) ->
+            div []
+                [ div
+                    [ testId "gs-filter-strip"
+                    , stopPropagationOn "mouseleave" (Json.Decode.succeed ( msg GraphFilterMsg.UserLeftStrip, True ))
+                    , css
+                        [ Css.displayFlex
+                        , Css.height (Css.px 32)
+                        , Css.padding2 Css.zero (Css.px 4)
+                        , Css.borderRadius (Css.px 4)
+                        , Css.property "background-color" Colors.greyBlue20
+                        , Css.property "user-select" "none"
+                        ]
+                    ]
+                    (List.map bar buckets)
+                , div [ css [ Css.displayFlex, Css.justifyContent Css.spaceBetween, Css.marginTop (Css.px 4), Css.fontSize (Css.px 11), Css.property "color" Colors.greyBlue500 ] ]
+                    [ span [] [ text (Locale.timestampDateUniform vc.locale first.period.from) ]
+                    , span [] [ Locale.text vc.locale "click a day, drag a period" ]
+                    , span [] [ text (Locale.timestampDateUniform vc.locale last.period.from) ]
+                    ]
+                ]
+
+        _ ->
+            text ""

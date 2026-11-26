@@ -154,6 +154,52 @@ suite =
                     hiddenTxs txConfig { init | period = period (day 10) (day 20) } chain
                         |> Expect.equal []
             ]
+        , describe "time helpers"
+            [ test "a day runs from midnight to the last millisecond" <|
+                \_ ->
+                    GraphFilter.dayBounds Time.utc (Time.millisToPosix ((day 10 + 3600 * 12) * 1000))
+                        |> Expect.equal
+                            { from = Time.millisToPosix (day 10 * 1000)
+                            , until = Time.millisToPosix (day 11 * 1000 - 1)
+                            }
+            , test "a date field value is the start of that day" <|
+                \_ ->
+                    GraphFilter.fromDateString Time.utc "1970-01-11"
+                        |> Expect.equal (Just (Time.millisToPosix (day 10 * 1000)))
+            , test "a date field value round-trips" <|
+                \_ ->
+                    GraphFilter.fromDateString Time.utc "2026-03-02"
+                        |> Maybe.map (GraphFilter.toDateString Time.utc)
+                        |> Expect.equal (Just "2026-03-02")
+            , test "an unparsable date is no date" <|
+                \_ -> GraphFilter.fromDateString Time.utc "2026-13-45" |> Expect.equal Nothing
+            ]
+        , describe "activity strip"
+            [ test "one bucket per day from the first transfer to the last, money per day" <|
+                \_ ->
+                    GraphFilter.activity "usd" Time.utc 60 TransactionTracingMode init chain
+                        |> (\buckets -> ( List.length buckets, List.map .value buckets |> List.filter ((<) 0) ))
+                        |> Expect.equal ( 11, [ 1000, 5 ] )
+            , test "a long span gets several days per bucket" <|
+                \_ ->
+                    GraphFilter.activity "usd" Time.utc 5 TransactionTracingMode init chain
+                        |> (\buckets -> ( List.length buckets, List.map .value buckets |> List.sum ))
+                        |> Expect.equal ( 4, 1005 )
+            , test "transfers the other filters hide do not count" <|
+                \_ ->
+                    GraphFilter.activity "usd" Time.utc 60 TransactionTracingMode { init | excludedAssets = Set.singleton "usdt" } chain
+                        |> List.map .value
+                        |> Expect.equal [ 5 ]
+            , test "the time filter itself does not shrink the strip" <|
+                \_ ->
+                    GraphFilter.activity "usd" Time.utc 60 TransactionTracingMode { init | period = period (day 15) (day 25) } chain
+                        |> List.length
+                        |> Expect.equal 11
+            , test "the aggregated mode has no strip" <|
+                \_ ->
+                    GraphFilter.activity "usd" Time.utc 60 AggregateTracingMode init chain
+                        |> Expect.equal []
+            ]
         , describe "assets"
             [ test "hides transfers of an excluded asset" <|
                 \_ ->
