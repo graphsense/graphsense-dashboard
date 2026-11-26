@@ -148,7 +148,7 @@ searchWithMoreCss vc sc model =
                                 ]
 
                             SearchActorsOnly ->
-                                [ Locale.string vc.locale "actor"
+                                [ Locale.string vc.locale "Actor"
                                     |> placeholder
                                 ]
                        )

@@ -192,7 +192,7 @@ showActor vc a =
             a.jurisdictions |> List.map (.label >> Locale.string vc.locale)
     in
     [ tooltipRow
-        { tooltipRowLabel = { title = Locale.string vc.locale "actor" }
+        { tooltipRowLabel = { title = Locale.string vc.locale "Actor" }
         , tooltipRowValue = a.label |> val vc
         }
     , tooltipRowCustomValue (Locale.string vc.locale "Url") (Html.a [ Css.plainLinkStyle vc |> css, href (addProtocolPrefx a.uri), target "blank" ] [ text a.uri ])
