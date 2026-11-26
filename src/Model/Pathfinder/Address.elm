@@ -3,6 +3,7 @@ module Model.Pathfinder.Address exposing
     , AddressServiceType(..)
     , Txs(..)
     , expandAllowed
+    , expandHandleAllowed
     , getActivityRange
     , getActivityRangeAddress
     , getAddressType
@@ -65,6 +66,10 @@ type alias Address =
     , plugins : Plugin.AddressState
     , clusterColor : Maybe String
     , addressServiceType : AddressServiceType
+
+    -- the tag concept that makes this address a service no expand can trace
+    -- through (see `Util.Pathfinder.TagSummary.expandStopConcept`)
+    , serviceStop : Maybe String
     }
 
 
@@ -204,6 +209,19 @@ isSharedService address =
 expandAllowed : Address -> Bool
 expandAllowed address =
     address.exchange == Nothing && (address |> isSmartContract |> not)
+
+
+{-| Whether the graph's expand handles may trace from this address.
+
+Stricter than `expandAllowed`: it also stops at services that pool funds
+(DEXes, bridges, mixers, markets, ...), where the "next" tx is just the
+service's latest unrelated customer. Kept separate so that plugins using
+`expandAllowed` for other purposes are not affected.
+
+-}
+expandHandleAllowed : Address -> Bool
+expandHandleAllowed address =
+    expandAllowed address && address.serviceStop == Nothing
 
 
 getClusterId : Address -> Maybe Id

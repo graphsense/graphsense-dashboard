@@ -395,6 +395,7 @@ open: Aperto
 copy address ID: Copia indirizzo ID
 copy transaction ID: Copia dell'ID della transazione
 auto trace limit: Limite di tracciamento automatico
+infobox-auto-tracing-stops-at-mixer: "Il tracciamento automatico si interrompe a {0}, una transazione CoinJoin (mixing). Un CoinJoin interrompe il legame tra input e output, quindi nessun singolo indirizzo dall'altro lato può essere indicato come origine o destinazione dei fondi. È comunque possibile proseguire manualmente scegliendo un indirizzo tra gli input o gli output della transazione."
 infobox-no-suitable-adjacent-transaction: Impossibile trovare una transazione adiacente
   adeguata per l'indirizzo {0}. Questo probabilmente perché i fondi non sono ancora
   stati spesi.

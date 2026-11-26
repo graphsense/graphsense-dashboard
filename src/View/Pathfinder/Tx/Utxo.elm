@@ -119,11 +119,7 @@ view vc pc level tx utxo annotation =
                 |> Maybe.withDefault ( [], [] )
 
         isCoinjoinTx =
-            utxo.raw.heuristics
-                |> Maybe.andThen .coinjoinHeuristics
-                |> Maybe.andThen .consensus
-                |> Maybe.map .detected
-                |> Maybe.withDefault False
+            isRawCoinJoin utxo.raw
 
         txNodeNeutralInstance =
             if isCoinjoinTx then

@@ -35,4 +35,5 @@ init id { x, y } =
     , plugins = Plugin.initAddress
     , clusterColor = Nothing
     , addressServiceType = UnknownService
+    , serviceStop = Nothing
     }

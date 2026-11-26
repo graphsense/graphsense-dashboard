@@ -417,6 +417,7 @@ infobox-auto-tracing-stops-at-service: Urmărirea automată se oprește la adres
 copy address ID: Copiază ID-ul adresei
 copy transaction ID: Copiază ID-ul tranzacției
 auto trace limit: Limită urmărire automată
+infobox-auto-tracing-stops-at-mixer: "Urmărirea automată se oprește la {0}, o tranzacție CoinJoin (mixare). Un CoinJoin rupe legătura dintre intrări și ieșiri, astfel încât nicio adresă de pe cealaltă parte nu poate fi indicată ca sursă sau destinație a fondurilor. Puteți continua manual alegând o adresă din intrările sau ieșirile tranzacției."
 infobox-no-suitable-adjacent-transaction: Nu s-a putut găsi o tranzacție adiacentă potrivită
   pentru adresa {0}. Acest lucru se datorează probabil faptului că fondurile nu au fost încă
   cheltuite.

@@ -408,6 +408,7 @@ infobox-auto-tracing-stops-at-service: Auto tracing stops at service addresses, 
 copy address ID: Copy address ID
 copy transaction ID: Copy transaction ID
 auto trace limit: Auto trace limit
+infobox-auto-tracing-stops-at-mixer: "Auto tracing stops at {0}, a CoinJoin (mixing) transaction. A CoinJoin breaks the link between its inputs and outputs, so no single address on the other side can be named as the source or destination of the funds. You can still continue manually by picking an address from the transaction's inputs or outputs."
 infobox-no-suitable-adjacent-transaction: Could not find a suitable adjacent transaction
   for address {0}. This is likely because the funds are not yet spent.
 save file: Save file

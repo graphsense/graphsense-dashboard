@@ -30,6 +30,7 @@ module Model.Pathfinder.Tx exposing
     , hasInput
     , hasOutput
     , ioToId
+    , isRawCoinJoin
     , isRawInFlow
     , isRawOutFlow
     , isZeroValueTx
@@ -469,6 +470,19 @@ sumIoValuesForAddress address ios =
                 |> List.map .value
                 |> Data.sumValues
                 |> Just
+
+
+{-| Does the GraphSense CoinJoin consensus flag this tx as a mixing tx?
+Needs the tx fetched with heuristics (`includeIo` does that); without them
+the answer is `False`.
+-}
+isRawCoinJoin : Api.Data.TxUtxo -> Bool
+isRawCoinJoin tx =
+    tx.heuristics
+        |> Maybe.andThen .coinjoinHeuristics
+        |> Maybe.andThen .consensus
+        |> Maybe.map .detected
+        |> Maybe.withDefault False
 
 
 isZeroValueTx : Api.Data.Tx -> Bool
