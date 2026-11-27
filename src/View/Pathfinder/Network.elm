@@ -470,11 +470,11 @@ dimAttrs look =
          , Css.property "transition" "opacity 0.2s ease-in-out"
          ]
             -- one css value: two would each become a class, and which wins
-            -- would depend on how their text sorts (see .claude/CLAUDE.md)
+            -- would depend on how their text sorts (see .claude/CLAUDE.md).
+            -- Grey only, not dashed: dashes on parallel edges read as stripes
+            -- (2026-11-27)
             ++ (if look == Filtered then
-                    [ Css.property "filter" "grayscale(1)"
-                    , Css.property "stroke-dasharray" "4 3"
-                    ]
+                    [ Css.property "filter" "grayscale(1)" ]
 
                 else
                     []

@@ -16,12 +16,13 @@ Rules:
 
   - A transaction passes when its asset, value and time all pass. The asset
     of a swap leg also passes when the other leg's asset passes, so a swap
-    never breaks the trail ("swaps stay linked").
+    never breaks the trail.
   - A transaction without a fiat value in the chosen currency is never hidden
     by the value filter: what we cannot price, we do not drop.
-  - The value of a UTXO transaction is the largest input or output that is
-    shown on the graph (an io whose address is on the graph). Without any,
-    it is the total output. Provisional, to be checked in testing.
+  - The value of a UTXO transaction is its largest output shown on the
+    graph (an output whose address is on the graph; design review 2026-11-27). With no
+    output shown, it is the sum of the inputs shown; with neither, the total
+    output.
   - An address is hidden when it has transfers on the graph but none of them
     is visible. Protected addresses (starting points, plus what the caller
     passes: annotated, selected) are kept instead (`greyedAddresses`: drawn
@@ -350,19 +351,22 @@ txFiatValue fiatCode tx =
             Locale.getFiatValue fiatCode t.value
 
         Utxo t ->
+            -- design review 2026-11-27: the outputs shown on the graph; a tx with none
+            -- shown (only its inputs are on the graph) by its shown inputs
             let
-                shown =
-                    Dict.values t.inputs
-                        ++ Dict.values t.outputs
-                        |> List.filter (.address >> (/=) Nothing)
-                        |> List.filterMap (.values >> Locale.getFiatValue fiatCode)
-                        |> List.maximum
+                shownValues =
+                    Dict.values
+                        >> List.filter (.address >> (/=) Nothing)
+                        >> List.filterMap (.values >> Locale.getFiatValue fiatCode)
             in
-            case shown of
-                Just v ->
-                    Just v
+            case ( shownValues t.outputs, shownValues t.inputs ) of
+                ( (_ :: _) as shownOutputs, _ ) ->
+                    List.maximum shownOutputs
 
-                Nothing ->
+                ( [], (_ :: _) as shownInputs ) ->
+                    Just (List.sum shownInputs)
+
+                ( [], [] ) ->
                     Locale.getFiatValue fiatCode t.raw.totalOutput
 
 
@@ -576,10 +580,13 @@ toDateString zone =
 
 
 {-| One bar of the activity strip: the fiat value moved in `period`.
+`gapBefore` is the number of days without transfers the strip leaves out
+right before this bar, see `activity`.
 -}
 type alias Bucket =
     { period : Period
     , value : Float
+    , gapBefore : Maybe Int
     }
 
 
@@ -588,6 +595,13 @@ the first transfer to the day of the last, one bucket per day, or per several
 days when that would make more than `maxBuckets` bars. Only transfers that
 pass the asset and value filters count, so the strip shows what the time
 filter picks from. Empty in the aggregated mode, which has no times.
+
+A long stretch without transfers would squeeze everything else into a few
+bars (transfers in 2019 and 2024: two bars of a month each). So while the
+span needs more than `maxBuckets` bars, the longest empty stretch is left out
+if it is at least `minGapDays` and a fifth of the span, at most `maxGaps`
+times. The first bar after one carries its length in `gapBefore`.
+
 -}
 activity : String -> Time.Zone -> Int -> TracingMode -> Model -> Network -> List Bucket
 activity fiatCode zone maxBuckets mode model network =
@@ -613,48 +627,138 @@ activity fiatCode zone maxBuckets mode model network =
         times =
             List.map (Tuple.first >> Time.posixToMillis) counted
     in
-    case ( mode, List.minimum times, List.maximum times ) of
-        ( TransactionTracingMode, Just first, Just last ) ->
+    case ( mode, List.minimum times ) of
+        ( TransactionTracingMode, Just first ) ->
             let
                 start =
                     Time.Extra.floor Time.Extra.Day zone (Time.millisToPosix first)
 
-                days =
-                    Time.Extra.diff Time.Extra.Day zone start (Time.millisToPosix last) + 1
+                dayOf t =
+                    Time.Extra.diff Time.Extra.Day zone start t
 
-                daysPerBucket =
-                    max 1 (ceiling (toFloat days / toFloat (max 1 maxBuckets)))
-
-                bucketCount =
-                    ceiling (toFloat days / toFloat daysPerBucket)
-
-                bucketOf t =
-                    Time.Extra.diff Time.Extra.Day zone start t // daysPerBucket
-
-                sums =
+                perDay =
                     counted
                         |> List.foldl
-                            (\( t, v ) -> Dict.update (bucketOf t) (Maybe.withDefault 0 >> (+) v >> Just))
+                            (\( t, v ) -> Dict.update (dayOf t) (Maybe.withDefault 0 >> (+) v >> Just))
                             Dict.empty
+
+                dayStart d =
+                    Time.Extra.add Time.Extra.Day d zone start
+
+                segments =
+                    activeSegments maxBuckets (Dict.keys perDay)
+
+                gaps =
+                    List.length segments - 1
+
+                daysPerBucket =
+                    max 1
+                        (ceiling
+                            (toFloat (segments |> List.map (\( a, b ) -> b - a + 1) |> List.sum)
+                                / toFloat (max 1 (maxBuckets - gaps))
+                            )
+                        )
+
+                bucketsOf previousEnd ( a, b ) =
+                    List.range 0 ((b - a) // daysPerBucket)
+                        |> List.map
+                            (\i ->
+                                let
+                                    from =
+                                        a + i * daysPerBucket
+
+                                    until =
+                                        min b (from + daysPerBucket - 1)
+                                in
+                                { period =
+                                    { from = dayStart from
+                                    , until = dayStart (until + 1) |> Time.posixToMillis |> (+) -1 |> Time.millisToPosix
+                                    }
+                                , value =
+                                    List.range from until
+                                        |> List.filterMap (\d -> Dict.get d perDay)
+                                        |> List.sum
+                                , gapBefore =
+                                    case ( i, previousEnd ) of
+                                        ( 0, Just e ) ->
+                                            Just (a - e - 1)
+
+                                        _ ->
+                                            Nothing
+                                }
+                            )
             in
-            List.range 0 (bucketCount - 1)
-                |> List.map
-                    (\i ->
-                        let
-                            from =
-                                Time.Extra.add Time.Extra.Day (i * daysPerBucket) zone start
-                        in
-                        { period =
-                            { from = from
-                            , until =
-                                Time.Extra.add Time.Extra.Day daysPerBucket zone from
-                                    |> Time.posixToMillis
-                                    |> (+) -1
-                                    |> Time.millisToPosix
-                            }
-                        , value = Dict.get i sums |> Maybe.withDefault 0
-                        }
+            segments
+                |> List.foldl
+                    (\(( _, b ) as segment) ( previousEnd, acc ) ->
+                        ( Just b, acc ++ bucketsOf previousEnd segment )
                     )
+                    ( Nothing, [] )
+                |> Tuple.second
+
+        _ ->
+            []
+
+
+{-| Shorter gaps are always drawn as empty bars.
+-}
+minGapDays : Int
+minGapDays =
+    7
+
+
+maxGaps : Int
+maxGaps =
+    5
+
+
+{-| The days with transfers (ascending day numbers) as the stretches the strip
+draws, first and last day of each; the stretches between them are left out.
+See `activity`.
+-}
+activeSegments : Int -> List Int -> List ( Int, Int )
+activeSegments maxBuckets days =
+    case ( List.head days, List.reverse days |> List.head ) of
+        ( Just first, Just last ) ->
+            let
+                -- empty stretches between days with transfers: (day before, day after)
+                holes =
+                    List.map2 Tuple.pair days (List.drop 1 days)
+                        |> List.filter (\( a, b ) -> b - a - 1 >= minGapDays)
+                        |> List.sortBy (\( a, b ) -> a - b)
+
+                length ( a, b ) =
+                    b - a - 1
+
+                pick span candidates chosen =
+                    case candidates of
+                        hole :: rest ->
+                            if
+                                List.length chosen
+                                    < maxGaps
+                                    && span
+                                    > maxBuckets
+                                    && toFloat (length hole)
+                                    * 5
+                                    >= toFloat span
+                            then
+                                pick (span - length hole) rest (hole :: chosen)
+
+                            else
+                                chosen
+
+                        [] ->
+                            chosen
+
+                cuts =
+                    pick (last - first + 1) holes []
+                        |> List.sortBy Tuple.first
+            in
+            List.foldr
+                (\( before, after ) ( segmentEnd, acc ) -> ( before, ( after, segmentEnd ) :: acc ))
+                ( last, [] )
+                cuts
+                |> (\( firstEnd, acc ) -> ( first, firstEnd ) :: acc)
 
         _ ->
             []

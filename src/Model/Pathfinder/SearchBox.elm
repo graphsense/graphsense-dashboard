@@ -3,7 +3,6 @@ module Model.Pathfinder.SearchBox exposing
     , Model
     , currentMatch
     , dimmedOpacity
-    , edgeAttrs
     , empty
     , highlightFor
     , highlightForAny
@@ -15,7 +14,7 @@ import List.Extra
 import Model.Pathfinder.Id exposing (Id)
 import Set exposing (Set)
 import Svg.Styled exposing (Attribute)
-import Svg.Styled.Attributes exposing (css, opacity, strokeDasharray)
+import Svg.Styled.Attributes exposing (css, opacity)
 
 
 type alias Model =
@@ -54,18 +53,6 @@ dimmedOpacity highlight =
 
         _ ->
             []
-
-
-{-| `dimmedOpacity`, and a filtered-out edge is dashed as well. Set on the
-group around an edge, the dash reaches the paths that do not set their own.
--}
-edgeAttrs : Highlight -> List (Attribute msg)
-edgeAttrs highlight =
-    if highlight == FilteredOut then
-        strokeDasharray "4 3" :: dimmedOpacity highlight
-
-    else
-        dimmedOpacity highlight
 
 
 empty : Model

@@ -72,7 +72,9 @@ view vc pc level tx utxo annotation =
                                         Colors.pathOut
                             )
                     )
-                |> Maybe.withDefault Colors.pathMiddle
+                -- the selection ring: an annotation's or a swap leg's colour,
+                -- else the blue of the selection (design review 2026-11-27)
+                |> Maybe.withDefault Colors.blue400
 
         anyIsNotVisible =
             Dict.toList
@@ -170,7 +172,17 @@ view vc pc level tx utxo annotation =
                         |> preventDefaultOn "contextmenu"
                     ]
                         ++ tooltipAttributes vc tx.id utxo
-                , highlightEllipse = [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
+                , highlightEllipse =
+                    -- a light blue halo with a thin rim, as for addresses
+                    -- (design review 2026-11-27); the rim keeps an annotation's colour
+                    [ rx "12"
+                    , ry "12"
+                    , css
+                        [ Css.property "fill" Colors.blue100 |> Css.important
+                        , Css.property "stroke" colorFinal |> Css.important
+                        , Css.property "stroke-width" "1.5" |> Css.important
+                        ]
+                    ]
                 , date =
                     [ translate 0 offsetTxHash |> transform ]
                 , time =
@@ -183,19 +195,17 @@ view vc pc level tx utxo annotation =
                 , date = Locale.timestampDateUniform vc.locale t |> ifTrue showTimestamp
                 , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset t |> ifTrue showTimestamp
                 , timestampVisible = showTimestamp || showHash
-                , startingPointVisible = tx.isStartingPoint || pc.hideForExport /= Exporting True && tx.selected
+                , startingPointVisible = tx.isStartingPoint
                 }
             , iconsNodeMarker =
                 { variant =
-                    case ( tx.selected, tx.isStartingPoint ) of
-                        ( True, _ ) ->
-                            Icons.iconsNodeMarkerPurposeSelectedNode {}
+                    -- no marker for the selection, the ring shows it
+                    -- (design review 2026-11-27)
+                    if tx.isStartingPoint then
+                        Icons.iconsNodeMarkerPurposeStartingPoint {}
 
-                        ( False, False ) ->
-                            text ""
-
-                        ( False, True ) ->
-                            Icons.iconsNodeMarkerPurposeStartingPoint {}
+                    else
+                        text ""
                 }
             , txNode =
                 { variant = txNodeNeutralInstance

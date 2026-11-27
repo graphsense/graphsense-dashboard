@@ -311,7 +311,44 @@ view vc pc capabilities searchHighlight level address annotation =
                         |> onMouseLeave
                     ]
                 |> Rs.s_nodeFrame annAttr
-                |> Rs.s_clusterColor clusterStroke
+                |> Rs.s_clusterColor
+                    (clusterStroke
+                        -- the halo below reaches into the cluster ring's place;
+                        -- with it, the ring moves out so a white gap keeps the
+                        -- two apart (design review 2026-11-27). Later attributes win
+                        -- over the generated rx/ry
+                        ++ (if highlightVisible then
+                                [ Svg.rx "34", Svg.ry "34" ]
+
+                            else
+                                []
+                           )
+                    )
+                -- the selection as in the prototype (design review 2026-11-27): a light
+                -- blue halo behind the node with a thin blue rim; the current
+                -- search match, if not selected, fainter with a dashed rim.
+                -- Overrides the generated ring until the Figma node has it
+                |> Rs.s_highlightColor
+                    (Svg.rx "30"
+                        :: Svg.ry "30"
+                        :: (if address.selected then
+                                [ css
+                                    [ Css.property "fill" Colors.blue100 |> Css.important
+                                    , Css.property "stroke" Colors.blue400 |> Css.important
+                                    , Css.property "stroke-width" "1.5" |> Css.important
+                                    ]
+                                ]
+
+                            else
+                                [ css
+                                    [ Css.property "fill" Colors.blue50 |> Css.important
+                                    , Css.property "stroke" Colors.blue500 |> Css.important
+                                    , Css.property "stroke-width" "1.5" |> Css.important
+                                    , Css.property "stroke-dasharray" "3 2" |> Css.important
+                                    ]
+                                ]
+                           )
+                    )
             )
             { root =
                 { addressId =
@@ -329,7 +366,7 @@ view vc pc capabilities searchHighlight level address annotation =
                 , mainIconInstance = toNodeIcon address
                 , exchangeLabel = nodeLabel |> Maybe.withDefault ""
                 , exchangeLabelVisible = nodeLabel /= Nothing
-                , isStartingPoint = address.isStartingPoint || (pc.hideForExport /= Exporting True && address.selected)
+                , isStartingPoint = address.isStartingPoint
                 , icon1Visible = iconVisible icons 0
                 , icon1Instance = iconInstance icons 0
                 , icon2Visible = iconVisible icons 1
@@ -405,15 +442,13 @@ view vc pc capabilities searchHighlight level address annotation =
                 }
             , iconsNodeMarker =
                 { variant =
-                    case ( address.selected || isCurrentSearchMatch, address.isStartingPoint ) of
-                        ( True, _ ) ->
-                            Icons.iconsNodeMarkerPurposeSelectedNode {}
+                    -- no marker for the selection or the current search
+                    -- match, the ring shows it (design review 2026-11-27)
+                    if address.isStartingPoint then
+                        Icons.iconsNodeMarkerPurposeStartingPoint {}
 
-                        ( False, False ) ->
-                            text ""
-
-                        ( False, True ) ->
-                            Icons.iconsNodeMarkerPurposeStartingPoint {}
+                    else
+                        text ""
                 }
             }
             :: label

@@ -125,19 +125,29 @@ suite =
             , test "a transfer without a fiat value in the chosen currency stays" <|
                 \_ -> hiddenTxs { txConfig | fiatCode = "eur" } tiny chain |> Expect.equal []
             ]
-        , describe "UTXO value: largest io shown on the graph"
+        , describe "UTXO value: the outputs shown on the graph (design review 2026-11-27)"
             [ test "an off-graph output does not count" <|
                 \_ ->
                     networkOf []
                         [ utxoTx "u1" [ ( "in", 1005, False ) ] [ ( "shown", 5, True ), ( "other", 1000, False ) ] 1005 ]
                         |> hiddenTxs txConfig tiny
                         |> Expect.equal [ Id.init "btc" "u1" ]
-            , test "the largest shown io decides" <|
+            , test "a shown output decides, not a larger shown input" <|
                 \_ ->
                     networkOf []
                         [ utxoTx "u1" [ ( "in", 50, True ) ] [ ( "shown", 5, True ) ] 55 ]
                         |> hiddenTxs txConfig tiny
-                        |> Expect.equal []
+                        |> Expect.equal [ Id.init "btc" "u1" ]
+            , test "the largest shown output decides" <|
+                \_ ->
+                    utxoTx "u1" [ ( "in", 900, True ) ] [ ( "a", 5, True ), ( "b", 40, True ), ( "c", 800, False ) ] 845
+                        |> GraphFilter.txFiatValue "usd"
+                        |> Expect.equal (Just 40)
+            , test "with no output shown, the shown inputs add up" <|
+                \_ ->
+                    utxoTx "u1" [ ( "i1", 6, True ), ( "i2", 7, True ), ( "i3", 500, False ) ] [ ( "out", 500, False ) ] 500
+                        |> GraphFilter.txFiatValue "usd"
+                        |> Expect.equal (Just 13)
             , test "without any shown io, the total output decides" <|
                 \_ ->
                     utxoTx "u1" [ ( "in", 1, False ) ] [ ( "out", 1, False ) ] 3
@@ -182,9 +192,37 @@ suite =
                         |> Expect.equal ( 11, [ 1000, 5 ] )
             , test "a long span gets several days per bucket" <|
                 \_ ->
+                    -- daily transfers for 30 days: no empty stretch to leave out
+                    networkOf [ "a", "b" ] (List.range 0 29 |> List.map (\i -> accountTx ("d" ++ String.fromInt i) "a" "b" "eth" (usd 1) (day i)))
+                        |> GraphFilter.activity "usd" Time.utc 10 TransactionTracingMode init
+                        |> (\buckets -> ( List.length buckets, List.map .value buckets |> List.sum, List.filterMap .gapBefore buckets ))
+                        |> Expect.equal ( 10, 30, [] )
+            , test "a long empty stretch is left out instead of squeezing the bars" <|
+                \_ ->
+                    -- two bursts of activity, 5 years apart
+                    networkOf [ "a", "b" ]
+                        [ accountTx "x1" "a" "b" "eth" (usd 10) (day 0)
+                        , accountTx "x2" "a" "b" "eth" (usd 20) (day 1)
+                        , accountTx "y1" "a" "b" "eth" (usd 30) (day 1826)
+                        , accountTx "y2" "a" "b" "eth" (usd 40) (day 1828)
+                        ]
+                        |> GraphFilter.activity "usd" Time.utc 60 TransactionTracingMode init
+                        |> List.map (\b -> ( b.value, b.gapBefore ))
+                        |> Expect.equal [ ( 10, Nothing ), ( 20, Nothing ), ( 30, Just 1824 ), ( 0, Nothing ), ( 40, Nothing ) ]
+            , test "the bars keep their real dates after a gap" <|
+                \_ ->
+                    networkOf [ "a", "b" ]
+                        [ accountTx "x1" "a" "b" "eth" (usd 10) (day 0)
+                        , accountTx "y1" "a" "b" "eth" (usd 30) (day 1826)
+                        ]
+                        |> GraphFilter.activity "usd" Time.utc 60 TransactionTracingMode init
+                        |> List.map (.period >> .from >> Time.posixToMillis)
+                        |> Expect.equal [ 0, day 1826 * 1000 ]
+            , test "with few bars to spare, a shorter empty stretch is left out too" <|
+                \_ ->
                     GraphFilter.activity "usd" Time.utc 5 TransactionTracingMode init chain
-                        |> (\buckets -> ( List.length buckets, List.map .value buckets |> List.sum ))
-                        |> Expect.equal ( 4, 1005 )
+                        |> (\buckets -> ( List.length buckets, List.map .value buckets |> List.sum, List.filterMap .gapBefore buckets ))
+                        |> Expect.equal ( 2, 1005, [ 9 ] )
             , test "transfers the other filters hide do not count" <|
                 \_ ->
                     GraphFilter.activity "usd" Time.utc 60 TransactionTracingMode { init | excludedAssets = Set.singleton "usdt" } chain

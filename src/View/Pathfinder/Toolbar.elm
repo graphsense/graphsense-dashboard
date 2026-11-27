@@ -115,20 +115,24 @@ view vc config =
                         ]
          in
          SettingsComponents.toolbarInstances
-            -- the last section holds display settings and, new, the graph
-            -- filter; the generated toolbar has no slot for the latter yet
+            -- the last section holds, new, the graph filter and then the
+            -- display settings; the generated toolbar has no slot for the
+            -- former yet
             |> Rs.s_section5
                 (Just
                     (div [ css [ Css.displayFlex, Css.property "gap" "6px", Css.alignItems Css.center ] ]
-                        [ Icons.iconsDisplayConfigurationWithAttributes
+                        [ GraphFilterView.toolbarButton vc { activeFilters = config.activeFilters, open = config.filterOpen }
+                        , Icons.iconsDisplayConfigurationWithAttributes
                             (Icons.iconsDisplayConfigurationAttributes
                                 |> Rs.s_root
                                     (id (toolbarHovercardTypeToId Settings)
                                         :: iconsAttr "gs-toolbar-display-settings" "Display settings" False (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
                                     )
+                                -- the icon's own fill is the sidebar's near
+                                -- black; the toolbar draws its icons grey
+                                |> Rs.s_combinedShape [ css [ Css.property "fill" Theme.Colors.greyBlue500 |> Css.important ] ]
                             )
                             {}
-                        , GraphFilterView.toolbarButton vc { activeFilters = config.activeFilters, open = config.filterOpen }
                         ]
                     )
                 )
