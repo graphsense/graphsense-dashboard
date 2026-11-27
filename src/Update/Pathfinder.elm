@@ -1698,8 +1698,9 @@ updateByMsg uc msg model =
                         |> Tuple.mapSecond (List.map Pathfinder.SearchEffect)
 
         UserClosedDetailsView ->
-            { model | details = Nothing, selection = NoSelection }
-                |> n
+            -- unmark the selected nodes too: resetting only `selection` left
+            -- them drawn as selected, stuck (multi-selection toolbar's clear)
+            unselect model
 
         TxDetailsMsg (TxDetails.UserClickedTxInSubTxsTable tx) ->
             addOrRemoveTx (Just (Id.init tx.network tx.fromAddress)) (Id.init tx.network tx.identifier) model

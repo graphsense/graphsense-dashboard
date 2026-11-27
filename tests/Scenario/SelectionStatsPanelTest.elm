@@ -53,6 +53,31 @@ suite =
                         [ App.html >> Query.findAll [ byTestId "gs-selection-stats" ] >> Query.count (Expect.equal 0)
                         , App.model >> .selection >> Expect.equal NoSelection
                         ]
+        , test "clearing it from the toolbar unmarks the nodes, so the selection is not stuck" <|
+            \_ ->
+                -- a real multi-selection marks each node selected; closing
+                -- used to reset only `model.selection`, leaving the nodes
+                -- drawn as selected and out of reach of the next selection
+                twoSelectedOnGraph
+                    |> App.mapModel
+                        (\m ->
+                            let
+                                network =
+                                    m.network
+                            in
+                            { m | network = { network | addresses = Dict.map (\_ a -> { a | selected = True }) network.addresses } }
+                        )
+                    |> App.step UserClosedDetailsView
+                    |> App.model
+                    |> (\m -> ( m.selection, m.network.addresses |> Dict.values |> List.filter .selected |> List.length ))
+                    |> Expect.equal ( NoSelection, 0 )
+        , test "its clear button closes the selection like the panel's close" <|
+            \_ ->
+                twoSelectedOnGraph
+                    |> App.html
+                    |> Query.find [ byTestId "gs-selection-toolbar-clear" ]
+                    |> Event.simulate Event.click
+                    |> Event.expect UserClosedDetailsView
         , test "a floating toolbar shows the actions for the selection" <|
             \_ ->
                 twoSelectedOnGraph

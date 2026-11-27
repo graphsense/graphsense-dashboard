@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The expand handles are disabled not only on exchanges but on every address whose own tags mark it as a service that pools funds (DEX, bridge, mixer, market, gambling, payment processor, wallet service, ATM, lending, custody), so an expand no longer adds an unrelated customer's transaction as if it continued the trace. A service concept counts when it is the address's top concept or carries at least 30% of the tag weight, so a single weak mention does not disable tracing
 
 ### Fixed
+- Closing the details panel of a selection, or clearing a multi-selection, now also takes the selection marks off the nodes; they stayed drawn as selected and the selection was stuck
 - The search placeholder in English read "Address, transaction, Actor"; actor is lower case now, like the other kinds
 
 ## [26.11.0] - 2026-11-25
