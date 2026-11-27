@@ -28,6 +28,7 @@ import RecordSetter as Rs
 import Set
 import Theme.Colors as Colors
 import Theme.Html.Buttons as Buttons
+import Theme.Html.GraphFilters as GraphFilters
 import Theme.Html.Icons as Icons
 import Theme.Html.SelectionControls exposing (SwitchSize(..))
 import Time
@@ -52,62 +53,31 @@ Highlighted like the other toolbar tools while the popover is open.
 -}
 toolbarButton : View.Config -> { activeFilters : Int, open : Bool } -> Html Msg
 toolbarButton vc { activeFilters, open } =
-    div
-        [ HA.id (toolbarHovercardTypeToId Filter)
-        , testId "gs-toolbar-filter"
-        , HA.title (Locale.string vc.locale "Filters")
-        , onClickWithStop (msg GraphFilterMsg.UserClickedToggleFilter)
-        , css
-            [ Css.position Css.relative
-            , Css.width (Css.px 24)
-            , Css.height (Css.px 24)
-            , Css.cursor Css.pointer
-            , Css.borderRadius (Css.px 5)
-            , Css.property "background-color" <|
-                if open then
-                    Colors.toolbarHighlight
+    GraphFilters.toolbarFilterButtonWithAttributes
+        (GraphFilters.toolbarFilterButtonAttributes
+            |> Rs.s_root
+                [ HA.id (toolbarHovercardTypeToId Filter)
+                , testId "gs-toolbar-filter"
+                , HA.title (Locale.string vc.locale "Filters")
+                , onClickWithStop (msg GraphFilterMsg.UserClickedToggleFilter)
+                , css
+                    [ Css.cursor Css.pointer
+                    , Css.borderRadius (Css.px 5)
+                    , Css.property "background-color"
+                        (if open then
+                            Colors.toolbarHighlight
 
-                else
-                    "transparent"
-            ]
-        ]
-        (Icons.iconsFilterWithAttributes
-            -- grey like the toolbar's own icons, not the icon's near black
-            (Icons.iconsFilterAttributes
-                |> Rs.s_filter [ css [ Css.property "fill" Colors.greyBlue500 |> Css.important ] ]
-            )
-            {}
-            :: (if activeFilters > 0 then
-                    [ badge activeFilters ]
-
-                else
-                    []
-               )
+                         else
+                            "transparent"
+                        )
+                        |> Css.important
+                    ]
+                ]
+            |> Rs.s_countBadge [ testId "gs-filter-count" ]
         )
-
-
-badge : Int -> Html msg
-badge n =
-    span
-        [ testId "gs-filter-count"
-        , css
-            [ Css.position Css.absolute
-            , Css.top (Css.px -6)
-            , Css.right (Css.px -7)
-            , Css.minWidth (Css.px 16)
-            , Css.height (Css.px 16)
-            , Css.padding2 Css.zero (Css.px 4)
-            , Css.borderRadius (Css.px 8)
-            , Css.property "background-color" Colors.blue500
-            , Css.property "color" Colors.white
-            , Css.fontSize (Css.px 10)
-            , Css.fontWeight (Css.int 600)
-            , Css.lineHeight (Css.px 16)
-            , Css.textAlign Css.center
-            , Css.boxSizing Css.borderBox
-            ]
-        ]
-        [ text (String.fromInt n) ]
+        { countBadge = { count = String.fromInt activeFilters }
+        , root = { badgeVisible = activeFilters > 0 }
+        }
 
 
 
@@ -251,29 +221,34 @@ popover vc model hc =
 
 limitEditor : View.Config -> Pathfinder.Model -> Html Msg
 limitEditor vc model =
-    -- the label on its own line, so the field can be wide and Done sit at
-    -- the right edge (2026-11-27)
-    div
-        [ css
-            [ Css.marginTop (Css.px 8)
-            , Css.padding2 (Css.px 8) (Css.px 10)
-            , Css.borderRadius (Css.px 6)
-            , Css.property "background-color" Colors.greyBlue20
-            ]
-        ]
-        [ div [ css [ Css.property "color" Colors.greyBlue700, Css.marginBottom (Css.px 6) ] ] [ Locale.text vc.locale "Hide transfers under" ]
-        , div [ css [ Css.displayFlex, Css.alignItems Css.center, Css.property "gap" "6px" ] ] (limitRow vc model)
-        ]
+    GraphFilters.limitEditorWithInstances
+        (GraphFilters.limitEditorAttributes
+            |> Rs.s_root
+                [ css
+                    -- as wide as the popover, which is narrower than the frame
+                    [ Css.marginTop (Css.px 8)
+                    , Css.width (Css.pct 100) |> Css.important
+                    , Css.boxSizing Css.borderBox |> Css.important
+                    ]
+                ]
+        )
+        (GraphFilters.limitEditorInstances |> Rs.s_limitInput (Just (limitInput model)))
+        { root =
+            { label = Locale.string vc.locale "Hide transfers under"
+            , currency = String.toUpper vc.preferredFiatCurrency
+            }
+        , done = { variant = link vc (Locale.string vc.locale "Done") (msg GraphFilterMsg.UserClickedLimitDone) }
+        }
 
 
-limitRow : View.Config -> Pathfinder.Model -> List (Html Msg)
-limitRow vc model =
-    [ input
+{-| The field of the limit editor: a number input in place of the drawn one.
+The arrows move the limit by 10; any value can still be typed.
+-}
+limitInput : Pathfinder.Model -> Html Msg
+limitInput model =
+    input
         [ HA.type_ "number"
         , HA.min "0"
-
-        -- the arrows move the limit by 10 (2026-11-27); any value can
-        -- still be typed
         , HA.step "10"
         , testId "gs-filter-limit"
         , HA.value (String.fromFloat model.graphFilter.limit)
@@ -295,60 +270,35 @@ limitRow vc model =
             ]
         ]
         []
-    , span [ css [ Css.property "color" Colors.greyBlue700 ] ] [ text (String.toUpper vc.preferredFiatCurrency) ]
-    , span [ css [ Css.marginLeft Css.auto ] ]
-        [ link vc (Locale.string vc.locale "Done") (msg GraphFilterMsg.UserClickedLimitDone) ]
-    ]
 
 
 optionChip : String -> Bool -> Msg -> Html Msg
 optionChip label selected onClick =
-    span
-        [ testId "gs-filter-asset"
-        , HA.attribute "aria-pressed"
-            (if selected then
-                "true"
+    GraphFilters.optionChipWithAttributes
+        { option = []
+        , root =
+            [ testId "gs-filter-asset"
+            , HA.attribute "aria-pressed"
+                (if selected then
+                    "true"
 
-             else
-                "false"
-            )
-        , onClickWithStop onClick
-        , css
-            [ Css.cursor Css.pointer
-            , Css.height (Css.px 24)
-            , Css.displayFlex
-            , Css.alignItems Css.center
-            , Css.padding2 Css.zero (Css.px 10)
-            , Css.borderRadius (Css.px 12)
-            , Css.border3 (Css.px 1) Css.solid Css.transparent
-            , Css.boxSizing Css.borderBox
-            , Css.property "border-color" <|
-                if selected then
-                    Colors.blue500
-
-                else
-                    Colors.greyBlue200
-            , Css.property "background-color" <|
-                if selected then
-                    Colors.blue50
-
-                else
-                    Colors.white
-            , Css.property "color" <|
-                if selected then
-                    Colors.blue700
-
-                else
-                    Colors.greyBlue700
-            , Css.fontWeight <|
-                if selected then
-                    Css.int 500
-
-                else
-                    Css.int 400
+                 else
+                    "false"
+                )
+            , onClickWithStop onClick
+            , css [ Css.cursor Css.pointer ]
             ]
-        ]
-        [ text label ]
+        }
+        { root =
+            { selected =
+                if selected then
+                    GraphFilters.OptionChipSelectedTrue
+
+                else
+                    GraphFilters.OptionChipSelectedFalse
+            , option = label
+            }
+        }
 
 
 {-| `label` comes translated, so check-lang sees the literal key at the call.
@@ -445,57 +395,39 @@ statusRow vc model =
 
 summaryChip : View.Config -> Bool -> Int -> Html Msg
 summaryChip vc grey hidden =
-    span
-        (testId "gs-filter-summary" :: chipStyle Colors.white)
-        [ text <|
-            case ( grey, hidden ) of
-                ( True, 1 ) ->
-                    Locale.string vc.locale "Filters on · 1 edge greyed out"
+    GraphFilters.filterSummaryChipWithAttributes
+        (GraphFilters.filterSummaryChipAttributes |> Rs.s_root [ testId "gs-filter-summary" ])
+        { root =
+            { summary =
+                case ( grey, hidden ) of
+                    ( True, 1 ) ->
+                        Locale.string vc.locale "Filters on · 1 edge greyed out"
 
-                ( True, _ ) ->
-                    Locale.interpolated vc.locale "Filters on · {0} edges greyed out" [ String.fromInt hidden ]
+                    ( True, _ ) ->
+                        Locale.interpolated vc.locale "Filters on · {0} edges greyed out" [ String.fromInt hidden ]
 
-                ( False, 1 ) ->
-                    Locale.string vc.locale "Filters on · 1 edge hidden"
+                    ( False, 1 ) ->
+                        Locale.string vc.locale "Filters on · 1 edge hidden"
 
-                ( False, _ ) ->
-                    Locale.interpolated vc.locale "Filters on · {0} edges hidden" [ String.fromInt hidden ]
-        ]
+                    ( False, _ ) ->
+                        Locale.interpolated vc.locale "Filters on · {0} edges hidden" [ String.fromInt hidden ]
+            }
+        }
 
 
 filterChip : View.Config -> ( String, String, GraphFilterMsg.Msg ) -> Html Msg
 filterChip vc ( label, value, clear ) =
-    span
-        (testId "gs-filter-chip" :: chipStyle Colors.greyBlue50)
-        [ span [ css [ Css.property "color" Colors.greyBlue500 ] ] [ text (label ++ ":") ]
-        , span [ css [ Css.property "color" Colors.greyBlue900 ] ] [ text value ]
-        , span
-            [ css [ Css.cursor Css.pointer, Css.displayFlex, Css.marginLeft (Css.px 2) ]
-            , HA.title (Locale.string vc.locale "Remove this filter")
-            , testId "gs-filter-chip-remove"
-            , onClickWithStop (msg clear)
-            ]
-            [ Icons.iconsCloseSnoPadding {} ]
-        ]
-
-
-chipStyle : String -> List (Html.Attribute msg)
-chipStyle background =
-    [ css
-        [ Css.displayFlex
-        , Css.alignItems Css.center
-        , Css.property "gap" "4px"
-        , Css.height (Css.px 24)
-        , Css.padding2 Css.zero (Css.px 10)
-        , Css.borderRadius (Css.px 12)
-        , Css.border3 (Css.px 1) Css.solid Css.transparent
-        , Css.property "border-color" Colors.greyBlue100
-        , Css.property "background-color" background
-        , Css.property "color" Colors.greyBlue700
-        , Css.boxSizing Css.borderBox
-        , Css.whiteSpace Css.noWrap
-        ]
-    ]
+    GraphFilters.filterChipWithAttributes
+        (GraphFilters.filterChipAttributes
+            |> Rs.s_root [ testId "gs-filter-chip" ]
+            |> Rs.s_remove
+                [ css [ Css.cursor Css.pointer ]
+                , HA.title (Locale.string vc.locale "Remove this filter")
+                , testId "gs-filter-chip-remove"
+                , onClickWithStop (msg clear)
+                ]
+        )
+        { root = { label = label ++ ":", value = value } }
 
 
 
@@ -630,32 +562,22 @@ gapMarker vc bucket =
                 from =
                     until + 1 - days * dayMillis
             in
-            [ div
-                [ testId "gs-filter-strip-gap"
-                , HA.title
-                    (Locale.interpolated vc.locale
-                        "No transfers for {0} ({1} – {2}); left out of the strip"
-                        [ length
-                        , Locale.timestampDateUniform vc.locale (Time.millisToPosix from)
-                        , Locale.timestampDateUniform vc.locale (Time.millisToPosix until)
+            [ GraphFilters.activityStripGapWithAttributes
+                (GraphFilters.activityStripGapAttributes
+                    |> Rs.s_root
+                        [ testId "gs-filter-strip-gap"
+                        , HA.title
+                            (Locale.interpolated vc.locale
+                                "No transfers for {0} ({1} – {2}); left out of the strip"
+                                [ length
+                                , Locale.timestampDateUniform vc.locale (Time.millisToPosix from)
+                                , Locale.timestampDateUniform vc.locale (Time.millisToPosix until)
+                                ]
+                            )
+                        , css [ Css.property "flex" "0 0 auto", Css.margin2 Css.zero (Css.px 2) ]
                         ]
-                    )
-                , css
-                    [ Css.property "flex" "0 0 auto"
-                    , Css.displayFlex
-                    , Css.alignItems Css.center
-                    , Css.padding2 Css.zero (Css.px 4)
-                    , Css.margin2 Css.zero (Css.px 2)
-                    , Css.property "background-color" Colors.white
-                    , Css.property "border-top" ("1px dashed " ++ Colors.greyBlue200)
-                    , Css.property "border-bottom" ("1px dashed " ++ Colors.greyBlue200)
-                    , Css.boxSizing Css.borderBox
-                    , Css.property "color" Colors.greyBlue500
-                    , Css.fontSize (Css.px 10)
-                    , Css.whiteSpace Css.noWrap
-                    ]
-                ]
-                [ text length ]
+                )
+                { root = { length = length } }
             ]
 
         Nothing ->
