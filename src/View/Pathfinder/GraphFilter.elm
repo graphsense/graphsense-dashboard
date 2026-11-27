@@ -647,6 +647,9 @@ gapMarker vc bucket =
                     , Css.padding2 Css.zero (Css.px 4)
                     , Css.margin2 Css.zero (Css.px 2)
                     , Css.property "background-color" Colors.white
+                    , Css.property "border-top" ("1px dashed " ++ Colors.greyBlue200)
+                    , Css.property "border-bottom" ("1px dashed " ++ Colors.greyBlue200)
+                    , Css.boxSizing Css.borderBox
                     , Css.property "color" Colors.greyBlue500
                     , Css.fontSize (Css.px 10)
                     , Css.whiteSpace Css.noWrap

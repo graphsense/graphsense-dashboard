@@ -173,7 +173,16 @@ view vc pc level tx utxo annotation =
                     ]
                         ++ tooltipAttributes vc tx.id utxo
                 , highlightEllipse =
-                    [ Css.property "stroke" colorFinal |> Css.important ] |> css |> List.singleton
+                    -- a light blue halo with a thin rim, as for addresses
+                    -- (2026-11-27 D1); the rim keeps an annotation's colour
+                    [ rx "12"
+                    , ry "12"
+                    , css
+                        [ Css.property "fill" Colors.blue100 |> Css.important
+                        , Css.property "stroke" colorFinal |> Css.important
+                        , Css.property "stroke-width" "1.5" |> Css.important
+                        ]
+                    ]
                 , date =
                     [ translate 0 offsetTxHash |> transform ]
                 , time =

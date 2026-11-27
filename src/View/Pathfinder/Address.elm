@@ -313,21 +313,42 @@ view vc pc capabilities searchHighlight level address annotation =
                 |> Rs.s_nodeFrame annAttr
                 |> Rs.s_clusterColor
                     (clusterStroke
-                        -- with the selection ring inside it, the cluster ring
-                        -- moves out by 2 so a white gap keeps the two apart,
-                        -- also for the blue cluster colour (Adva, 2026-11-27).
-                        -- Later attributes win over the generated rx/ry.
+                        -- the halo below reaches into the cluster ring's place;
+                        -- with it, the ring moves out so a white gap keeps the
+                        -- two apart (Adva, 2026-11-27). Later attributes win
+                        -- over the generated rx/ry
                         ++ (if highlightVisible then
-                                [ Svg.rx "30.5", Svg.ry "30.5" ]
+                                [ Svg.rx "34", Svg.ry "34" ]
 
                             else
                                 []
                            )
                     )
-                -- the selection ring in the selection's blue (2026-11-27 D1),
-                -- at the generated width; until the Figma node has it
+                -- the selection as in the prototype (2026-11-27 D1): a light
+                -- blue halo behind the node with a thin blue rim; the current
+                -- search match, if not selected, fainter with a dashed rim.
+                -- Overrides the generated ring until the Figma node has it
                 |> Rs.s_highlightColor
-                    [ css [ Css.property "stroke" Colors.blue400 |> Css.important ] ]
+                    (Svg.rx "30"
+                        :: Svg.ry "30"
+                        :: (if address.selected then
+                                [ css
+                                    [ Css.property "fill" Colors.blue100 |> Css.important
+                                    , Css.property "stroke" Colors.blue400 |> Css.important
+                                    , Css.property "stroke-width" "1.5" |> Css.important
+                                    ]
+                                ]
+
+                            else
+                                [ css
+                                    [ Css.property "fill" Colors.blue50 |> Css.important
+                                    , Css.property "stroke" Colors.blue500 |> Css.important
+                                    , Css.property "stroke-width" "1.5" |> Css.important
+                                    , Css.property "stroke-dasharray" "3 2" |> Css.important
+                                    ]
+                                ]
+                           )
+                    )
             )
             { root =
                 { addressId =
