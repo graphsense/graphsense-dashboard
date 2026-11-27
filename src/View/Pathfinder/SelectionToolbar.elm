@@ -13,7 +13,7 @@ import Animation
 import Config.View as View
 import Css
 import Dict
-import Html.Styled exposing (Html, div, span, text)
+import Html.Styled exposing (Html, text)
 import Html.Styled.Attributes exposing (css, title)
 import Model.Graph.Coords exposing (BBox)
 import Model.Graph.Transform as Transform
@@ -21,8 +21,9 @@ import Model.Pathfinder as Pathfinder exposing (unit)
 import Model.Pathfinder.ContextMenu exposing (ContextMenuType(..))
 import Model.Pathfinder.Selection exposing (MultiSelectOptions(..))
 import Msg.Pathfinder exposing (Msg(..))
+import RecordSetter as Rs
 import Theme.Colors as Colors
-import Theme.Html.Icons as Icons
+import Theme.Html.GraphFilters as GraphFilters
 import Util.View exposing (onClickWithStop, testId)
 import View.Locale as Locale
 
@@ -80,85 +81,46 @@ view vc model selection dim =
                 top =
                     max 64 (anchor.y - offsetAbove)
 
-                button tid label icon msg =
-                    span
-                        [ testId tid
-                        , title label
-                        , onClickWithStop msg
+                action tid label onClick =
+                    [ testId tid
+                    , title label
+                    , onClickWithStop onClick
+                    , css
+                        [ Css.cursor Css.pointer
+                        , Css.hover [ Css.property "background-color" Colors.greyBlue50 ]
+                        ]
+                    ]
+            in
+            GraphFilters.selectionToolbarWithAttributes
+                (GraphFilters.selectionToolbarAttributes
+                    |> Rs.s_root
+                        [ testId "gs-selection-toolbar"
                         , css
-                            [ Css.displayFlex
-                            , Css.alignItems Css.center
-                            , Css.justifyContent Css.center
-                            , Css.width (Css.px 28)
-                            , Css.height (Css.px 28)
-                            , Css.borderRadius (Css.px 4)
-                            , Css.cursor Css.pointer
-                            , Css.hover [ Css.property "background-color" Colors.greyBlue50 ]
+                            -- placed over the graph; the generated bar only
+                            -- knows its own layout
+                            [ Css.position Css.absolute |> Css.important
+                            , Css.left (Css.px left) |> Css.important
+                            , Css.top (Css.px top) |> Css.important
+                            , Css.transform (Css.translateX (Css.pct -50)) |> Css.important
+                            , Css.property "pointer-events" "all"
+                            , Css.whiteSpace Css.noWrap
                             ]
                         ]
-                        [ icon ]
-
-                separator =
-                    span [ css [ Css.width (Css.px 1), Css.height (Css.px 18), Css.property "background-color" Colors.greyBlue100, Css.margin2 Css.zero (Css.px 4) ] ] []
-            in
-            div
-                [ testId "gs-selection-toolbar"
-                , css
-                    [ Css.position Css.absolute
-                    , Css.left (Css.px left)
-                    , Css.top (Css.px top)
-                    , Css.transform (Css.translateX (Css.pct -50))
-                    , Css.displayFlex
-                    , Css.alignItems Css.center
-                    , Css.property "gap" "2px"
-                    , Css.padding2 (Css.px 4) (Css.px 6)
-                    , Css.borderRadius (Css.px 8)
-                    , Css.property "background-color" Colors.white
-                    , Css.property "border" ("1px solid " ++ Colors.greyBlue100)
-                    , Css.property "box-shadow" ("0 4px 12px " ++ Colors.greyShadow)
-                    , Css.property "pointer-events" "all"
-                    , Css.whiteSpace Css.noWrap
-                    ]
-                ]
-                [ span
-                    [ css
-                        [ Css.displayFlex
-                        , Css.alignItems Css.center
-                        , Css.property "gap" "4px"
-                        , Css.height (Css.px 26)
-                        , Css.padding4 Css.zero (Css.px 4) Css.zero (Css.px 10)
-                        , Css.borderRadius (Css.px 13)
-                        , Css.property "background-color" Colors.blue50
-                        , Css.property "color" Colors.blue700
-                        , Css.fontSize (Css.px 12)
-                        , Css.fontWeight (Css.int 600)
-                        ]
-                    ]
-                    [ text (Locale.interpolated vc.locale "{0} selected" [ String.fromInt (List.length selection) ])
-                    , span
+                    |> Rs.s_clear
                         [ testId "gs-selection-toolbar-clear"
                         , title (Locale.string vc.locale "Clear selection")
                         , onClickWithStop UserClosedDetailsView
                         , css
-                            [ Css.displayFlex
-                            , Css.alignItems Css.center
-                            , Css.justifyContent Css.center
-                            , Css.width (Css.px 18)
-                            , Css.height (Css.px 18)
-                            , Css.borderRadius (Css.px 9)
-                            , Css.cursor Css.pointer
+                            [ Css.cursor Css.pointer
                             , Css.hover [ Css.property "background-color" Colors.blue100 ]
                             ]
                         ]
-                        [ Icons.iconsCloseSnoPadding {} ]
-                    ]
-                , separator
-                , button "gs-selection-toolbar-align" (Locale.string vc.locale "Align horizontally") (Icons.iconsHorizontalAlign {}) UserClickedContextMenuAlignHorizontally
-                , button "gs-selection-toolbar-annotate" (Locale.string vc.locale "Annotate") (Icons.iconsAnnotateS {}) UserToggleAnnotationSettings
-                , button "gs-selection-toolbar-newtab" (Locale.string vc.locale "Open in new tab") (Icons.iconsGoToS {}) (UserClickedContextMenuOpenInNewTab (AddressContextMenu first.id))
-                , separator
-                , button "gs-selection-toolbar-delete" (Locale.string vc.locale "Remove from graph") (Icons.iconsDeleteS {}) UserClickedToolbarDeleteIcon
-                ]
+                    |> Rs.s_align (action "gs-selection-toolbar-align" (Locale.string vc.locale "Align horizontally") UserClickedContextMenuAlignHorizontally)
+                    |> Rs.s_annotate (action "gs-selection-toolbar-annotate" (Locale.string vc.locale "Annotate") UserToggleAnnotationSettings)
+                    |> Rs.s_openInNewTab (action "gs-selection-toolbar-newtab" (Locale.string vc.locale "Open in new tab") (UserClickedContextMenuOpenInNewTab (AddressContextMenu first.id)))
+                    |> Rs.s_remove (action "gs-selection-toolbar-delete" (Locale.string vc.locale "Remove from graph") UserClickedToolbarDeleteIcon)
+                )
+                { root = { count = Locale.interpolated vc.locale "{0} selected" [ String.fromInt (List.length selection) ] } }
 
         _ ->
             text ""

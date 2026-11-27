@@ -359,6 +359,26 @@ A round-trip test that compares an encoder against its own decoder passes even w
 
 Runs on commit: `make format`, `make lint`, `make test`. On push: `tools/set_version.sh` (writes version to `Version.elm`).
 
+### `src/Version.elm` must match the tag
+
+The version in the footer comes from `src/Version.elm`, and the bundle built
+from a tag shows whatever that file says *in the tagged commit*.
+`tools/set_version.sh` (pre-push hook `set-version`) stamps the nearest tag
+reachable from `HEAD`, so:
+
+- **Before creating a tag, commit `src/Version.elm` set to exactly that tag,
+  then tag that commit.** Tagging first and letting the hook catch up stamps
+  the *previous* tag into the build. This is what the `vX.Y.Z-<channel>.N`
+  commits on `test/uipush` and on release branches are for.
+- Check before pushing a tag: `git show <tag>:src/Version.elm` must print the
+  tag's own name.
+- If the hook rewrites `Version.elm` during a push, it fails the push ("Please
+  commit and try again"). Commit the stamped file and push again; do not skip
+  the hook.
+- On a feature branch, the nearest tag is the last one on its base (e.g.
+  `v26.11.0` while the test tags live on `test/uipush`), so the dev server and
+  feature builds show that. Expected; only tagged builds carry a newer version.
+
 ## Graph detail levels (semantic zoom)
 
 `Model.Pathfinder.DetailLevel` maps the zoom (`Transform.getZ`, larger = further out) to `Full | Reduced | Minimal`, computed once in `View.Pathfinder.graphSvg` and threaded into the lazily rendered layers (`Network.addresses`, `Network.relations`, `Tx.view`, `Address.view`). `Reduced` drops edge values, timestamps, tx hashes and tag icons; `Minimal` also drops address identifiers. Annotations, service labels and selected/hovered nodes keep full detail. Keep it a bucketed custom type passed as its own lazy argument: passing the raw zoom, or a `View.Config` rebuilt per render, defeats `Svg.lazy` memoization and makes every zoom tick re-render the whole graph. `aggRelations` sits exactly at the `lazy7` limit, so a further argument has to be packed into an existing one.
