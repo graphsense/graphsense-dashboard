@@ -311,7 +311,23 @@ view vc pc capabilities searchHighlight level address annotation =
                         |> onMouseLeave
                     ]
                 |> Rs.s_nodeFrame annAttr
-                |> Rs.s_clusterColor clusterStroke
+                |> Rs.s_clusterColor
+                    (clusterStroke
+                        -- with the selection ring inside it, the cluster ring
+                        -- moves out by 2 so a white gap keeps the two apart,
+                        -- also for the blue cluster colour (Adva, 2026-11-27).
+                        -- Later attributes win over the generated rx/ry.
+                        ++ (if highlightVisible then
+                                [ Svg.rx "30.5", Svg.ry "30.5" ]
+
+                            else
+                                []
+                           )
+                    )
+                -- the selection ring in the selection's blue (2026-11-27 D1),
+                -- at the generated width; until the Figma node has it
+                |> Rs.s_highlightColor
+                    [ css [ Css.property "stroke" Colors.blue400 |> Css.important ] ]
             )
             { root =
                 { addressId =
@@ -329,7 +345,7 @@ view vc pc capabilities searchHighlight level address annotation =
                 , mainIconInstance = toNodeIcon address
                 , exchangeLabel = nodeLabel |> Maybe.withDefault ""
                 , exchangeLabelVisible = nodeLabel /= Nothing
-                , isStartingPoint = address.isStartingPoint || (pc.hideForExport /= Exporting True && address.selected)
+                , isStartingPoint = address.isStartingPoint
                 , icon1Visible = iconVisible icons 0
                 , icon1Instance = iconInstance icons 0
                 , icon2Visible = iconVisible icons 1
@@ -405,15 +421,13 @@ view vc pc capabilities searchHighlight level address annotation =
                 }
             , iconsNodeMarker =
                 { variant =
-                    case ( address.selected || isCurrentSearchMatch, address.isStartingPoint ) of
-                        ( True, _ ) ->
-                            Icons.iconsNodeMarkerPurposeSelectedNode {}
+                    -- no marker for the selection or the current search
+                    -- match, the ring shows it (2026-11-27 D2)
+                    if address.isStartingPoint then
+                        Icons.iconsNodeMarkerPurposeStartingPoint {}
 
-                        ( False, False ) ->
-                            text ""
-
-                        ( False, True ) ->
-                            Icons.iconsNodeMarkerPurposeStartingPoint {}
+                    else
+                        text ""
                 }
             }
             :: label
