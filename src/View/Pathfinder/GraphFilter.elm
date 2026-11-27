@@ -574,7 +574,14 @@ gapMarker vc bucket =
                                 , Locale.timestampDateUniform vc.locale (Time.millisToPosix until)
                                 ]
                             )
-                        , css [ Css.property "flex" "0 0 auto", Css.margin2 Css.zero (Css.px 2) ]
+                        , css
+                            [ Css.property "flex" "0 0 auto"
+                            , Css.margin2 Css.zero (Css.px 2)
+
+                            -- dashed as in Figma: codegen does not carry
+                            -- the dash pattern and writes solid
+                            , Css.borderStyle Css.dashed |> Css.important
+                            ]
                         ]
                 )
                 { root = { length = length } }
@@ -678,7 +685,7 @@ activityStrip vc period buckets =
                     ]
                 , if List.any (.gapBefore >> (/=) Nothing) buckets then
                     div [ css [ Css.marginTop (Css.px 2), Css.fontSize (Css.px 11), Css.property "color" Colors.greyBlue500 ] ]
-                        [ Locale.text vc.locale "Long stretches without transfers are cut out of the strip; the white gaps say how long." ]
+                        [ Locale.text vc.locale "Long stretches without transfers are cut out of the strip; the dashed gaps say how long." ]
 
                   else
                     text ""
