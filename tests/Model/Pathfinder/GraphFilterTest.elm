@@ -125,7 +125,7 @@ suite =
             , test "a transfer without a fiat value in the chosen currency stays" <|
                 \_ -> hiddenTxs { txConfig | fiatCode = "eur" } tiny chain |> Expect.equal []
             ]
-        , describe "UTXO value: the outputs shown on the graph (2026-11-27 D3)"
+        , describe "UTXO value: the outputs shown on the graph (design review 2026-11-27)"
             [ test "an off-graph output does not count" <|
                 \_ ->
                     networkOf []

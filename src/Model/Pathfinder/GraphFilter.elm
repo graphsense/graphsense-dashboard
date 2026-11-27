@@ -20,7 +20,7 @@ Rules:
   - A transaction without a fiat value in the chosen currency is never hidden
     by the value filter: what we cannot price, we do not drop.
   - The value of a UTXO transaction is its largest output shown on the
-    graph (an output whose address is on the graph; 2026-11-27 D3). With no
+    graph (an output whose address is on the graph; design review 2026-11-27). With no
     output shown, it is the sum of the inputs shown; with neither, the total
     output.
   - An address is hidden when it has transfers on the graph but none of them
@@ -351,7 +351,7 @@ txFiatValue fiatCode tx =
             Locale.getFiatValue fiatCode t.value
 
         Utxo t ->
-            -- 2026-11-27 D3: the outputs shown on the graph; a tx with none
+            -- design review 2026-11-27: the outputs shown on the graph; a tx with none
             -- shown (only its inputs are on the graph) by its shown inputs
             let
                 shownValues =

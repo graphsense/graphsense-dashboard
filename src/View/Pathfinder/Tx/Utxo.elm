@@ -73,7 +73,7 @@ view vc pc level tx utxo annotation =
                             )
                     )
                 -- the selection ring: an annotation's or a swap leg's colour,
-                -- else the blue of the selection (2026-11-27 D1)
+                -- else the blue of the selection (design review 2026-11-27)
                 |> Maybe.withDefault Colors.blue400
 
         anyIsNotVisible =
@@ -174,7 +174,7 @@ view vc pc level tx utxo annotation =
                         ++ tooltipAttributes vc tx.id utxo
                 , highlightEllipse =
                     -- a light blue halo with a thin rim, as for addresses
-                    -- (2026-11-27 D1); the rim keeps an annotation's colour
+                    -- (design review 2026-11-27); the rim keeps an annotation's colour
                     [ rx "12"
                     , ry "12"
                     , css
@@ -200,7 +200,7 @@ view vc pc level tx utxo annotation =
             , iconsNodeMarker =
                 { variant =
                     -- no marker for the selection, the ring shows it
-                    -- (2026-11-27 D2)
+                    -- (design review 2026-11-27)
                     if tx.isStartingPoint then
                         Icons.iconsNodeMarkerPurposeStartingPoint {}
 

@@ -2,7 +2,7 @@ module View.Pathfinder.SelectionToolbar exposing (view)
 
 {-| A small toolbar that floats above a multi-selection on the graph, so the
 actions for several nodes are visible without knowing the right-click menu
-(Adva's "quick actions" idea, Slack 2026-11-10/13; light, not dark).
+(a "quick actions" bar above the selection; light, not dark).
 
 Draft: the actions that exist for a multi-selection today. The statistics
 stay in the side panel (`View.Pathfinder.SelectionStats`).

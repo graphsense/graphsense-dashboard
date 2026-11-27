@@ -315,7 +315,7 @@ view vc pc capabilities searchHighlight level address annotation =
                     (clusterStroke
                         -- the halo below reaches into the cluster ring's place;
                         -- with it, the ring moves out so a white gap keeps the
-                        -- two apart (Adva, 2026-11-27). Later attributes win
+                        -- two apart (design review 2026-11-27). Later attributes win
                         -- over the generated rx/ry
                         ++ (if highlightVisible then
                                 [ Svg.rx "34", Svg.ry "34" ]
@@ -324,7 +324,7 @@ view vc pc capabilities searchHighlight level address annotation =
                                 []
                            )
                     )
-                -- the selection as in the prototype (2026-11-27 D1): a light
+                -- the selection as in the prototype (design review 2026-11-27): a light
                 -- blue halo behind the node with a thin blue rim; the current
                 -- search match, if not selected, fainter with a dashed rim.
                 -- Overrides the generated ring until the Figma node has it
@@ -443,7 +443,7 @@ view vc pc capabilities searchHighlight level address annotation =
             , iconsNodeMarker =
                 { variant =
                     -- no marker for the selection or the current search
-                    -- match, the ring shows it (2026-11-27 D2)
+                    -- match, the ring shows it (design review 2026-11-27)
                     if address.isStartingPoint then
                         Icons.iconsNodeMarkerPurposeStartingPoint {}
 
