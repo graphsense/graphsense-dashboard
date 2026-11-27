@@ -71,7 +71,12 @@ toolbarButton vc { activeFilters, open } =
                     "transparent"
             ]
         ]
-        (Icons.iconsFilter {}
+        (Icons.iconsFilterWithAttributes
+            -- grey like the toolbar's own icons, not the icon's near black
+            (Icons.iconsFilterAttributes
+                |> Rs.s_filter [ css [ Css.property "fill" Colors.greyBlue500 |> Css.important ] ]
+            )
+            {}
             :: (if activeFilters > 0 then
                     [ badge activeFilters ]
 
@@ -246,44 +251,54 @@ popover vc model hc =
 
 limitEditor : View.Config -> Pathfinder.Model -> Html Msg
 limitEditor vc model =
+    -- the label on its own line, so the field can be wide and Done sit at
+    -- the right edge (2026-11-27)
     div
         [ css
-            [ Css.displayFlex
-            , Css.alignItems Css.center
-            , Css.property "gap" "6px"
-            , Css.marginTop (Css.px 8)
+            [ Css.marginTop (Css.px 8)
             , Css.padding2 (Css.px 8) (Css.px 10)
             , Css.borderRadius (Css.px 6)
             , Css.property "background-color" Colors.greyBlue20
             ]
         ]
-        [ span [ css [ Css.property "color" Colors.greyBlue700 ] ] [ Locale.text vc.locale "Hide transfers under" ]
-        , input
-            [ HA.type_ "number"
-            , HA.min "0"
-            , HA.step "any"
-            , testId "gs-filter-limit"
-            , HA.value (String.fromFloat model.graphFilter.limit)
-            , onInput
-                (String.toFloat
-                    >> Maybe.withDefault model.graphFilter.limit
-                    >> GraphFilterMsg.UserChangedLimit
-                    >> msg
-                )
-            , css
-                [ Css.width (Css.px 72)
-                , Css.height (Css.px 28)
-                , Css.padding2 Css.zero (Css.px 8)
-                , Css.borderRadius (Css.px 4)
-                , Css.border3 (Css.px 1) Css.solid Css.transparent
-                , Css.property "border-color" Colors.greyBlue200
-                , Css.boxSizing Css.borderBox
-                ]
-            ]
-            []
-        , span [ css [ Css.property "color" Colors.greyBlue700 ] ] [ text (String.toUpper vc.preferredFiatCurrency) ]
-        , link vc (Locale.string vc.locale "Done") (msg GraphFilterMsg.UserClickedLimitDone)
+        [ div [ css [ Css.property "color" Colors.greyBlue700, Css.marginBottom (Css.px 6) ] ] [ Locale.text vc.locale "Hide transfers under" ]
+        , div [ css [ Css.displayFlex, Css.alignItems Css.center, Css.property "gap" "6px" ] ] (limitRow vc model)
         ]
+
+
+limitRow : View.Config -> Pathfinder.Model -> List (Html Msg)
+limitRow vc model =
+    [ input
+        [ HA.type_ "number"
+        , HA.min "0"
+
+        -- the arrows move the limit by 10 (2026-11-27); any value can
+        -- still be typed
+        , HA.step "10"
+        , testId "gs-filter-limit"
+        , HA.value (String.fromFloat model.graphFilter.limit)
+        , onInput
+            (String.toFloat
+                >> Maybe.withDefault model.graphFilter.limit
+                >> GraphFilterMsg.UserChangedLimit
+                >> msg
+            )
+        , css
+            [ Css.width (Css.px 140)
+            , Css.height (Css.px 32)
+            , Css.padding2 Css.zero (Css.px 8)
+            , Css.fontSize (Css.px 13)
+            , Css.borderRadius (Css.px 4)
+            , Css.border3 (Css.px 1) Css.solid Css.transparent
+            , Css.property "border-color" Colors.greyBlue200
+            , Css.boxSizing Css.borderBox
+            ]
+        ]
+        []
+    , span [ css [ Css.property "color" Colors.greyBlue700 ] ] [ text (String.toUpper vc.preferredFiatCurrency) ]
+    , span [ css [ Css.marginLeft Css.auto ] ]
+        [ link vc (Locale.string vc.locale "Done") (msg GraphFilterMsg.UserClickedLimitDone) ]
+    ]
 
 
 optionChip : String -> Bool -> Msg -> Html Msg
@@ -597,6 +612,37 @@ dateField tid bounds value toMsg =
         []
 
 
+{-| Where the strip leaves out a long stretch without transfers (see
+`GraphFilter.activity`): a narrow mark between the bars, the length in its
+tooltip.
+-}
+gapMarker : View.Config -> Maybe Int -> List (Html Msg)
+gapMarker vc gapBefore =
+    case gapBefore of
+        Just days ->
+            [ div
+                [ testId "gs-filter-strip-gap"
+                , HA.title (Locale.interpolated vc.locale "{0} days without transfers" [ Locale.intWithoutValueDetailFormatting vc.locale days ])
+                , css
+                    [ Css.flex3 Css.zero Css.zero (Css.px 14)
+                    , Css.displayFlex
+                    , Css.alignItems Css.center
+                    , Css.justifyContent Css.center
+                    , Css.property "color" Colors.greyBlue300
+                    , Css.fontSize (Css.px 11)
+                    , Css.letterSpacing (Css.px -1)
+                    , Css.property "border-left" ("1px dashed " ++ Colors.greyBlue200)
+                    , Css.property "border-right" ("1px dashed " ++ Colors.greyBlue200)
+                    , Css.margin2 Css.zero (Css.px 2)
+                    ]
+                ]
+                [ text "⋯" ]
+            ]
+
+        Nothing ->
+            []
+
+
 {-| Money moved per bar, height relative to the busiest bar (square root, so
 small days stay visible next to a big one). Press a bar to pick it, drag to
 pick a period. Bars outside the picked period are light.
@@ -678,7 +724,7 @@ activityStrip vc period buckets =
                         , Css.property "user-select" "none"
                         ]
                     ]
-                    (List.map bar buckets)
+                    (List.concatMap (\b -> gapMarker vc b.gapBefore ++ [ bar b ]) buckets)
                 , div [ css [ Css.displayFlex, Css.justifyContent Css.spaceBetween, Css.marginTop (Css.px 4), Css.fontSize (Css.px 11), Css.property "color" Colors.greyBlue500 ] ]
                     [ span [] [ text (Locale.timestampDateUniform vc.locale first.period.from) ]
                     , span [] [ Locale.text vc.locale "click a day, drag a period" ]
