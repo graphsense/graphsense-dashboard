@@ -202,23 +202,23 @@ popover vc model hc =
                     div [ css [ Css.property "color" Colors.greyBlue500 ] ] [ Locale.text vc.locale "No transfers on the graph yet" ]
 
                   else
-                    div [ css [ Css.displayFlex, Css.flexWrap Css.wrap, Css.alignItems Css.center, Css.property "gap" "4px" ] ]
-                        (List.map
-                            (\asset ->
-                                optionChip (String.toUpper asset)
-                                    (not (Set.member asset f.excludedAssets))
-                                    (msg (GraphFilterMsg.UserToggledAsset asset))
+                    div []
+                        [ div [ css [ Css.displayFlex, Css.flexWrap Css.wrap, Css.alignItems Css.center, Css.property "gap" "4px" ] ]
+                            (List.map
+                                (\asset ->
+                                    optionChip (String.toUpper asset)
+                                        (not (Set.member asset f.excludedAssets))
+                                        (msg (GraphFilterMsg.UserToggledAsset asset))
+                                )
+                                assets
                             )
-                            assets
-                            ++ (if Dict.isEmpty model.network.conversions then
-                                    []
+                        , if Dict.isEmpty model.network.conversions then
+                            text ""
 
-                                else
-                                    [ span [ css [ Css.property "color" Colors.greyBlue500, Css.fontSize (Css.px 11), Css.marginLeft (Css.px 4) ] ]
-                                        [ Locale.text vc.locale "swaps stay linked" ]
-                                    ]
-                               )
-                        )
+                          else
+                            div [ css [ Css.property "color" Colors.greyBlue500, Css.fontSize (Css.px 11), Css.marginTop (Css.px 6) ] ]
+                                [ Locale.text vc.locale "A swap stays on the graph as long as one of its two assets is shown." ]
+                        ]
                 ]
             ]
         , div
@@ -613,34 +613,55 @@ dateField tid bounds value toMsg =
 
 
 {-| Where the strip leaves out a long stretch without transfers (see
-`GraphFilter.activity`): a narrow mark between the bars, the length in its
-tooltip.
+`GraphFilter.activity`): a white cut through the strip, labelled with how long
+the stretch is; the dates are in its tooltip.
 -}
-gapMarker : View.Config -> Maybe Int -> List (Html Msg)
-gapMarker vc gapBefore =
-    case gapBefore of
+gapMarker : View.Config -> Bucket -> List (Html Msg)
+gapMarker vc bucket =
+    case bucket.gapBefore of
         Just days ->
+            let
+                length =
+                    Locale.durationToStringWithPrecision vc.locale 1 (days * dayMillis)
+
+                until =
+                    Time.posixToMillis bucket.period.from - 1
+
+                from =
+                    until + 1 - days * dayMillis
+            in
             [ div
                 [ testId "gs-filter-strip-gap"
-                , HA.title (Locale.interpolated vc.locale "{0} days without transfers" [ Locale.intWithoutValueDetailFormatting vc.locale days ])
+                , HA.title
+                    (Locale.interpolated vc.locale
+                        "No transfers for {0} ({1} – {2}); left out of the strip"
+                        [ length
+                        , Locale.timestampDateUniform vc.locale (Time.millisToPosix from)
+                        , Locale.timestampDateUniform vc.locale (Time.millisToPosix until)
+                        ]
+                    )
                 , css
-                    [ Css.flex3 Css.zero Css.zero (Css.px 14)
+                    [ Css.property "flex" "0 0 auto"
                     , Css.displayFlex
                     , Css.alignItems Css.center
-                    , Css.justifyContent Css.center
-                    , Css.property "color" Colors.greyBlue300
-                    , Css.fontSize (Css.px 11)
-                    , Css.letterSpacing (Css.px -1)
-                    , Css.property "border-left" ("1px dashed " ++ Colors.greyBlue200)
-                    , Css.property "border-right" ("1px dashed " ++ Colors.greyBlue200)
+                    , Css.padding2 Css.zero (Css.px 4)
                     , Css.margin2 Css.zero (Css.px 2)
+                    , Css.property "background-color" Colors.white
+                    , Css.property "color" Colors.greyBlue500
+                    , Css.fontSize (Css.px 10)
+                    , Css.whiteSpace Css.noWrap
                     ]
                 ]
-                [ text "⋯" ]
+                [ text length ]
             ]
 
         Nothing ->
             []
+
+
+dayMillis : Int
+dayMillis =
+    86400000
 
 
 {-| Money moved per bar, height relative to the busiest bar (square root, so
@@ -724,12 +745,18 @@ activityStrip vc period buckets =
                         , Css.property "user-select" "none"
                         ]
                     ]
-                    (List.concatMap (\b -> gapMarker vc b.gapBefore ++ [ bar b ]) buckets)
+                    (List.concatMap (\b -> gapMarker vc b ++ [ bar b ]) buckets)
                 , div [ css [ Css.displayFlex, Css.justifyContent Css.spaceBetween, Css.marginTop (Css.px 4), Css.fontSize (Css.px 11), Css.property "color" Colors.greyBlue500 ] ]
                     [ span [] [ text (Locale.timestampDateUniform vc.locale first.period.from) ]
                     , span [] [ Locale.text vc.locale "click a day, drag a period" ]
                     , span [] [ text (Locale.timestampDateUniform vc.locale last.period.from) ]
                     ]
+                , if List.any (.gapBefore >> (/=) Nothing) buckets then
+                    div [ css [ Css.marginTop (Css.px 2), Css.fontSize (Css.px 11), Css.property "color" Colors.greyBlue500 ] ]
+                        [ Locale.text vc.locale "Long stretches without transfers are cut out of the strip; the white gaps say how long." ]
+
+                  else
+                    text ""
                 ]
 
         _ ->

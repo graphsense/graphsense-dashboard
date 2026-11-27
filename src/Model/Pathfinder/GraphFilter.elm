@@ -16,7 +16,7 @@ Rules:
 
   - A transaction passes when its asset, value and time all pass. The asset
     of a swap leg also passes when the other leg's asset passes, so a swap
-    never breaks the trail ("swaps stay linked").
+    never breaks the trail.
   - A transaction without a fiat value in the chosen currency is never hidden
     by the value filter: what we cannot price, we do not drop.
   - The value of a UTXO transaction is its largest output shown on the
