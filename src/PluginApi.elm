@@ -383,6 +383,7 @@ surface =
     , ref Util.View.none
     , ref Util.View.onClickWithStop
     , ref Util.View.pointer
+    , ref Util.View.testId
     , ref Util.View.truncateLongIdentifier
     , ref Util.View.truncateLongIdentifierWithLengths
 

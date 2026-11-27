@@ -60,6 +60,8 @@ import View.Pathfinder.Network as Network
 import View.Pathfinder.Overview as OverviewView
 import View.Pathfinder.RelationDetails as RelationDetails
 import View.Pathfinder.SearchBox as OnGraphSearchView
+import View.Pathfinder.SelectionStats as SelectionStatsView
+import View.Pathfinder.SelectionToolbar as SelectionToolbarView
 import View.Pathfinder.ShortcutHints as ShortcutHints
 import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.TxDetails as TxDetails
@@ -91,6 +93,12 @@ view pluginStates vc model =
     , vc.size
         |> Maybe.map (OverviewView.view vc model)
         |> Maybe.withDefault none
+    , case ( model.selection, vc.size ) of
+        ( Pathfinder.MultiSelect selection, Just dim ) ->
+            SelectionToolbarView.view vc model selection dim
+
+        _ ->
+            none
     , OnGraphSearchView.view vc model.onGraphSearch
     , Util.Tooltip.view vc model
         |> Tooltip.view (Util.Tooltip.tooltipConfig vc TooltipMsg) model.tooltip
@@ -670,7 +678,12 @@ settingsHovercardView vc pm hc =
 topRightPanel : ModelState -> View.Config -> Pathfinder.Model -> Html Msg
 topRightPanel pluginStates vc model =
     div [ Css.topRightPanelStyle vc |> css ]
-        [ detailsView pluginStates vc model
+        [ case model.selection of
+            Pathfinder.MultiSelect selection ->
+                SelectionStatsView.view vc model selection
+
+            _ ->
+                detailsView pluginStates vc model
         ]
 
 
